@@ -1,0 +1,1 @@
+// Logique projets : créer, modifier, changer le statut (draft → submitted → validated/rejected), notifier l'étudiant après validation, déclencher vérification badges.

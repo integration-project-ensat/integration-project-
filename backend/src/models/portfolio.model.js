@@ -1,0 +1,1 @@
+// Requêtes SQL portfolios : create, getByStudent, getPublicByLink, updateScore, updateVisibility, saveGeneratedPDF.

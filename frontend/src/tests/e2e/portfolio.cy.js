@@ -1,0 +1,1 @@
+// Tests end-to-end Cypress. Simule le parcours complet : connexion → création projet → soumission → vérification statut → visualisation portfolio public.

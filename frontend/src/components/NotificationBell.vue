@@ -1,0 +1,1 @@
+<!-- Icône cloche avec badge compteur. Au clic, affiche le dropdown des dernières notifications (projet validé, commentaire reçu, etc.). -->

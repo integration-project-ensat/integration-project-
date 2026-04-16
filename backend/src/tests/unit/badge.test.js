@@ -1,0 +1,1 @@
+// Tests unitaires des règles d'attribution des badges. Vérifie que le badge Web Developer est bien attribué après 3 projets web validés, etc.

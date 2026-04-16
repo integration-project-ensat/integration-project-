@@ -1,0 +1,1 @@
+<!-- Page de connexion. Redirige automatiquement vers Keycloak SSO. L'utilisateur se connecte sur Keycloak, puis est renvoyé ici avec un token JWT. -->

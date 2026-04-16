@@ -1,0 +1,1 @@
+<!-- Composant carte projet réutilisable. Affiche titre, stack technologique, statut (validé / en attente), lien GitHub, captures d'écran en miniature. -->

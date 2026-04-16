@@ -1,0 +1,1 @@
+// Routes notifications : GET /notifications (liste), PUT /notifications/:id/read (marquer lu), DELETE /notifications/:id.

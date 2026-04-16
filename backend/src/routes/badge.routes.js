@@ -1,0 +1,1 @@
+// Vérifie automatiquement les règles d'attribution des badges (ex: 3 projets web validés → badge Web Developer) et les assigne si conditions remplies.Routes badges : GET /badges/student/:id (badges d'un étudiant), POST /badges/check (vérifie et attribue automatiquement les badges mérités).

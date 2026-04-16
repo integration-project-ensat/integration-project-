@@ -1,0 +1,1 @@
+// Service d'authentification. Gère le login/logout SSO Keycloak, le refresh token automatique, et la récupération du rôle utilisateur depuis le token JWT.

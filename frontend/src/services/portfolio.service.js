@@ -1,0 +1,1 @@
+// Appels API liés au portfolio : charger les données, mettre à jour la visibilité, déclencher la génération PDF, récupérer le lien public partageable.

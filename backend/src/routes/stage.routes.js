@@ -1,0 +1,1 @@
+// Routes stages : CRUD + soumission à validation par l'encadrant académique. Inclut upload du rapport de stage.

@@ -1,0 +1,1 @@
+// Initialise Keycloak Connect pour Express. Fournit le middleware protect() qui vérifie le token JWT sur les routes protégées, et extrait les rôles de l'utilisateur.

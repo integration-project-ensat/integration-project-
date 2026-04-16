@@ -1,0 +1,1 @@
+// Tests unitaires Jest du controller projet. Mock la base de données et vérifie la logique : création projet, changement de statut, calcul score après validation.

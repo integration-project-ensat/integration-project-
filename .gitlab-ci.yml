@@ -1,0 +1,1 @@
+# Pipeline CI/CD principal sur GitLab. 4 stages : build (images Docker), test (Jest + Cypress), scan (SonarQube + Trivy + OWASP ZAP), deploy (staging puis prod sur validation).

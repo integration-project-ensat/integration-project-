@@ -1,0 +1,1 @@
+// Crée des notifications en base lors d'événements : projet validé, commentaire reçu, badge obtenu, stage accepté. Appelé depuis les autres controllers.

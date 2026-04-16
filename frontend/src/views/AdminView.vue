@@ -1,0 +1,1 @@
+<!-- Interface réservée à l'administrateur. Gestion des utilisateurs, des rôles, validation des comptes professionnels, supervision globale de la plateforme. -->

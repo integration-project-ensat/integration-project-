@@ -1,0 +1,35 @@
+version: '3.8'
+ 
+services:
+  frontend:
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+ 
+  backend:
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npx nodemon server.js
+ 
+  postgres:
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./backend/src/migrations:/docker-entrypoint-initdb.d
+ 
+  keycloak:
+    ports:
+      - "8080:8080"
+    command: start-dev
+ 
+  nginx:
+    ports:
+      - "80:80"

@@ -1,0 +1,1 @@
+# GitHub Action qui synchronise automatiquement le dépôt GitLab local vers GitHub distant à chaque push sur main. Assure la continuité si GitLab local est inaccessible.

@@ -1,0 +1,1 @@
+// Logique portfolio : agrège les données étudiant (projets validés, stages, badges), calcule le score de crédibilité selon la formule définie, génère le PDF.

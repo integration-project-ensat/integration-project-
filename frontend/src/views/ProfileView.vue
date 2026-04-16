@@ -1,0 +1,1 @@
+<!-- Page d'édition du profil étudiant. Permet de renseigner infos personnelles, compétences techniques, soft skills, parcours académique. -->

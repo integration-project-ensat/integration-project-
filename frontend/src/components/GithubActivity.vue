@@ -1,0 +1,1 @@
+<!-- Calendrier d'activité GitHub (style heatmap) + statistiques de commits. Récupère les données via github.service.js qui appelle l'API GitHub. -->

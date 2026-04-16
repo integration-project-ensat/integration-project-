@@ -1,0 +1,1 @@
+// Requêtes SQL notifications : create, getByUser (non lues en premier), markRead, deleteOld (nettoyage des notifs de plus de 30 jours).

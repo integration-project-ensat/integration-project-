@@ -1,0 +1,1 @@
+// Tests d'intégration avec Supertest. Lance le serveur Express en mémoire et teste les routes API complètes avec une base de données de test dédiée.

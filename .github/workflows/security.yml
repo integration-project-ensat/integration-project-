@@ -1,0 +1,1 @@
+# GitHub Action dédiée sécurité. Lance Trivy pour scanner les images Docker (CVE) et OWASP ZAP sur l'URL de staging pour détecter les failles web.

@@ -1,0 +1,1 @@
+// Logique métier de l'authentification. Valide le token Keycloak reçu, crée ou met à jour l'utilisateur en base lors de la première connexion (OpenID Connect).

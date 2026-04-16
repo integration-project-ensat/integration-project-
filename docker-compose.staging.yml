@@ -1,0 +1,28 @@
+version: '3.8'
+ 
+services:
+  frontend:
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+ 
+  backend:
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=staging
+ 
+  postgres:
+    restart: unless-stopped
+ 
+  keycloak:
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    command: start
+ 
+  nginx:
+    restart: unless-stopped
+    ports:
+      - "80:80"

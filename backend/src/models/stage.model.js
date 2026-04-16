@@ -1,0 +1,1 @@
+// Requêtes SQL stages : CRUD, findByStudent, findPendingByTeacher, validate (mise à jour statut + encadrant_id).

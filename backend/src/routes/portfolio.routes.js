@@ -1,0 +1,1 @@
+// Routes portfolio : GET /portfolios/:id (public), POST /portfolios/generate, GET /portfolios/:id/pdf (export), PUT /portfolios/:id/visibility.

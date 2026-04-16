@@ -1,0 +1,1 @@
+// Routes gestion utilisateur : GET /users/:id (profil), PUT /users/:id (mise à jour), GET /users (liste admin). Protégées par auth middleware.
