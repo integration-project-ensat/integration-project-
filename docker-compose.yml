@@ -2,12 +2,16 @@ version: '3.8'
  
 services:
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     depends_on:
       - backend
  
   backend:
     build: ./backend
+    ports:
+      - "3000:3000"
     environment:
       - PORT=3000
       - DB_HOST=postgres
@@ -31,12 +35,16 @@ services:
  
   keycloak:
     image: quay.io/keycloak/keycloak:23.0
+    ports:
+      - "8080:8080"
     environment:
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
- 
+    command: start-dev
   nginx:
     image: nginx:alpine
+    ports:
+      - "80:80"
     depends_on:
       - frontend
       - backend
