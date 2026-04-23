@@ -1,13 +1,12 @@
 // prisma/schema.prisma
-// Généré depuis le MCD - Plateforme Portfolio Étudiant
+// Généré depuis le MCD et MLD - Plateforme Portfolio Étudiant
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // ou "mysql" selon ton .env
-  url      = env("DATABASE_URL")
+  provider = "postgresql" 
 }
 
 // ═══════════════════════════════════════════════════
