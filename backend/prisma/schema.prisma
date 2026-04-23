@@ -1,0 +1,574 @@
+// prisma/schema.prisma
+// Généré depuis le MCD - Plateforme Portfolio Étudiant
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // ou "mysql" selon ton .env
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════
+// 1. UTILISATEUR — table centrale
+// ═══════════════════════════════════════════════════
+model Utilisateur {
+  id_utilisateur     Int       @id @default(autoincrement())
+  nom                String
+  prenom             String
+  email              String    @unique
+  mot_de_passe       String
+  est_actif          Boolean   @default(true)
+  est_valide         Boolean   @default(false)
+  date_creation      DateTime  @default(now())
+  derniere_connexion DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations 1-1
+  profil             Profil?
+  etudiant           Etudiant?
+  professeur         Professeur?
+  preference         Preference?
+  score_credibilite  ScoreCredibilite?
+  github_integration GithubIntegration?
+
+  // Relations 1-N
+  diplomes           Diplome[]
+  projets            Projet[]
+  stages             Stage[]
+  portfolios         Portfolio[]
+  attestations       Attestation[]
+  lettres_recommandation LettreRecommandation[]
+  recommendations    Recommendation[]
+  notifications      Notification[]
+  commentaires       Commentaire[]
+  notes              Note[]
+  depots_github      DepotGithub[]
+
+  // Relations N-N (via tables pivot)
+  badges             UtilisateurBadge[]
+  competences        UtilisateurCompetence[]
+
+  @@map("utilisateurs")
+}
+
+// ═══════════════════════════════════════════════════
+// 2. PROFIL — informations personnelles
+// ═══════════════════════════════════════════════════
+model Profil {
+  id_profil              Int     @id @default(autoincrement())
+  id_utilisateur         Int     @unique
+  photo_profil           String?
+  telephone              String?
+  ville                  String?
+  date_naissance         DateTime?
+  pays                   String?
+  bio                    String?
+  objectif_professionnel String?
+  linkedin_url           String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  utilisateur            Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("profils")
+}
+
+// ═══════════════════════════════════════════════════
+// 3. ETUDIANT — spécialisation de Utilisateur
+// ═══════════════════════════════════════════════════
+model Etudiant {
+  id_element          Int     @id @default(autoincrement())
+  id_utilisateur      Int     @unique
+  numero_etudiant     String?
+  filiere             String?
+  annee_universitaire Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  utilisateur         Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("etudiants")
+}
+
+// ═══════════════════════════════════════════════════
+// 4. PROFESSEUR — spécialisation de Utilisateur
+// ═══════════════════════════════════════════════════
+model Professeur {
+  id_element          Int      @id @default(autoincrement())
+  id_utilisateur      Int      @unique
+  entreprise          String?
+  poste               String?
+  email_professionnel String?
+  facteur             String?
+  date_validation     DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  utilisateur         Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("professeurs")
+}
+
+// ═══════════════════════════════════════════════════
+// 5. PREFERENCE — préférences de l'utilisateur
+// ═══════════════════════════════════════════════════
+model Preference {
+  id             Int     @id @default(autoincrement())
+  id_utilisateur Int     @unique
+  departement    String?
+  specialite     String?
+  telephone      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("preferences")
+}
+
+// ═══════════════════════════════════════════════════
+// 6. REGLE_BADGE — règles de déclenchement des badges
+// ═══════════════════════════════════════════════════
+model RegleBadge {
+  id_nom      Int     @id @default(autoincrement())
+  nom         String
+  description String?
+  est_valide  Boolean @default(true)
+  categorie   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  badges      Badge[]
+
+  @@map("regle_badge")
+}
+
+// ═══════════════════════════════════════════════════
+// 7. BADGE
+// ═══════════════════════════════════════════════════
+model Badge {
+  id_badge         Int      @id @default(autoincrement())
+  id_regle         Int?
+  nom              String
+  description      String?
+  categorie        String?
+  date_attribution DateTime?
+  icon_url         String?
+  critere_type     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  regle            RegleBadge?       @relation(fields: [id_regle], references: [id_nom])
+  utilisateurs     UtilisateurBadge[]
+
+  @@map("badges")
+}
+
+// ═══════════════════════════════════════════════════
+// 8. UTILISATEUR_BADGE — table pivot N-N
+// ═══════════════════════════════════════════════════
+model UtilisateurBadge {
+  id_utilisateur   Int
+  id_badge         Int
+  date_attribution DateTime?
+  createdAt        DateTime @default(now())
+
+  utilisateur      Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  badge            Badge       @relation(fields: [id_badge], references: [id_badge], onDelete: Cascade)
+
+  @@id([id_utilisateur, id_badge])
+  @@map("utilisateur_badge")
+}
+
+// ═══════════════════════════════════════════════════
+// 9. COMPETENCE_TECHNIQUE
+// ═══════════════════════════════════════════════════
+model CompetenceTechnique {
+  id_element Int    @id @default(autoincrement())
+  categorie  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("competences_techniques")
+}
+
+// ═══════════════════════════════════════════════════
+// 10. COMPETENCE_COMPORTEMENTALE
+// ═══════════════════════════════════════════════════
+model CompetenceComportementale {
+  id_element Int @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("competences_comportementales")
+}
+
+// ═══════════════════════════════════════════════════
+// 11. COMPETENCE
+// ═══════════════════════════════════════════════════
+model Competence {
+  id_competence Int    @id @default(autoincrement())
+  nom           String
+  description   String?
+  niveau        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  utilisateurs  UtilisateurCompetence[]
+
+  @@map("competences")
+}
+
+// ═══════════════════════════════════════════════════
+// 12. UTILISATEUR_COMPETENCE — table pivot N-N
+// ═══════════════════════════════════════════════════
+model UtilisateurCompetence {
+  id_utilisateur Int
+  id_competence  Int
+  niveau         String?
+  createdAt      DateTime @default(now())
+
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  competence     Competence  @relation(fields: [id_competence], references: [id_competence], onDelete: Cascade)
+
+  @@id([id_utilisateur, id_competence])
+  @@map("utilisateur_competence")
+}
+
+// ═══════════════════════════════════════════════════
+// 13. ACTIVITE
+// ═══════════════════════════════════════════════════
+model Activite {
+  id_element      Int      @id @default(autoincrement())
+  titre           String
+  type            String?
+  description     String?
+  date            DateTime?
+  url_affectation String?
+  date_validation DateTime?
+  est_visible     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("activites")
+}
+
+// ═══════════════════════════════════════════════════
+// 14. NOTIFICATION
+// ═══════════════════════════════════════════════════
+model Notification {
+  id_notification Int      @id @default(autoincrement())
+  id_utilisateur  Int
+  type            String
+  message         String
+  canal_envoi     Boolean  @default(false)
+  date_reception  DateTime?
+  cible_id        Int?
+  cible_type      String?
+  lu              Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  utilisateur     Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ═══════════════════════════════════════════════════
+// 15. DIPLOME
+// ═══════════════════════════════════════════════════
+model Diplome {
+  id_diplome    Int     @id @default(autoincrement())
+  id_utilisateur Int
+  titre_diplome String
+  domaine       String?
+  annee_debut   Int?
+  annee_fin     Int?
+  etablissement String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  utilisateur   Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("diplomes")
+}
+
+// ═══════════════════════════════════════════════════
+// 16. TECHNOLOGIE
+// ═══════════════════════════════════════════════════
+model Technologie {
+  id_technologie Int     @id @default(autoincrement())
+  titre          String
+  description    String?
+  est_valide     Boolean @default(true)
+  categorie      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  projets        ProjetTechnologie[]
+
+  @@map("technologies")
+}
+
+// ═══════════════════════════════════════════════════
+// 17. PROJET
+// ═══════════════════════════════════════════════════
+model Projet {
+  id_element              Int      @id @default(autoincrement())
+  id_utilisateur          Int
+  titre                   String
+  description             String?
+  type                    String?
+  role                    String?
+  url_github              String?
+  filiere                 String?
+  resultats               String?
+  statut                  String?
+  visibilite              Boolean  @default(true)
+  appreciation_professeur String?
+  date_debut              DateTime?
+  date_fin                DateTime?
+  est_dans_portfolio      Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  utilisateur             Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  technologies            ProjetTechnologie[]
+  commentaires            Commentaire[]
+  notes                   Note[]
+
+  @@map("projets")
+}
+
+// ═══════════════════════════════════════════════════
+// 18. PROJET_TECHNOLOGIE — table pivot N-N
+// ═══════════════════════════════════════════════════
+model ProjetTechnologie {
+  id_projet      Int
+  id_technologie Int
+  createdAt      DateTime @default(now())
+
+  projet         Projet      @relation(fields: [id_projet], references: [id_element], onDelete: Cascade)
+  technologie    Technologie @relation(fields: [id_technologie], references: [id_technologie], onDelete: Cascade)
+
+  @@id([id_projet, id_technologie])
+  @@map("projet_technologie")
+}
+
+// ═══════════════════════════════════════════════════
+// 19. STAGE
+// ═══════════════════════════════════════════════════
+model Stage {
+  id_element     Int      @id @default(autoincrement())
+  id_utilisateur Int
+  entreprise     String
+  date_debut     DateTime
+  date_fin       DateTime?
+  duree_semaines String?
+  missions       String?
+  statut         String?
+  url_rapport    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("stages")
+}
+
+// ═══════════════════════════════════════════════════
+// 20. PORTFOLIO
+// ═══════════════════════════════════════════════════
+model Portfolio {
+  id_portfolio     Int      @id @default(autoincrement())
+  id_utilisateur   Int
+  titre            String
+  objectif         Boolean  @default(false)
+  theme            String?
+  url_youtube      String?
+  est_public       Boolean  @default(false)
+  lien_public      Boolean  @default(false)
+  nombre_vues      Int      @default(0)
+  date_modification DateTime?
+  date_export       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  utilisateur      Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("portfolios")
+}
+
+// ═══════════════════════════════════════════════════
+// 21. ATTESTATION
+// ═══════════════════════════════════════════════════
+model Attestation {
+  id_element     Int      @id @default(autoincrement())
+  id_utilisateur Int
+  titre          String
+  date_obtention DateTime?
+  organisme      String?
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("attestations")
+}
+
+// ═══════════════════════════════════════════════════
+// 22. LETTRE_RECOMMANDATION
+// ═══════════════════════════════════════════════════
+model LettreRecommandation {
+  id_element     Int     @id @default(autoincrement())
+  id_utilisateur Int
+  type           String?
+  contenu        String?
+  url_fichier    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("lettres_recommandation")
+}
+
+// ═══════════════════════════════════════════════════
+// 23. RECOMMENDATION
+// ═══════════════════════════════════════════════════
+model Recommendation {
+  id_recommendation Int     @id @default(autoincrement())
+  id_utilisateur    Int
+  type              String?
+  contenu           String?
+  url_fichier       String?
+  statut            String?
+  visibilite        Boolean @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  utilisateur       Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("recommendations")
+}
+
+// ═══════════════════════════════════════════════════
+// 24. COMMENTAIRE
+// ═══════════════════════════════════════════════════
+model Commentaire {
+  id_commentaire Int      @id @default(autoincrement())
+  id_utilisateur Int
+  id_projet      Int?
+  contenu        String
+  statut         String?
+  date           DateTime?
+  cible_id       Int?
+  cible_type     String?  // "projet" | "stage" | "portfolio"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  projet         Projet?     @relation(fields: [id_projet], references: [id_element], onDelete: SetNull)
+
+  @@map("commentaires")
+}
+
+// ═══════════════════════════════════════════════════
+// 25. NOTE
+// ═══════════════════════════════════════════════════
+model Note {
+  id_note          Int      @id @default(autoincrement())
+  id_utilisateur   Int
+  id_projet        Int?
+  date_publication DateTime?
+  visibilite       Boolean  @default(true)
+  description      String?
+  cible_id         Int?
+  cible_type       String?  // "projet" | "stage" | "portfolio"
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  utilisateur      Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  projet           Projet?     @relation(fields: [id_projet], references: [id_element], onDelete: SetNull)
+
+  @@map("notes")
+}
+
+// ═══════════════════════════════════════════════════
+// 26. DEPOT_GITHUB
+// ═══════════════════════════════════════════════════
+model DepotGithub {
+  id_depot       Int      @id @default(autoincrement())
+  id_utilisateur Int
+  nom_depot      String
+  description    String?
+  url_depot      String?
+  nbr_commits    Int      @default(0)
+  date_creation  DateTime?
+  est_public     Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("depot_github")
+}
+
+// ═══════════════════════════════════════════════════
+// 27. GITHUB_INTEGRATION
+// ═══════════════════════════════════════════════════
+model GithubIntegration {
+  id_integration       Int      @id @default(autoincrement())
+  id_utilisateur       Int      @unique
+  github_username      String?
+  access_token         String?
+  date_synchronisation DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  utilisateur          Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("github_integrations")
+}
+
+// ═══════════════════════════════════════════════════
+// 28. SCORE_CREDIBILITE
+// ═══════════════════════════════════════════════════
+model ScoreCredibilite {
+  scoreID               Int   @id @default(autoincrement())
+  id_utilisateur        Int   @unique
+  score_totale          Float @default(0)
+  score_projet          Float @default(0)
+  score_github          Float @default(0)
+  score_recommendation  Float @default(0)
+  score_certification   Float @default(0)
+  score_stage           Float @default(0)
+  niveau                Float @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  utilisateur           Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("scores_credibilite")
+}
+
+// ═══════════════════════════════════════════════════
+// 29. ELEMENT_VALIDE
+// ═══════════════════════════════════════════════════
+model ElementValide {
+  id_element       Int      @id @default(autoincrement())
+  statut           String?
+  date_soumission  DateTime?
+  date_validation  DateTime?
+  validateur_id    Int?     // FK vers utilisateur (admin/prof)
+  element_ref_id   Int?
+  element_ref_type String?  // "projet" | "stage" | "attestation" | ...
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("elements_valides")
+}
