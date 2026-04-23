@@ -1,1 +1,18 @@
-# GitHub Action qui synchronise automatiquement le dépôt GitLab local vers GitHub distant à chaque push sur main. Assure la continuité si GitLab local est inaccessible.
+name: Mirror Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  mirror-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test mirror workflow
+        run: echo "Mirror workflow works"# GitHub Action qui synchronise automatiquement le dépôt GitLab local vers GitHub distant à chaque push sur main. Assure la continuité si GitLab local est inaccessible.
