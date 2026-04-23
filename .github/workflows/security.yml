@@ -1,1 +1,27 @@
-# GitHub Action dédiée sécurité. Lance Trivy pour scanner les images Docker (CVE) et OWASP ZAP sur l'URL de staging pour détecter les failles web.
+name: Security Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan with Trivy (basic)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.50.0_Linux-64bit.deb
+          trivy fs .
+          # GitHub Action dédiée sécurité. Lance Trivy pour scanner les images Docker (CVE) et OWASP ZAP sur l'URL de staging pour détecter les failles web.
