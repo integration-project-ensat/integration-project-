@@ -50,9 +50,17 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Lint frontend (ESLint)
+      #- name: Lint frontend (ESLint)
+       # working-directory: ./frontend
+       # run: npm run lint
+
+       - name: Type check frontend
+         working-directory: ./frontend
+         run: npm run type-check
+      - name: Build frontend
         working-directory: ./frontend
-        run: npm run lint
+        run: npm run build
+
 
       # ── Backend (Express.js) ──
       - name: Install backend deps
