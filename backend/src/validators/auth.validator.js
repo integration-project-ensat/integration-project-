@@ -1,81 +1,83 @@
-const {body} = require('express-validator');
-const {PUBLIC_ROLES,ROLES} = require('../config/roles');
+
+const { body } = require('express-validator');
+const { PUBLIC_ROLES, ROLES } = require('../config/roles');
 
 const Rules = {
-    nom: body('nom')
-        .trim()
-        .notEmpty().withMessage('Le nom est requis')
-        .isLength({min:2, max: 50}).withMessage('Le nom doit contenir entre 2 et 50 caractères')
-        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/).withMessage('Le nom ne doit contenir que des lettres, espaces, apostrophes ou tirets'),
+  nom: body('nom')
+    .trim()
+    .notEmpty().withMessage('Le nom est obligatoire')
+    .isLength({ min: 2, max: 50 }).withMessage('Le nom doit contenir entre 2 et 50 caracteres')
+    .matches(/^[a-zA-ZÀ-ÿ\s'-]+$/).withMessage('Le nom contient des caracteres non autorises'),
 
+  prenom: body('prenom')
+    .trim()
+    .notEmpty().withMessage('Le prenom est obligatoire')
+    .isLength({ min: 2, max: 50 }).withMessage('Le prenom doit contenir entre 2 et 50 caracteres')
+    .matches(/^[a-zA-ZÀ-ÿ\s'-]+$/).withMessage('Le prenom contient des caracteres non autorises'),
 
-    prenom: body('prenom')
-        .trim()
-        .notEmpty().withMessage('Le prénom est requis')
-        .isLength({min:2, max: 50}).withMessage('Le prénom doit contenir entre 2 et 50 caractères')
-        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/).withMessage('Le prénom ne doit contenir que des lettres, espaces, apostrophes ou tirets'), 
+  email: body('email')
+    .trim()
+    .notEmpty().withMessage('L\'email est obligatoire')
+    .isEmail().withMessage('Format d\'email invalide')
+    .normalizeEmail()
+    .isLength({ max: 255 }).withMessage('Email trop long'),
 
-    email: body('email')
-        .trim()
-        .notEmpty().withMessage('L\'email est requis')
-        .isEmail().withMessage('Format d\'email invalide')
-        .normalizeEmail()
-        .isLength({max: 255}).withMessage('Email trop long'),
+  motDePasse: body('mot_de_passe')
+    .notEmpty().withMessage('Le mot de passe est obligatoire')
+    .isLength({ min: 8 }).withMessage('Le mot de passe doit contenir au moins 8 caracteres')
+    .matches(/[A-Z]/).withMessage('Doit contenir au moins une majuscule')
+    .matches(/[a-z]/).withMessage('Doit contenir au moins une minuscule')
+    .matches(/\d/).withMessage('Doit contenir au moins un chiffre'),
 
-    mot_de_passe: body('mot_de_passe')
-        .notEmpty().withMessage('Le mot de passe est requis')
-        .isLength({min: 8}).withMessage('Le mot de passe doit contenir au moins 8 caractères')
-        .matches(/[A-Z]/).withMessage('Le mot de passe doit contenir au moins une lettre majuscule')
-        .matches(/[a-z]/).withMessage('Le mot de passe doit contenir au moins une lettre minuscule')
-        .matches(/[0-9]/).withMessage('Le mot de passe doit contenir au moins un chiffre')
-        .matches(/[@$!%*?&]/).withMessage('Le mot de passe doit contenir au moins un caractère spécial (@$!%*?&)'),
+  confirmationMotDePasse: body('confirmation_mot_de_passe')
+    .notEmpty().withMessage('La confirmation est obligatoire')
+    .custom((value, { req }) => {
+      if (value !== req.body.mot_de_passe) {
+        throw new Error('Les mots de passe ne correspondent pas');
+      }
+      return true;
+    }),
 
-        confirmation_mot_de_passe: body('confirmation_mot_de_passe')
-        .notEmpty().withMessage('La confirmation du mot de passe est requise')
-        .custom((value, { req }) => {
-            if (value !== req.body.mot_de_passe) {
-                throw new Error('Les mots de passe ne correspondent pas');
-            }
-            return true;
-        }),
+  rolePublic: body('role')
+    .notEmpty().withMessage('Le role est obligatoire')
+    .isIn(Object.values(PUBLIC_ROLES))
+    .withMessage('Role invalide. Choix : Etudiant, Professeur, Professionnel'),
 
-    role: body('role')
-        .notEmpty().withMessage('Le rôle est requis')
-        .isIn(Object.values(PUBLIC_ROLES).concat(Object.values(ROLES))),
+  // === ETUDIANT ===
+  numeroEtudiant: body('numero_etudiant')
+    .if(body('role').equals('ETUDIANT'))
+    .notEmpty().withMessage('Le numero etudiant est obligatoire')
+    .isLength({ min: 3, max: 20 }).withMessage('Numero etudiant invalide (3-20 caracteres)')
+    .matches(/^[A-Z0-9-]+$/i).withMessage('Format : lettres, chiffres et tirets uniquement'),
 
-        numeroEtudiant: body('numeroEtudiant')
-        .if(body('role').equals(ROLES.ETUDIANT))
-        .notEmpty().withMessage('Le numéro étudiant est requis pour les étudiants')
-        .isLength({min: 5, max: 20}).withMessage('Le numéro étudiant doit contenir entre 5 et 20 caractères')
-        .matches(/^[A-Za-z0-9]+$/).withMessage('Le numéro étudiant ne doit contenir que des lettres et des chiffres'),
+  filiere: body('filiere')
+    .if(body('role').equals('ETUDIANT'))
+    .notEmpty().withMessage('La filiere est obligatoire')
+    .isLength({ min: 2, max: 100 }).withMessage('Filiere invalide'),
 
-        filiere: body('filiere')
-        .if(body('role').equals(ROLES.ETUDIANT))
-        .notEmpty().withMessage('La filière est requise pour les étudiants')
-        .isLength({min: 2, max: 100}).withMessage('La filière doit contenir entre 2 et 100 caractères'),
+  anneeUniversitaire: body('annee_universitaire')
+    .if(body('role').equals('ETUDIANT'))
+    .notEmpty().withMessage('L\'annee universitaire est obligatoire')
+    .matches(/^\d{4}\/\d{4}$/).withMessage('Format : AAAA/AAAA (ex: 2025/2026)'),
 
-        anneeUniversitaire: body('anneeUniversitaire')
-        .if(body('role').equals(ROLES.ETUDIANT))
-        .notEmpty().withMessage('L\'année universitaire est requise pour les étudiants')
-        .matches(/^\d{4}\/\d{4}$/).withMessage('L\'année universitaire doit être au format AAAA/AAAA (ex: 2025/2026)'),
+  // === PROFESSEUR ===
+  codeAdministratif: body('code_administratif')
+    .if(body('role').equals('PROFESSEUR'))
+    .notEmpty().withMessage('Le code administratif est obligatoire')
+    .isLength({ min: 3, max: 20 }).withMessage('Code administratif invalide (3-20 caracteres)')
+    .matches(/^[A-Z0-9-]+$/i).withMessage('Format : lettres, chiffres et tirets uniquement'),
 
-         codeAdministratif: body('code_administratif')
-        .if(body('role').equals('PROFESSEUR'))
-        .notEmpty().withMessage('Le code administratif est obligatoire')
-        .isLength({ min: 3, max: 20 }).withMessage('Code administratif invalide (3-20 caracteres)')
-        .matches(/^[A-Z0-9-]+$/i).withMessage('Format : lettres, chiffres et tirets uniquement'),
-
-        departement: body('departement')
-        .if(body('role').equals('PROFESSEUR'))
-            .notEmpty().withMessage('Le departement est obligatoire')
-            .isLength({ min: 2, max: 100 }).withMessage('Departement invalide'),
+  departement: body('departement')
+    .if(body('role').equals('PROFESSEUR'))
+    .notEmpty().withMessage('Le departement est obligatoire')
+    .isLength({ min: 2, max: 100 }).withMessage('Departement invalide'),
 
   specialite: body('specialite')
     .if(body('role').equals('PROFESSEUR'))
     .notEmpty().withMessage('La specialite est obligatoire')
     .isLength({ min: 2, max: 100 }).withMessage('Specialite invalide'),
 
-  // === PROFESSIONNEL (strict) ===
+  // === PROFESSIONNEL ===
   entreprise: body('entreprise')
     .if(body('role').equals('PROFESSIONNEL'))
     .notEmpty().withMessage('L\'entreprise est obligatoire')
@@ -86,9 +88,9 @@ const Rules = {
     .notEmpty().withMessage('Le poste est obligatoire')
     .isLength({ min: 2, max: 100 }).withMessage('Poste invalide'),
 
-  // === ADMIN (creation reservee) ===
+  // === ADMIN ===
   roleAdmin: body('role')
-    .notEmpty().withMessage('Le rle est obligatoire')
+    .notEmpty().withMessage('Le role est obligatoire')
     .isIn([ROLES.ADMINISTRATEUR])
     .withMessage('Seul le role Administrateur est autorise')
 };
@@ -126,5 +128,4 @@ const AuthValidator = {
   ]
 };
 
-module.exports = AuthValidator;
-
+module.exports = { Rules, AuthValidator };

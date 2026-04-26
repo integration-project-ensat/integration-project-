@@ -49,9 +49,12 @@ process.on('SIGTERM', async() => {
 process.on('SIGINT', async () => {
   //en local, quand tu appuies sur Ctrl+C dans le terminal, log l'événement, ferme le serveur HTTP et la connexion à la base de données avant de quitter proprement.
   console.log('Ctrl+C received, shutting down server...')
-
-
-
+  server.close(async () => {
+    await prisma.$disconnect()
+    console.log('Server and database closed gracefully')
+    process.exit(0)
   })
+
+})
 //Démarre le serveur après avoir établi la connexion à la base de données.
 startServer()

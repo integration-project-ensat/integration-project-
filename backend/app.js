@@ -17,7 +17,11 @@ const authRoutes = require('./src/routes/auth.routes')
 
 const app = express()
 // Middlewares globaux
-app.use(cors())
+//autoriser les requêtes du frontend
+app.use(cors({
+    origin:process.env.FRONTEND_URL,
+    credentials:true  
+}))
 app.use(express.json())
 // Routes
 app.get('/', (req, res) => {

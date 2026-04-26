@@ -93,7 +93,7 @@ const authorizePermissions = (permissionArray) => {
     if (!hasPermission(req.utilisateur.role, permissionArray)) {
       return res.status(403).json({
         success: false,
-        message: 'Action non autorisee pour votre role'
+        message: 'Action non autorisée pour votre rôle',
       });
     }
     next();

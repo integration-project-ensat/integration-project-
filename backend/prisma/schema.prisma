@@ -24,7 +24,6 @@ model Utilisateur {
   derniere_connexion DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
-  role               Role      
 
   // Relations 1-1
   profil             Profil?
@@ -112,11 +111,6 @@ model Professeur {
   @@map("professeurs")
 }
 
-enum Role {
-  ETUDIANT
-  PROFESSEUR
-  PROFESSIONNEL
-}
 // ═══════════════════════════════════════════════════
 // 5. PREFERENCE — préférences de l'utilisateur
 // ═══════════════════════════════════════════════════

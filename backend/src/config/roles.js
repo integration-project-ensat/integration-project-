@@ -6,15 +6,18 @@ const ROLES = {
 };
 
 const PUBLIC_ROLES = [
-    ROLES.ETUDIANT,
-    ROLES.PROFESSEUR,
-    ROLES.PROFSSIONNEL
+    ETUDIANT = 'ETUDIANT',
+    PROFESSEUR = 'PROFESSEUR',
+    PROFSSIONNEL = 'PROFSSIONNEL'   
 ];
 
 // Permissions par ressource/action
 const PERMISSIONS = {
     USER: {
-        CREATE_ADMIN: [ROLES.ADMINISTATEUR],}
+        CREATE_ADMIN: [ROLES.ADMINISTATEUR],
+        VALIDATE_PROFESSIONNEL: [ROLES.ADMINISTATEUR],
+        VIEW_PROFESSIONNELS_EN_ATTENTE: [ROLES.ADMINISTATEUR]
+    },
 };
 // Helper : vérifier si un rôle a une permission
 const hasPermission = (userRole, permissionArray) => {
