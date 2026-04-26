@@ -49,14 +49,12 @@ jobs:
         run: |
           npm ci
           npm audit --audit-level=moderate --json > ../security-reports/npm-audit-frontend.json || true
-          npm audit --audit-level=moderate || true
 
       - name: "Audit Backend"
         working-directory: ./backend
         run: |
           npm ci
           npm audit --audit-level=moderate --json > ../security-reports/npm-audit-backend.json || true
-          npm audit --audit-level=moderate || true
 
       - name: "Publier rapports audit"
         uses: actions/upload-artifact@v4
@@ -172,7 +170,6 @@ jobs:
     name: "Rapport AppSec Final"
     runs-on: ubuntu-latest
     needs:
-      - security-scan
       - appsec-dependency-audit
       - appsec-sonarqube
       - appsec-secrets
@@ -184,7 +181,6 @@ jobs:
           cat >> $GITHUB_STEP_SUMMARY << 'EOF'
           | Outil     | Statut                                          |
           |-----------|-------------------------------------------------|
-          | Trivy     | ${{ needs.security-scan.result }}               |
           | npm audit | ${{ needs.appsec-dependency-audit.result }}     |
           | SonarQube | ${{ needs.appsec-sonarqube.result }}            |
           | Gitleaks  | ${{ needs.appsec-secrets.result }}              |
