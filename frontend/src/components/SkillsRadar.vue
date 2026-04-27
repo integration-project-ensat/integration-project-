@@ -1,1 +1,0 @@
-<!-- Diagramme radar interactif des compétences (Chart.js). Représente visuellement les domaines : Web, DevOps, Sécurité, Data, etc. -->

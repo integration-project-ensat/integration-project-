@@ -1,1 +1,0 @@
-<!-- Gestion des stages. Permet à l'étudiant de soumettre un stage avec tous les détails, puis de suivre son statut de validation par l'encadrant. -->

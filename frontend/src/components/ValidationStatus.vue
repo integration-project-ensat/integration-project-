@@ -1,1 +1,0 @@
-<!-- Pastille de statut réutilisable. Affiche : en attente (orange), validé (vert), refusé (rouge). Utilisée sur les cartes projets, stages, attestations. -->

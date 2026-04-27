@@ -1,1 +1,0 @@
-<!-- Barre de navigation globale. Affiche des liens différents selon le rôle connecté (étudiant, prof, admin). Intègre la cloche de notifications et l'avatar utilisateur. -->

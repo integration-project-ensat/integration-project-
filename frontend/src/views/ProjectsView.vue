@@ -1,1 +1,0 @@
-<!-- Gestion des projets de l'étudiant. Liste tous ses projets avec leur statut (validé / en attente / refusé), et permet d'en ajouter ou modifier. -->

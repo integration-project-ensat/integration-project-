@@ -1,1 +1,0 @@
-<!-- Tableau de bord de l'étudiant connecté. Affiche un résumé : nombre de projets, badges obtenus, score de crédibilité, dernières notifications. -->
