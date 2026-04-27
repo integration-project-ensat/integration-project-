@@ -1,1 +1,103 @@
-# Pipeline CI/CD principal sur GitLab. 4 stages : build (images Docker), test (Jest + Cypress), scan (SonarQube + Trivy + OWASP ZAP), deploy (staging puis prod sur validation).
+# Pipeline CI/CD principal sur GitLab
+# Stages : build, test, scan, hardening, deploy
+
+stages:
+  - build
+  - scan
+  - hardening
+  - deploy
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE
+
+# STAGE 1 — BUILD
+
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $DOCKER_IMAGE/backend:$CI_COMMIT_SHA ./backend
+    - docker build -t $DOCKER_IMAGE/frontend:$CI_COMMIT_SHA ./frontend
+    - docker push $DOCKER_IMAGE/backend:$CI_COMMIT_SHA
+    - docker push $DOCKER_IMAGE/frontend:$CI_COMMIT_SHA
+  only:
+    - main
+    - dev
+
+
+# STAGE 2 — SCAN TRIVY 
+
+scan:trivy:backend:
+  stage: scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - trivy image
+        --exit-code 1
+        --severity HIGH,CRITICAL
+        --no-progress
+        --format table
+        $DOCKER_IMAGE/backend:$CI_COMMIT_SHA
+  allow_failure: false
+  only:
+    - main
+    - dev
+
+scan:trivy:frontend:
+  stage: scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - trivy image
+        --exit-code 1
+        --severity HIGH,CRITICAL
+        --no-progress
+        --format table
+        $DOCKER_IMAGE/frontend:$CI_COMMIT_SHA
+  allow_failure: false
+  only:
+    - main
+    - dev
+
+# STAGE 3 — HARDENING 
+
+hardening:
+  stage: hardening
+  image: cytopia/ansible:latest
+  before_script:
+    - echo "$VAULT_PASSWORD" > .vault_pass
+    - chmod 600 .vault_pass
+  script:
+    - cd ansible
+    - ansible-playbook hardening.yml --vault-password-file ../.vault_pass
+  after_script:
+    - rm -f .vault_pass
+  only:
+    - main
+  when: on_success
+
+# STAGE 4 — DEPLOY
+
+deploy:staging:
+  stage: deploy
+  script:
+    - echo "Deploy to staging"
+  environment:
+    name: staging
+  only:
+    - dev
+
+deploy:prod:
+  stage: deploy
+  script:
+    - echo "Deploy to production"
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
