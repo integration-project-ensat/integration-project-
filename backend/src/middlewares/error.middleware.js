@@ -1,8 +1,55 @@
-// Handler global des erreurs Express (4 arguments). Intercepte toutes les erreurs non gérées et renvoie une réponse JSON cohérente avec le bon code HTTP.
-// Contenu type
-// module.exports = (err, req, res, next) => {
-//   const status = err.status || 500
-//   res.status(status).json({
-//     error: err.message || 'Erreur interne'
-//   })
-// }
+const ERROR_STATUS_MAP = {
+  ValidationError: 400,
+  UnauthorizedError: 401,
+  ForbiddenError: 403,
+  NotFoundError: 404,
+  ConflictError: 409,
+  TooManyRequestsError: 429,
+};
+
+const resolveStatusCode = (err) => {
+  if (err.statusCode && Number.isInteger(err.statusCode)) return err.statusCode;
+  if (err.status && Number.isInteger(err.status)) return err.status;
+  if (ERROR_STATUS_MAP[err.name]) return ERROR_STATUS_MAP[err.name];
+  return 500;
+};
+
+const resolveClientMessage = (err, statusCode, isDev) => {
+  if (isDev) return err.message || 'An unexpected error occurred.';
+  if (statusCode >= 400 && statusCode < 500) return err.message || 'Bad request.';
+  return 'An internal server error occurred. Please try again later.';
+};
+
+// eslint-disable-next-line no-unused-vars
+const errorMiddleware = (err, req, res, next) => {
+  const isDev = process.env.NODE_ENV === 'development';
+  const statusCode = resolveStatusCode(err);
+  const clientMessage = resolveClientMessage(err, statusCode, isDev);
+
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    url: req.originalUrl,
+    statusCode,
+    errorName: err.name || 'Error',
+    message: err.message,
+    ...(isDev && { stack: err.stack }),
+  };
+
+  if (statusCode >= 500) {
+    console.error('[CRITICAL ERROR]', JSON.stringify(logEntry, null, 2));
+  } else {
+    console.warn('[CLIENT ERROR]', JSON.stringify(logEntry, null, 2));
+  }
+
+  if (res.headersSent) return next(err);
+
+  res.status(statusCode).json({
+    success: false,
+    statusCode,
+    message: clientMessage,
+    ...(isDev && { stack: err.stack }),
+  });
+};
+
+module.exports = errorMiddleware;
