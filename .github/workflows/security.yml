@@ -63,7 +63,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Start all containers
       - name: "Demarrer Staging"
         run: |
           docker compose \
@@ -71,7 +70,6 @@ jobs:
             -f docker-compose.staging.yml \
             up -d --build
 
-      # Wait for SonarQube
       - name: "Attendre SonarQube"
         run: |
           timeout 180 bash -c \
@@ -79,7 +77,6 @@ jobs:
             | grep -q UP; do sleep 10; done'
           echo "SonarQube pret"
 
-      # Wait for Backend
       - name: "Attendre Backend"
         run: |
           timeout 60 bash -c \
@@ -87,7 +84,6 @@ jobs:
             do sleep 3; done'
           echo "Backend pret"
 
-      # Generate SonarQube token
       - name: "Generer Token SonarQube"
         id: sonar_token
         run: |
@@ -99,18 +95,15 @@ jobs:
             | cut -d'"' -f4)
           echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
-      # SonarQube Scan
       - name: "SonarQube Scan"
         uses: SonarSource/sonarqube-scan-action@v5.2.0
         env:
           SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
           SONAR_HOST_URL: "http://127.0.0.1:9000"
 
-      # ZAP Scan
       - name: "Preparer dossier ZAP"
         run: |
           mkdir -p reports/zap
-          chmod 777 reports/zap
           docker exec --user root portfolio_zap chmod 777 /zap/wrk || true
 
       - name: "Scan OWASP ZAP"
@@ -131,7 +124,6 @@ jobs:
           path: reports/zap/*
           retention-days: 30
 
-      # Stop containers
       - name: "Arreter Staging"
         if: always()
         run: |
@@ -151,8 +143,8 @@ jobs:
       - name: "Resume statuts"
         run: |
           cat >> $GITHUB_STEP_SUMMARY << 'EOF'
-          | Outil     | Statut                                    |
-          |-----------|-------------------------------------------|
-          | npm audit | ${{ needs.appsec-dependency-audit.result }} |
-          | SonarQube + ZAP | ${{ needs.appsec-scan.result }}   |
+          | Outil           | Statut                                      |
+          |-----------------|---------------------------------------------|
+          | npm audit       | ${{ needs.appsec-dependency-audit.result }} |
+          | SonarQube + ZAP | ${{ needs.appsec-scan.result }}             |
           EOF
