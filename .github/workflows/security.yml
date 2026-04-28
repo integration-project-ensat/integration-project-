@@ -84,6 +84,36 @@ jobs:
             do sleep 3; done'
           echo "Backend pret"
 
+      - name: "Scanner images Docker avec Trivy"
+        run: |
+          mkdir -p reports/trivy
+ 
+          for IMAGE in \
+            postgres:15-alpine \
+            quay.io/keycloak/keycloak:23.0 \
+            nginx:alpine \
+            sonarqube:10-community \
+            ghcr.io/zaproxy/zaproxy:stable; do
+ 
+            SAFE_NAME=$(echo $IMAGE | tr '/:' '--')
+            echo "Scanning $IMAGE..."
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:latest image \
+              --format json \
+              --output /dev/stdout \
+              --severity HIGH,CRITICAL \
+              $IMAGE > reports/trivy/trivy-${SAFE_NAME}.json || true
+          done
+ 
+      - name: "Publier rapports Trivy"
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-report-${{ github.run_number }}
+          path: reports/trivy/*
+          retention-days: 30    
+
       - name: "Generer Token SonarQube"
         id: sonar_token
         run: |
@@ -146,5 +176,6 @@ jobs:
           | Outil           | Statut                                      |
           |-----------------|---------------------------------------------|
           | npm audit       | ${{ needs.appsec-dependency-audit.result }} |
+          |Trivy           | ${{ needs.appsec-scan.result }}              |
           | SonarQube + ZAP | ${{ needs.appsec-scan.result }}             |
           EOF
