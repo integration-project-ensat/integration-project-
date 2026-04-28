@@ -54,30 +54,41 @@ jobs:
           path: security-reports/npm-audit-*.json
           retention-days: 30
 
-  appsec-start-staging:
-    name: "Demarrer Staging"
+  appsec-scan:
+    name: "Scan Securite"
     runs-on: ubuntu-latest
     needs: appsec-dependency-audit
-    outputs:
-      sonar_token: ${{ steps.sonar_token.outputs.token }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Start staging
+      # Start all containers
+      - name: "Demarrer Staging"
         run: |
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
             up -d --build
 
-      - name: Wait for SonarQube
+      # Wait for SonarQube
+      - name: "Attendre SonarQube"
         run: |
           timeout 180 bash -c \
             'until curl -sf http://127.0.0.1:9000/api/system/status \
             | grep -q UP; do sleep 10; done'
           echo "SonarQube pret"
 
-      - name: Generate Sonar Token
+      # Wait for Backend
+      - name: "Attendre Backend"
+        run: |
+          timeout 60 bash -c \
+            'until curl -sf http://127.0.0.1:3000; \
+            do sleep 3; done'
+          echo "Backend pret"
+
+      # Generate SonarQube token
+      - name: "Generer Token SonarQube"
         id: sonar_token
         run: |
           TOKEN=$(curl -s -X POST \
@@ -88,36 +99,15 @@ jobs:
             | cut -d'"' -f4)
           echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
-      - name: Wait for Backend
-        run: |
-          timeout 60 bash -c \
-            'until curl -sf http://127.0.0.1:3000; \
-            do sleep 3; done'
-          echo "Backend pret"
-
-  appsec-sonarqube:
-    name: "Analyse SonarQube"
-    runs-on: ubuntu-latest
-    needs: appsec-start-staging
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: SonarQube Scan
+      # SonarQube Scan
+      - name: "SonarQube Scan"
         uses: SonarSource/sonarqube-scan-action@v5.2.0
         env:
-          SONAR_TOKEN: ${{ needs.appsec-start-staging.outputs.sonar_token }}
+          SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
           SONAR_HOST_URL: "http://127.0.0.1:9000"
 
-  appsec-dast-owasp-zap:
-    name: "Scan DAST - OWASP ZAP"
-    runs-on: ubuntu-latest
-    needs: appsec-sonarqube
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run ZAP Scan
+      # ZAP Scan
+      - name: "Scan OWASP ZAP"
         run: |
           docker exec portfolio_zap \
             zap-baseline.py \
@@ -136,15 +126,9 @@ jobs:
           path: reports/zap/*
           retention-days: 30
 
-  appsec-stop-staging:
-    name: "Arreter Staging"
-    runs-on: ubuntu-latest
-    needs: appsec-dast-owasp-zap
-    if: always()
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Stop staging
+      # Stop containers
+      - name: "Arreter Staging"
+        if: always()
         run: |
           docker compose \
             -f docker-compose.yml \
@@ -156,16 +140,14 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - appsec-dependency-audit
-      - appsec-sonarqube
-      - appsec-dast-owasp-zap
+      - appsec-scan
     if: always()
     steps:
-      - name: Resume statuts
+      - name: "Resume statuts"
         run: |
           cat >> $GITHUB_STEP_SUMMARY << 'EOF'
-          | Outil     | Statut                                          |
-          |-----------|-------------------------------------------------|
-          | npm audit | ${{ needs.appsec-dependency-audit.result }}     |
-          | SonarQube | ${{ needs.appsec-sonarqube.result }}            |
-          | ZAP       | ${{ needs.appsec-dast-owasp-zap.result }}       |
+          | Outil     | Statut                                    |
+          |-----------|-------------------------------------------|
+          | npm audit | ${{ needs.appsec-dependency-audit.result }} |
+          | SonarQube + ZAP | ${{ needs.appsec-scan.result }}   |
           EOF
