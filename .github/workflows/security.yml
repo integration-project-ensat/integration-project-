@@ -1,4 +1,4 @@
-nname: "Security Pipeline - Application Security"
+name: "Security Pipeline - Application Security"
 
 on:
   push:
