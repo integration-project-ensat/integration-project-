@@ -23,7 +23,6 @@ router.get('/profil', authentifier, authController.getCurrentUser);
 router.post(
   '/admin/creer',
   authentifier,
-  validate(AuthValidator.createAdmin),
   autoriserRoles(ROLES.ADMINISTRATEUR),
   validate(AuthValidator.createAdmin),
   authController.createAdmin
