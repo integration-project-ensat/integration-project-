@@ -7,7 +7,7 @@ const { emit } = require('node:cluster');
 
 const SALT_ROUNDS = 12;
 const JWT_EXPIRES_IN = '24h';
-
+// Fonction pour générer un token JWTavec les informations de l'utilisateur et une clé secrète, valable pendant 24 heures.
 function generateToken(user) {
   return jwt.sign(
     { userId: user.id_utilisateur, email: user.email, role: user.role },
@@ -50,6 +50,7 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
         prenom,
         role,
         est_actif: false,
+        email_verifie: false,
         email_verification:verificationCode,
         token_expires_at: tokenExpiresAt
       }
@@ -60,16 +61,13 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
       const etudiant = await tx.etudiant.create({
         data: {
           id_utilisateur: newUser.id_utilisateur,
-          numero_etudiant: specificData.numero_etudiant
-        }
-      });
-      await tx.profil.create({
-        data: {
-          id_utilisateur: etudiant.id_utilisateur,
+          numero_etudiant: specificData.numero_etudiant,
           filiere: specificData.filiere,
-          annee_universitaire: specificData.annee_universitaire
+          annee_universitaire: specificData.annee_universitaire,
+          profil: { create: {} } // Création du profil vide associé à l'étudiant
         }
       });
+      
     }
 // Création du professeur
     if (role === 'PROFESSEUR') {
@@ -127,7 +125,7 @@ const verifierCode = async (req, res) => {
             message: 'Email introuvable'
         });
     }
-    if (user.token_verification !== code) {
+    if (user.email_verification !== code) {
         return res.status(400).json({
             success: false,
             message: 'Code de vérification incorrect'
@@ -141,7 +139,7 @@ const verifierCode = async (req, res) => {
     }
  const updateData={
     email_verifie:true,
-    token_verification:null,
+    email_verification:null,
     token_expires_at:null
  };
 
@@ -153,7 +151,8 @@ const verifierCode = async (req, res) => {
         data: updateData
     });
     
-    const message = user.role === 'PROFESSIONNEL'?'Email vérifié! Votre compte est en attente de validation par un administrateur.':'Email vérifié et compte activé! Vous pouvez maintenant vous connecter.';
+    const message = user.role === 'PROFESSIONNEL'?'Email vérifié! Votre compte est en attente de validation par un administrateur.'
+    :'Email vérifié et compte activé! Vous pouvez maintenant vous connecter.';
     res.json({
         success: true,
         message
@@ -175,7 +174,7 @@ const renvoyerCode=async(req,res)=>{
     await prisma.utilisateur.update({
         where:{id:user.id_utilisateur},
         data:{
-            token_verification:newCode,
+            email_verification:newCode,
             token_expires_at:newExpiresAt
         }
     });
@@ -231,7 +230,7 @@ const login = async (req, res) => {
 
   res.json({
     success: true,
-    message: 'Connexion reussie',
+    message: 'Connexion réussie',
     data: {
       token,
       user: sanitizeUser(user)
@@ -282,15 +281,11 @@ const createAdmin = async (req, res) => {
         prenom,
         role: 'ADMINISTRATEUR',
         est_actif: true,
-        email_verifie: true
-      }
-    });
-
-    await tx.administrateur.create({
-      data: {
-        id_utilisateur: newUser.id_utilisateur,
-        niveau_acces: 'STANDARD'
-      }
+        email_verifie: true,
+        administrateur: {
+          create: {niveau_acces: 'STANDARD'
+}}
+}
     });
 
     return newUser;
@@ -306,31 +301,32 @@ const createAdmin = async (req, res) => {
 };
 //Valider Professionnel par admin
 const validerProfessionnel=async(req,res)=>{
-    const {id_utilisateur}=req.params;
+    const {utilisateurId}=req.params;
 
     const professionnel=await prisma.professionnel.findUnique({
-        where:{id_utilisateur:parseInt(id_utilisateur)}
+        where:{id_utilisateur:parseInt(utilisateurId)},
+        include:{professionnel:true}
     });
-    if(!professionnel){
+    if(!utilisateur||!utilisateur.professionnel){
         return res.status(404).json({
             success:false,
             message:'Utilisateur introuvable'
         });
     }
-    if(professionnel.role!=='PROFESSIONNEL'){
+    if(utilisateur.role!=='PROFESSIONNEL'){
         return res.status(400).json({
             success:false,  
             message:'Cet utilisateur n\'est pas un professionnel'
         });
     }
-    if(professionnel.utilisateur.est_actif){
+    if(utilisateur.est_actif){
         return res.status(400).json({
             success:false,
             message:'Ce compte est déjà activé'
         });
     }
     const updated=await prisma.utilisateur.update({
-        where:{id_utilisateur:parseInt(id_utilisateur)},
+        where:{id_utilisateur:parseInt(utilisateurId)},
         data:{est_actif:true}
     });
 
