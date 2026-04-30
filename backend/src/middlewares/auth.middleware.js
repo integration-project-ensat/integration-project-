@@ -20,8 +20,7 @@ const authentifier = async (req, res, next) => {
 
     const utilisateur = await prisma.utilisateur.findUnique({
       where: {
-        id_utilisateur: decoded.id_utilisateur,
-        est_actif: true
+        id_utilisateur: decoded.userId
       },
       select: {
         id_utilisateur: true,
@@ -33,7 +32,7 @@ const authentifier = async (req, res, next) => {
       }
     });
 
-    if (!utilisateur) {
+    if (!utilisateur||!utilisateur.est_actif) {
       return res.status(401).json({
         success: false,
         message: 'Accès non autorisé: utilisateur introuvable ou désactivé'
