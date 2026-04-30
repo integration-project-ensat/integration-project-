@@ -30,18 +30,18 @@ app.use(express.json({limit:'10Kb'}))
 app.use(express.urlencoded({extended:true, limit:'10Kb'}))
 
 app.use('/api', apiLimiter)
-app.use('/api/auth/login', authLimiter)
-app.use('/api/auth/register', authLimiter)
-app.use('/api/auth/reset-password', passwordLimiter)
-app.use('/api/auth/forgot-password', passwordLimiter)
+app.use('/api/auth/seconnecter', authLimiter)
+app.use('/api/auth/sinscrire', authLimiter)
+app.use('/api/auth/renvoyer-code', passwordLimiter)
+app.use('/api/auth/verifier-code', passwordLimiter)
 
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Backend is running',
     timestamp: new Date().toISOString()
   })
-})
+})*/
 
 
 // Auth routes
@@ -51,7 +51,7 @@ app.use((req,res) => {
   res.status(404).json({
     success:false,
     statusCode:404,
-    message:'Route ${req.method} ${req.originalUrl} not found'
+    message: `Route ${req.method} ${req.originalUrl} not found`
   })
 })
 

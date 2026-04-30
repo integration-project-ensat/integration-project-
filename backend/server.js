@@ -15,7 +15,7 @@ const http = require('http')
 //Importe l'instance Prisma unique pour gérer la connexion à PostgreSQL.
 const prisma = require('./prisma/client')
 
-
+require('dotenv').config()
 const PORT = process.env.PORT || 3000
 //Crée le serveur HTTP avec ta configuration Express
 const server = http.createServer(app)
@@ -45,6 +45,10 @@ process.on('SIGTERM', async() => {
     console.log('Server and database closed gracefully')
     process.exit(0)
   })
+  setTimeout(() => {
+    console.error('Forced shutdown after 10 seconds')
+    process.exit(1)
+  }, 10000)
 })
 
 process.on('SIGINT', async () => {
