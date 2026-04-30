@@ -8,7 +8,8 @@
  * Pour démarrer : node server.js
  */
 //Importe la configuration Express depuis app.js (routes, middlewares).
-const app = require('./app')
+
+const app = require('./app.js')
 //Importe le module HTTP natif de Node.js pour créer un serveur web bas niveau (plus propre qu'app.listen()).
 const http = require('http')
 //Importe l'instance Prisma unique pour gérer la connexion à PostgreSQL.

@@ -14,15 +14,17 @@ const authentifier = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET,{
+      algorithms: ['HS256']
+    });
 
     const utilisateur = await prisma.utilisateur.findUnique({
       where: {
-        id: decoded.userId,
+        id_utilisateur: decoded.id_utilisateur,
         est_actif: true
       },
       select: {
-        id: true,
+        id_utilisateur: true,
         nom: true,
         prenom: true,
         email: true,

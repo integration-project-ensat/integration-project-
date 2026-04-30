@@ -11,23 +11,51 @@
  */
 
 const express = require('express')
-const cors = require('cors')
+const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
+const corsMiddleware = require('./src/middlewares/cors.middleware')
+
+const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateLimiter.middleware')
+const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
 
 const app = express()
-// Middlewares globaux
-//autoriser les requêtes du frontend
-app.use(cors({
-    origin:process.env.FRONTEND_URL,
-    credentials:true  
-}))
-app.use(express.json())
-// Routes
+
+//securite(headers, CORS, rate )
+app.use(securityHeaders)
+app.use(corsMiddleware)
+
+//body parser
+app.use(express.json({limit:'10Kb'}))
+app.use(express.urlencoded({extended:true, limit:'10Kb'}))
+
+app.use('/api', apiLimiter)
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/register', authLimiter)
+app.use('/api/auth/reset-password', passwordLimiter)
+app.use('/api/auth/forgot-password', passwordLimiter)
+
 app.get('/', (req, res) => {
-  res.send('Backend is running ')
+  res.status(200).json({
+    success: true,
+    message: 'Backend is running',
+    timestamp: new Date().toISOString()
+  })
 })
+
+
 // Auth routes
 app.use('/api/auth', authRoutes) 
+//404 not found handler (doit être après toutes les routes)
+app.use((req,res) => {
+  res.status(404).json({
+    success:false,
+    statusCode:404,
+    message:'Route ${req.method} ${req.originalUrl} not found'
+  })
+})
 
-module.exports = app    
+
+app.use(errorMiddleware)
+
+module.exports = app

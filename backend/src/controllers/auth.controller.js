@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../../prisma/client');
-const { PUBLIC_ROLES } = require('../config/roles');
 const{PUBLIC_ROLES, ROLES} = require('../config/roles');
 const {genererCode,sendVerificationCode,sendAdminValidationRequest}=require('../services/email.service');
 const { emit } = require('node:cluster');
@@ -11,7 +10,7 @@ const JWT_EXPIRES_IN = '24h';
 
 function generateToken(user) {
   return jwt.sign(
-    { userId: user.id, email: user.email, role: user.role },
+    { userId: user.id_utilisateur, email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -60,13 +59,13 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
         // Création de l'étudiant
       const etudiant = await tx.etudiant.create({
         data: {
-          utilisateur_id: newUser.id_utilisateur,
+          id_utilisateur: newUser.id_utilisateur,
           numero_etudiant: specificData.numero_etudiant
         }
       });
       await tx.profil.create({
         data: {
-          etudiant_id: etudiant.id,
+          id_utilisateur: etudiant.id_utilisateur,
           filiere: specificData.filiere,
           annee_universitaire: specificData.annee_universitaire
         }
@@ -76,7 +75,7 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
     if (role === 'PROFESSEUR') {
       await tx.professeur.create({
         data: {
-          utilisateur_id: newUser.id_utilisateur,
+          id_utilisateur: newUser.id_utilisateur,
           code_administratif: specificData.code_administratif,
           departement: specificData.departement,
           specialite: specificData.specialite
@@ -88,7 +87,7 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
     if (role === 'PROFESSIONNEL') {
       await tx.professionnel.create({
         data: {
-          utilisateur_id: newUser.id_utilisateur,
+          id_utilisateur: newUser.id_utilisateur,
           entreprise: specificData.entreprise,
           poste: specificData.poste
         }
@@ -102,7 +101,7 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
     await sendVerificationCode(email, verificationCode, nom);
     if (role === 'PROFESSIONNEL') {
         const proComplet = await prisma.utilisateur.findUnique({
-            where: { id: user.id_utilisateur },
+            where: { id_utilisateur: user.id_utilisateur },
             include: { professionnel: true }
         });
         await sendAdminValidationRequest(proComplet);
@@ -150,7 +149,7 @@ const verifierCode = async (req, res) => {
     updateData.est_actif=true;
  }
     await prisma.utilisateur.update({
-        where: { id: user.id_utilisateur },
+        where: { id_utilisateur: user.id_utilisateur },
         data: updateData
     });
     
@@ -244,7 +243,7 @@ const login = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   const user = await prisma.utilisateur.findUnique({
-    where: { id: req.utilisateur.id },
+    where: { id_utilisateur: req.utilisateur.id_utilisateur },
     include: {
       etudiant: { include: { profil: true } },
       professeur: true,
@@ -289,7 +288,7 @@ const createAdmin = async (req, res) => {
 
     await tx.administrateur.create({
       data: {
-        utilisateur_id: newUser.id,
+        id_utilisateur: newUser.id_utilisateur,
         niveau_acces: 'STANDARD'
       }
     });
@@ -310,7 +309,7 @@ const validerProfessionnel=async(req,res)=>{
     const {id_utilisateur}=req.params;
 
     const professionnel=await prisma.professionnel.findUnique({
-        where:{utilisateur_id:parseInt(id_utilisateur)}
+        where:{id_utilisateur:parseInt(id_utilisateur)}
     });
     if(!professionnel){
         return res.status(404).json({
@@ -331,7 +330,7 @@ const validerProfessionnel=async(req,res)=>{
         });
     }
     const updated=await prisma.utilisateur.update({
-        where:{id:parseInt(id_utilisateur)},
+        where:{id_utilisateur:parseInt(id_utilisateur)},
         data:{est_actif:true}
     });
 
