@@ -17,7 +17,7 @@ function generateToken(user) {
 }
 //pour ne pas exposer le mot de passe dans les reponses
 function sanitizeUser(user) {
-  const { mot_de_passe, ...safe } = user;
+  const { mot_de_passe_hashe, ...safe } = user;
   return safe;
 }
 
@@ -25,7 +25,7 @@ function sanitizeUser(user) {
 
 const register = async (req, res) => {
     // Validation des données d'inscription
-  const { nom, prenom, email, mot_de_passe, role, ...specificData } = req.body;
+  const { nom, prenom, email, mot_de_passe_hashe, role, ...specificData } = req.body;
 // Vérification de l'unicité de l'email
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
@@ -35,7 +35,7 @@ const register = async (req, res) => {
     });
   }
 // Hashage du mot de passe
-  const hashedPassword = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
+  const hashedPassword = await bcrypt.hash(mot_de_passe_hashe, SALT_ROUNDS);
 // Génération du code de vérification et envoi de l'email de vérification
   const verificationCode = genererCode();
 const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
@@ -45,7 +45,7 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
     const newUser = await tx.utilisateur.create({
       data: {
         email,
-        mot_de_passe: hashedPassword,
+        mot_de_passe_hashe: hashedPassword,
         nom,
         prenom,
         role,
@@ -193,7 +193,7 @@ const renvoyerCode=async(req,res)=>{
 // ==================== CONNEXION ====================
 
 const login = async (req, res) => {
-  const { email, mot_de_passe } = req.body;
+  const { email, mot_de_passe_hashe } = req.body;
 
   const user = await prisma.utilisateur.findUnique({
     where: { email },
@@ -219,7 +219,7 @@ const login = async (req, res) => {
 }
 
 // Vérification du mot de passe par la fonction compare de bcrypt
-  const isValid = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
+  const isValid = await bcrypt.compare(mot_de_passe_hashe, user.mot_de_passe_hashe);
   if (!isValid) {
     return res.status(401).json({
       success: false,
@@ -261,7 +261,7 @@ const getCurrentUser = async (req, res) => {
 // ==================== CREATION ADMIN (RESERVE) ====================
 
 const createAdmin = async (req, res) => {
-  const { nom, prenom, email, mot_de_passe } = req.body;
+  const { nom, prenom, email, mot_de_passe_hashe } = req.body;
 
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
@@ -271,13 +271,13 @@ const createAdmin = async (req, res) => {
     });
   }
 
-  const hashedPassword = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
+  const hashedPassword = await bcrypt.hash(mot_de_passe_hashe, SALT_ROUNDS);
 
   const user = await prisma.$transaction(async (tx) => {
     const newUser = await tx.utilisateur.create({
       data: {
         email,
-        mot_de_passe: hashedPassword,
+        mot_de_passe_hashe: hashedPassword,
         nom,
         prenom,
         role: 'ADMINISTRATEUR',

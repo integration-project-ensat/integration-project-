@@ -58,6 +58,8 @@ model Utilisateur {
   est_actif          Boolean   @default(true)
   est_valide         Boolean   @default(false)
   email_verifie     Boolean   @default(false)
+  token_expires_at DateTime?
+  email_verification String?
   date_creation      DateTime  @default(now())
   derniere_connexion DateTime?
 
