@@ -35,13 +35,13 @@ app.use('/api/auth/sinscrire', authLimiter)
 app.use('/api/auth/renvoyer-code', passwordLimiter)
 app.use('/api/auth/verifier-code', passwordLimiter)
 
-/*app.get('/', (req, res) => {
+app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Backend is running',
     timestamp: new Date().toISOString()
   })
-})*/
+})
 
 
 // Auth routes
