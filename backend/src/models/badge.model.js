@@ -1,20 +1,40 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
 
 export const createBadge = (data) =>
-  prisma.badge.create({ data })
+  prisma.badge.create({
+    data: normalizeBigIntFields(data, ['id_badge']),
+  })
 
 export const findAllBadges = () =>
-  prisma.badge.findMany({ include: { regle: true } })
+  prisma.badge.findMany({ include: { regles: true } })
 
-export const attribuerBadge = (id_utilisateur, id_badge) =>
-  prisma.utilisateurBadge.create({
-    data: { id_utilisateur, id_badge, date_attribution: new Date() }
+export const attribuerBadge = async (id_utilisateur, id_badge) => {
+  const profil = await prisma.profil.findUnique({
+    where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
 
-export const findBadgesUser = (id_utilisateur) =>
-  prisma.utilisateurBadge.findMany({
-    where: { id_utilisateur },
-    include: { badge: true }
+  if (!profil) {
+    throw new Error('Profil introuvable pour cet utilisateur')
+  }
+
+  return prisma.profilBadge.create({
+    data: {
+      id_profil: profil.id_profil,
+      id_badge: toBigInt(id_badge),
+      date_attribution: new Date(),
+    },
   })
+}
+
+export const findBadgesUser = async (id_utilisateur) => {
+  const profil = await prisma.profil.findUnique({
+    where: { id_utilisateur: toBigInt(id_utilisateur) },
+  })
+
+  if (!profil) return []
+
+  return prisma.profilBadge.findMany({
+    where: { id_profil: profil.id_profil },
+    include: { badge: true },
+  })
+}

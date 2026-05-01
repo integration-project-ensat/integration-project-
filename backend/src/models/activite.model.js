@@ -1,26 +1,43 @@
-import { PrismaClient } from '@prisma/client'
+import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
 
-const prisma = new PrismaClient()
+const ACTIVITE_ID_FIELDS = ['id_activite', 'id_etudiant', 'id_validateur']
 
 export const createActivite = (data) =>
-  prisma.activite.create({ data })
-
-export const findAllActivites = () =>
-  prisma.activite.findMany({
-    orderBy: { createdAt: 'desc' }
+  prisma.activiteParascolaire.create({
+    data: normalizeBigIntFields(data, ACTIVITE_ID_FIELDS),
   })
 
-export const findActiviteById = (id_element) =>
-  prisma.activite.findUnique({ where: { id_element } })
+export const findAllActivites = () =>
+  prisma.activiteParascolaire.findMany({
+    include: {
+      etudiant: { include: { utilisateur: true } },
+      validateur: { include: { utilisateur: true } },
+    },
+  })
 
-export const updateActivite = (id_element, data) =>
-  prisma.activite.update({ where: { id_element }, data })
+export const findActiviteById = (id_activite) =>
+  prisma.activiteParascolaire.findUnique({
+    where: { id_activite: toBigInt(id_activite) },
+    include: {
+      etudiant: { include: { utilisateur: true } },
+      validateur: { include: { utilisateur: true } },
+    },
+  })
 
-export const deleteActivite = (id_element) =>
-  prisma.activite.delete({ where: { id_element } })
+export const updateActivite = (id_activite, data) =>
+  prisma.activiteParascolaire.update({
+    where: { id_activite: toBigInt(id_activite) },
+    data: normalizeBigIntFields(data, ACTIVITE_ID_FIELDS),
+  })
 
-export const validerActivite = (id_element) =>
-  prisma.activite.update({
-    where: { id_element },
-    data: { date_validation: new Date() }
+export const deleteActivite = (id_activite) =>
+  prisma.activiteParascolaire.delete({ where: { id_activite: toBigInt(id_activite) } })
+
+export const validerActivite = (id_activite, id_validateur) =>
+  prisma.activiteParascolaire.update({
+    where: { id_activite: toBigInt(id_activite) },
+    data: {
+      statut: 'ATTESTEE_INSTITUTION',
+      ...(id_validateur ? { id_validateur: toBigInt(id_validateur) } : {}),
+    },
   })
