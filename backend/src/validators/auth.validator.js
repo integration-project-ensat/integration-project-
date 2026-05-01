@@ -22,7 +22,7 @@ const Rules = {
     .normalizeEmail()
     .isLength({ max: 255 }).withMessage('Email trop long'),
 
-  mot_de_passe_hashe: body('mot_de_passe')
+  mot_de_passe: body('mot_de_passe')
     .notEmpty().withMessage('Le mot de passe est obligatoire')
     .isLength({ min: 8,max:128 }).withMessage('Le mot de passe doit contenir au moins 8 caracteres')
     .matches(/[A-Z]/).withMessage('Doit contenir au moins une majuscule')
@@ -30,14 +30,16 @@ const Rules = {
     .matches(/\d/).withMessage('Doit contenir au moins un chiffre')
     .matches(/[\w_]/).withMessage('Doit contenir au moins un caractère spécial(@,#,!,etc.)'),
 
-  confirmation_mot_de_passe: body('confirmation_mot_de_passe')
-    .notEmpty().withMessage('La confirmation est obligatoire')
-    .custom((value, { req }) => {
-      if (value !== req.body.mot_de_passe_hashe) {
-        throw new Error('Les mots de passe ne correspondent pas');
-      }
-      return true;
-    }),
+    confirmation_mot_de_passe: body('confirmation_mot_de_passe')
+  .notEmpty().withMessage('La confirmation est obligatoire')
+  .custom((value, { req }) => {
+    console.log('mot_de_passe reçu:', req.body.mot_de_passe);
+    console.log('confirmation reçue:', value);
+    if (value !== req.body.mot_de_passe) {
+      throw new Error('Les mots de passe ne correspondent pas');
+    }
+    return true;
+  }),
 
   rolePublic: body('role')
     .notEmpty().withMessage('Le role est obligatoire')
@@ -105,7 +107,7 @@ const AuthValidator = {
     Rules.nom,
     Rules.prenom,
     Rules.email,
-    Rules.mot_de_passe_hashe,
+    Rules.mot_de_passe,
     Rules.confirmation_mot_de_passe,
     Rules.rolePublic,
     Rules.numero_etudiant,
@@ -127,7 +129,7 @@ const AuthValidator = {
     Rules.nom,
     Rules.prenom,
     Rules.email,
-    Rules.mot_de_passe_hashe,
+    Rules.mot_de_passe,
     Rules.confirmation_mot_de_passe,
     Rules.roleAdmin
   ],
