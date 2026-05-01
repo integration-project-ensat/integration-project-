@@ -1,8 +1,8 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
 const GITHUB_ID_FIELDS = ['id_integration', 'id_etudiant']
 
-export const upsertGithubIntegration = (id_utilisateur, data) =>
+const upsertGithubIntegration = (id_utilisateur, data) =>
   prisma.githubIntegration.upsert({
     where: { id_etudiant: toBigInt(id_utilisateur) },
     update: {
@@ -15,8 +15,13 @@ export const upsertGithubIntegration = (id_utilisateur, data) =>
     },
   })
 
-export const findGithubIntegration = (id_utilisateur) =>
+const findGithubIntegration = (id_utilisateur) =>
   prisma.githubIntegration.findUnique({
     where: { id_etudiant: toBigInt(id_utilisateur) },
     include: { depots: true },
   })
+
+module.exports = {
+  upsertGithubIntegration,
+  findGithubIntegration,
+}

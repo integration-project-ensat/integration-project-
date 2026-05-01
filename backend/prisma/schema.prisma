@@ -160,7 +160,7 @@ enum CritereScore {
 enum TypeReaction {
   JAIME
   BRAVO
-  like
+  LIKE
   
 }
 
@@ -206,7 +206,7 @@ model Etudiant {
   lettres_recommandation  LettreRecommandation[]
   portfolio               Portfolio?
   github_integration      GithubIntegration?
-  publications            Publication[]
+  postes            Poste[]
 
   @@map("etudiants")
 }
@@ -226,7 +226,7 @@ model Professeur {
   stages_encadres  Stage[]
   lettres_redigees LettreRecommandation[]
 
-  @@map("professionnel")
+  @@map("professeurs")
 }
 
 model Administrateur {
@@ -327,19 +327,7 @@ model Diplome {
 
   etudiant Etudiant @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
 
-  @@map("badge")
-}
-
-model RegleBadge {
-  id_regle    Int     @id @default(autoincrement())
-  nom         String?
-  description String?
-  est_valide  Boolean @default(true)
-  categorie   String?
-
-  badges Badge[]
-
-  @@map("regle_badge")
+  @@map("diplomes")
 }
 
 model Projet {

@@ -1,6 +1,6 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-export const upsertProfil = (id_utilisateur, data) =>
+const upsertProfil = (id_utilisateur, data) =>
   prisma.profil.upsert({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
     update: data,
@@ -10,7 +10,7 @@ export const upsertProfil = (id_utilisateur, data) =>
     },
   })
 
-export const findProfil = (id_utilisateur) =>
+const findProfil = (id_utilisateur) =>
   prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
     include: {
@@ -21,3 +21,8 @@ export const findProfil = (id_utilisateur) =>
       etudiant: { include: { publications: true } },
     },
   })
+
+module.exports = {
+  upsertProfil,
+  findProfil,
+}

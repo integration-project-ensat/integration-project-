@@ -1,14 +1,14 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-export const createBadge = (data) =>
+const createBadge = (data) =>
   prisma.badge.create({
     data: normalizeBigIntFields(data, ['id_badge']),
   })
 
-export const findAllBadges = () =>
+const findAllBadges = () =>
   prisma.badge.findMany({ include: { regles: true } })
 
-export const attribuerBadge = async (id_utilisateur, id_badge) => {
+const attribuerBadge = async (id_utilisateur, id_badge) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -26,7 +26,7 @@ export const attribuerBadge = async (id_utilisateur, id_badge) => {
   })
 }
 
-export const findBadgesUser = async (id_utilisateur) => {
+const findBadgesUser = async (id_utilisateur) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -37,4 +37,11 @@ export const findBadgesUser = async (id_utilisateur) => {
     where: { id_profil: profil.id_profil },
     include: { badge: true },
   })
+}
+
+module.exports = {
+  createBadge,
+  findAllBadges,
+  attribuerBadge,
+  findBadgesUser,
 }

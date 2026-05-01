@@ -1,14 +1,14 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
 const RECOMMANDATION_ID_FIELDS = ['id_recommandation', 'id_auteur', 'id_profil']
 const PORTFOLIO_RECOMMANDATION_ID_FIELDS = ['id_portfolio', 'id_recommandation']
 
-export const createRecommendation = (data) =>
+const createRecommendation = (data) =>
   prisma.recommandation.create({
     data: normalizeBigIntFields(data, RECOMMANDATION_ID_FIELDS),
   })
 
-export const createRecommendationForUserProfile = async (id_utilisateur, data) => {
+const createRecommendationForUserProfile = async (id_utilisateur, data) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -23,7 +23,7 @@ export const createRecommendationForUserProfile = async (id_utilisateur, data) =
   })
 }
 
-export const findRecommendationsUser = async (id_utilisateur) => {
+const findRecommendationsUser = async (id_utilisateur) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -39,7 +39,7 @@ export const findRecommendationsUser = async (id_utilisateur) => {
   })
 }
 
-export const findRecommendationsProfil = (id_profil) =>
+const findRecommendationsProfil = (id_profil) =>
   prisma.recommandation.findMany({
     where: { id_profil: toBigInt(id_profil) },
     include: {
@@ -48,7 +48,7 @@ export const findRecommendationsProfil = (id_profil) =>
     },
   })
 
-export const findRecommendationsPortfolio = (id_portfolio) =>
+const findRecommendationsPortfolio = (id_portfolio) =>
   prisma.portfolioRecommandation.findMany({
     where: { id_portfolio: toBigInt(id_portfolio), est_affichee: true },
     include: {
@@ -57,7 +57,7 @@ export const findRecommendationsPortfolio = (id_portfolio) =>
     orderBy: { position: 'asc' },
   })
 
-export const ajouterRecommendationAuPortfolio = (id_portfolio, id_recommandation, data = {}) =>
+const ajouterRecommendationAuPortfolio = (id_portfolio, id_recommandation, data = {}) =>
   prisma.portfolioRecommandation.upsert({
     where: {
       id_portfolio_id_recommandation: {
@@ -80,7 +80,7 @@ export const ajouterRecommendationAuPortfolio = (id_portfolio, id_recommandation
     ),
   })
 
-export const retirerRecommendationDuPortfolio = (id_portfolio, id_recommandation) =>
+const retirerRecommendationDuPortfolio = (id_portfolio, id_recommandation) =>
   prisma.portfolioRecommandation.delete({
     where: {
       id_portfolio_id_recommandation: {
@@ -90,8 +90,19 @@ export const retirerRecommendationDuPortfolio = (id_portfolio, id_recommandation
     },
   })
 
-export const updateRecommendation = (id_recommendation, data) =>
+const updateRecommendation = (id_recommendation, data) =>
   prisma.recommandation.update({
     where: { id_recommandation: toBigInt(id_recommendation) },
     data: normalizeBigIntFields(data, RECOMMANDATION_ID_FIELDS),
   })
+
+module.exports = {
+  createRecommendation,
+  createRecommendationForUserProfile,
+  findRecommendationsUser,
+  findRecommendationsProfil,
+  findRecommendationsPortfolio,
+  ajouterRecommendationAuPortfolio,
+  retirerRecommendationDuPortfolio,
+  updateRecommendation,
+}

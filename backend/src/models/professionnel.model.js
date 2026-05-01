@@ -1,24 +1,31 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-export const createProfessionnel = (data) =>
+const createProfessionnel = (data) =>
   prisma.professionnel.create({
     data: normalizeBigIntFields(data, ['id_utilisateur']),
   })
 
-export const findProfessionnelByUser = (id_utilisateur) =>
+const findProfessionnelByUser = (id_utilisateur) =>
   prisma.professionnel.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
     include: { utilisateur: true },
   })
 
-export const updateProfessionnel = (id_utilisateur, data) =>
+const updateProfessionnel = (id_utilisateur, data) =>
   prisma.professionnel.update({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
     data,
   })
 
-export const validerProfessionnel = (id_utilisateur) =>
+const validerProfessionnel = (id_utilisateur) =>
   prisma.professionnel.update({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
     data: { est_valide_admin: true },
   })
+
+module.exports = {
+  createProfessionnel,
+  findProfessionnelByUser,
+  updateProfessionnel,
+  validerProfessionnel,
+}

@@ -1,16 +1,16 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
 const DEPOT_ID_FIELDS = ['id_depot', 'id_integration']
 
-export const createDepot = (data) =>
+const createDepot = (data) =>
   prisma.depotGithub.create({
     data: normalizeBigIntFields(data, DEPOT_ID_FIELDS),
   })
 
-export const findDepotsIntegration = (id_integration) =>
+const findDepotsIntegration = (id_integration) =>
   prisma.depotGithub.findMany({ where: { id_integration: toBigInt(id_integration) } })
 
-export const findDepotsUser = async (id_utilisateur) => {
+const findDepotsUser = async (id_utilisateur) => {
   const integration = await prisma.githubIntegration.findUnique({
     where: { id_etudiant: toBigInt(id_utilisateur) },
   })
@@ -20,7 +20,7 @@ export const findDepotsUser = async (id_utilisateur) => {
   return findDepotsIntegration(integration.id_integration)
 }
 
-export const syncDepots = async (id_utilisateur, depots) => {
+const syncDepots = async (id_utilisateur, depots) => {
   const integration = await prisma.githubIntegration.findUnique({
     where: { id_etudiant: toBigInt(id_utilisateur) },
   })
@@ -39,4 +39,11 @@ export const syncDepots = async (id_utilisateur, depots) => {
       id_integration: integration.id_integration,
     })),
   })
+}
+
+module.exports = {
+  createDepot,
+  findDepotsIntegration,
+  findDepotsUser,
+  syncDepots,
 }

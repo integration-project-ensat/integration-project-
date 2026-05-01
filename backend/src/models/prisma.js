@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-import dotenv from 'dotenv'
+const { PrismaClient } = require('@prisma/client')
+const { PrismaPg } = require('@prisma/adapter-pg')
+const dotenv = require('dotenv')
 
 dotenv.config({ path: '.env.local' })
 dotenv.config()
@@ -13,17 +13,17 @@ if (!connectionString) {
 
 const adapter = new PrismaPg({ connectionString })
 
-export const prisma = new PrismaClient({
+const prisma = new PrismaClient({
   adapter,
   errorFormat: 'colorless',
 })
 
-export const toBigInt = (value) => {
+const toBigInt = (value) => {
   if (value === null || value === undefined || value === '') return value
   return typeof value === 'bigint' ? value : BigInt(value)
 }
 
-export const normalizeBigIntFields = (data = {}, fields = []) => {
+const normalizeBigIntFields = (data = {}, fields = []) => {
   const normalized = { ...data }
 
   for (const field of fields) {
@@ -33,4 +33,10 @@ export const normalizeBigIntFields = (data = {}, fields = []) => {
   }
 
   return normalized
+}
+
+module.exports = {
+  normalizeBigIntFields,
+  prisma,
+  toBigInt,
 }

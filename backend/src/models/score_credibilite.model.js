@@ -1,4 +1,4 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
 const SCORE_ID_FIELDS = ['id_score', 'id_profil']
 
@@ -9,7 +9,7 @@ const niveauFromScore = (score) => {
   return 'DEBUTANT'
 }
 
-export const upsertScore = async (id_utilisateur, data) => {
+const upsertScore = async (id_utilisateur, data) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -28,7 +28,7 @@ export const upsertScore = async (id_utilisateur, data) => {
   })
 }
 
-export const findScore = async (id_utilisateur) => {
+const findScore = async (id_utilisateur) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -38,7 +38,7 @@ export const findScore = async (id_utilisateur) => {
   return prisma.scoreCredibilite.findUnique({ where: { id_profil: profil.id_profil } })
 }
 
-export const calculerScoreTotal = async (id_utilisateur) => {
+const calculerScoreTotal = async (id_utilisateur) => {
   const id = toBigInt(id_utilisateur)
   const profil = await prisma.profil.findUnique({ where: { id_utilisateur: id } })
 
@@ -83,4 +83,10 @@ export const calculerScoreTotal = async (id_utilisateur) => {
     score_completude,
     niveau: niveauFromScore(score_total),
   })
+}
+
+module.exports = {
+  upsertScore,
+  findScore,
+  calculerScoreTotal,
 }

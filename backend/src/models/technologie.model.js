@@ -1,9 +1,14 @@
-import { normalizeBigIntFields, prisma } from './prisma.js'
+const { normalizeBigIntFields, prisma } = require('./prisma')
 
-export const createTechnologie = (data) =>
+const createTechnologie = (data) =>
   prisma.technologie.create({
     data: normalizeBigIntFields(data, ['id_technologie']),
   })
 
-export const findAllTechnologies = () =>
+const findAllTechnologies = () =>
   prisma.technologie.findMany({ where: { est_validee: true } })
+
+module.exports = {
+  createTechnologie,
+  findAllTechnologies,
+}

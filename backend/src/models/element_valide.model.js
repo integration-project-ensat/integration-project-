@@ -1,8 +1,8 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
 const ELEMENT_ID_FIELDS = ['id_element', 'reference_id', 'validateur_id']
 
-export const soumettreElement = (data) =>
+const soumettreElement = (data) =>
   prisma.elementValidable.create({
     data: {
       ...normalizeBigIntFields(data, ELEMENT_ID_FIELDS),
@@ -11,7 +11,7 @@ export const soumettreElement = (data) =>
     },
   })
 
-export const validerElement = (id_element, validateur_id) =>
+const validerElement = (id_element, validateur_id) =>
   prisma.elementValidable.update({
     where: { id_element: toBigInt(id_element) },
     data: {
@@ -21,7 +21,7 @@ export const validerElement = (id_element, validateur_id) =>
     },
   })
 
-export const rejeterElement = (id_element, validateur_id, motif_refus) =>
+const rejeterElement = (id_element, validateur_id, motif_refus) =>
   prisma.elementValidable.update({
     where: { id_element: toBigInt(id_element) },
     data: {
@@ -32,7 +32,7 @@ export const rejeterElement = (id_element, validateur_id, motif_refus) =>
     },
   })
 
-export const demanderCorrectionElement = (id_element, validateur_id, motif_refus) =>
+const demanderCorrectionElement = (id_element, validateur_id, motif_refus) =>
   prisma.elementValidable.update({
     where: { id_element: toBigInt(id_element) },
     data: {
@@ -43,8 +43,16 @@ export const demanderCorrectionElement = (id_element, validateur_id, motif_refus
     },
   })
 
-export const findElementsEnAttente = () =>
+const findElementsEnAttente = () =>
   prisma.elementValidable.findMany({
     where: { statut: 'EN_ATTENTE' },
     include: { validateur: true, attestation: true },
   })
+
+module.exports = {
+  soumettreElement,
+  validerElement,
+  rejeterElement,
+  demanderCorrectionElement,
+  findElementsEnAttente,
+}

@@ -1,14 +1,14 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
 const USER_ID_FIELDS = ['id_utilisateur']
 
-export const createUser = (data) =>
+const createUser = (data) =>
   prisma.utilisateur.create({ data: normalizeBigIntFields(data, USER_ID_FIELDS) })
 
-export const findByEmail = (email) =>
+const findByEmail = (email) =>
   prisma.utilisateur.findUnique({ where: { email } })
 
-export const findById = (id) =>
+const findById = (id) =>
   prisma.utilisateur.findUnique({
     where: { id_utilisateur: toBigInt(id) },
     include: {
@@ -26,17 +26,26 @@ export const findById = (id) =>
     },
   })
 
-export const updateUser = (id, data) =>
+const updateUser = (id, data) =>
   prisma.utilisateur.update({
     where: { id_utilisateur: toBigInt(id) },
     data,
   })
 
-export const deleteUser = (id) =>
+const deleteUser = (id) =>
   prisma.utilisateur.delete({ where: { id_utilisateur: toBigInt(id) } })
 
-export const updateLastLogin = (id) =>
+const updateLastLogin = (id) =>
   prisma.utilisateur.update({
     where: { id_utilisateur: toBigInt(id) },
     data: { derniere_connexion: new Date() },
   })
+
+module.exports = {
+  createUser,
+  findByEmail,
+  findById,
+  updateUser,
+  deleteUser,
+  updateLastLogin,
+}

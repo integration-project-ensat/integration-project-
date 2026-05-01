@@ -1,14 +1,14 @@
-import { normalizeBigIntFields, prisma, toBigInt } from './prisma.js'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-export const createCompetence = (data) =>
+const createCompetence = (data) =>
   prisma.competence.create({
     data: normalizeBigIntFields(data, ['id_competence']),
   })
 
-export const findAllCompetences = () =>
+const findAllCompetences = () =>
   prisma.competence.findMany()
 
-export const ajouterCompetenceUser = async (id_utilisateur, id_competence, niveau_maitrise) => {
+const ajouterCompetenceUser = async (id_utilisateur, id_competence, niveau_maitrise) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -34,7 +34,7 @@ export const ajouterCompetenceUser = async (id_utilisateur, id_competence, nivea
   })
 }
 
-export const findCompetencesUser = async (id_utilisateur) => {
+const findCompetencesUser = async (id_utilisateur) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -47,7 +47,7 @@ export const findCompetencesUser = async (id_utilisateur) => {
   })
 }
 
-export const supprimerCompetenceUser = async (id_utilisateur, id_competence) => {
+const supprimerCompetenceUser = async (id_utilisateur, id_competence) => {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
@@ -62,4 +62,12 @@ export const supprimerCompetenceUser = async (id_utilisateur, id_competence) => 
       },
     },
   })
+}
+
+module.exports = {
+  createCompetence,
+  findAllCompetences,
+  ajouterCompetenceUser,
+  findCompetencesUser,
+  supprimerCompetenceUser,
 }
