@@ -226,7 +226,7 @@ model Professeur {
   stages_encadres  Stage[]
   lettres_redigees LettreRecommandation[]
 
-  @@map("professeurs")
+  @@map("professionnel")
 }
 
 model Administrateur {
@@ -300,7 +300,7 @@ model Competence {
 
   profils ProfilCompetence[]
 
-  @@map("competences")
+  @@map("projet")
 }
 
 model ProfilCompetence {
@@ -327,7 +327,19 @@ model Diplome {
 
   etudiant Etudiant @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
 
-  @@map("diplomes")
+  @@map("badge")
+}
+
+model RegleBadge {
+  id_regle    Int     @id @default(autoincrement())
+  nom         String?
+  description String?
+  est_valide  Boolean @default(true)
+  categorie   String?
+
+  badges Badge[]
+
+  @@map("regle_badge")
 }
 
 model Projet {
@@ -516,14 +528,14 @@ model Commentaire {
   id_commentaire BigInt           @id @default(autoincrement())
   id_auteur      BigInt
   id_portfolio   BigInt?
-  id_publication BigInt?
+  id_poste       BigInt?
   contenu        String
   statut         StatutValidation @default(EN_ATTENTE)
   date           DateTime?
 
   auteur      Utilisateur  @relation("AuteurCommentaires", fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
   portfolio   Portfolio?   @relation(fields: [id_portfolio], references: [id_portfolio], onDelete: Cascade)
-  publication Publication? @relation(fields: [id_publication], references: [id_publication], onDelete: Cascade)
+  publication Poste? @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
 
   @@map("commentaires")
 }
@@ -614,13 +626,14 @@ model GithubIntegration {
   id_etudiant          BigInt    @unique
   github_username      String    @db.VarChar(100)
   access_token         String?
+  total_depot          Int       @default(0)
   date_synchronisation DateTime?
   est_actif            Boolean   @default(true)
 
   etudiant Etudiant @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
   depots   DepotGithub[]
 
-  @@map("github_integrations")
+  @@map("github_integration")
 }
 
 model DepotGithub {
@@ -639,8 +652,8 @@ model DepotGithub {
 
   @@map("depots_github")
 }
-model Publication {
-  id_publication  BigInt     @id @default(autoincrement())
+model Poste {
+  id_poste  BigInt     @id @default(autoincrement())
   id_etudiant     BigInt
   contenu         String
   visibilite      Visibilite @default(PUBLIC)
@@ -650,20 +663,20 @@ model Publication {
   commentaires Commentaire[]
   reactions    Reaction[]    // pour les "j'aime"
 
-  @@map("publications")
+  @@map("postes")
 }
 
 model Reaction {
   id_reaction    BigInt   @id @default(autoincrement())
   id_auteur      BigInt
-  id_publication BigInt
+  id_poste BigInt
   type           TypeReaction  // JAIME, etc.
   date           DateTime @default(now())
 
   auteur      Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
-  publication Publication @relation(fields: [id_publication], references: [id_publication], onDelete: Cascade)
+  publication Poste @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
 
-  @@unique([id_auteur, id_publication]) // une seule réaction par personne
+  @@unique([id_auteur, id_poste]) // une seule réaction par personne
   @@map("reactions")
 }
 
