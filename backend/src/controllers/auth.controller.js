@@ -25,7 +25,7 @@ function sanitizeUser(user) {
 
 const register = async (req, res) => {
     // Validation des données d'inscription
-  const { nom, prenom, email, mot_de_passe_hashe, role, ...specificData } = req.body;
+  const { nom, prenom, email, mot_de_passe, role, ...specificData } = req.body;
 // Vérification de l'unicité de l'email
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
@@ -35,7 +35,7 @@ const register = async (req, res) => {
     });
   }
 // Hashage du mot de passe
-  const hashedPassword = await bcrypt.hash(mot_de_passe_hashe, SALT_ROUNDS);
+  const hashedPassword = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
 // Génération du code de vérification et envoi de l'email de vérification
   const verificationCode = genererCode();
 const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
@@ -172,7 +172,7 @@ const renvoyerCode=async(req,res)=>{
     const newCode=genererCode();
     const newExpiresAt=new Date(Date.now()+24*60*60*1000);
     await prisma.utilisateur.update({
-        where:{id:user.id_utilisateur},
+        where:{id_utilisateur:user.id_utilisateur},
         data:{
             email_verification:newCode,
             token_expires_at:newExpiresAt
@@ -192,7 +192,7 @@ const renvoyerCode=async(req,res)=>{
 // ==================== CONNEXION ====================
 
 const login = async (req, res) => {
-  const { email, mot_de_passe_hashe } = req.body;
+  const { email, mot_de_passe } = req.body;
 
   const user = await prisma.utilisateur.findUnique({
     where: { email },
@@ -218,7 +218,7 @@ const login = async (req, res) => {
 }
 
 // Vérification du mot de passe par la fonction compare de bcrypt
-  const isValid = await bcrypt.compare(mot_de_passe_hashe, user.mot_de_passe_hashe);
+  const isValid = await bcrypt.compare(mot_de_passe, user.mot_de_passe_hashe);
   if (!isValid) {
     return res.status(401).json({
       success: false,
@@ -303,7 +303,7 @@ const createAdmin = async (req, res) => {
 const validerProfessionnel=async(req,res)=>{
     const {utilisateurId}=req.params;
 
-    const professionnel=await prisma.professionnel.findUnique({
+    const utilisateur=await prisma.utilisateur.findUnique({
         where:{id_utilisateur:parseInt(utilisateurId)},
         include:{professionnel:true}
     });
@@ -341,7 +341,7 @@ const validerProfessionnel=async(req,res)=>{
 };
 //lister les professionnels en attente de validation
 const getProfessionnelsEnAttente=async(req,res)=>{
-    const professionnels=await prisma.professionnel.findMany({
+    const professionnels=await prisma.utilisateur.findMany({
         where:{
             role:'PROFESSIONNEL',
             est_actif:false,
