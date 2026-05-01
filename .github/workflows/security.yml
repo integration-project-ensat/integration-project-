@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      -security-pipeline
+      - security-pipeline
   pull_request:
     branches:
       - main
