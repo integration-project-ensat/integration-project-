@@ -29,9 +29,14 @@ async function startServer() {
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
     })
-  }
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Please free the port and try again.`)
+      process.exit(1)
+      }
+  })
   //En cas d'erreur de connexion à la base de données, log l'erreur et arrête le processus. 
-  catch (error) {
+}catch (error) {
     console.error('Failed to connect to Database:', error)
     process.exit(1)
   }
