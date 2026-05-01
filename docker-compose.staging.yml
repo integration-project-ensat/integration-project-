@@ -1,33 +1,72 @@
-version: '3.8'
- 
+# docker-compose.staging.yml
 services:
+
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile  
+      dockerfile: Dockerfile      # build Vue → sert sur :80
     restart: unless-stopped
     ports:
-      - "80"
- 
+      - "8081:80"                 # frontend accessible sur localhost:8081
+
   backend:
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3000:3000"               # backend accessible sur localhost:3000
     environment:
       - NODE_ENV=staging
- 
+
   postgres:
     restart: unless-stopped
- 
+
   keycloak:
     restart: unless-stopped
     ports:
       - "8080:8080"
-    command: start
- 
-  nginx:
+    environment:
+      - KC_HOSTNAME_STRICT=false
+    command: start-dev
+
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: portfolio_sonarqube
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "9000:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-portfolio_db}
+      - SONAR_JDBC_USERNAME=${DB_USER:-postgres}
+      - SONAR_JDBC_PASSWORD=${DB_PASSWORD:-secret}
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+    depends_on:
+      - postgres
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: portfolio_zap
+    restart: unless-stopped
+    command: zap.sh -daemon -host 0.0.0.0 -port 8090
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./reports/zap:/zap/wrk
+
+  trivy:
+    image: aquasec/trivy:latest
+    container_name: portfolio_trivy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./reports/trivy:/reports
+    command: >
+      image --format json
+      --output /reports/trivy-report.json
+      --severity HIGH,CRITICAL
+      frontend:latest
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
