@@ -6,7 +6,10 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+    pass: process.env.SMTP_PASSWORD
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
@@ -19,11 +22,11 @@ const genererCode = () => {
 
 const sendVerificationCode = async (email, code, nom) => {
   await transporter.sendMail({
-    from: '"Pheracore platforme" <noreply@portfolio.ma>',
+    from: '"Pheracore platforme" <pheracoreplatfoms@gmail.com>',
     to: email,
     subject: 'Votre code de vérification',
     html: `
-      <h2>Bonjour  ${nom},</h2>
+      <h2>Bonjour ${nom},</h2>
       <p>Voici votre code de vérification :</p>
       <div style="padding:20px;background:#f3f4f6;text-align:center;font-size:32px;letter-spacing:8px;font-weight:bold;">
         ${code}
@@ -35,10 +38,10 @@ const sendVerificationCode = async (email, code, nom) => {
 };
 
 const sendAdminValidationRequest = async (professionnel) => {
-  const adminUrl = `${process.env.FRONTEND_URL}/admin/validation/${professionnel.id}`;
+  const adminUrl = `${process.env.FRONTEND_URL}/admin/validation/${professionnel.id_utilisateur}`;
 
   await transporter.sendMail({
-    from: '"Pheracore" <noreply@portfolio.ma>',
+    from: '"Pheracore" <pheracoreplatfoms@gmail.com>',
     to: process.env.ADMIN_EMAIL,
     subject: 'Nouveau professionnel en attente de validation',
     html: `
