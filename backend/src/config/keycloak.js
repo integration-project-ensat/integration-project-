@@ -1,1 +1,17 @@
-// Initialise Keycloak Connect pour Express. Fournit le middleware protect() qui vérifie le token JWT sur les routes protégées, et extrait les rôles de l'utilisateur.
+const session = require('express-session');
+const Keycloak = require('keycloak-connect');
+
+const memoryStore = new session.MemoryStore();
+
+const keycloakConfig = {
+  realm: process.env.KEYCLOAK_REALM || 'portfolio-realm',
+  'auth-server-url': process.env.KEYCLOAK_URL || 'http://keycloak:8080',
+  'ssl-required': 'none',
+  resource: process.env.KEYCLOAK_CLIENT_ID || 'portfolio-app',
+  'public-client': true,
+  'confidential-port': 0
+};
+
+const keycloak = new Keycloak({ store: memoryStore }, keycloakConfig);
+
+module.exports = { keycloak, memoryStore };
