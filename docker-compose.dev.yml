@@ -31,5 +31,6 @@ services:
     command: start-dev
  
   nginx:
+    image: nginx:alpine
     ports:
       - "80:80"

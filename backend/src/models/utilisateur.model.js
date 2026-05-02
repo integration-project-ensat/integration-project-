@@ -1,33 +1,51 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-export const createUser = (data) =>
-  prisma.utilisateur.create({ data })
+const USER_ID_FIELDS = ['id_utilisateur']
 
-export const findByEmail = (email) =>
+const createUser = (data) =>
+  prisma.utilisateur.create({ data: normalizeBigIntFields(data, USER_ID_FIELDS) })
+
+const findByEmail = (email) =>
   prisma.utilisateur.findUnique({ where: { email } })
 
-export const findById = (id) =>
+const findById = (id) =>
   prisma.utilisateur.findUnique({
-    where: { id_utilisateur: id },
+    where: { id_utilisateur: toBigInt(id) },
     include: {
-      profil: true,
-      etudiant: true,
+      etudiant: {
+        include: {
+          profil: true,
+          portfolio: true,
+          github_integration: true,
+        },
+      },
       professeur: true,
-      preference: true,
-      score_credibilite: true,
-      github_integration: true,
-    }
+      professionnel: true,
+      administrateur: true,
+      notifications: true,
+    },
   })
 
-export const updateUser = (id, data) =>
-  prisma.utilisateur.update({ where: { id_utilisateur: id }, data })
-
-export const deleteUser = (id) =>
-  prisma.utilisateur.delete({ where: { id_utilisateur: id } })
-
-export const updateLastLogin = (id) =>
+const updateUser = (id, data) =>
   prisma.utilisateur.update({
-    where: { id_utilisateur: id },
-    data: { derniere_connexion: new Date() }
+    where: { id_utilisateur: toBigInt(id) },
+    data,
   })
+
+const deleteUser = (id) =>
+  prisma.utilisateur.delete({ where: { id_utilisateur: toBigInt(id) } })
+
+const updateLastLogin = (id) =>
+  prisma.utilisateur.update({
+    where: { id_utilisateur: toBigInt(id) },
+    data: { derniere_connexion: new Date() },
+  })
+
+module.exports = {
+  createUser,
+  findByEmail,
+  findById,
+  updateUser,
+  deleteUser,
+  updateLastLogin,
+}

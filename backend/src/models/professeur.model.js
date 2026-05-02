@@ -1,21 +1,31 @@
-import { PrismaClient } from '@prisma/client'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-const prisma = new PrismaClient()
+const createProfesseur = (data) =>
+  prisma.professeur.create({
+    data: normalizeBigIntFields(data, ['id_utilisateur']),
+  })
 
-export const createProfesseur = (data) =>
-  prisma.professeur.create({ data })
-
-export const findProfesseurByUser = (id_utilisateur) =>
+const findProfesseurByUser = (id_utilisateur) =>
   prisma.professeur.findUnique({
-    where: { id_utilisateur },
-    include: { utilisateur: true }
+    where: { id_utilisateur: toBigInt(id_utilisateur) },
+    include: { utilisateur: true },
   })
 
-export const updateProfesseur = (id_element, data) =>
-  prisma.professeur.update({ where: { id_element }, data })
-
-export const validerProfesseur = (id_element) =>
+const updateProfesseur = (id_utilisateur, data) =>
   prisma.professeur.update({
-    where: { id_element },
-    data: { date_validation: new Date() }
+    where: { id_utilisateur: toBigInt(id_utilisateur) },
+    data,
   })
+
+const validerProfesseur = (id_utilisateur) =>
+  prisma.professeur.findUnique({
+    where: { id_utilisateur: toBigInt(id_utilisateur) },
+    include: { utilisateur: true },
+  })
+
+module.exports = {
+  createProfesseur,
+  findProfesseurByUser,
+  updateProfesseur,
+  validerProfesseur,
+}

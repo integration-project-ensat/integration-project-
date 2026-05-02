@@ -4,7 +4,7 @@ services:
   frontend:
     build: 
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     depends_on:
       - backend
  
@@ -32,6 +32,8 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-secret}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  
  
   keycloak:
     image: quay.io/keycloak/keycloak:23.0

@@ -1,9 +1,14 @@
-import { PrismaClient } from '@prisma/client'
+const { normalizeBigIntFields, prisma } = require('./prisma')
 
-const prisma = new PrismaClient()
+const createTechnologie = (data) =>
+  prisma.technologie.create({
+    data: normalizeBigIntFields(data, ['id_technologie']),
+  })
 
-export const createTechnologie = (data) =>
-  prisma.technologie.create({ data })
+const findAllTechnologies = () =>
+  prisma.technologie.findMany({ where: { est_validee: true } })
 
-export const findAllTechnologies = () =>
-  prisma.technologie.findMany({ where: { est_valide: true } })
+module.exports = {
+  createTechnologie,
+  findAllTechnologies,
+}

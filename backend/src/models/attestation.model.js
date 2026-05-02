@@ -1,15 +1,38 @@
-import { PrismaClient } from '@prisma/client'
+const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-const prisma = new PrismaClient()
+const ATTESTATION_ID_FIELDS = ['id_attestation', 'id_element']
 
-export const createAttestation = (data) =>
-  prisma.attestation.create({ data })
+const createAttestation = (data) =>
+  prisma.attestation.create({
+    data: normalizeBigIntFields(data, ATTESTATION_ID_FIELDS),
+  })
 
-export const findAttestationsUser = (id_utilisateur) =>
-  prisma.attestation.findMany({ where: { id_utilisateur } })
+const findAttestationsElement = (id_element) =>
+  prisma.attestation.findMany({ where: { id_element: toBigInt(id_element) } })
 
-export const updateAttestation = (id_element, data) =>
-  prisma.attestation.update({ where: { id_element }, data })
+const findAttestationsUser = (id_utilisateur) =>
+  prisma.attestation.findMany({
+    where: {
+      element: {
+        validateur_id: toBigInt(id_utilisateur),
+      },
+    },
+    include: { element: true },
+  })
 
-export const deleteAttestation = (id_element) =>
-  prisma.attestation.delete({ where: { id_element } })
+const updateAttestation = (id_attestation, data) =>
+  prisma.attestation.update({
+    where: { id_attestation: toBigInt(id_attestation) },
+    data: normalizeBigIntFields(data, ATTESTATION_ID_FIELDS),
+  })
+
+const deleteAttestation = (id_attestation) =>
+  prisma.attestation.delete({ where: { id_attestation: toBigInt(id_attestation) } })
+
+module.exports = {
+  createAttestation,
+  findAttestationsElement,
+  findAttestationsUser,
+  updateAttestation,
+  deleteAttestation,
+}
