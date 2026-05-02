@@ -1,6 +1,7 @@
 grafana_port: 3001
 prometheus_port: 9090
 ssh_port: 22
+keycloak_port: 8080
 docker_log_max_size: "10m"
 ssh_password: "{{ vault_ssh_password }}"
 grafana_admin_password: "{{ vault_grafana_admin_password }}"
