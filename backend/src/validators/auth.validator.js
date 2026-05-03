@@ -28,7 +28,7 @@ const Rules = {
     .matches(/[A-Z]/).withMessage('Doit contenir au moins une majuscule')
     .matches(/[a-z]/).withMessage('Doit contenir au moins une minuscule')
     .matches(/\d/).withMessage('Doit contenir au moins un chiffre')
-    .matches(/[\w_]/).withMessage('Doit contenir au moins un caractère spécial(@,#,!,etc.)'),
+    .matches(/[[@#!$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/).withMessage('Doit contenir au moins un caractère spécial(@,#,!,etc.)'),
 
     confirmation_mot_de_passe: body('confirmation_mot_de_passe')
   .notEmpty().withMessage('La confirmation est obligatoire')
@@ -140,7 +140,7 @@ const AuthValidator = {
     .isLength({min:6,max:6}).withMessage('Code invalide')
     .isNumeric().withMessage('Le code doit etre numérique')
   ],
-  revoyerCode:[
+  renvoyerCode:[
     Rules.email
   ]
 };

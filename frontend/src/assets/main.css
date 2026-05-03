@@ -1,35 +1,40 @@
-@import './base.css';
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+:root {
+  --navy:          #0d1b2a;
+  --navy-mid:      #1a2d42;
+  --purple:        #5b3fd4;
+  --purple-hover:  #4a31b8;
+  --input-bg:      #eef0f4;
+  --text-dark:     #1a1a2e;
+  --text-muted:    #5a6a7a;
+  --error:         #e53e3e;
+  --font-head:     'Sora', sans-serif;
+  --font-body:     'DM Sans', sans-serif;
+  --radius-pill:   50px;
+  --radius-card:   16px;
+  --ease:          all 0.25s cubic-bezier(.4,0,.2,1);
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+html, body, #app {
+  height: 100%;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+body {
+  font-family: var(--font-body);
+  background: #6e7faa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
 }
+
+button { cursor: pointer; border: none; font-family: var(--font-head); }
+input, select { outline: none; border: none; font-family: var(--font-body); }
+a { text-decoration: none; }

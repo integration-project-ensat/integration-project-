@@ -1,1 +1,0 @@
-<!-- Jauge visuelle du score de crédibilité /100. Affiche le niveau (Débutant, Intermédiaire, Avancé, Expert) calculé depuis le backend selon les projets, stages, badges, etc. -->
