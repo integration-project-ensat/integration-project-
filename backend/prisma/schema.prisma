@@ -163,7 +163,10 @@ enum TypeReaction {
   LIKE
   
 }
-
+enum niveau_acces {
+  SUPER_ADMIN
+  STANDARD
+}
 model Utilisateur {
   id_utilisateur     BigInt           @id @default(autoincrement())
   nom                String           @db.VarChar(100)
@@ -175,6 +178,9 @@ model Utilisateur {
   est_valide         Boolean          @default(false)
   date_creation      DateTime         @default(now())
   derniere_connexion DateTime?
+  email_verifie      Boolean          @default(false)
+  token_verification String?          @db.VarChar(255)
+  token_expires_at DateTime?
 
   etudiant       Etudiant?
   professeur     Professeur?
@@ -218,6 +224,7 @@ model Professeur {
   titre               String? @db.VarChar(100)
   email_professionnel String? @db.VarChar(255)
   telephone         String? @db.VarChar(20)
+  code_administratif String? @db.VarChar(50)
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
@@ -233,6 +240,7 @@ model Administrateur {
   id_utilisateur  BigInt    @id
   droits_admin    Json?
   date_validation DateTime?
+  niveau_acces   niveau_acces @default(STANDARD)
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 

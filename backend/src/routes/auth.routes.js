@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const{param} = require('express-validator');
+const{param, body} = require('express-validator');
 
 const authController = require('../controllers/auth.controller');
 const { AuthValidator } = require('../validators/auth.validator');
@@ -28,14 +28,23 @@ router.post(
   authController.createAdmin
 );
 
-router.patch(
+router.get(
   '/admin/valider/:utilisateurId',
-  authentifier,
-  autoriserRoles(ROLES.ADMINISTRATEUR),
-  validate([param('utilisateurId').isInt({min: 1}).withMessage('ID utilisateur invalide')]),
-  authController.validerProfessionnel
+  validate([
+    param('utilisateurId').isInt({ min: 1 }).withMessage('ID invalide'),
+    query('token').notEmpty().withMessage('Token manquant')
+  ]),
+  authController.validerProfessionnelParLien
 );
 
+router.get(
+  '/admin/refuser/:utilisateurId',
+  validate([
+    param('utilisateurId').isInt({ min: 1 }).withMessage('ID invalide'),
+    query('token').notEmpty().withMessage('Token manquant')
+  ]),
+  authController.refuserProfessionnelParLien
+);
 router.get(
   '/admin/professionnels-en-attente',
   authentifier,

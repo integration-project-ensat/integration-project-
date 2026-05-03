@@ -2,8 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../../prisma/client');
 const{PUBLIC_ROLES, ROLES} = require('../config/roles');
-const {genererCode,sendVerificationCode,sendAdminValidationRequest}=require('../services/email.service');
-const { emit } = require('node:cluster');
+const { genererCode, sendVerificationCode, sendAdminValidationRequest,sendValidationResultEmail } = require('../services/email.service');
+const asyncHandler = require('../middlewares/asyncHandler');
 
 const SALT_ROUNDS = 12;
 const JWT_EXPIRES_IN = '24h';
@@ -23,7 +23,7 @@ function sanitizeUser(user) {
 
 // ==================== INSCRIPTION PUBLIQUE ====================
 
-const register = async (req, res) => {
+const register = asyncHandler(async (req, res) => {
     // Validation des données d'inscription
   const { nom, prenom, email, mot_de_passe, role, ...specificData } = req.body;
 // Vérification de l'unicité de l'email
@@ -113,10 +113,10 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
             email: user.email
         } 
     });
-};
+});
 //Verification par code de vérification
 
-const verifierCode = async (req, res) => {
+const verifierCode = asyncHandler(async (req, res) => {
     const { email, code } = req.body;
     const user = await prisma.utilisateur.findUnique({ where: { email } });
     if (!user) {
@@ -157,10 +157,10 @@ const verifierCode = async (req, res) => {
         success: true,
         message
     });
-}
+}); 
 
 //renvoyer le code de vérification
-const renvoyerCode=async(req,res)=>{
+const renvoyerCode=asyncHandler(async(req,res)=>{
     const {email}=req.body;
     const user=await prisma.utilisateur.findUnique({where:{email}});
     if(!user || user.email_verifie){
@@ -186,12 +186,12 @@ const renvoyerCode=async(req,res)=>{
         success: true,
         message: 'Nouveau code de vérification envoyé!'
     });
-};
+});
 
 
 // ==================== CONNEXION ====================
 
-const login = async (req, res) => {
+const login = asyncHandler(async (req, res) => {
   const { email, mot_de_passe } = req.body;
 
   const user = await prisma.utilisateur.findUnique({
@@ -236,11 +236,10 @@ const login = async (req, res) => {
       user: sanitizeUser(user)
     }
   });
-};
-
+});
 // ==================== PROFIL ====================
 
-const getCurrentUser = async (req, res) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
   const user = await prisma.utilisateur.findUnique({
     where: { id_utilisateur: req.utilisateur.id_utilisateur },
     include: {
@@ -255,12 +254,12 @@ const getCurrentUser = async (req, res) => {
     success: true,
     data: sanitizeUser(user)
   });
-};
+});
 
 // ==================== CREATION ADMIN (RESERVE) ====================
 
-const createAdmin = async (req, res) => {
-  const { nom, prenom, email, mot_de_passe_hashe } = req.body;
+const createAdmin = asyncHandler(async (req, res) => {
+  const { nom, prenom, email, mot_de_passe } = req.body;
 
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
@@ -298,49 +297,126 @@ const createAdmin = async (req, res) => {
       user: sanitizeUser(user)
     }
   });
-};
-//Valider Professionnel par admin
-const validerProfessionnel=async(req,res)=>{
-    const {utilisateurId}=req.params;
+});
+// ==================== VALIDATION PAR LIEN EMAIL (GET) ====================
 
-    const utilisateur=await prisma.utilisateur.findUnique({
-        where:{id_utilisateur:parseInt(utilisateurId)},
-        include:{professionnel:true}
-    });
-    if(!utilisateur||!utilisateur.professionnel){
-        return res.status(404).json({
-            success:false,
-            message:'Utilisateur introuvable'
-        });
-    }
-    if(utilisateur.role!=='PROFESSIONNEL'){
-        return res.status(400).json({
-            success:false,  
-            message:'Cet utilisateur n\'est pas un professionnel'
-        });
-    }
-    if(utilisateur.est_actif){
-        return res.status(400).json({
-            success:false,
-            message:'Ce compte est déjà activé'
-        });
-    }
-    const updated=await prisma.utilisateur.update({
-        where:{id_utilisateur:parseInt(utilisateurId)},
-        data:{est_actif:true}
-    });
+const validerProfessionnelParLien = asyncHandler(async (req, res) => {
+  const { utilisateurId } = req.params;
+  const { token } = req.query;
 
-    res.json({
-        success: true,
-        message: 'Professionnel validé avec succès!',
-        data: {
-            utilisateur: sanitizeUser(updated)
-        }
+  // Vérification du token secret
+  if (token !== process.env.ADMIN_ACTION_SECRET) {
+    return res.status(403).send(`
+      <h2 style="font-family:Arial;color:#dc2626;">❌ Token invalide</h2>
+      <p style="font-family:Arial;">Ce lien n'est pas autorisé.</p>
+    `);
+  }
 
-    });
-};
+  const utilisateur = await prisma.utilisateur.findUnique({
+    where: { id_utilisateur: parseInt(utilisateurId) },
+    include: { professionnel: true }
+  });
+
+  if (!utilisateur || !utilisateur.professionnel) {
+    return res.status(404).send(`
+      <h2 style="font-family:Arial;color:#dc2626;">❌ Utilisateur introuvable</h2>
+      <p style="font-family:Arial;">Ce compte n'existe pas ou a déjà été traité.</p>
+    `);
+  }
+
+  if (utilisateur.est_actif) {
+    return res.status(400).send(`
+      <h2 style="font-family:Arial;color:#D97706;">⚠️ Déjà activé</h2>
+      <p style="font-family:Arial;">Ce compte est déjà actif.</p>
+    `);
+  }
+
+  await prisma.utilisateur.update({
+    where: { id_utilisateur: parseInt(utilisateurId) },
+    data: { est_actif: true }
+  });
+
+  await sendValidationResultEmail(utilisateur.email, utilisateur.nom, true);
+
+  // Page de confirmation affichée dans le navigateur
+  return res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>Compte validé</title></head>
+    <body style="font-family:Arial;max-width:500px;margin:80px auto;text-align:center;">
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:40px;">
+        <h1 style="color:#16a34a;">✅ Compte validé</h1>
+        <p style="color:#374151;">
+          Le compte de <strong>${utilisateur.prenom} ${utilisateur.nom}</strong> 
+          a été validé avec succès.
+        </p>
+        <p style="color:#6B7280;font-size:14px;">
+          Un email de confirmation a été envoyé à ${utilisateur.email}.
+        </p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
+  const { utilisateurId } = req.params;
+  const { token } = req.query;
+
+  // Vérification du token secret
+  if (token !== process.env.ADMIN_ACTION_SECRET) {
+    return res.status(403).send(`
+      <h2 style="font-family:Arial;color:#dc2626;">❌ Token invalide</h2>
+      <p style="font-family:Arial;">Ce lien n'est pas autorisé.</p>
+    `);
+  }
+
+  const utilisateur = await prisma.utilisateur.findUnique({
+    where: { id_utilisateur: parseInt(utilisateurId) },
+    include: { professionnel: true }
+  });
+
+  if (!utilisateur || !utilisateur.professionnel) {
+    return res.status(404).send(`
+      <h2 style="font-family:Arial;color:#dc2626;">❌ Utilisateur introuvable</h2>
+      <p style="font-family:Arial;">Ce compte n'existe pas ou a déjà été traité.</p>
+    `);
+  }
+
+  if (utilisateur.est_actif) {
+    return res.status(400).send(`
+      <h2 style="font-family:Arial;color:#D97706;">⚠️ Déjà activé</h2>
+      <p style="font-family:Arial;">Ce compte est déjà actif, impossible de le refuser.</p>
+    `);
+  }
+
+  await prisma.utilisateur.delete({
+    where: { id_utilisateur: parseInt(utilisateurId) }
+  });
+
+  await sendValidationResultEmail(utilisateur.email, utilisateur.nom, false);
+
+  return res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>Compte refusé</title></head>
+    <body style="font-family:Arial;max-width:500px;margin:80px auto;text-align:center;">
+      <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:40px;">
+        <h1 style="color:#dc2626;">❌ Compte refusé</h1>
+        <p style="color:#374151;">
+          Le compte de <strong>${utilisateur.prenom} ${utilisateur.nom}</strong> 
+          a été refusé et supprimé.
+        </p>
+        <p style="color:#6B7280;font-size:14px;">
+          Un email de notification a été envoyé à ${utilisateur.email}.
+        </p>
+      </div>
+    </body>
+    </html>
+  `);
+});
 //lister les professionnels en attente de validation
-const getProfessionnelsEnAttente=async(req,res)=>{
+const getProfessionnelsEnAttente=asyncHandler(async(req,res)=>{
     const professionnels=await prisma.utilisateur.findMany({
         where:{
             role:'PROFESSIONNEL',
@@ -354,15 +430,16 @@ const getProfessionnelsEnAttente=async(req,res)=>{
         success: true,
         data: professionnels.map(sanitizeUser)
     });
-};
+});
 
 module.exports = {
-  register,
-  login,
-  getCurrentUser,
-  createAdmin,
-  verifierCode,
-  renvoyerCode,
-  validerProfessionnel,
-  getProfessionnelsEnAttente
+    register,
+    login,
+    verifierCode,
+    renvoyerCode, 
+    getCurrentUser,
+    createAdmin,
+    validerProfessionnelParLien,
+    refuserProfessionnelParLien,
+    getProfessionnelsEnAttente
 };
