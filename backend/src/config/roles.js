@@ -7,7 +7,10 @@ const ROLES = {
 
 const PUBLIC_ROLES = ['ETUDIANT', 'PROFESSEUR', 'PROFESSIONNEL'
 ];
-
+const ADMIN_LEVELS = {
+    STANDARD: 'STANDARD',
+    SUPER_ADMIN: 'SUPER_ADMIN'
+};
 // Permissions par ressource/action
 const PERMISSIONS = {
     USER: {
@@ -20,10 +23,15 @@ const PERMISSIONS = {
 const hasPermission = (userRole, permissionArray) => {
   return permissionArray.includes(userRole);
 };
+const isPublicRole = (role) => {
+    return PUBLIC_ROLES.includes(role);
+};
 
 module.exports = {
   ROLES,
   PUBLIC_ROLES,
+  ADMIN_LEVELS,
   PERMISSIONS,
-  hasPermission
+  hasPermission,
+  isPublicRole
 };

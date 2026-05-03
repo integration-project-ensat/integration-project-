@@ -4,9 +4,11 @@ const prisma = require('../../prisma/client');
 const{PUBLIC_ROLES, ROLES} = require('../config/roles');
 const { genererCode, sendVerificationCode, sendAdminValidationRequest,sendValidationResultEmail } = require('../services/email.service');
 const asyncHandler = require('../middlewares/asyncHandler');
+const { count } = require('node:console');
 
 const SALT_ROUNDS = 12;
 const JWT_EXPIRES_IN = '24h';
+const VERIFICATION_CODE_EXPIRY_HOURS = 24;
 // Fonction pour générer un token JWTavec les informations de l'utilisateur et une clé secrète, valable pendant 24 heures.
 function generateToken(user) {
   return jwt.sign(
@@ -20,12 +22,20 @@ function sanitizeUser(user) {
   const { mot_de_passe_hashe, ...safe } = user;
   return safe;
 }
-
+function isValidPublicRole(role) {
+  return Object.values(PUBLIC_ROLES).includes(role);
+}
 // ==================== INSCRIPTION PUBLIQUE ====================
 
 const register = asyncHandler(async (req, res) => {
     // Validation des données d'inscription
   const { nom, prenom, email, mot_de_passe, role, ...specificData } = req.body;
+  if (!isValidPublicRole(role)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Rôle invalide'
+    });
+  }
 // Vérification de l'unicité de l'email
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
@@ -38,7 +48,7 @@ const register = asyncHandler(async (req, res) => {
   const hashedPassword = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
 // Génération du code de vérification et envoi de l'email de vérification
   const verificationCode = genererCode();
-const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
+const tokenExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 60 * 60 * 1000); // 24 heures
 
   // Création de l'utilisateur et des données spécifiques au rôle dans une transaction
   const user = await prisma.$transaction(async (tx) => {
@@ -110,7 +120,8 @@ const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
         message: 'Inscription réussie! Veuillez vérifier votre email pour activer votre compte.',
         data: {
             userId: user.id_utilisateur,
-            email: user.email
+            email: user.email,
+            role: user.role
         } 
     });
 });
@@ -123,6 +134,12 @@ const verifierCode = asyncHandler(async (req, res) => {
         return res.status(404).json({
             success: false,
             message: 'Email introuvable'
+        });
+    }
+    if (user.email_verifie) {
+        return res.status(400).json({
+            success: false,
+            message: 'Email déjà vérifié'
         });
     }
     if (user.email_verification !== code) {
@@ -169,8 +186,14 @@ const renvoyerCode=asyncHandler(async(req,res)=>{
             message:'Email introuvable ou déjà vérifié'
         });
     }
+    if(user.email_verifie) {
+        return res.status(400).json({
+            success: false,
+            message: 'Email déjà vérifié'
+        });
+    }
     const newCode=genererCode();
-    const newExpiresAt=new Date(Date.now()+24*60*60*1000);
+    const newExpiresAt=new Date(Date.now()+VERIFICATION_CODE_EXPIRY_HOURS*60*60*1000);
     await prisma.utilisateur.update({
         where:{id_utilisateur:user.id_utilisateur},
         data:{
@@ -213,7 +236,16 @@ const login = asyncHandler(async (req, res) => {
     if (!user.est_actif) {
     return res.status(403).json({
         success: false,
-        message:'Votre compte n\'est pas encore activé. Veuillez vérifier votre email pour activer votre compte.'
+message: user.email_verifie 
+                ? 'Votre compte n\'est pas encore activé. En attente de validation administrative.'
+                : 'Votre compte n\'est pas encore activé. Veuillez vérifier votre email.'
+                  });
+}
+
+if (!user.email_verifie) {
+    return res.status(403).json({
+        success: false,
+        message: 'Votre compte n\'est pas encore activé. Veuillez vérifier votre email.'
     });
 }
 
@@ -225,6 +257,10 @@ const login = asyncHandler(async (req, res) => {
       message: 'Email ou mot de passe incorrect'
     });
   }
+  await prisma.utilisateur.update({
+    where: { id_utilisateur: user.id_utilisateur },
+    data: { derniere_connexion: new Date() }
+  });
 // Génération du token JWT et envoi de la réponse avec les données de l'utilisateur (sans le mot de passe)
   const token = generateToken(user);
 
@@ -237,6 +273,7 @@ const login = asyncHandler(async (req, res) => {
     }
   });
 });
+
 // ==================== PROFIL ====================
 
 const getCurrentUser = asyncHandler(async (req, res) => {
@@ -249,6 +286,12 @@ const getCurrentUser = asyncHandler(async (req, res) => {
       administrateur: true
     }
   });
+  if (!user) {
+    return res.status(404).json({
+      success: false, 
+      message: 'Utilisateur non trouvé'
+    });
+  }
 
   res.json({
     success: true,
@@ -259,7 +302,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 // ==================== CREATION ADMIN (RESERVE) ====================
 
 const createAdmin = asyncHandler(async (req, res) => {
-  const { nom, prenom, email, mot_de_passe } = req.body;
+  const { nom, prenom, email, mot_de_passe ,niveau_acces='STANDARD'||'SUPER_ADMIN'} = req.body;
 
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
@@ -269,7 +312,7 @@ const createAdmin = asyncHandler(async (req, res) => {
     });
   }
 
-  const hashedPassword = await bcrypt.hash(mot_de_passe_hashe, SALT_ROUNDS);
+  const hashedPassword = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
 
   const user = await prisma.$transaction(async (tx) => {
     const newUser = await tx.utilisateur.create({
@@ -280,12 +323,15 @@ const createAdmin = asyncHandler(async (req, res) => {
         prenom,
         role: 'ADMINISTRATEUR',
         est_actif: true,
-        email_verifie: true,
-        administrateur: {
-          create: {niveau_acces: 'STANDARD'
-}}
+        email_verifie: true
 }
     });
+     await tx.administrateur.create({
+            data: {
+                id_utilisateur: newUser.id_utilisateur,
+                niveau_acces: niveau_acces
+            }
+        });
 
     return newUser;
   });
@@ -305,58 +351,37 @@ const validerProfessionnelParLien = asyncHandler(async (req, res) => {
   const { token } = req.query;
 
   // Vérification du token secret
-  if (token !== process.env.ADMIN_ACTION_SECRET) {
-    return res.status(403).send(`
-      <h2 style="font-family:Arial;color:#dc2626;">❌ Token invalide</h2>
-      <p style="font-family:Arial;">Ce lien n'est pas autorisé.</p>
-    `);
+  if (!token || token !== process.env.ADMIN_ACTION_SECRET) {
+   return res.status(403).send(renderErrorPage('Token invalide', 'Ce lien n\'est pas autorisé.'));
   }
-
+const id = parseInt(utilisateurId, 10);
+if (isNaN(id)) {
+    return res.status(400).send(renderErrorPage('ID invalide', 'L\'ID utilisateur doit être un nombre entier.'));
+  }
+  
   const utilisateur = await prisma.utilisateur.findUnique({
-    where: { id_utilisateur: parseInt(utilisateurId) },
+    where: { id_utilisateur: id },
     include: { professionnel: true }
   });
 
   if (!utilisateur || !utilisateur.professionnel) {
-    return res.status(404).send(`
-      <h2 style="font-family:Arial;color:#dc2626;">❌ Utilisateur introuvable</h2>
-      <p style="font-family:Arial;">Ce compte n'existe pas ou a déjà été traité.</p>
-    `);
+   return res.status(404).send(renderErrorPage('Utilisateur introuvable', 'Ce compte n\'existe pas ou a déjà été traité.'));
   }
 
   if (utilisateur.est_actif) {
-    return res.status(400).send(`
-      <h2 style="font-family:Arial;color:#D97706;">⚠️ Déjà activé</h2>
-      <p style="font-family:Arial;">Ce compte est déjà actif.</p>
-    `);
+    return res.status(400).send(renderWarningPage('Déjà activé', 'Ce compte est déjà actif.'));
   }
 
   await prisma.utilisateur.update({
-    where: { id_utilisateur: parseInt(utilisateurId) },
+    where: { id_utilisateur: id },
     data: { est_actif: true }
   });
 
   await sendValidationResultEmail(utilisateur.email, utilisateur.nom, true);
 
   // Page de confirmation affichée dans le navigateur
-  return res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head><meta charset="UTF-8"><title>Compte validé</title></head>
-    <body style="font-family:Arial;max-width:500px;margin:80px auto;text-align:center;">
-      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:40px;">
-        <h1 style="color:#16a34a;">✅ Compte validé</h1>
-        <p style="color:#374151;">
-          Le compte de <strong>${utilisateur.prenom} ${utilisateur.nom}</strong> 
-          a été validé avec succès.
-        </p>
-        <p style="color:#6B7280;font-size:14px;">
-          Un email de confirmation a été envoyé à ${utilisateur.email}.
-        </p>
-      </div>
-    </body>
-    </html>
-  `);
+  return res.send(renderSuccessPage('Compte validé', `Le compte de ${utilisateur.prenom} ${utilisateur.nom} a été validé avec succès.`,
+    `un email de confirmation a été envoyé à ${utilisateur.email}.`));       
 });
 
 const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
@@ -364,74 +389,144 @@ const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
   const { token } = req.query;
 
   // Vérification du token secret
-  if (token !== process.env.ADMIN_ACTION_SECRET) {
-    return res.status(403).send(`
-      <h2 style="font-family:Arial;color:#dc2626;">❌ Token invalide</h2>
-      <p style="font-family:Arial;">Ce lien n'est pas autorisé.</p>
-    `);
+  if (!token || token !== process.env.ADMIN_ACTION_SECRET) {
+    return res.status(403).send(renderErrorPage('Token invalide', 'Ce lien n\'est pas autorisé.'));
   }
 
+  const id = parseInt(utilisateurId, 10);
+  if (isNaN(id)) {
+    return res.status(400).send(renderErrorPage('ID invalide', 'L\'ID utilisateur doit être un nombre entier.'));
+  }
   const utilisateur = await prisma.utilisateur.findUnique({
-    where: { id_utilisateur: parseInt(utilisateurId) },
+    where: { id_utilisateur: id },
     include: { professionnel: true }
   });
 
   if (!utilisateur || !utilisateur.professionnel) {
-    return res.status(404).send(`
-      <h2 style="font-family:Arial;color:#dc2626;">❌ Utilisateur introuvable</h2>
-      <p style="font-family:Arial;">Ce compte n'existe pas ou a déjà été traité.</p>
-    `);
+    return res.status(404).send(renderErrorPage('Utilisateur introuvable', 'Ce compte n\'existe pas ou a déjà été traité.'));
   }
 
   if (utilisateur.est_actif) {
-    return res.status(400).send(`
-      <h2 style="font-family:Arial;color:#D97706;">⚠️ Déjà activé</h2>
-      <p style="font-family:Arial;">Ce compte est déjà actif, impossible de le refuser.</p>
-    `);
+    return res.status(400).send(renderWarningPage('Déjà activé', 'Ce compte est déjà actif, impossible de le refuser.'));
   }
 
-  await prisma.utilisateur.delete({
-    where: { id_utilisateur: parseInt(utilisateurId) }
-  });
+   // Suppression en cascade via transaction
+    await prisma.$transaction(async (tx) => {
+        await tx.professionnel.delete({
+            where: { id_utilisateur: id }
+        });
+        await tx.utilisateur.delete({
+            where: { id_utilisateur: id }
+        });
+    });
 
   await sendValidationResultEmail(utilisateur.email, utilisateur.nom, false);
 
-  return res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head><meta charset="UTF-8"><title>Compte refusé</title></head>
-    <body style="font-family:Arial;max-width:500px;margin:80px auto;text-align:center;">
-      <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:40px;">
-        <h1 style="color:#dc2626;">❌ Compte refusé</h1>
-        <p style="color:#374151;">
-          Le compte de <strong>${utilisateur.prenom} ${utilisateur.nom}</strong> 
-          a été refusé et supprimé.
-        </p>
-        <p style="color:#6B7280;font-size:14px;">
-          Un email de notification a été envoyé à ${utilisateur.email}.
-        </p>
-      </div>
-    </body>
-    </html>
-  `);
+  return res.send(renderErrorPage('Compte refusé', 
+     `Le compte de <strong>${escapeHtml(utilisateur.prenom)} ${escapeHtml(utilisateur.nom)}</strong> a été refusé et supprimé.`,
+        `Un email de notification a été envoyé à ${escapeHtml(utilisateur.email)}.`));
 });
+
 //lister les professionnels en attente de validation
 const getProfessionnelsEnAttente=asyncHandler(async(req,res)=>{
     const professionnels=await prisma.utilisateur.findMany({
         where:{
-            role:'PROFESSIONNEL',
+            role:ROLES.PROFESSIONNEL,
             est_actif:false,
             email_verifie:true
         },
-        include:{professionnel:true}
+        include:{professionnel:true},
+          orderBy:{date_creation:'asc'}
     });
 
     res.json({
         success: true,
+        count: professionnels.length,
         data: professionnels.map(sanitizeUser)
     });
 });
 
+
+// ==================== HELPERS RENDU HTML ====================
+
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function renderPage(title, message, submessage = '', color = '#4F46E5', icon = 'ℹ️') {
+    return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${escapeHtml(title)}</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+                background: #f3f4f6; 
+                min-height: 100vh; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+                padding: 20px;
+            }
+            .card {
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                max-width: 500px;
+                width: 100%;
+                overflow: hidden;
+            }
+            .header {
+                background: ${color};
+                padding: 24px 30px;
+                color: #fff;
+            }
+            .header h1 { font-size: 20px; margin: 0; }
+            .body {
+                padding: 30px;
+                text-align: center;
+            }
+            .body p { color: #374151; line-height: 1.6; margin-bottom: 12px; }
+            .body .sub { color: #6B7280; font-size: 14px; }
+            .icon { font-size: 48px; margin-bottom: 16px; display: block; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="header">
+                <h1>${escapeHtml(title)}</h1>
+            </div>
+            <div class="body">
+                <span class="icon">${icon}</span>
+                <p>${message}</p>
+                ${submessage ? `<p class="sub">${submessage}</p>` : ''}
+            </div>
+        </div>
+    </body>
+    </html>`;
+}
+
+function renderSuccessPage(title, message, submessage) {
+    return renderPage(title, message, submessage, '#16a34a', '✅');
+}
+
+function renderErrorPage(title, message, submessage) {
+    return renderPage(title, message, submessage, '#dc2626', '❌');
+}
+
+function renderWarningPage(title, message, submessage) {
+    return renderPage(title, message, submessage, '#D97706', '⚠️');
+}
 module.exports = {
     register,
     login,
@@ -441,5 +536,6 @@ module.exports = {
     createAdmin,
     validerProfessionnelParLien,
     refuserProfessionnelParLien,
-    getProfessionnelsEnAttente
+    getProfessionnelsEnAttente,
+    sanitizeUser
 };

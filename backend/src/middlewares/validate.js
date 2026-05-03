@@ -8,16 +8,20 @@ const validate=(validations)=>{
         const errors=validationResult(req);
         if(errors.isEmpty()){
             return next();
-        }   
+        }  
+        
+        const formattedErrors=errors.array().map(err=>({
+            field:err.path,
+            message:err.msg,
+            value:err.value
+        }));
+        
         return res.status(400).json({
             success:false,
             message:'Validation échouée',
-            errors:errors.array().map(err=>({
-                field:err.path,
-                message:err.msg
-            }))
+            errors:formattedErrors
         });
     }
-}
+};
 
 module.exports=validate;

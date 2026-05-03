@@ -168,10 +168,10 @@ enum niveau_acces {
   STANDARD
 }
 model Utilisateur {
-  id_utilisateur     BigInt           @id @default(autoincrement())
-  nom                String           @db.VarChar(100)
-  prenom             String           @db.VarChar(100)
-  email              String           @unique @db.VarChar(255)
+  id_utilisateur     BigInt  @id @default(autoincrement()) @db.BigInt
+  nom                String  @db.VarChar(100)
+  prenom             String  @db.VarChar(100)
+  email              String  @unique @db.VarChar(255)
   mot_de_passe_hashe String
   role               RoleUtilisateur
   est_actif          Boolean          @default(true)
@@ -179,7 +179,7 @@ model Utilisateur {
   date_creation      DateTime         @default(now())
   derniere_connexion DateTime?
   email_verifie      Boolean          @default(false)
-  token_verification String?          @db.VarChar(255)
+  email_verification String?          @db.VarChar(255)
   token_expires_at DateTime?
 
   etudiant       Etudiant?
@@ -254,6 +254,7 @@ model Professionnel {
   id_utilisateur   BigInt  @id
   entreprise       String  @db.VarChar(150)
   poste            String  @db.VarChar(150)
+  secteur          String? @db.VarChar(100)
   est_valide_admin Boolean @default(false)
   justificatifs_url String?
 

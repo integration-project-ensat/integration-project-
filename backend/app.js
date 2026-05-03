@@ -34,7 +34,7 @@ app.use('/api/auth/seconnecter', authLimiter)
 app.use('/api/auth/sinscrire', authLimiter)
 app.use('/api/auth/renvoyer-code', passwordLimiter)
 app.use('/api/auth/verifier-code', passwordLimiter)
-app.use('/api/auth/admin', authLimiter)
+
 
 //health check
 app.get('/', (req, res) => {

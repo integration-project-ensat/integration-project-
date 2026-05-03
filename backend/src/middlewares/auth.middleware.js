@@ -32,13 +32,26 @@ const authentifier = async (req, res, next) => {
       }
     });
 
-    if (!utilisateur||!utilisateur.est_actif) {
-      return res.status(401).json({
-        success: false,
-        message: 'Accès non autorisé: utilisateur introuvable ou désactivé'
-      });
-    }
+    if (!utilisateur) {
+            return res.status(401).json({
+                success: false,
+                message: 'Accès non autorisé : utilisateur introuvable'
+            });
+        }
 
+        if (!utilisateur.est_actif) {
+            return res.status(403).json({
+                success: false,
+                message: 'Compte désactivé. Contactez l\'administrateur.'
+            });
+        } 
+
+          if (!utilisateur.email_verifie) {
+            return res.status(403).json({
+                success: false,
+                message: 'Email non vérifié. Veuillez vérifier votre email avant de continuer.'
+            });
+        }
     req.utilisateur = utilisateur;
     next();
 
