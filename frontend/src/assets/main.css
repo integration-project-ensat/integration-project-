@@ -7,28 +7,37 @@
 }
 
 :root {
-  --navy:          #0d1b2a;
-  --navy-mid:      #1a2d42;
-  --purple:        #5b3fd4;
-  --purple-hover:  #4a31b8;
-  --input-bg:      #eef0f4;
-  --text-dark:     #1a1a2e;
-  --text-muted:    #5a6a7a;
-  --error:         #e53e3e;
-  --font-head:     'Sora', sans-serif;
+  --navy:          #111827;
+  --navy-mid:      #243559; 
+  --purple:        #4f46e5;
+  --purple-light:  #5a89ed; /*ou bien ce coleur*/
+  --blue-w:        #06B6D4;
+  --text-dark:     #111827;
+  --text-gray:     #7A7F88;
+  --input-bg:      #E5E7EB;
+  --error:         #df1e21;
+  --font-head:     'Inter', sans-serif;
   --font-body:     'DM Sans', sans-serif;
   --radius-pill:   50px;
   --radius-card:   16px;
   --ease:          all 0.25s cubic-bezier(.4,0,.2,1);
 }
 
-html, body, #app {
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
   height: 100%;
+}
+
+#app {
+   width: 100%;
+   height: 100vh;
+   display: flex;
 }
 
 body {
   font-family: var(--font-body);
-  background: #6e7faa;
   display: flex;
   align-items: center;
   justify-content: center;

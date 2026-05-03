@@ -10,7 +10,7 @@
   padding: 12px;
   border-radius: 20px;
   border: none;
-  background: linear-gradient(to right, #5f5fff, #7b5cff);
+  /* background: linear-gradient(to right, #5f5fff, #7b5cff); */
   color: white;
   cursor: pointer;
 }
