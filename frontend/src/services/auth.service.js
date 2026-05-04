@@ -1,18 +1,33 @@
-// Service d'authentification. Gère le login/logout SSO Keycloak, le refresh token automatique, et la récupération du rôle utilisateur depuis le token JWT.
 import api from './api.js'
 
 export default {
   async login(email, password) {
-    const { data } = await api.post('/auth/login', { email, password })
+    const { data } = await api.post('/seconnecter', { email, password })
     localStorage.setItem('token', data.token)
     return data
   },
 
   async signup(payload) {
-    // payload: { firstName, lastName, email, password, role }
-    const { data } = await api.post('/auth/signup', payload)
+    const { data } = await api.post('/sinscrire', payload)
     localStorage.setItem('token', data.token)
     return data
+  },
+
+  async forgotPassword(email) {
+    return api.post('/mot-de-passe-oublie', { email })
+  },
+
+  async verifyCode(email, code) {
+    return api.post('/verifier-code', { email, code })
+  },
+
+  async resendCode(email) {
+    return api.post('/renvoyer-code', { email })
+  },
+
+  async resetPassword(payload) {
+    // payload: { email, code, newPassword }
+    return api.post('/reinitialiser-mot-de-passe', payload)
   },
 
   logout() {

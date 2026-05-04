@@ -38,11 +38,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const email   = ref('')
 const error   = ref('')
 const success = ref('')
 const loading = ref(false)
+const router = useRouter()
 
 async function submit() {
   error.value = ''
@@ -55,6 +57,8 @@ async function submit() {
   try {
     // await authService.forgotPassword(email.value)
     success.value = 'Lien envoyé ! Vérifiez votre boîte mail.'
+
+    router.push({ path: '/verify-code', query: { email: email.value } })
   } catch {
     error.value = 'Nous ne trouvons pas votre e-mail.'
   } finally {
