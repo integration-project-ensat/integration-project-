@@ -48,7 +48,7 @@ const motDePasseOublie = asyncHandler(async (req, res) => {
     await prisma.utilisateur.update({
         where: { id_utilisateur: user.id_utilisateur },
         data: {
-            token_verification: resetTokenHash,
+            email_verification: resetTokenHash,
             token_expires_at: expiresAt
         }
     });
@@ -83,7 +83,7 @@ const verifierTokenReset = asyncHandler(async (req, res) => {
 
     const user = await prisma.utilisateur.findFirst({
         where: {
-            token_verification: tokenHash,
+            email_verification: tokenHash,
             token_expires_at: { gt: new Date() }
         },
         select: {
@@ -135,7 +135,7 @@ const reinitialiserMotDePasse = asyncHandler(async (req, res) => {
 
     const user = await prisma.utilisateur.findFirst({
         where: {
-            token_verification: tokenHash,
+            email_verification: tokenHash,
             token_expires_at: { gt: new Date() }
         }
     });
@@ -163,7 +163,7 @@ const reinitialiserMotDePasse = asyncHandler(async (req, res) => {
         where: { id_utilisateur: user.id_utilisateur },
         data: {
             mot_de_passe_hashe: hashedPassword,
-            token_verification: null,
+            email_verification: null,
             token_expires_at: null
         }
     });
