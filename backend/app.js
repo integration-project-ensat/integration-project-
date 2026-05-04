@@ -9,7 +9,8 @@
  * 
  * Ne démarre PAS le serveur (voir server.js pour le démarrage)
  */
-
+require('dotenv').config()
+BigInt.prototype.toJSON = function () { return this.toString() }
 const express = require('express')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
@@ -18,6 +19,7 @@ const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateL
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
+const e = require('express')
 
 const app = express()
 
