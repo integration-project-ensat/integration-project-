@@ -96,7 +96,8 @@ async function main() {
       professionnel: {
         create: {
           entreprise: 'StartupMA',
-          poste: 'Designer'
+          poste: 'Designer',
+          secteur: 'Design' 
         }
       }
     }
