@@ -1,1 +1,180 @@
-# GitHub Action dédiée sécurité. Lance Trivy pour scanner les images Docker (CVE) et OWASP ZAP sur l'URL de staging pour détecter les failles web.
+name: "Security Pipeline - Application Security"
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+
+  appsec-dependency-audit:
+    name: "Audit des Dependances"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - run: mkdir -p security-reports
+
+      - name: Audit Frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm audit --audit-level=moderate \
+          --json > ../security-reports/npm-audit-frontend.json || true
+
+      - name: Audit Backend
+        working-directory: ./backend
+        run: |
+          npm ci
+          npm audit --audit-level=moderate \
+          --json > ../security-reports/npm-audit-backend.json || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-dependances-${{ github.run_number }}
+          path: security-reports/npm-audit-*.json
+          retention-days: 30
+
+  appsec-scan:
+    name: "Scan Securite"
+    runs-on: ubuntu-latest
+    needs: appsec-dependency-audit
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Demarrer Staging"
+        run: |
+          docker compose \
+            -f docker-compose.yml \
+            -f docker-compose.staging.yml \
+            up -d --build
+
+      - name: "Attendre SonarQube"
+        run: |
+          timeout 180 bash -c \
+            'until curl -sf http://127.0.0.1:9000/api/system/status \
+            | grep -q UP; do sleep 10; done'
+          echo "SonarQube pret"
+
+      - name: "Attendre Backend"
+        run: |
+          timeout 60 bash -c \
+            'until curl -sf http://127.0.0.1:3000; \
+            do sleep 3; done'
+          echo "Backend pret"
+
+      - name: "Scanner images Docker avec Trivy"
+        run: |
+          mkdir -p reports/trivy
+ 
+          for IMAGE in \
+            postgres:15-alpine \
+            quay.io/keycloak/keycloak:23.0 \
+            nginx:alpine \
+            sonarqube:10-community \
+            ghcr.io/zaproxy/zaproxy:stable; do
+ 
+            SAFE_NAME=$(echo $IMAGE | tr '/:' '--')
+            echo "Scanning $IMAGE..."
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:latest image \
+              --format json \
+              --output /dev/stdout \
+              --severity HIGH,CRITICAL \
+              $IMAGE > reports/trivy/trivy-${SAFE_NAME}.json || true
+          done
+ 
+      - name: "Publier rapports Trivy"
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-report-${{ github.run_number }}
+          path: reports/trivy/*
+          retention-days: 30    
+
+      - name: "Generer Token SonarQube"
+        id: sonar_token
+        run: |
+          TOKEN=$(curl -s -X POST \
+            "http://127.0.0.1:9000/api/user_tokens/generate" \
+            -u "admin:admin" \
+            -d "name=pipeline-${{ github.run_number }}" \
+            | grep -o '"token":"[^"]*"' \
+            | cut -d'"' -f4)
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: "SonarQube Scan"
+        uses: SonarSource/sonarqube-scan-action@v5.2.0
+        env:
+          SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
+          SONAR_HOST_URL: "http://127.0.0.1:9000"
+
+      - name: "Preparer dossier ZAP"
+        run: |
+          mkdir -p reports/zap
+          docker exec --user root portfolio_zap chmod 777 /zap/wrk || true
+
+      - name: "Scan OWASP ZAP"
+        run: |
+          docker exec portfolio_zap \
+            zap-baseline.py \
+            -t http://127.0.0.1:3000 \
+            -r /zap/wrk/zap_report.html \
+            -J /zap/wrk/zap_report.json \
+            -I || true
+          docker cp portfolio_zap:/zap/wrk/zap_report.html reports/zap/ || true
+          docker cp portfolio_zap:/zap/wrk/zap_report.json reports/zap/ || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-dast-report-${{ github.run_number }}
+          path: reports/zap/*
+          retention-days: 30
+
+      - name: "Arreter Staging"
+        if: always()
+        run: |
+          docker compose \
+            -f docker-compose.yml \
+            -f docker-compose.staging.yml \
+            down --remove-orphans
+
+  appsec-rapport:
+    name: "Rapport AppSec Final"
+    runs-on: ubuntu-latest
+    needs:
+      - appsec-dependency-audit
+      - appsec-scan
+    if: always()
+    steps:
+      - name: "Resume statuts"
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          | Outil           | Statut                                      |
+          |-----------------|---------------------------------------------|
+          | npm audit       | ${{ needs.appsec-dependency-audit.result }} |
+          |Trivy           | ${{ needs.appsec-scan.result }}              |
+          | SonarQube + ZAP | ${{ needs.appsec-scan.result }}             |
+          EOF
