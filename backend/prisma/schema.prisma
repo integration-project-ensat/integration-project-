@@ -1,6 +1,6 @@
 generator client {
   provider   = "prisma-client-js"
-  engineType = "binary"
+  
 }
 
 datasource db {
@@ -168,7 +168,7 @@ enum niveau_acces {
   STANDARD
 }
 model Utilisateur {
-  id_utilisateur     BigInt  @id @default(autoincrement()) @db.BigInt
+  id_utilisateur     BigInt  @id @default(autoincrement())
   nom                String  @db.VarChar(100)
   prenom             String  @db.VarChar(100)
   email              String  @unique @db.VarChar(255)
@@ -309,7 +309,7 @@ model Competence {
 
   profils ProfilCompetence[]
 
-  @@map("projet")
+  @@map("competences")
 }
 
 model ProfilCompetence {
@@ -620,7 +620,7 @@ model RegleScoreCredibilite {
 
 model GithubIntegration {
   id_integration       BigInt    @id @default(autoincrement())
-  id_etudiant          BigInt    @unique
+  id_etudiant          BigInt   @unique
   github_username      String    @db.VarChar(100)
   access_token         String?
   total_depot          Int       @default(0)
