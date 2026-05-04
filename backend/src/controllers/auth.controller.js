@@ -97,7 +97,8 @@ const tokenExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 60
         data: {
           id_utilisateur: newUser.id_utilisateur,
           entreprise: specificData.entreprise,
-          poste: specificData.poste
+          poste: specificData.poste,
+          secteur: specificData.secteur
         }
       });
     }

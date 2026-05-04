@@ -115,6 +115,7 @@ const sendAdminValidationRequest = async (professionnel) => {
     const email = escapeHtml(professionnel.email);
     const entreprise = escapeHtml(professionnel.professionnel?.entreprise || 'Non renseigné');
     const poste = escapeHtml(professionnel.professionnel?.poste || 'Non renseigné');
+    const secteur = escapeHtml(professionnel.professionnel?.secteur || 'Non renseigné');
 
     const content = `
         <p style="color:#374151;margin:0 0 20px;">
@@ -136,6 +137,10 @@ const sendAdminValidationRequest = async (professionnel) => {
             <tr>
                 <td style="padding:10px 12px;background:#f9fafb;font-weight:bold;border:1px solid #e5e7eb;color:#374151;">Poste</td>
                 <td style="padding:10px 12px;border:1px solid #e5e7eb;color:#111827;">${poste}</td>
+            </tr>
+            <tr>
+                <td style="padding:10px 12px;background:#f9fafb;font-weight:bold;border:1px solid #e5e7eb;color:#374151;">Secteur</td>
+                <td style="padding:10px 12px;border:1px solid #e5e7eb;color:#111827;">${secteur}</td>
             </tr>
         </table>
         <div style="text-align:center;margin:0 0 24px;">

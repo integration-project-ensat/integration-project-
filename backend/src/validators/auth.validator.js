@@ -95,6 +95,11 @@ const Rules = {
     .notEmpty().withMessage('Le poste est obligatoire')
     .isLength({ min: 2, max: 100 }).withMessage('Poste invalide'),
 
+    secteur: body('secteur')
+    .if(body('role').equals('PROFESSIONNEL'))
+    .trim().escape()
+    .notEmpty().withMessage('Le secteur est obligatoire')
+    .isLength({ min: 2, max: 100 }).withMessage('Secteur invalide'),
   // === ADMIN ===
   roleAdmin: body('role')
     .notEmpty().withMessage('Le role est obligatoire')
@@ -117,7 +122,8 @@ const AuthValidator = {
     Rules.departement,
     Rules.specialite,
     Rules.entreprise,
-    Rules.poste
+    Rules.poste,
+    Rules.secteur
   ],
 
   login: [
