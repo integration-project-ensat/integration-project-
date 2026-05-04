@@ -3,7 +3,9 @@ const router = express.Router();
 const { body, param, query } = require('express-validator');
 
 const authController = require('../controllers/auth.controller');
+const passwordController = require('../controllers/password.controller');
 const { AuthValidator } = require('../validators/auth.validator');
+const { PasswordValidator } = require('../validators/password.validator');
 const validate = require('../middlewares/validate');
 const { authentifier, autoriserRoles } = require('../middlewares/auth.middleware');
 const { ROLES } = require('../config/roles');
@@ -15,6 +17,13 @@ router.post('/seconnecter', validate(AuthValidator.login), authController.login)
 //  vérification par code (POST avec body)
 router.post('/verifier-code', validate(AuthValidator.verifierCode), authController.verifierCode);
 router.post('/renvoyer-code', validate(AuthValidator.renvoyerCode), authController.renvoyerCode);
+
+//Réinitialisation du mot de passe
+router.post('/mot-de-passe-oublie', validate(PasswordValidator.motDePasseOublie), passwordController.motDePasseOublie);
+
+router.get('/verifier-token-reset', validate(PasswordValidator.verifierTokenReset), passwordController.verifierTokenReset);
+
+router.post('/reinitialiser-mot-de-passe', validate(PasswordValidator.reinitialiserMotDePasse), passwordController.reinitialiserMotDePasse);
 
 // === PROTÉGÉES ===
 router.get('/profil', authentifier, authController.getCurrentUser);

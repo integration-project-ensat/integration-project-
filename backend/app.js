@@ -34,6 +34,8 @@ app.use('/api/auth/seconnecter', authLimiter)
 app.use('/api/auth/sinscrire', authLimiter)
 app.use('/api/auth/renvoyer-code', passwordLimiter)
 app.use('/api/auth/verifier-code', passwordLimiter)
+app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
+app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
 
 
 //health check
