@@ -3,22 +3,26 @@ import MockAdapter from 'axios-mock-adapter'
 import api from '../../services/api.js'
 import authService from '../../services/auth.service'
 
+Object.defineProperty(window, 'location', {
+  writable: true,
+  value: { href: '' }
+})
+
 // mock axios
 const mock = new MockAdapter(api)
 
 describe('auth.service', () => {
   beforeEach(() => {
     localStorage.clear()
-    mock.reset()
+    mock.resetHandlers()
   })
 
-  afterEach(() => {
-    mock.reset()
-  })
+
 
   // ── LOGIN ──
   it('login réussit et sauvegarde le token', async () => {
-    mock.onPost('/auth/login').reply(200, {
+   
+    mock.onPost('/login').replyOnce(200, {
       token: 'fake-token-123',
       user: { id: '1', email: 'test@test.com', role: 'student' }
     })
@@ -30,7 +34,8 @@ describe('auth.service', () => {
   })
 
   it('login échoue avec mauvais identifiants', async () => {
-    mock.onPost('/auth/login').reply(401, {
+    
+    mock.onPost('/login').replyOnce(401, {
       message: 'Identifiants invalides'
     })
 
@@ -43,7 +48,7 @@ describe('auth.service', () => {
 
   // ── SIGNUP ──
   it('signup réussit et sauvegarde le token', async () => {
-    mock.onPost('/auth/signup').reply(201, {
+    mock.onPost('/sinscrire').reply(201, {
       token: 'signup-token-456',
       user: { id: '2', email: 'new@test.com', role: 'student' }
     })
@@ -61,7 +66,7 @@ describe('auth.service', () => {
   })
 
   it('signup échoue si email déjà utilisé', async () => {
-    mock.onPost('/auth/signup').reply(409, {
+    mock.onPost('/sinscrire').reply(409, {
       message: 'Email déjà utilisé'
     })
 

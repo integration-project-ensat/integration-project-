@@ -2,7 +2,7 @@ import api from './api.js'
 
 export default {
   async login(email, password) {
-    const { data } = await api.post('/seconnecter', { email, password })
+    const { data } = await api.post('/login', { email, password })
     localStorage.setItem('token', data.token)
     return data
   },
