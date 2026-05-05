@@ -1,10 +1,11 @@
-# Configuration Prometheus : définit les cibles à scraper (backend :3000/metrics, node_exporter, postgres_exporter) et la fréquence de collecte.
+global:
+  scrape_interval: 15s
 
-#exemple : 
-# scrape_configs:
-#   - job_name: 'backend'
-#     static_configs:
-#       - targets: ['backend:3000']
-#   - job_name: 'postgres'
-#     static_configs:
-#       - targets: ['postgres-exporter:9187']
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-vm2'
+    static_configs:
+      - targets: ['192.168.246.132:9100']
