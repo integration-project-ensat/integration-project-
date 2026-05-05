@@ -10,6 +10,7 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: "unix:///var/run/docker.sock"
   IMAGE_FRONTEND: $CI_REGISTRY_IMAGE/frontend
   IMAGE_BACKEND: $CI_REGISTRY_IMAGE/backend
   NPM_REGISTRY: "http://192.168.246.132:8082/repository/npm-proxy/"
@@ -78,10 +79,10 @@ sonarqube:
       -Dsonar.exclusions=**/node_modules/**,frontend/dist/**
   allow_failure: true
 
+
 # ─────────────────────────────────────────────
 # JOB 4 — BUILD IMAGES DOCKER
-# Pas de services: dind car le runner utilise
-# /var/run/docker.sock directement (plus rapide)
+# DOCKER_HOST unix socket monté par le runner
 # ─────────────────────────────────────────────
 build-image-frontend:
   stage: build-docker
@@ -92,6 +93,7 @@ build-image-frontend:
     - main
     - dev
   before_script:
+    - docker info
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker build -t $IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA ./frontend
@@ -115,6 +117,7 @@ build-image-backend:
     - main
     - dev
   before_script:
+    - docker info
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker build -t $IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA ./backend
@@ -185,7 +188,6 @@ deploy-staging:
 
 # ─────────────────────────────────────────────
 # JOB 7 — OWASP ZAP SCAN (DAST)
-# Stage dast = après deploy-staging
 # ─────────────────────────────────────────────
 zap-scan:
   stage: dast
