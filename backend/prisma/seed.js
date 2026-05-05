@@ -12,6 +12,7 @@ async function main() {
             prenom: 'Admin',
             role: 'ADMINISTRATEUR',
             est_actif: true,
+            email_verifie: true,
             administrateur: {
                 create: {
                     niveau_acces: 'SUPER_ADMIN'
