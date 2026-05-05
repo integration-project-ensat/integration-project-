@@ -79,14 +79,14 @@ sonarqube:
       -Dsonar.exclusions=**/node_modules/**,frontend/dist/**
   allow_failure: true
 
-
 # ─────────────────────────────────────────────
 # JOB 4 — BUILD IMAGES DOCKER
-# DOCKER_HOST unix socket monté par le runner
+# Utilise docker:latest pour correspondre
+# au daemon Docker v29 sur la VM
 # ─────────────────────────────────────────────
 build-image-frontend:
   stage: build-docker
-  image: docker:24
+  image: docker:latest
   tags:
     - docker
   only:
@@ -110,7 +110,7 @@ build-image-frontend:
 
 build-image-backend:
   stage: build-docker
-  image: docker:24
+  image: docker:latest
   tags:
     - docker
   only:
