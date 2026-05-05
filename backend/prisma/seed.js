@@ -1,7 +1,5 @@
-const {PrismaClient} = require('@prisma/client');
+const prisma=require('./client');
 const bcrypt = require('bcryptjs');
-
-const prisma = new PrismaClient();
 
 async function main() {
     const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 15);
@@ -9,14 +7,14 @@ async function main() {
     const admin = await prisma.utilisateur.create({
         data: {
             email: process.env.ADMIN_EMAIL,
-            mot_de_passe: hashedPassword,
+            mot_de_passe_hashe: hashedPassword,
             nom: 'Super',
             prenom: 'Admin',
             role: 'ADMINISTRATEUR',
             est_actif: true,
             administrateur: {
                 create: {
-                    niveau_acces: 'SUPER'
+                    niveau_acces: 'SUPER_ADMIN'
                 }
             }
         }
