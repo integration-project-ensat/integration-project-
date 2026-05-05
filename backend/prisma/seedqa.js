@@ -140,7 +140,9 @@ async function main() {
       est_actif: true,
       email_verifie: true,
       administrateur: {
-        create: {}
+        create: {
+          niveau_acces: 'STANDARD'
+        }
       }
     }
   });
