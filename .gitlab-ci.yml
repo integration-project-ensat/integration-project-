@@ -4,6 +4,7 @@ stages:
   - build-docker
   - security
   - deploy-staging
+  - dast
   - deploy-production
 
 variables:
@@ -171,7 +172,7 @@ trivy-scan:
 # Exporte rapport HTML + JSON en artifact
 # ─────────────────────────────────────────────
 zap-scan:
-  stage: security
+  stage: dast
   image: ghcr.io/zaproxy/zaproxy:stable
   tags:
     - docker
