@@ -39,9 +39,6 @@ build-frontend:
 
 # ─────────────────────────────────────────────
 # JOB 2 — VÉRIFICATION BACKEND
-# node --check valide la syntaxe sans démarrer
-# le serveur (évite les erreurs liées aux
-# variables d'env manquantes en CI)
 # ─────────────────────────────────────────────
 build-backend:
   stage: build-code
@@ -83,14 +80,12 @@ sonarqube:
 
 # ─────────────────────────────────────────────
 # JOB 4 — BUILD IMAGES DOCKER
-# services: docker:24-dind requis pour que
-# docker build/push fonctionne dans le runner
+# Pas de services: dind car le runner utilise
+# /var/run/docker.sock directement (plus rapide)
 # ─────────────────────────────────────────────
 build-image-frontend:
   stage: build-docker
   image: docker:24
-  services:
-    - docker:24-dind
   tags:
     - docker
   only:
@@ -114,8 +109,6 @@ build-image-frontend:
 build-image-backend:
   stage: build-docker
   image: docker:24
-  services:
-    - docker:24-dind
   tags:
     - docker
   only:
@@ -166,39 +159,7 @@ trivy-scan:
   allow_failure: true
 
 # ─────────────────────────────────────────────
-# JOB 6 — OWASP ZAP SCAN (DAST)
-# Scan dynamique de sécurité sur l'app staging
-# Lance après deploy-staging (branche dev)
-# Exporte rapport HTML + JSON en artifact
-# ─────────────────────────────────────────────
-zap-scan:
-  stage: dast
-  image: ghcr.io/zaproxy/zaproxy:stable
-  tags:
-    - docker
-  only:
-    - dev
-  needs:
-    - deploy-staging
-  script:
-    - mkdir -p /zap/wrk
-    - zap-baseline.py
-      -t http://$STAGING_HOST:8081
-      -r zap-report.html
-      -J zap-report.json
-      -I
-  after_script:
-    - cp /zap/wrk/zap-report.html ./zap-report.html || true
-    - cp /zap/wrk/zap-report.json ./zap-report.json || true
-  artifacts:
-    paths:
-      - zap-report.html
-      - zap-report.json
-    expire_in: 14 days
-  allow_failure: true
-
-# ─────────────────────────────────────────────
-# JOB 7 — DEPLOY STAGING (branche dev)
+# JOB 6 — DEPLOY STAGING (branche dev)
 # ─────────────────────────────────────────────
 deploy-staging:
   stage: deploy-staging
@@ -221,6 +182,34 @@ deploy-staging:
   environment:
     name: staging
     url: http://$STAGING_HOST:8081
+
+# ─────────────────────────────────────────────
+# JOB 7 — OWASP ZAP SCAN (DAST)
+# Stage dast = après deploy-staging
+# ─────────────────────────────────────────────
+zap-scan:
+  stage: dast
+  image: ghcr.io/zaproxy/zaproxy:stable
+  tags:
+    - docker
+  only:
+    - dev
+  script:
+    - mkdir -p /zap/wrk
+    - zap-baseline.py
+      -t http://$STAGING_HOST:8081
+      -r zap-report.html
+      -J zap-report.json
+      -I
+  after_script:
+    - cp /zap/wrk/zap-report.html ./zap-report.html || true
+    - cp /zap/wrk/zap-report.json ./zap-report.json || true
+  artifacts:
+    paths:
+      - zap-report.html
+      - zap-report.json
+    expire_in: 14 days
+  allow_failure: true
 
 # ─────────────────────────────────────────────
 # JOB 8 — DEPLOY PRODUCTION (branche main)
