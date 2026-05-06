@@ -54,6 +54,7 @@ services:
     ports:
       - "3001:3000"
     environment:
+      - GF_SERVER_ROOT_URL=http://localhost:3001
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
       - GF_AUTH_GENERIC_OAUTH_ENABLED=true
@@ -64,6 +65,7 @@ services:
       - GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost:8081/realms/portfolio-realm/protocol/openid-connect/auth
       - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak:8080/realms/portfolio-realm/protocol/openid-connect/token
       - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak:8080/realms/portfolio-realm/protocol/openid-connect/userinfo
+      - GF_AUTH_GENERIC_OAUTH_REDIRECT_URI=http://localhost:3001/login/generic_oauth
       - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(roles[*], 'admin') && 'Admin' || 'Viewer'
     volumes:
       - grafana_data:/var/lib/grafana
