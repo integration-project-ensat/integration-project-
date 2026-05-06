@@ -80,9 +80,6 @@ sonarqube:
 
 # ─────────────────────────────────────────────
 # JOB 4 — BUILD IMAGES DOCKER
-# Utilise ubuntu:24.04 + docker CLI installé
-# pour accéder au socket /var/run/docker.sock
-# monté par le runner (plus fiable que docker:XX)
 # ─────────────────────────────────────────────
 build-image-frontend:
   stage: build-docker
@@ -173,6 +170,8 @@ trivy-scan:
 
 # ─────────────────────────────────────────────
 # JOB 6 — DEPLOY STAGING (branche dev)
+# --remove-orphans supprimé pour ne pas
+# arrêter le container GitLab au déploiement
 # ─────────────────────────────────────────────
 deploy-staging:
   stage: deploy-staging
@@ -191,7 +190,7 @@ deploy-staging:
       "cd /opt/devsecops &&
       docker compose -f docker-compose.yml
       -f docker-compose.staging.yml
-      up -d --remove-orphans"
+      up -d"
   environment:
     name: staging
     url: http://$STAGING_HOST:8081
@@ -244,7 +243,7 @@ deploy-production:
       "cd /opt/devsecops &&
       docker compose -f docker-compose.yml
       -f docker-compose.prod.yml
-      up -d --remove-orphans"
+      up -d"
   environment:
     name: production
     url: http://$PROD_HOST
