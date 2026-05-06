@@ -141,10 +141,15 @@ build-image-backend:
 
 # ─────────────────────────────────────────────
 # JOB 5 — TRIVY SCAN
+# entrypoint: [""] requis car l'image trivy
+# utilise trivy comme entrypoint par défaut
+# ce qui empêche le runner de lancer sh
 # ─────────────────────────────────────────────
 trivy-scan:
   stage: security
-  image: aquasec/trivy:latest
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
   tags:
     - docker
   only:
@@ -170,8 +175,6 @@ trivy-scan:
 
 # ─────────────────────────────────────────────
 # JOB 6 — DEPLOY STAGING (branche dev)
-# --remove-orphans supprimé pour ne pas
-# arrêter le container GitLab au déploiement
 # ─────────────────────────────────────────────
 deploy-staging:
   stage: deploy-staging
@@ -200,7 +203,9 @@ deploy-staging:
 # ─────────────────────────────────────────────
 zap-scan:
   stage: dast
-  image: ghcr.io/zaproxy/zaproxy:stable
+  image:
+    name: ghcr.io/zaproxy/zaproxy:stable
+    entrypoint: [""]
   tags:
     - docker
   only:
