@@ -1,1 +1,0 @@
-<!-- Interface du professeur. Visualise les projets soumis en attente de validation, peut valider/refuser avec un commentaire, et rédiger des lettres de recommandation. -->
