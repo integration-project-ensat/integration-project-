@@ -10,7 +10,6 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
-  DOCKER_HOST: "unix:///var/run/docker.sock"
   IMAGE_FRONTEND: $CI_REGISTRY_IMAGE/frontend
   IMAGE_BACKEND: $CI_REGISTRY_IMAGE/backend
   NPM_REGISTRY: "http://192.168.246.132:8082/repository/npm-proxy/"
@@ -81,18 +80,24 @@ sonarqube:
 
 # ─────────────────────────────────────────────
 # JOB 4 — BUILD IMAGES DOCKER
-# Utilise docker:latest pour correspondre
-# au daemon Docker v29 sur la VM
+# Utilise ubuntu:24.04 + docker CLI installé
+# pour accéder au socket /var/run/docker.sock
+# monté par le runner (plus fiable que docker:XX)
 # ─────────────────────────────────────────────
 build-image-frontend:
   stage: build-docker
-  image: docker:latest
+  image: ubuntu:24.04
   tags:
     - docker
   only:
     - main
     - dev
   before_script:
+    - apt-get update -qq && apt-get install -y -qq curl ca-certificates
+    - install -m 0755 -d /etc/apt/keyrings
+    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    - echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list
+    - apt-get update -qq && apt-get install -y -qq docker-ce-cli
     - docker info
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -110,13 +115,18 @@ build-image-frontend:
 
 build-image-backend:
   stage: build-docker
-  image: docker:latest
+  image: ubuntu:24.04
   tags:
     - docker
   only:
     - main
     - dev
   before_script:
+    - apt-get update -qq && apt-get install -y -qq curl ca-certificates
+    - install -m 0755 -d /etc/apt/keyrings
+    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    - echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list
+    - apt-get update -qq && apt-get install -y -qq docker-ce-cli
     - docker info
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
