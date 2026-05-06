@@ -70,7 +70,17 @@ services:
     depends_on:
       - prometheus
       - keycloak
-  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: portfolio_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/var/prometheus/data
+    depends_on:
+      - keycloak
 volumes:
   postgres-data:
   grafana_data:
+  prometheus_data:
