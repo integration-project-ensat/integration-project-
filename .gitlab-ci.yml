@@ -140,10 +140,8 @@ build-image-backend:
       fi
 
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
 # JOB 5 — TRIVY SCAN
-# entrypoint: [""] requis car l'image trivy
-# utilise trivy comme entrypoint par défaut
-# ce qui empêche le runner de lancer sh
 # ─────────────────────────────────────────────
 trivy-scan:
   stage: security
@@ -155,16 +153,21 @@ trivy-scan:
   only:
     - main
     - dev
+  variables:
+    TRIVY_USERNAME: $CI_REGISTRY_USER
+    TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD
   script:
     - trivy image
       --severity HIGH,CRITICAL
       --format json
       --output trivy-frontend.json
+      --insecure
       $IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA
     - trivy image
       --severity HIGH,CRITICAL
       --format json
       --output trivy-backend.json
+      --insecure
       $IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA
   artifacts:
     paths:
