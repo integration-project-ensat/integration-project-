@@ -61,6 +61,18 @@ const baseEmailTemplate = (title, content) => `
 </body>
 </html>`;
 
+/**
+ * Envoie un email avec gestion d'erreur
+ */
+const sendEmail = async (options) => {
+    try {
+        await transporter.sendMail(options);
+    } catch (error) {
+        console.error('[EMAIL ERROR]', error.message);
+        throw new Error(`Échec de l'envoi d'email : ${error.message}`);
+    }
+};
+
 // ── Email vérification inscription ──────────────────────────────────────────
 const sendVerificationCode = async (email, code, nom) => {
     const safeNom = escapeHtml(nom);
@@ -83,7 +95,7 @@ const sendVerificationCode = async (email, code, nom) => {
             Si vous n'avez pas créé ce compte, ignorez cet email.
         </p>`;
 
-    await transporter.sendMail({
+    await sendEmail({
         from: `"Pheracore" <${process.env.SMTP_USER}>`,
         to: email,
         subject: 'Votre code de vérification',
@@ -93,22 +105,23 @@ const sendVerificationCode = async (email, code, nom) => {
 };
 
 // ── Email admin : demande de validation d'un professionnel ──────────────────
-const sendAdminValidationRequest = async (professionnel) => {
+const sendAdminValidationRequest = async (professionnel, adminActionToken) => {
+    // ✅ Vérification DES DONNÉES d'abord
     if (!professionnel?.id_utilisateur) {
         throw new Error('Données du professionnel invalides');
     }
 
-    const required = ['BACKEND_URL', 'ADMIN_EMAIL', 'FRONTEND_URL', 'ADMIN_ACTION_SECRET'];
+    const required = ['BACKEND_URL', 'ADMIN_EMAIL', 'FRONTEND_URL'];
     for (const key of required) {
         if (!process.env[key]) throw new Error(`Variable d'environnement manquante : ${key}`);
     }
 
-    const base = process.env.BACKEND_URL.replace(/\/$/, '');
+    // ✅ Construction des liens APRÈS vérification
+    const baseUrl = process.env.BACKEND_URL.replace(/\/$/, '');
     const id = professionnel.id_utilisateur;
-    const secret = encodeURIComponent(process.env.ADMIN_ACTION_SECRET);
 
-    const validationLink = `${base}/api/auth/admin/valider/${id}?token=${secret}`;
-    const refusalLink = `${base}/api/auth/admin/refuser/${id}?token=${secret}`;
+    const validationLink = `${baseUrl}/api/auth/admin/valider/${id}?token=${adminActionToken}`;
+    const refusalLink = `${baseUrl}/api/auth/admin/refuser/${id}?token=${adminActionToken}`;
     const adminUrl = `${process.env.FRONTEND_URL}/admin/validation/${id}`;
 
     const nom = escapeHtml(`${professionnel.prenom} ${professionnel.nom}`);
@@ -159,7 +172,7 @@ const sendAdminValidationRequest = async (professionnel) => {
             </a>
         </p>`;
 
-    await transporter.sendMail({
+    await sendEmail({
         from: `"Pheracore" <${process.env.SMTP_USER}>`,
         to: process.env.ADMIN_EMAIL,
         subject: `[Action requise] Nouveau professionnel à valider — ${nom}`,
@@ -199,7 +212,7 @@ const sendValidationResultEmail = async (email, nom, estValide, motifRefus = nul
              Pour toute question, contactez-nous à <a href="mailto:${escapeHtml(process.env.SMTP_USER)}" style="color:#4F46E5;">${escapeHtml(process.env.SMTP_USER)}</a>.
            </p>`;
 
-    await transporter.sendMail({
+    await sendEmail({
         from: `"Pheracore" <${process.env.SMTP_USER}>`,
         to: email,
         subject: sujet,
@@ -215,7 +228,7 @@ const sendValidationResultEmail = async (email, nom, estValide, motifRefus = nul
 
 // ── Email réinitialisation mot de passe ─────────────────────────────────────
 const sendResetPasswordEmail = async (email, token, nom) => {
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(token)}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reinitialiser-mot-de-passe?token=${resetToken}`;
     const safeNom = escapeHtml(nom);
 
     const content = `
@@ -236,7 +249,7 @@ const sendResetPasswordEmail = async (email, token, nom) => {
             Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
         </p>`;
 
-    await transporter.sendMail({
+    await sendEmail({
         from: `"Pheracore" <${process.env.SMTP_USER}>`,
         to: email,
         subject: 'Réinitialisation de votre mot de passe',

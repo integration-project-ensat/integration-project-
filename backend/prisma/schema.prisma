@@ -182,6 +182,10 @@ model Utilisateur {
   email_verifie      Boolean          @default(false)
   email_verification String?          @db.VarChar(255)
   token_expires_at DateTime?
+  reset_token_hash String? @db.VarChar(255)
+  reset_token_expires_at DateTime?
+  admin_action_token String? @unique
+  admin_action_expires_at DateTime?
 
   etudiant       Etudiant?
   professeur     Professeur?
@@ -256,7 +260,9 @@ model Professionnel {
   entreprise       String  @db.VarChar(150)
   poste            String  @db.VarChar(150)
   secteur          String? @db.VarChar(100)
-  est_valide_admin Boolean @default(false)
+  est_valide       Boolean @default(false)
+  statut_validation StatutValidation @default(EN_ATTENTE)
+  date_validation  DateTime?
   justificatifs_url String?
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)

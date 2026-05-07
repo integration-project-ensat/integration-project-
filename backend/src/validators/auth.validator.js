@@ -26,7 +26,7 @@ const Rules = {
     .notEmpty().withMessage('Le mot de passe est obligatoire').bail()
     .isLength({ min: 8,max:128 }).withMessage('Le mot de passe doit contenir au moins 8 caracteres').bail()
     .matches(/[A-Z]/).withMessage('Doit contenir au moins une majuscule').bail()
-    .matches(/[a-z]/).withMessage('Doit contenir au moins une minuscule').bail
+    .matches(/[a-z]/).withMessage('Doit contenir au moins une minuscule').bail()
     .matches(/\d/).withMessage('Doit contenir au moins un chiffre').bail()
     .matches(/[[@#!$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/).withMessage('Doit contenir au moins un caractère spécial(@,#,!,etc.)'),
 
@@ -110,7 +110,7 @@ const Rules = {
     secteur: body('secteur')
     .if(body('role').equals('PROFESSIONNEL'))
     .trim().escape()
-    .notEmpty().withMessage('Le secteur est obligatoire').bail()
+    .optional({ nullable: true })
     .isLength({ min: 2, max: 100 }).withMessage('Secteur invalide').bail(),
   // === ADMIN ===
   roleAdmin: body('role')

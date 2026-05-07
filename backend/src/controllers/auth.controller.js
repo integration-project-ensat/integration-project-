@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');//ajouté pour les tokens sécurisés
 const prisma = require('../../prisma/client');
 const{PUBLIC_ROLES, ROLES} = require('../config/roles');
 const { genererCode, sendVerificationCode, sendAdminValidationRequest,sendValidationResultEmail } = require('../services/email.service');
@@ -9,6 +10,7 @@ const { count } = require('node:console');
 const SALT_ROUNDS = 12;
 const JWT_EXPIRES_IN = '24h';
 const VERIFICATION_CODE_EXPIRY_HOURS = 24;
+const ADMIN_LINK_EXPIRY_HOURS = 48;
 // Fonction pour générer un token JWTavec les informations de l'utilisateur et une clé secrète, valable pendant 24 heures.
 function generateToken(user) {
   return jwt.sign(
@@ -22,8 +24,18 @@ function sanitizeUser(user) {
   const { mot_de_passe_hashe, ...safe } = user;
   return safe;
 }
+//vérifie que le rôle est bien un rôle public autorisé
 function isValidPublicRole(role) {
   return Object.values(PUBLIC_ROLES).includes(role);
+}
+//Génère un token unique pour l'action admin (lien email)
+function generateAdminActionToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+//hash le token pour le stocker de manière sécurisée dans la base de données 
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 // ==================== INSCRIPTION PUBLIQUE ====================
 
@@ -50,6 +62,16 @@ const register = asyncHandler(async (req, res) => {
   const verificationCode = genererCode();
 const tokenExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 60 * 60 * 1000); // 24 heures
 
+let adminActionToken = null;
+let adminActionTokenHash = null;
+let adminActionExpiresAt = null;
+
+if (role === 'PROFESSIONNEL') {
+  adminActionToken=generateAdminActionToken();
+  adminActionTokenHash=hashToken(adminActionToken);
+  adminActionExpiresAt=new Date(Date.now() + ADMIN_LINK_EXPIRY_HOURS * 60 * 60 * 1000); // 48 heures
+}
+
   // Création de l'utilisateur et des données spécifiques au rôle dans une transaction
   const user = await prisma.$transaction(async (tx) => {
     const newUser = await tx.utilisateur.create({
@@ -62,7 +84,11 @@ const tokenExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 60
         est_actif: false,
         email_verifie: false,
         email_verification:verificationCode,
-        token_expires_at: tokenExpiresAt
+        token_expires_at: tokenExpiresAt,
+        ...(role === 'PROFESSIONNEL' && {
+          admin_action_token: adminActionTokenHash,
+          admin_action_expires_at: adminActionExpiresAt
+        })
       }
     });
 // Création des données spécifiques au rôle
@@ -98,7 +124,8 @@ const tokenExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 60
           id_utilisateur: newUser.id_utilisateur,
           entreprise: specificData.entreprise,
           poste: specificData.poste,
-          secteur: specificData.secteur
+          secteur: specificData.secteur,
+          est_valide: false
         }
       });
     }
@@ -113,7 +140,7 @@ const tokenExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 60
             where: { id_utilisateur: user.id_utilisateur },
             include: { professionnel: true }
         });
-        await sendAdminValidationRequest(proComplet);
+        await sendAdminValidationRequest(proComplet, adminActionToken);
 
     }
     res.status(201).json({
@@ -187,12 +214,7 @@ const renvoyerCode=asyncHandler(async(req,res)=>{
             message:'Email introuvable ou déjà vérifié'
         });
     }
-    if(user.email_verifie) {
-        return res.status(400).json({
-            success: false,
-            message: 'Email déjà vérifié'
-        });
-    }
+
     const newCode=genererCode();
     const newExpiresAt=new Date(Date.now()+VERIFICATION_CODE_EXPIRY_HOURS*60*60*1000);
     await prisma.utilisateur.update({
@@ -352,9 +374,12 @@ const validerProfessionnelParLien = asyncHandler(async (req, res) => {
   const { token } = req.query;
 
   // Vérification du token secret
-  if (!token || token !== process.env.ADMIN_ACTION_SECRET) {
-   return res.status(403).send(renderErrorPage('Token invalide', 'Ce lien n\'est pas autorisé.'));
+  if (!token || token.length !== 64||!/^[a-f0-9]+$/.test(token)) {
+    return res.status(403).send(renderErrorPage('Token invalide', 'Ce lien est mal formé ou incomplet.'));
   }
+// Hash du token reçu pour comparaison sécurisée avec la base de données
+const tokenHash=hashToken(token);
+
 const id = parseInt(utilisateurId, 10);
 if (isNaN(id)) {
     return res.status(400).send(renderErrorPage('ID invalide', 'L\'ID utilisateur doit être un nombre entier.'));
@@ -369,15 +394,49 @@ if (isNaN(id)) {
    return res.status(404).send(renderErrorPage('Utilisateur introuvable', 'Ce compte n\'existe pas ou a déjà été traité.'));
   }
 
-  if (utilisateur.est_actif) {
-    return res.status(400).send(renderWarningPage('Déjà activé', 'Ce compte est déjà actif.'));
+  if (!utilisateur.email_verifie) {
+    return res.status(400).send(renderErrorPage('Email non vérifié','Le professionnel doit d\'abord vérifier son email avant d\'être validé.'
+    ));
   }
 
-  await prisma.utilisateur.update({
-    where: { id_utilisateur: id },
-    data: { est_actif: true }
-  });
+  if (utilisateur.est_actif && utilisateur.professionnel.est_valide) {
+    return res.status(400).send(renderWarningPage('Déjà activé', 'Ce compte est déjà actif et validé.'));
+  }
 
+  // Vérification du token admin
+  if (!utilisateur.admin_action_token || utilisateur.admin_action_token !== tokenHash) {
+    return res.status(403).send(renderErrorPage(
+      'Token invalide',
+      'Ce lien de validation n\'est pas autorisé ou a expiré.'
+    ));
+  }
+
+  if (utilisateur.admin_action_expires_at < new Date()) {
+    return res.status(410).send(renderErrorPage(
+      'Lien expiré',
+      'Ce lien de validation a expiré. Veuillez demander un nouveau lien.'
+    ));
+  }
+  
+// Validation du professionnel et activation du compte dans une transaction
+await prisma.$transaction
+([prisma.professionnel.update({
+    where: { id_utilisateur: id },
+    data: { est_valide: true ,
+      date_validation: new Date()
+    }
+  }),
+  prisma.utilisateur.update({
+    where: { id_utilisateur: id },
+    data: {
+      est_actif: true,
+      admin_action_token: null,
+      admin_action_expires_at: null
+    }
+  })
+]);
+
+// Envoi de l'email de résultat de validation
   await sendValidationResultEmail(utilisateur.email, utilisateur.nom, true);
 
   // Page de confirmation affichée dans le navigateur
@@ -388,15 +447,22 @@ if (isNaN(id)) {
 const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
   const { utilisateurId } = req.params;
   const { token } = req.query;
-
-  // Vérification du token secret
-  if (!token || token !== process.env.ADMIN_ACTION_SECRET) {
-    return res.status(403).send(renderErrorPage('Token invalide', 'Ce lien n\'est pas autorisé.'));
+//meme validation du token que pour la validation, mais avec des messages d'erreur différents
+   if (!token || token.length !== 64 || !/^[a-f0-9]+$/.test(token)) {
+    return res.status(400).send(renderErrorPage(
+      'Token invalide',
+      'Le lien est malformé ou incomplet.'
+    ));
   }
+
+  const tokenHash = hashToken(token);
 
   const id = parseInt(utilisateurId, 10);
   if (isNaN(id)) {
-    return res.status(400).send(renderErrorPage('ID invalide', 'L\'ID utilisateur doit être un nombre entier.'));
+    return res.status(400).send(renderErrorPage(
+      'ID invalide',
+      'L\'ID utilisateur doit être un nombre entier.'
+    ));
   }
   const utilisateur = await prisma.utilisateur.findUnique({
     where: { id_utilisateur: id },
@@ -407,19 +473,38 @@ const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
     return res.status(404).send(renderErrorPage('Utilisateur introuvable', 'Ce compte n\'existe pas ou a déjà été traité.'));
   }
 
-  if (utilisateur.est_actif) {
-    return res.status(400).send(renderWarningPage('Déjà activé', 'Ce compte est déjà actif, impossible de le refuser.'));
+  if (!utilisateur.email_verifie) {
+    return res.status(400).send(renderWarningPage('Email non vérifié', 'Ce compte n\'a pas encore vérifié son email, impossible de le refuser.'));
+  }
+  if(utilisateur.est_actif && utilisateur.professionnel.est_valide){
+    return res.status(400).send(renderWarningPage('Déjà activé', 'Ce compte est déjà actif et validé, impossible de le refuser.'));
+  }
+  if (!utilisateur.admin_action_token || utilisateur.admin_action_token !== tokenHash) {
+    return res.status(403).send(renderErrorPage('Token invalide', 'Ce lien de refus n\'est pas autorisé ou a expiré.'));
+  }
+  if (utilisateur.admin_action_expires_at < new Date()) {
+    return res.status(410).send(renderErrorPage('Lien expiré', 'Ce lien de refus a expiré. Veuillez demander un nouveau lien.'));
   }
 
    // Suppression en cascade via transaction
-    await prisma.$transaction(async (tx) => {
-        await tx.professionnel.delete({
-            where: { id_utilisateur: id }
-        });
-        await tx.utilisateur.delete({
-            where: { id_utilisateur: id }
-        });
-    });
+    await prisma.$transaction([
+      prisma.utilisateur.update({
+        where: { id_utilisateur: id },
+        data: {
+          est_valide: false,
+          statut_validation: 'REFUSE',
+          date_validation: new Date()
+        }
+      }),
+      prisma.professionnel.update({
+        where: { id_utilisateur: id },
+        data: {
+          est_actif: false,
+          admin_action_token: null,
+          admin_action_expires_at: null
+        }
+      })
+    ]);
 
   await sendValidationResultEmail(utilisateur.email, utilisateur.nom, false);
 
@@ -434,7 +519,8 @@ const getProfessionnelsEnAttente=asyncHandler(async(req,res)=>{
         where:{
             role:ROLES.PROFESSIONNEL,
             est_actif:false,
-            email_verifie:true
+            email_verifie:true,
+            professionnel:{est_valide:false,statut_validation:'EN_ATTENTE'}
         },
         include:{professionnel:true},
           orderBy:{date_creation:'asc'}

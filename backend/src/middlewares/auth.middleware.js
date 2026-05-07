@@ -28,7 +28,8 @@ const authentifier = async (req, res, next) => {
         prenom: true,
         email: true,
         role: true,
-        est_actif: true
+        est_actif: true,
+        email_verifie: true
       }
     });
 
