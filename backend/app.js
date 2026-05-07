@@ -19,8 +19,6 @@ const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateL
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
-const e = require('express')
-
 const app = express()
 
 //securite(headers, CORS, rate )
