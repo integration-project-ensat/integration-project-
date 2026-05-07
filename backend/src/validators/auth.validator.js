@@ -2,6 +2,7 @@
 const { body } = require('express-validator');
 const { PUBLIC_ROLES, ROLES } = require('../config/roles');
 const { verifierCode } = require('../controllers/auth.controller');
+const prisma=require('../../prisma/client');
 
 const Rules = {
   nom: body('nom')

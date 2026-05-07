@@ -228,7 +228,7 @@ const sendValidationResultEmail = async (email, nom, estValide, motifRefus = nul
 
 // ── Email réinitialisation mot de passe ─────────────────────────────────────
 const sendResetPasswordEmail = async (email, token, nom) => {
-    const resetLink = `${process.env.FRONTEND_URL}/reinitialiser-mot-de-passe?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reinitialiser-mot-de-passe?token=${token}`;
     const safeNom = escapeHtml(nom);
 
     const content = `

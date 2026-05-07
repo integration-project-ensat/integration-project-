@@ -49,7 +49,6 @@ router.get(
   '/admin/professionnels-en-attente',
   authentifier,
   autoriserRoles(ROLES.ADMINISTRATEUR),
-  validate(AuthValidator.getProfessionnelsEnAttente),
   authController.getProfessionnelsEnAttente
 );
 // ROUTES LIEN EMAIL (token crypto, PAS JWT)

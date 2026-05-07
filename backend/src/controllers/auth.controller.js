@@ -488,7 +488,7 @@ const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
 
    // Suppression en cascade via transaction
     await prisma.$transaction([
-      prisma.utilisateur.update({
+      prisma.professionnel.update({
         where: { id_utilisateur: id },
         data: {
           est_valide: false,
@@ -496,7 +496,7 @@ const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
           date_validation: new Date()
         }
       }),
-      prisma.professionnel.update({
+      prisma.utilisateur.update({
         where: { id_utilisateur: id },
         data: {
           est_actif: false,

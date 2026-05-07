@@ -137,7 +137,11 @@ const reinitialiserMotDePasse = asyncHandler(async (req, res) => {
         where: {
             reset_token_hash: tokenHash,
             reset_token_expires_at: { gt: new Date() }
-        }
+        },
+        select: {
+        id_utilisateur: true,
+        mot_de_passe_hashe: true   // ← nécessaire pour bcrypt.compare ligne suivante
+    }
     });
 
     if (!user) {
