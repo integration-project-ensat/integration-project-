@@ -9,6 +9,7 @@
  * 
  * Ne démarre PAS le serveur (voir server.js pour le démarrage)
  */
+require('dotenv').config({ path: '.env.local' })
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
 const express = require('express')
@@ -19,6 +20,8 @@ const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateL
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
+const technologieRoutes = require('./src/routes/technologie.routes')
+const competenceRoutes = require('./src/routes/competence.routes')
 const app = express()
 
 //securite(headers, CORS, rate )
@@ -49,7 +52,9 @@ app.get('/', (req, res) => {
 
 
 // Auth routes
-app.use('/api/auth', authRoutes) 
+app.use('/api/auth', authRoutes)
+app.use('/api/technologies', technologieRoutes)
+app.use('/api/competences', competenceRoutes)
 //404 not found handler (doit être après toutes les routes)
 app.use((req,res) => {
   res.status(404).json({
