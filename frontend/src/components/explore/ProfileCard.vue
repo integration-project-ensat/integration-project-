@@ -1,92 +1,4 @@
-<template>
-  <article
-    class="rounded-[32px] border border-slate-800/80 bg-[#111827]/95 p-6 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.8)] transition duration-300 hover:-translate-y-0.5 hover:border-slate-600/60"
-  >
-    <div
-      class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div class="flex items-center gap-4">
-        <div
-          class="h-20 w-20 rounded-[28px] bg-slate-900 text-slate-500 grid place-items-center text-3xl font-semibold"
-        >
-          {{
-            profile.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-          }}
-        </div>
-        <div>
-          <div class="flex flex-wrap items-center gap-2">
-            <h3 class="text-xl font-semibold text-white">{{ profile.name }}</h3>
-            <span
-              class="rounded-full bg-cyan-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300"
-              >{{ profile.score }}+</span
-            >
-          </div>
-          <p class="mt-2 text-sm text-slate-400">{{ profile.role }}</p>
-          <p class="mt-1 text-sm text-slate-500">
-            {{ profile.school }} · {{ profile.field }} · {{ profile.city }}
-          </p>
-        </div>
-      </div>
-      <div class="grid gap-3 sm:place-items-end">
-        <div
-          class="rounded-3xl bg-slate-950/80 px-4 py-3 text-sm text-slate-300"
-        >
-          Recommandations :
-          <span class="font-semibold text-white"
-            >{{ profile.recommendations }}+</span
-          >
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <button
-            class="rounded-3xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-          >
-            Portfolio
-          </button>
-          <button
-            class="rounded-3xl border border-slate-700 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:text-white"
-          >
-            Voir Profil
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="mt-6 grid gap-3 sm:grid-cols-3">
-      <div class="rounded-3xl bg-slate-900/90 px-4 py-4 text-sm text-slate-300">
-        <span class="block text-xs uppercase tracking-[0.25em] text-slate-500"
-          >Score</span
-        >
-        <p class="mt-2 text-lg font-semibold text-white">{{ profile.score }}</p>
-      </div>
-      <div class="rounded-3xl bg-slate-900/90 px-4 py-4 text-sm text-slate-300">
-        <span class="block text-xs uppercase tracking-[0.25em] text-slate-500"
-          >Ville</span
-        >
-        <p class="mt-2 text-lg font-semibold text-white">{{ profile.city }}</p>
-      </div>
-      <div class="rounded-3xl bg-slate-900/90 px-4 py-4 text-sm text-slate-300">
-        <span class="block text-xs uppercase tracking-[0.25em] text-slate-500"
-          >Compétences</span
-        >
-        <div class="mt-3 flex flex-wrap gap-2">
-          <span
-            v-for="skill in profile.skills"
-            :key="skill"
-            class="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300"
-          >
-            {{ skill }}
-          </span>
-        </div>
-      </div>
-    </div>
-  </article>
-</template>
-
 <script setup lang="ts">
-import { defineProps } from "vue";
-
 interface Profile {
   id: number;
   name: string;
@@ -95,10 +7,91 @@ interface Profile {
   field: string;
   city: string;
   score: number;
-  year: number;
-  skills: string[];
   recommendations: number;
+  recos?: Array<{ name: string; role: string }>;
 }
 
 defineProps<{ profile: Profile }>();
 </script>
+
+<template>
+  <div class="bg-[#1a2847] rounded-lg border border-slate-700/30 p-5 space-y-4">
+    <!-- Header with profile info -->
+    <div class="flex gap-4">
+      <!-- Avatar -->
+      <div
+        class="w-20 h-20 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 flex-shrink-0 flex items-center justify-center text-sm font-semibold text-slate-900"
+      >
+        {{
+          profile.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+        }}
+      </div>
+
+      <!-- Info -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <h3 class="text-lg font-semibold text-slate-100">
+            {{ profile.name }}
+          </h3>
+          <span
+            class="inline-block bg-red-500/20 text-red-300 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+            >{{ profile.score }}+</span
+          >
+        </div>
+        <p class="text-sm text-slate-400 mt-1">{{ profile.role }}</p>
+        <p class="text-xs text-slate-500 mt-2">{{ profile.school }}</p>
+        <p class="text-xs text-slate-500">{{ profile.city }}</p>
+        <a
+          href="#"
+          class="text-xs text-cyan-400 hover:text-cyan-300 mt-1 inline-block"
+          >Contact info</a
+        >
+      </div>
+
+      <!-- Right side -->
+      <div class="text-right">
+        <p class="text-sm text-slate-300">
+          <span class="font-semibold text-slate-100"
+            >{{ profile.recommendations }}+</span
+          >
+          <span class="text-slate-400"> recos</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-2">
+      <button
+        class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+      >
+        Portfolio
+      </button>
+      <button
+        class="flex-1 border border-slate-600 text-slate-300 hover:text-slate-100 px-4 py-2 rounded-lg text-sm font-semibold transition hover:border-slate-500"
+      >
+        Voir Profile
+      </button>
+    </div>
+
+    <!-- Recommendations -->
+    <template v-if="profile.recos && profile.recos.length > 0">
+      <div class="space-y-2">
+        <p class="text-xs font-semibold text-slate-300">Recommendations:</p>
+        <template v-for="(reco, idx) in profile.recos" :key="idx">
+          <div class="bg-slate-800/50 rounded p-3 text-xs">
+            <p class="font-semibold text-slate-200">{{ reco.name }}</p>
+            <p class="text-slate-400 mt-1">{{ reco.role }}</p>
+          </div>
+        </template>
+      </div>
+    </template>
+    <template v-else>
+      <p class="text-xs text-slate-400 cursor-pointer hover:text-slate-300">
+        Details recos -
+      </p>
+    </template>
+  </div>
+</template>
