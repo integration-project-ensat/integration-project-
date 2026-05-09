@@ -19,7 +19,7 @@ const authentifier = async (req, res, next) => {
     });
 
     const utilisateur = await prisma.utilisateur.findUnique({
-      where: { id_utilisateur: decoded.userId },
+      where: { id_utilisateur: BigInt(decoded.userId) },
       select: {
         id_utilisateur: true,
         nom: true,
@@ -98,19 +98,23 @@ const autoriserRoles = (...rolesAutorises) => {
 
 const authorizePermissions = (permissionArray) => {
   return (req, res, next) => {
-    if (!req.utilisateur) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentification requise'
-      });
+    try {
+      if (!req.utilisateur) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentification requise'
+        });
+      }
+      if (!hasPermission(req.utilisateur.role, permissionArray)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Action non autorisée pour votre rôle',
+        });
+      }
+      next();
+    } catch (err) {
+      next(err);
     }
-    if (!hasPermission(req.utilisateur.role, permissionArray)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Action non autorisée pour votre rôle',
-      });
-    }
-    next();
   };
 };
 

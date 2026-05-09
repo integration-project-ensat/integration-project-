@@ -5,7 +5,6 @@ const prisma = require('../../prisma/client');
 const{PUBLIC_ROLES, ROLES} = require('../config/roles');
 const { genererCode, sendVerificationCode, sendAdminValidationRequest,sendValidationResultEmail } = require('../services/email.service');
 const asyncHandler = require('../middlewares/asyncHandler');
-const { count } = require('node:console');
 
 const SALT_ROUNDS = 12;
 const JWT_EXPIRES_IN = '24h';
@@ -14,7 +13,7 @@ const ADMIN_LINK_EXPIRY_HOURS = 48;
 // Fonction pour générer un token JWTavec les informations de l'utilisateur et une clé secrète, valable pendant 24 heures.
 function generateToken(user) {
   return jwt.sign(
-    { userId: user.id_utilisateur, email: user.email, role: user.role },
+    { userId: user.id_utilisateur.toString(), email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -91,16 +90,19 @@ if (role === 'PROFESSIONNEL') {
         })
       }
     });
+//Creer le profil vide pour tous les roles
+    await tx.profil.create({
+      data: { id_utilisateur: newUser.id_utilisateur }
+    });
 // Création des données spécifiques au rôle
     if (role === 'ETUDIANT') {
         // Création de l'étudiant
-      const etudiant = await tx.etudiant.create({
+       await tx.etudiant.create({
         data: {
           id_utilisateur: newUser.id_utilisateur,
           numero_etudiant: specificData.numero_etudiant,
           filiere: specificData.filiere,
           annee_universitaire: specificData.annee_universitaire,
-          profil: { create: {} } // Création du profil vide associé à l'étudiant
         }
       });
       
@@ -243,10 +245,11 @@ const login = asyncHandler(async (req, res) => {
   const user = await prisma.utilisateur.findUnique({
     where: { email },
     include: {
-      etudiant: { include: { profil: true } },
+      etudiant: true,
       professeur: true,
       professionnel: true,
-      administrateur: true
+      administrateur: true,
+      profil:true
     }
   });
 // Vérification de l'existence de l'utilisateur et de son statut actif
@@ -256,20 +259,12 @@ const login = asyncHandler(async (req, res) => {
       message: 'Email ou mot de passe incorrect'
     });
   }
-    if (!user.est_actif) {
-    return res.status(403).json({
-        success: false,
-message: user.email_verifie 
-                ? 'Votre compte n\'est pas encore activé. En attente de validation administrative.'
-                : 'Votre compte n\'est pas encore activé. Veuillez vérifier votre email.'
-                  });
-}
-
 if (!user.email_verifie) {
-    return res.status(403).json({
-        success: false,
-        message: 'Votre compte n\'est pas encore activé. Veuillez vérifier votre email.'
-    });
+  return res.status(403).json({ message: 'Veuillez vérifier votre email.' });
+}
+// 2. Compte inactif (professionnel en attente admin)
+if (!user.est_actif) {
+  return res.status(403).json({ message: 'En attente de validation administrative.' });
 }
 
 // Vérification du mot de passe par la fonction compare de bcrypt
@@ -303,10 +298,11 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   const user = await prisma.utilisateur.findUnique({
     where: { id_utilisateur: req.utilisateur.id_utilisateur },
     include: {
-      etudiant: { include: { profil: true } },
+      etudiant: true,
       professeur: true,
       professionnel: true,
-      administrateur: true
+      administrateur: true,
+      profil:true
     }
   });
   if (!user) {
@@ -325,7 +321,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 // ==================== CREATION ADMIN (RESERVE) ====================
 
 const createAdmin = asyncHandler(async (req, res) => {
-  const { nom, prenom, email, mot_de_passe ,niveau_acces='STANDARD'||'SUPER_ADMIN'} = req.body;
+  const { nom, prenom, email, mot_de_passe ,niveau_acces='STANDARD'} = req.body;
 
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
@@ -349,10 +345,15 @@ const createAdmin = asyncHandler(async (req, res) => {
         email_verifie: true
 }
     });
+    // Profil vide créé aussi pour l'admin
+    await tx.profil.create({
+      data: { id_utilisateur: newUser.id_utilisateur }
+    });
+
      await tx.administrateur.create({
             data: {
                 id_utilisateur: newUser.id_utilisateur,
-                niveau_acces: niveau_acces
+                niveau_acces
             }
         });
 
@@ -378,13 +379,13 @@ const validerProfessionnelParLien = asyncHandler(async (req, res) => {
     return res.status(403).send(renderErrorPage('Token invalide', 'Ce lien est mal formé ou incomplet.'));
   }
 // Hash du token reçu pour comparaison sécurisée avec la base de données
-const tokenHash=hashToken(token);
+const tokenHash = hashToken(token);
 
-const id = parseInt(utilisateurId, 10);
-if (isNaN(id)) {
-    return res.status(400).send(renderErrorPage('ID invalide', 'L\'ID utilisateur doit être un nombre entier.'));
-  }
-  
+if (!utilisateurId || !/^\d+$/.test(utilisateurId)) {
+  return res.status(400).send(renderErrorPage('ID invalide', 'L\'identifiant de l\'utilisateur est invalide.'));
+}
+const id = BigInt(utilisateurId);
+
   const utilisateur = await prisma.utilisateur.findUnique({
     where: { id_utilisateur: id },
     include: { professionnel: true }
@@ -423,6 +424,7 @@ await prisma.$transaction
 ([prisma.professionnel.update({
     where: { id_utilisateur: id },
     data: { est_valide: true ,
+      statut_validation:'VALIDE',
       date_validation: new Date()
     }
   }),
@@ -456,14 +458,14 @@ const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
   }
 
   const tokenHash = hashToken(token);
-
-  const id = parseInt(utilisateurId, 10);
-  if (isNaN(id)) {
-    return res.status(400).send(renderErrorPage(
+if (!utilisateurId || !/^\d+$/.test(utilisateurId)) {
+  return res.status(400).send(renderErrorPage(
       'ID invalide',
       'L\'ID utilisateur doit être un nombre entier.'
     ));
   }
+  const id = BigInt(utilisateurId);
+  
   const utilisateur = await prisma.utilisateur.findUnique({
     where: { id_utilisateur: id },
     include: { professionnel: true }
@@ -486,7 +488,7 @@ const refuserProfessionnelParLien = asyncHandler(async (req, res) => {
     return res.status(410).send(renderErrorPage('Lien expiré', 'Ce lien de refus a expiré. Veuillez demander un nouveau lien.'));
   }
 
-   // Suppression en cascade via transaction
+// Mise à jour du statut professionnel et désactivation du compte
     await prisma.$transaction([
       prisma.professionnel.update({
         where: { id_utilisateur: id },
