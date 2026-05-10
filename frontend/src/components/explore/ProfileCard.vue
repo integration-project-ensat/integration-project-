@@ -15,83 +15,97 @@ defineProps<{ profile: Profile }>();
 </script>
 
 <template>
-  <div class="bg-[#1a2847] rounded-lg border border-slate-700/30 p-5 space-y-4">
-    <!-- Header with profile info -->
-    <div class="flex gap-4">
-      <!-- Avatar -->
-      <div
-        class="w-20 h-20 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 flex-shrink-0 flex items-center justify-center text-sm font-semibold text-slate-900"
-      >
-        {{
-          profile.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-        }}
-      </div>
-
-      <!-- Info -->
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2">
-          <h3 class="text-lg font-semibold text-slate-100">
-            {{ profile.name }}
-          </h3>
-          <span
-            class="inline-block bg-red-500/20 text-red-300 px-2.5 py-0.5 rounded-full text-xs font-semibold"
-            >{{ profile.score }}+</span
-          >
-        </div>
-        <p class="text-sm text-slate-400 mt-1">{{ profile.role }}</p>
-        <p class="text-xs text-slate-500 mt-2">{{ profile.school }}</p>
-        <p class="text-xs text-slate-500">{{ profile.city }}</p>
-        <a
-          href="#"
-          class="text-xs text-cyan-400 hover:text-cyan-300 mt-1 inline-block"
-          >Contact info</a
+  <div
+    class="rounded-[2rem] bg-[#17243c] border border-slate-700/30 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+  >
+    <div
+      class="rounded-[1.5rem] bg-[#0f1729] p-6 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.08)]"
+    >
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-center">
+        <div
+          class="flex h-28 w-28 items-center justify-center rounded-full bg-slate-300 text-2xl font-bold text-slate-900"
         >
-      </div>
+          {{
+            profile.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+          }}
+        </div>
 
-      <!-- Right side -->
-      <div class="text-right">
-        <p class="text-sm text-slate-300">
-          <span class="font-semibold text-slate-100"
-            >{{ profile.recommendations }}+</span
+        <div class="flex-1 min-w-0">
+          <div
+            class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
           >
-          <span class="text-slate-400"> recos</span>
-        </p>
+            <div>
+              <h3 class="text-2xl font-bold text-white">{{ profile.name }}</h3>
+              <p class="text-sm text-slate-400 mt-2">{{ profile.role }}</p>
+            </div>
+
+            <div class="text-right">
+              <p class="text-sm font-semibold text-slate-100">
+                {{ profile.recommendations }}+ recos
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 space-y-1 text-sm text-slate-400">
+            <p>{{ profile.school }}</p>
+            <p>{{ profile.city }}</p>
+          </div>
+
+          <a
+            href="#"
+            class="mt-4 inline-block text-cyan-400 hover:text-cyan-300"
+          >
+            Contact info
+          </a>
+        </div>
+
+        <div
+          class="flex items-center justify-between gap-3 rounded-full bg-slate-900/70 px-4 py-3 text-sm text-slate-300"
+        >
+          <span class="font-semibold text-white">{{ profile.score }}+</span>
+          <span>score</span>
+        </div>
       </div>
     </div>
 
-    <!-- Buttons -->
-    <div class="flex gap-2">
+    <div class="mt-5 flex flex-col gap-3 sm:flex-row">
       <button
-        class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+        class="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-700"
       >
         Portfolio
       </button>
       <button
-        class="flex-1 border border-slate-600 text-slate-300 hover:text-slate-100 px-4 py-2 rounded-lg text-sm font-semibold transition hover:border-slate-500"
+        class="inline-flex items-center justify-center rounded-full border border-slate-600 bg-transparent px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
       >
         Voir Profile
       </button>
     </div>
 
-    <!-- Recommendations -->
-    <template v-if="profile.recos && profile.recos.length > 0">
-      <div class="space-y-2">
-        <p class="text-xs font-semibold text-slate-300">Recommendations:</p>
-        <template v-for="(reco, idx) in profile.recos" :key="idx">
-          <div class="bg-slate-800/50 rounded p-3 text-xs">
-            <p class="font-semibold text-slate-200">{{ reco.name }}</p>
-            <p class="text-slate-400 mt-1">{{ reco.role }}</p>
-          </div>
-        </template>
+    <div class="mt-6 rounded-[1.5rem] bg-slate-900/70 p-4">
+      <div
+        class="flex items-center justify-between text-sm font-semibold text-slate-200"
+      >
+        <span>Details recos</span>
+        <span class="text-slate-400">⌄</span>
       </div>
-    </template>
-    <template v-else>
-      <p class="text-xs text-slate-400 cursor-pointer hover:text-slate-300">
-        Details recos -
-      </p>
-    </template>
+
+      <template v-if="profile.recos && profile.recos.length > 0">
+        <div class="mt-4 space-y-3">
+          <template v-for="(reco, idx) in profile.recos" :key="idx">
+            <div class="rounded-3xl bg-slate-950/80 p-4">
+              <p class="font-semibold text-slate-100">{{ reco.name }}</p>
+              <p class="mt-1 text-sm text-slate-400">{{ reco.role }}</p>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <template v-else>
+        <p class="mt-4 text-sm text-slate-400">Details recos -</p>
+      </template>
+    </div>
   </div>
 </template>
