@@ -2,87 +2,242 @@ const express = require("express");
 const router  = express.Router();
 
 const technologieController = require("../controllers/technologie.controller");
-// const { authentifier, autoriserRoles } = require("../middlewares/auth.middleware");
 
 /**
- * SCRUM-89 — Technology Routes
- *
- * Base : /api/technologies
- *
- * Middlewares (décommenter quand prêts) :
- *   authenticate  → vérifie le JWT
- *   requireRole   → vérifie le rôle (ex: "ADMINISTRATEUR")
+ * @openapi
+ * tags:
+ *   name: Technologies
+ *   description: Gestion du catalogue de technologies
  */
-
-// ─── Lecture — tous les utilisateurs authentifiés ───────────────────────────
 
 /**
- * GET /api/technologies
- * Liste paginée des technologies validées
- * Query params : ?page=1&limit=10&categorie=Web&search=react
+ * @openapi
+ * /api/technologies:
+ *   get:
+ *     summary: Liste toutes les technologies
+ *     tags: [Technologies]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Numéro de page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: categorie
+ *         schema:
+ *           type: string
+ *         description: Filtrer par catégorie
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Rechercher par nom
+ *     responses:
+ *       200:
+ *         description: Liste des technologies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Technologie'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.get(
-  "/",
-  // authentifier,
-  technologieController.getAllTechnologies
-);
+router.get("/", technologieController.getAllTechnologies);
 
 /**
- * GET /api/technologies/:id
- * Détail d'une technologie
+ * @openapi
+ * /api/technologies/{id}:
+ *   get:
+ *     summary: Récupère une technologie par son ID
+ *     tags: [Technologies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la technologie
+ *     responses:
+ *       200:
+ *         description: Technologie trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Technologie'
+ *       404:
+ *         description: Technologie non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.get(
-  "/:id",
-  // authentifier,
-  technologieController.getTechnologieById
-);
-
-// ─── Écriture — réservé ADMINISTRATEUR ──────────────────────────────────────
-
-/**
- * POST /api/technologies
- * Créer une nouvelle technologie dans le catalogue
- * Body : { nom, categorie?, est_validee? }
- */
-router.post(
-  "/",
-  // authentifier,
-  // autoriserRoles("ADMINISTRATEUR"),
-  technologieController.createTechnologie
-);
-
-/**
- * PATCH /api/technologies/:id
- * Modifier une technologie existante
- * Body : { nom?, categorie?, est_validee? }
- */
-router.patch(
-  "/:id",
-  // authentifier,
-  // autoriserRoles("ADMINISTRATEUR"),
-  technologieController.updateTechnologie
-);
+router.get("/:id", technologieController.getTechnologieById);
 
 /**
- * PATCH /api/technologies/:id/valider
- * Valider une technologie détectée automatiquement (ex: depuis GitHub)
+ * @openapi
+ * /api/technologies:
+ *   post:
+ *     summary: Crée une nouvelle technologie
+ *     tags: [Technologies]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nom
+ *             properties:
+ *               nom:
+ *                 type: string
+ *                 example: "React"
+ *               categorie:
+ *                 type: string
+ *                 example: "Frontend"
+ *               est_validee:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: Technologie créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Technologie'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.patch(
-  "/:id/valider",
-  // authentifier,
-  // autoriserRoles("ADMINISTRATEUR"),
-  technologieController.validerTechnologie
-);
+router.post("/", technologieController.createTechnologie);
 
 /**
- * DELETE /api/technologies/:id
- * Supprimer une technologie (bloqué si utilisée dans des projets)
+ * @openapi
+ * /api/technologies/{id}:
+ *   patch:
+ *     summary: Modifie une technologie existante
+ *     tags: [Technologies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la technologie
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nom:
+ *                 type: string
+ *                 example: "Vue.js"
+ *               categorie:
+ *                 type: string
+ *                 example: "Frontend"
+ *               est_validee:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Technologie modifiée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Technologie'
+ *       404:
+ *         description: Technologie non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.delete(
-  "/:id",
-  // authentifier,
-  // autoriserRoles("ADMINISTRATEUR"),
-  technologieController.deleteTechnologie
-);
+router.patch("/:id", technologieController.updateTechnologie);
+
+/**
+ * @openapi
+ * /api/technologies/{id}/valider:
+ *   patch:
+ *     summary: Valide une technologie détectée automatiquement
+ *     tags: [Technologies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la technologie à valider
+ *     responses:
+ *       200:
+ *         description: Technologie validée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Technologie'
+ *       404:
+ *         description: Technologie non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.patch("/:id/valider", technologieController.validerTechnologie);
+
+/**
+ * @openapi
+ * /api/technologies/{id}:
+ *   delete:
+ *     summary: Supprime une technologie
+ *     tags: [Technologies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la technologie à supprimer
+ *     responses:
+ *       200:
+ *         description: Technologie supprimée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Success'
+ *       404:
+ *         description: Technologie non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.delete("/:id", technologieController.deleteTechnologie);
 
 module.exports = router;
