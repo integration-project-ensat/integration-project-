@@ -1,32 +1,25 @@
 <script setup lang="ts">
 import { Moon } from "lucide-vue-next";
-
-interface Props {
-  modelValue: string;
-}
-
-const props = defineProps<Props>();
-const emit = defineEmits(["update:modelValue"]);
 </script>
 
 <template>
   <header
-    class="flex items-center justify-between bg-[#0f1729] px-6 py-4 text-white"
+    class="flex h-[60px] items-center justify-between bg-[#182846] px-6 text-white shadow-[0_16px_40px_rgba(15,23,42,0.25)]"
   >
     <div class="flex items-center gap-3">
       <img
         src="@/assets/PheraCoreLogo.svg"
         alt="PheraCore"
-        class="h-8 w-auto"
+        class="h-7 w-auto"
       />
-      <div class="text-lg font-semibold tracking-tight">PheraCore</div>
+      <span class="text-base font-semibold tracking-tight">PheraCore</span>
     </div>
 
     <button
       type="button"
-      class="rounded-full border border-white/10 bg-white/10 p-2 text-white transition hover:bg-white/15"
+      class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/15"
     >
-      <Moon class="h-5 w-5" />
+      <Moon class="h-4 w-4" />
     </button>
   </header>
 </template>

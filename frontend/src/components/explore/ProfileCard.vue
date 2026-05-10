@@ -16,14 +16,12 @@ defineProps<{ profile: Profile }>();
 
 <template>
   <div
-    class="rounded-[2rem] bg-[#17243c] border border-slate-700/30 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+    class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
   >
-    <div
-      class="rounded-[1.5rem] bg-[#0f1729] p-6 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.08)]"
-    >
-      <div class="flex flex-col gap-6 lg:flex-row lg:items-center">
+    <div class="rounded-[1.75rem] bg-[#f4f4ff] p-5">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-start">
         <div
-          class="flex h-28 w-28 items-center justify-center rounded-full bg-slate-300 text-2xl font-bold text-slate-900"
+          class="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-xl font-semibold text-slate-700"
         >
           {{
             profile.name
@@ -35,58 +33,52 @@ defineProps<{ profile: Profile }>();
 
         <div class="flex-1 min-w-0">
           <div
-            class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <h3 class="text-2xl font-bold text-white">{{ profile.name }}</h3>
-              <p class="text-sm text-slate-400 mt-2">{{ profile.role }}</p>
+              <div class="flex flex-wrap items-center gap-3">
+                <h3 class="text-xl font-semibold text-slate-950">
+                  {{ profile.name }}
+                </h3>
+                <span
+                  class="rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-600"
+                  >{{ profile.score }}+</span
+                >
+              </div>
+              <p class="mt-2 text-sm text-slate-500">{{ profile.role }}</p>
+              <p class="mt-1 text-sm text-slate-500">{{ profile.school }}</p>
+              <p class="mt-1 text-sm text-slate-500">{{ profile.city }}</p>
             </div>
-
-            <div class="text-right">
-              <p class="text-sm font-semibold text-slate-100">
-                {{ profile.recommendations }}+ recos
-              </p>
-            </div>
-          </div>
-
-          <div class="mt-4 space-y-1 text-sm text-slate-400">
-            <p>{{ profile.school }}</p>
-            <p>{{ profile.city }}</p>
           </div>
 
           <a
             href="#"
-            class="mt-4 inline-block text-cyan-400 hover:text-cyan-300"
+            class="mt-3 inline-block text-sm font-semibold text-[#5b4df0] hover:text-[#4837d2]"
           >
             Contact info
           </a>
         </div>
-
-        <div
-          class="flex items-center justify-between gap-3 rounded-full bg-slate-900/70 px-4 py-3 text-sm text-slate-300"
-        >
-          <span class="font-semibold text-white">{{ profile.score }}+</span>
-          <span>score</span>
-        </div>
       </div>
     </div>
 
-    <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+    <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
       <button
-        class="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-700"
+        class="inline-flex items-center justify-center rounded-full bg-[#5b4df0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4837d2]"
       >
         Portfolio
       </button>
       <button
-        class="inline-flex items-center justify-center rounded-full border border-slate-600 bg-transparent px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
+        class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
       >
         Voir Profile
       </button>
     </div>
 
-    <div class="mt-6 rounded-[1.5rem] bg-slate-900/70 p-4">
+    <div
+      class="mt-5 rounded-[1.5rem] bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
+    >
       <div
-        class="flex items-center justify-between text-sm font-semibold text-slate-200"
+        class="flex items-center justify-between text-sm font-semibold text-slate-900"
       >
         <span>Details recos</span>
         <span class="text-slate-400">⌄</span>
@@ -95,16 +87,20 @@ defineProps<{ profile: Profile }>();
       <template v-if="profile.recos && profile.recos.length > 0">
         <div class="mt-4 space-y-3">
           <template v-for="(reco, idx) in profile.recos" :key="idx">
-            <div class="rounded-3xl bg-slate-950/80 p-4">
-              <p class="font-semibold text-slate-100">{{ reco.name }}</p>
-              <p class="mt-1 text-sm text-slate-400">{{ reco.role }}</p>
+            <div class="rounded-[1.5rem] bg-slate-100 p-4">
+              <p class="text-sm font-semibold text-slate-950">
+                {{ reco.name }}
+              </p>
+              <p class="mt-1 text-sm text-slate-500">{{ reco.role }}</p>
             </div>
           </template>
         </div>
       </template>
 
       <template v-else>
-        <p class="mt-4 text-sm text-slate-400">Details recos -</p>
+        <p class="mt-4 text-sm text-slate-500">
+          Aucune recommandation disponible.
+        </p>
       </template>
     </div>
   </div>
