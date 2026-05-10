@@ -39,6 +39,7 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useRouter } from 'vue-router'
+import authService from '@/services/auth.service.js'
 
 const email   = ref('')
 const error   = ref('')
@@ -55,15 +56,18 @@ async function submit() {
   }
   loading.value = true
   try {
-    // await authService.forgotPassword(email.value)
+   await authService.forgotPassword(email.value)
     success.value = 'Lien envoyé ! Vérifiez votre boîte mail.'
 
-    router.push({ path: '/verify-code', query: { email: email.value } })
-  } catch {
-    error.value = 'Nous ne trouvons pas votre e-mail.'
-  } finally {
-    loading.value = false
+router.push({ path: '/reset-password', query: { email: email.value } })
+ } catch(e) {
+  const errors = e.response?.data?.errors
+  if (errors && errors.length > 0) {
+    error.value = errors[0].message
+  } else {
+    error.value = e.response?.data?.message || 'Une erreur est survenue.'
   }
+}
 }
 </script>
 

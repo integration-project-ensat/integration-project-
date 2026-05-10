@@ -7,6 +7,7 @@ import ForgetPasswordView from '../views/ForgetPasswordView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import VerifyCodeView from '../views/VerifyCodeView.vue'
 
+
 export default createRouter({
   history: createWebHistory('/'),
   routes: [
@@ -15,6 +16,7 @@ export default createRouter({
     { path: '/signup', name: 'signup', component: SignupView },
     { path: '/forgot', name: 'forgot', component: ForgetPasswordView },
     { path: '/reset-password', name: 'reset', component: ResetPasswordView },
+    { path: '/reinitialiser-mot-de-passe', name: 'reinitialiser', component: ResetPasswordView },
     { path: '/verify-code', name: 'verify-code', component: VerifyCodeView }
   ]
 })
