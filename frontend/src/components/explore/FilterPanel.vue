@@ -63,45 +63,49 @@ const sections = [
 
 <template>
   <aside
-    class="w-72 bg-[#0f1729] border-l border-slate-700/50 p-5 overflow-y-auto"
+    class="w-[270px] flex-shrink-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
   >
     <div class="space-y-6">
-      <!-- Header -->
       <div>
-        <p class="text-xs font-semibold text-cyan-400 tracking-wider">
-          FILTERS
+        <p
+          class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400"
+        >
+          Filtres
         </p>
-        <h3 class="text-lg font-bold text-slate-100 mt-2">Refine Search</h3>
+        <h3 class="mt-2 text-sm font-semibold text-slate-950">
+          Affiner la recherche
+        </h3>
       </div>
 
-      <!-- Filter Sections -->
       <template v-for="section in sections" :key="section.title">
         <div>
-          <p class="text-xs font-semibold text-slate-300 mb-3">
+          <p
+            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3"
+          >
             {{ section.title }}
           </p>
           <div class="flex flex-wrap gap-2">
             <template v-for="option in section.options" :key="option">
               <button
                 :class="[
-                  'px-3 py-1.5 rounded-full text-xs font-medium border transition',
-                  (
-                    section.key === 'skills'
-                      ? filters.skills.includes(String(option))
-                      : filters[section.key as keyof typeof filters] === option
-                  )
-                    ? 'bg-purple-600/20 border-purple-400 text-purple-200'
-                    : 'border-slate-600 text-slate-300 hover:border-slate-500 hover:text-slate-100',
+                  'rounded-full px-3 py-2 text-xs font-semibold transition',
+                  section.key === 'skills'
+                    ? filters.skills.includes(String(option))
+                      ? 'bg-[#f3efff] border border-[#6c5ce7] text-[#6c5ce7]'
+                      : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400'
+                    : filters[section.key as keyof typeof filters] === option
+                      ? 'bg-[#f3efff] border border-[#6c5ce7] text-[#6c5ce7]'
+                      : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400',
                 ]"
               >
                 {{ option }}
               </button>
             </template>
             <button
-              class="px-3 py-1.5 rounded-full text-xs font-medium border border-slate-600 text-slate-400 hover:text-slate-300 transition flex items-center gap-1"
+              class="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
             >
               Plus
-              <ChevronDown class="w-3 h-3" />
+              <ChevronDown class="h-3 w-3" />
             </button>
           </div>
         </div>
