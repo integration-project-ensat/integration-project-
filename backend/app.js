@@ -1,40 +1,37 @@
-/**
- * app.js
- * Configuration de l'application Express
- * 
- * Responsabilités :
- * - Configurer les middlewares globaux (CORS, JSON parsing)
- * - Monter les routes de l'API
- * - Exporter l'instance app pour les tests et le démarrage
- * 
- * Ne démarre PAS le serveur (voir server.js pour le démarrage)
- */
 require('dotenv').config({ path: '.env.local' })
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
+
 const express = require('express')
-const morgan = require('morgan') 
-const swaggerUi = require('swagger-ui-express')              
+const morgan = require('morgan')
+const swaggerUi = require('swagger-ui-express')
 const swaggerSpec = require('./src/config/swagger.config')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
-
 const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
 const technologieRoutes = require('./src/routes/technologie.routes')
 const competenceRoutes = require('./src/routes/competence.routes')
-const profileRoutes = require('./src/routes/profile.routes')     
+const profileRoutes = require('./src/routes/profile.routes')
 const diplomeRoutes = require('./src/routes/diploma.routes')
+
 const app = express()
-//Logger HTTP
+
+// Logger HTTP
 app.use(morgan('dev'))
-//securite(headers, CORS, rate )
+
+// Documentation Swagger — AVANT helmet
+app.use('/api-docs', swaggerUi.serve)
+app.get('/api-docs', swaggerUi.setup(swaggerSpec))
+app.get('/api-docs/', swaggerUi.setup(swaggerSpec))
+
+// Securite (headers, CORS, rate)
 app.use(securityHeaders)
 app.use(corsMiddleware)
 
-//body parser
+// Body parser
 app.use(express.json({limit:'10Kb'}))
 app.use(express.urlencoded({extended:true, limit:'10Kb'}))
 
@@ -45,10 +42,8 @@ app.use('/api/auth/renvoyer-code', passwordLimiter)
 app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
-// Documentation Swagger
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-//health check
+// Health check
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
@@ -57,14 +52,14 @@ app.get('/', (req, res) => {
   })
 })
 
-
-// Auth routes
+// Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/technologies', technologieRoutes)
 app.use('/api/competences', competenceRoutes)
-app.use('/api/profils', profileRoutes)        
-app.use('/api/diplomes', diplomeRoutes) 
-//404 not found handler (doit être après toutes les routes)
+app.use('/api/profils', profileRoutes)
+app.use('/api/diplomes', diplomeRoutes)
+
+// 404
 app.use((req,res) => {
   res.status(404).json({
     success:false,
@@ -72,7 +67,6 @@ app.use((req,res) => {
     message: `Route ${req.method} ${req.originalUrl} not found`
   })
 })
-
 
 app.use(errorMiddleware)
 
