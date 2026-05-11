@@ -1,37 +1,6 @@
 const prisma = require('./client');
 const bcrypt = require('bcryptjs');
 
-async function main() {
-  const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 15);
-
-  const admin = await prisma.utilisateur.upsert({
-    where: { email: process.env.ADMIN_EMAIL },
-    update: {},
-    create: {
-      email:              process.env.ADMIN_EMAIL,
-      mot_de_passe_hashe: hashedPassword,
-      nom:                'Super',
-      prenom:             'Admin',
-      role:               'ADMINISTRATEUR',
-      est_actif:          true,
-      email_verifie:      true,
-      profil: {
-        create: {}
-      },
-      administrateur: {
-        create: {
-          niveau_acces: 'SUPER_ADMIN'
-        }
-      }
-    }
-  });
-
-  console.log('Admin créé :', admin.email);
-}
-
-main()
-  .catch(e => {
-    console.error(e);
 const SALT_ROUNDS = 12;
 
 const PASSWORDS = {
@@ -58,19 +27,27 @@ async function upsertUtilisateur(data) {
   });
 }
 
+async function upsertByFirst(model, where, data, idField) {
+  const existing = await model.findFirst({ where });
+
+  return existing
+    ? model.update({ where: { [idField]: existing[idField] }, data })
+    : model.create({ data });
+}
+
 async function seedAdministrateurs(hashAdmin) {
   const admins = [
     {
       email: process.env.ADMIN_EMAIL || 'admin1@plateforme.ma',
       nom: 'Admin',
-      prenom: 'Un',
+      prenom: 'Principal',
       niveau_acces: 'SUPER_ADMIN',
       droits_admin: { utilisateurs: true, validations: true, parametrage: true },
     },
     {
       email: 'admin2@plateforme.ma',
       nom: 'Admin',
-      prenom: 'Deux',
+      prenom: 'Secondaire',
       niveau_acces: 'STANDARD',
       droits_admin: { utilisateurs: true, validations: true, parametrage: false },
     },
@@ -88,6 +65,12 @@ async function seedAdministrateurs(hashAdmin) {
       est_actif: true,
       est_valide: true,
       email_verifie: true,
+    });
+
+    await prisma.profil.upsert({
+      where: { id_utilisateur: utilisateur.id_utilisateur },
+      update: { pays: 'Maroc', visibilite: 'PRIVE' },
+      create: { id_utilisateur: utilisateur.id_utilisateur, pays: 'Maroc', visibilite: 'PRIVE' },
     });
 
     await prisma.administrateur.upsert({
@@ -166,8 +149,6 @@ async function seedProfesseurs(hashProfesseur) {
         departement: prof.departement,
         specialite: prof.specialite,
         titre: prof.titre,
-        email_professionnel: prof.email,
-        telephone: prof.telephone,
       },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
@@ -175,8 +156,23 @@ async function seedProfesseurs(hashProfesseur) {
         departement: prof.departement,
         specialite: prof.specialite,
         titre: prof.titre,
-        email_professionnel: prof.email,
+      },
+    });
+
+    await prisma.profil.upsert({
+      where: { id_utilisateur: utilisateur.id_utilisateur },
+      update: {
         telephone: prof.telephone,
+        pays: 'Maroc',
+        email_professionnel: prof.email,
+        visibilite: 'PUBLIC',
+      },
+      create: {
+        id_utilisateur: utilisateur.id_utilisateur,
+        telephone: prof.telephone,
+        pays: 'Maroc',
+        email_professionnel: prof.email,
+        visibilite: 'PUBLIC',
       },
     });
 
@@ -194,7 +190,7 @@ async function seedEtudiants(hashEtudiant) {
       prenom: 'Omar',
       numero_etudiant: 'ETU001',
       filiere: 'Genie Informatique',
-      objectif_professionnel: 'DEV_WEB',
+      objectif_pro: 'DEV_WEB',
       telephone: '0611111111',
       linkedin_url: 'https://linkedin.com/in/omar-mansouri',
     },
@@ -204,7 +200,7 @@ async function seedEtudiants(hashEtudiant) {
       prenom: 'Imane',
       numero_etudiant: 'ETU002',
       filiere: 'Reseaux et Telecoms',
-      objectif_professionnel: 'CYBERSECURITE',
+      objectif_pro: 'CYBERSECURITE',
       telephone: '0611111112',
       linkedin_url: 'https://linkedin.com/in/imane-tazi',
     },
@@ -214,7 +210,7 @@ async function seedEtudiants(hashEtudiant) {
       prenom: 'Mehdi',
       numero_etudiant: 'ETU003',
       filiere: 'Data Science',
-      objectif_professionnel: 'DATA_SCIENCE',
+      objectif_pro: 'DATA_SCIENCE',
       telephone: '0611111113',
       linkedin_url: 'https://linkedin.com/in/mehdi-rifai',
     },
@@ -224,7 +220,7 @@ async function seedEtudiants(hashEtudiant) {
       prenom: 'Salma',
       numero_etudiant: 'ETU004',
       filiere: 'Genie Informatique',
-      objectif_professionnel: 'DEVOPS',
+      objectif_pro: 'DEVOPS',
       telephone: '0611111114',
       linkedin_url: 'https://linkedin.com/in/salma-elfassi',
     },
@@ -234,7 +230,7 @@ async function seedEtudiants(hashEtudiant) {
       prenom: 'Yassine',
       numero_etudiant: 'ETU005',
       filiere: 'Cybersecurite',
-      objectif_professionnel: 'CYBERSECURITE',
+      objectif_pro: 'CYBERSECURITE',
       telephone: '0611111115',
       linkedin_url: 'https://linkedin.com/in/yassine-naciri',
     },
@@ -274,7 +270,6 @@ async function seedEtudiants(hashEtudiant) {
       update: {
         telephone: etudiant.telephone,
         pays: 'Maroc',
-        objectif_professionnel: etudiant.objectif_professionnel,
         linkedin_url: etudiant.linkedin_url,
         bio: `Profil de ${etudiant.prenom} ${etudiant.nom}, etudiant en ${etudiant.filiere}.`,
         visibilite: 'PUBLIC',
@@ -283,14 +278,13 @@ async function seedEtudiants(hashEtudiant) {
         id_utilisateur: utilisateur.id_utilisateur,
         telephone: etudiant.telephone,
         pays: 'Maroc',
-        objectif_professionnel: etudiant.objectif_professionnel,
         linkedin_url: etudiant.linkedin_url,
         bio: `Profil de ${etudiant.prenom} ${etudiant.nom}, etudiant en ${etudiant.filiere}.`,
         visibilite: 'PUBLIC',
       },
     });
 
-    result.push(utilisateur);
+    result.push({ ...utilisateur, objectif_pro: etudiant.objectif_pro });
   }
 
   return result;
@@ -332,36 +326,47 @@ async function seedProfessionnels(hashProfessionnel) {
 
   const result = [];
 
-  for (const professionnel of professionnels) {
+  for (const pro of professionnels) {
     const utilisateur = await upsertUtilisateur({
-      email: professionnel.email,
+      email: pro.email,
       mot_de_passe_hashe: hashProfessionnel,
-      nom: professionnel.nom,
-      prenom: professionnel.prenom,
+      nom: pro.nom,
+      prenom: pro.prenom,
       role: 'PROFESSIONNEL',
-      est_actif: professionnel.est_valide,
-      est_valide: professionnel.est_valide,
+      est_actif: pro.est_valide,
+      est_valide: pro.est_valide,
       email_verifie: true,
     });
 
     await prisma.professionnel.upsert({
       where: { id_utilisateur: utilisateur.id_utilisateur },
       update: {
-        entreprise: professionnel.entreprise,
-        poste: professionnel.poste,
-        secteur: professionnel.secteur,
-        est_valide: professionnel.est_valide,
-        statut_validation: professionnel.statut_validation,
-        date_validation: professionnel.est_valide ? new Date() : null,
+        entreprise: pro.entreprise,
+        poste: pro.poste,
+        secteur: pro.secteur,
+        est_valide: pro.est_valide,
+        statut_validation: pro.statut_validation,
+        date_validation: pro.est_valide ? new Date() : null,
       },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
-        entreprise: professionnel.entreprise,
-        poste: professionnel.poste,
-        secteur: professionnel.secteur,
-        est_valide: professionnel.est_valide,
-        statut_validation: professionnel.statut_validation,
-        date_validation: professionnel.est_valide ? new Date() : null,
+        entreprise: pro.entreprise,
+        poste: pro.poste,
+        secteur: pro.secteur,
+        est_valide: pro.est_valide,
+        statut_validation: pro.statut_validation,
+        date_validation: pro.est_valide ? new Date() : null,
+      },
+    });
+
+    await prisma.profil.upsert({
+      where: { id_utilisateur: utilisateur.id_utilisateur },
+      update: { pays: 'Maroc', email_professionnel: pro.email, visibilite: 'PUBLIC' },
+      create: {
+        id_utilisateur: utilisateur.id_utilisateur,
+        pays: 'Maroc',
+        email_professionnel: pro.email,
+        visibilite: 'PUBLIC',
       },
     });
 
@@ -371,45 +376,33 @@ async function seedProfessionnels(hashProfessionnel) {
   return result;
 }
 
-async function upsertCompetence(data) {
-  const existing = await prisma.competence.findFirst({
-    where: { nom: data.nom, categorie: data.categorie },
-  });
-
-  if (existing) {
-    return prisma.competence.update({
-      where: { id_competence: existing.id_competence },
-      data: { niveau: data.niveau },
-    });
-  }
-
-  return prisma.competence.create({ data });
-}
-
 async function seedCompetences() {
   const competencesData = [
     { nom: 'JavaScript', categorie: 'TECHNIQUE', niveau: 'AVANCE' },
     { nom: 'TypeScript', categorie: 'TECHNIQUE', niveau: 'INTERMEDIAIRE' },
     { nom: 'React', categorie: 'TECHNIQUE', niveau: 'AVANCE' },
     { nom: 'Node.js', categorie: 'TECHNIQUE', niveau: 'INTERMEDIAIRE' },
-    { nom: 'Express.js', categorie: 'TECHNIQUE', niveau: 'INTERMEDIAIRE' },
     { nom: 'PostgreSQL', categorie: 'TECHNIQUE', niveau: 'INTERMEDIAIRE' },
     { nom: 'Prisma', categorie: 'TECHNIQUE', niveau: 'INTERMEDIAIRE' },
     { nom: 'Docker', categorie: 'TECHNIQUE', niveau: 'DEBUTANT' },
     { nom: 'Python', categorie: 'TECHNIQUE', niveau: 'INTERMEDIAIRE' },
-    { nom: 'Data analysis', categorie: 'TECHNIQUE', niveau: 'INTERMEDIAIRE' },
-    { nom: 'Communication', categorie: 'SOFT', niveau: 'AVANCE' },
-    { nom: 'Travail en equipe', categorie: 'SOFT', niveau: 'EXPERT' },
-    { nom: 'Leadership', categorie: 'SOFT', niveau: 'INTERMEDIAIRE' },
-    { nom: 'Gestion du temps', categorie: 'SOFT', niveau: 'AVANCE' },
-    { nom: 'Resolution de problemes', categorie: 'SOFT', niveau: 'AVANCE' },
-    { nom: 'Autonomie', categorie: 'SOFT', niveau: 'AVANCE' },
+    { nom: 'Communication', categorie: 'COMPORTEMENTALE', niveau: 'AVANCE' },
+    { nom: 'Travail en equipe', categorie: 'COMPORTEMENTALE', niveau: 'EXPERT' },
+    { nom: 'Leadership', categorie: 'COMPORTEMENTALE', niveau: 'INTERMEDIAIRE' },
+    { nom: 'Gestion du temps', categorie: 'COMPORTEMENTALE', niveau: 'AVANCE' },
   ];
 
   const result = [];
 
   for (const competence of competencesData) {
-    result.push(await upsertCompetence(competence));
+    result.push(
+      await upsertByFirst(
+        prisma.competence,
+        { nom: competence.nom, categorie: competence.categorie },
+        competence,
+        'id_competence'
+      )
+    );
   }
 
   return result;
@@ -445,19 +438,14 @@ async function seedTechnologies() {
 }
 
 async function seedProfilCompetences(etudiants, competences) {
-  const profiles = await prisma.profil.findMany({
-    where: { id_utilisateur: { in: etudiants.map((e) => e.id_utilisateur) } },
-    orderBy: { id_utilisateur: 'asc' },
-  });
-
-  for (let i = 0; i < profiles.length; i += 1) {
+  for (let i = 0; i < etudiants.length; i += 1) {
     const selected = competences.slice(i, i + 5);
 
     for (let j = 0; j < selected.length; j += 1) {
       await prisma.profilCompetence.upsert({
         where: {
-          id_profil_id_competence: {
-            id_profil: profiles[i].id_profil,
+          id_etudiant_id_competence: {
+            id_etudiant: etudiants[i].id_utilisateur,
             id_competence: selected[j].id_competence,
           },
         },
@@ -466,7 +454,7 @@ async function seedProfilCompetences(etudiants, competences) {
           date_ajout: new Date(),
         },
         create: {
-          id_profil: profiles[i].id_profil,
+          id_etudiant: etudiants[i].id_utilisateur,
           id_competence: selected[j].id_competence,
           niveau_maitrise: Math.min(95, 60 + i * 5 + j * 5),
           date_ajout: new Date(),
@@ -474,41 +462,6 @@ async function seedProfilCompetences(etudiants, competences) {
       });
     }
   }
-
-  return profiles;
-}
-
-async function upsertProjet(data, technologieIds) {
-  let projet = await prisma.projet.findFirst({
-    where: { id_etudiant: data.id_etudiant, titre: data.titre },
-  });
-
-  if (projet) {
-    projet = await prisma.projet.update({
-      where: { id_projet: projet.id_projet },
-      data,
-    });
-  } else {
-    projet = await prisma.projet.create({ data });
-  }
-
-  for (const id_technologie of technologieIds) {
-    await prisma.projetTechnologie.upsert({
-      where: {
-        id_projet_id_technologie: {
-          id_projet: projet.id_projet,
-          id_technologie,
-        },
-      },
-      update: {},
-      create: {
-        id_projet: projet.id_projet,
-        id_technologie,
-      },
-    });
-  }
-
-  return projet;
 }
 
 async function seedProjets(etudiants, professeurs, technologies) {
@@ -564,27 +517,47 @@ async function seedProjets(etudiants, professeurs, technologies) {
   const result = [];
 
   for (const projet of projetsData) {
-    result.push(
-      await upsertProjet(
-        {
-          id_etudiant: etudiants[projet.etudiantIdx].id_utilisateur,
-          id_professeur: professeurs[projet.profIdx].id_utilisateur,
-          titre: projet.titre,
-          description: projet.description,
-          type: projet.type,
-          role: 'Developpeur',
-          resultats: projet.statut === 'VALIDE' ? 'Prototype valide et documente' : null,
-          lien_github: `https://github.com/demo/${projet.titre.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-          captures: { images: [] },
-          statut: projet.statut,
-          visibilite: 'PUBLIC',
-          est_dans_portfolio: projet.statut === 'VALIDE',
-          appreciation_professeur:
-            projet.statut === 'VALIDE' ? 'Bon travail, projet bien structure.' : null,
-        },
-        projet.techs.map((name) => techByName[name].id_technologie)
-      )
+    const data = {
+      id_etudiant: etudiants[projet.etudiantIdx].id_utilisateur,
+      id_professeur: professeurs[projet.profIdx].id_utilisateur,
+      titre: projet.titre,
+      description: projet.description,
+      type: projet.type,
+      role: 'Developpeur',
+      resultats: projet.statut === 'VALIDE' ? 'Prototype valide et documente' : null,
+      lien_github: `https://github.com/demo/${projet.titre.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      captures: { images: [] },
+      statut: projet.statut,
+      visibilite: 'PUBLIC',
+      est_dans_portfolio: projet.statut === 'VALIDE',
+      appreciation_professeur:
+        projet.statut === 'VALIDE' ? 'Bon travail, projet bien structure.' : null,
+    };
+
+    const saved = await upsertByFirst(
+      prisma.projet,
+      { id_etudiant: data.id_etudiant, titre: data.titre },
+      data,
+      'id_projet'
     );
+
+    for (const techName of projet.techs) {
+      await prisma.projetTechnologie.upsert({
+        where: {
+          id_projet_id_technologie: {
+            id_projet: saved.id_projet,
+            id_technologie: techByName[techName].id_technologie,
+          },
+        },
+        update: {},
+        create: {
+          id_projet: saved.id_projet,
+          id_technologie: techByName[techName].id_technologie,
+        },
+      });
+    }
+
+    result.push(saved);
   }
 
   return result;
@@ -638,14 +611,13 @@ async function seedStages(etudiants, professeurs) {
       commentaire_prof: stage.statut === 'VALIDE' ? 'Stage effectue avec serieux.' : null,
     };
 
-    const existing = await prisma.stage.findFirst({
-      where: { id_etudiant: data.id_etudiant, entreprise: data.entreprise, poste: data.poste },
-    });
-
     result.push(
-      existing
-        ? await prisma.stage.update({ where: { id_stage: existing.id_stage }, data })
-        : await prisma.stage.create({ data })
+      await upsertByFirst(
+        prisma.stage,
+        { id_etudiant: data.id_etudiant, entreprise: data.entreprise, poste: data.poste },
+        data,
+        'id_stage'
+      )
     );
   }
 
@@ -673,17 +645,13 @@ async function seedActivites(etudiants, professeurs) {
       statut: activite.statut,
     };
 
-    const existing = await prisma.activiteParascolaire.findFirst({
-      where: { id_etudiant: data.id_etudiant, nom: data.nom },
-    });
-
     result.push(
-      existing
-        ? await prisma.activiteParascolaire.update({
-            where: { id_activite: existing.id_activite },
-            data,
-          })
-        : await prisma.activiteParascolaire.create({ data })
+      await upsertByFirst(
+        prisma.activiteParascolaire,
+        { id_etudiant: data.id_etudiant, nom: data.nom },
+        data,
+        'id_activite'
+      )
     );
   }
 
@@ -691,41 +659,38 @@ async function seedActivites(etudiants, professeurs) {
 }
 
 async function seedDiplomes(etudiants) {
+  const diplomes = [
+    { etudiantIdx: 0, titre_diplome: 'Licence Informatique', domaine: 'Informatique' },
+    { etudiantIdx: 1, titre_diplome: 'Licence Reseaux', domaine: 'Reseaux' },
+    { etudiantIdx: 2, titre_diplome: 'Licence Data', domaine: 'Data Science' },
+  ];
+
   const result = [];
 
-  for (const etudiant of etudiants) {
+  for (const diplome of diplomes) {
     const data = {
-      id_etudiant: etudiant.id_utilisateur,
-      titre_diplome: 'Licence en Informatique',
-      domaine: 'Sciences et Technologies',
-      etablissement: 'Ecole Nationale des Sciences Appliquees',
+      id_etudiant: etudiants[diplome.etudiantIdx].id_utilisateur,
+      titre_diplome: diplome.titre_diplome,
+      domaine: diplome.domaine,
+      etablissement: 'Universite Mohammed V',
       annee_debut: 2022,
       annee_fin: 2025,
     };
 
-    const existing = await prisma.diplome.findFirst({
-      where: { id_etudiant: data.id_etudiant, titre_diplome: data.titre_diplome },
-    });
-
     result.push(
-      existing
-        ? await prisma.diplome.update({ where: { id_diplome: existing.id_diplome }, data })
-        : await prisma.diplome.create({ data })
+      await upsertByFirst(
+        prisma.diplome,
+        { id_etudiant: data.id_etudiant, titre_diplome: data.titre_diplome },
+        data,
+        'id_diplome'
+      )
     );
   }
 
   return result;
 }
 
-async function upsertBadge(data) {
-  const existing = await prisma.badge.findFirst({ where: { nom: data.nom } });
-
-  return existing
-    ? prisma.badge.update({ where: { id_badge: existing.id_badge }, data })
-    : prisma.badge.create({ data });
-}
-
-async function seedBadges(profiles) {
+async function seedBadges(etudiants) {
   const badgesData = [
     {
       nom: 'Badge Dev Web',
@@ -763,19 +728,20 @@ async function seedBadges(profiles) {
 
   for (const badge of badgesData) {
     badges.push(
-      await upsertBadge({
-        ...badge,
-        est_visible: true,
-        mis_en_avant: false,
-      })
+      await upsertByFirst(
+        prisma.badge,
+        { nom: badge.nom },
+        { ...badge, est_visible: true, mis_en_avant: false },
+        'id_badge'
+      )
     );
   }
 
-  for (let i = 0; i < profiles.length; i += 1) {
+  for (let i = 0; i < etudiants.length; i += 1) {
     await prisma.profilBadge.upsert({
       where: {
-        id_profil_id_badge: {
-          id_profil: profiles[i].id_profil,
+        id_etudiant_id_badge: {
+          id_etudiant: etudiants[i].id_utilisateur,
           id_badge: badges[i % badges.length].id_badge,
         },
       },
@@ -784,7 +750,7 @@ async function seedBadges(profiles) {
         position: 1,
       },
       create: {
-        id_profil: profiles[i].id_profil,
+        id_etudiant: etudiants[i].id_utilisateur,
         id_badge: badges[i % badges.length].id_badge,
         date_attribution: new Date(),
         position: 1,
@@ -810,22 +776,17 @@ async function seedReglesBadge(badges) {
   ];
 
   for (const rule of rules) {
-    const existing = await prisma.regleBadge.findFirst({
-      where: { id_badge: rule.badge.id_badge },
-    });
-
-    const data = {
-      id_badge: rule.badge.id_badge,
-      criteres: rule.criteres,
-      seuils: rule.seuils,
-      est_valide: true,
-    };
-
-    if (existing) {
-      await prisma.regleBadge.update({ where: { id_regle: existing.id_regle }, data });
-    } else {
-      await prisma.regleBadge.create({ data });
-    }
+    await upsertByFirst(
+      prisma.regleBadge,
+      { id_badge: rule.badge.id_badge },
+      {
+        id_badge: rule.badge.id_badge,
+        criteres: rule.criteres,
+        seuils: rule.seuils,
+        est_valide: true,
+      },
+      'id_regle'
+    );
   }
 }
 
@@ -839,33 +800,25 @@ async function seedReglesScore(admin) {
   ];
 
   for (const rule of rules) {
-    const existing = await prisma.regleScoreCredibilite.findFirst({
-      where: { cree_par_admin: admin.id_utilisateur, critere: rule.critere },
-    });
-
-    const data = {
-      cree_par_admin: admin.id_utilisateur,
-      critere: rule.critere,
-      poids: rule.poids,
-      seuil: rule.seuil,
-      est_active: true,
-    };
-
-    if (existing) {
-      await prisma.regleScoreCredibilite.update({
-        where: { id_regle_score: existing.id_regle_score },
-        data,
-      });
-    } else {
-      await prisma.regleScoreCredibilite.create({ data });
-    }
+    await upsertByFirst(
+      prisma.regleScoreCredibilite,
+      { cree_par_admin: admin.id_utilisateur, critere: rule.critere },
+      {
+        cree_par_admin: admin.id_utilisateur,
+        critere: rule.critere,
+        poids: rule.poids,
+        seuil: rule.seuil,
+        est_active: true,
+      },
+      'id_regle_score'
+    );
   }
 }
 
-async function seedScoresCredibilite(profiles) {
-  for (const profile of profiles) {
+async function seedScoresCredibilite(etudiants) {
+  for (const etudiant of etudiants) {
     await prisma.scoreCredibilite.upsert({
-      where: { id_profil: profile.id_profil },
+      where: { id_etudiant: etudiant.id_utilisateur },
       update: {
         score_total: 65.5,
         score_projets: 25.0,
@@ -877,7 +830,7 @@ async function seedScoresCredibilite(profiles) {
         niveau: 'INTERMEDIAIRE',
       },
       create: {
-        id_profil: profile.id_profil,
+        id_etudiant: etudiant.id_utilisateur,
         score_total: 65.5,
         score_projets: 25.0,
         score_github: 12.5,
@@ -910,13 +863,13 @@ async function seedModelesPortfolio(admin) {
   const result = [];
 
   for (const modele of modelesData) {
-    const existing = await prisma.modelePortfolio.findFirst({ where: { nom: modele.nom } });
-    const data = { ...modele, cree_par_admin: admin.id_utilisateur };
-
     result.push(
-      existing
-        ? await prisma.modelePortfolio.update({ where: { id_modele: existing.id_modele }, data })
-        : await prisma.modelePortfolio.create({ data })
+      await upsertByFirst(
+        prisma.modelePortfolio,
+        { nom: modele.nom },
+        { ...modele, cree_par_admin: admin.id_utilisateur },
+        'id_modele'
+      )
     );
   }
 
@@ -932,8 +885,8 @@ async function seedPortfolios(etudiants, modeles) {
         where: { id_etudiant: etudiants[i].id_utilisateur },
         update: {
           id_modele: modeles[i % modeles.length].id_modele,
-          titre: `Portfolio de l'etudiant ${i + 1}`,
-          objectif_pro: i % 2 === 0 ? 'DEV_WEB' : 'DATA_SCIENCE',
+          titre: `Portfolio de ${etudiants[i].prenom} ${etudiants[i].nom}`,
+          objectif_pro: etudiants[i].objectif_pro,
           theme: i % 2 === 0 ? 'light' : 'dark',
           est_public: true,
           url_public: `etudiant${i + 1}-portfolio`,
@@ -942,8 +895,8 @@ async function seedPortfolios(etudiants, modeles) {
         create: {
           id_etudiant: etudiants[i].id_utilisateur,
           id_modele: modeles[i % modeles.length].id_modele,
-          titre: `Portfolio de l'etudiant ${i + 1}`,
-          objectif_pro: i % 2 === 0 ? 'DEV_WEB' : 'DATA_SCIENCE',
+          titre: `Portfolio de ${etudiants[i].prenom} ${etudiants[i].nom}`,
+          objectif_pro: etudiants[i].objectif_pro,
           theme: i % 2 === 0 ? 'light' : 'dark',
           est_public: true,
           url_public: `etudiant${i + 1}-portfolio`,
@@ -990,19 +943,16 @@ async function seedLettresRecommandation(etudiants, professeurs) {
       url_fichier: lettre.statut === 'REDIGEE' ? 'https://example.com/lettres/lettre-1.pdf' : null,
     };
 
-    const existing = await prisma.lettreRecommandation.findFirst({
-      where: {
+    await upsertByFirst(
+      prisma.lettreRecommandation,
+      {
         id_etudiant: data.id_etudiant,
         id_professeur: data.id_professeur,
         motif: data.motif,
       },
-    });
-
-    if (existing) {
-      await prisma.lettreRecommandation.update({ where: { id_lettre: existing.id_lettre }, data });
-    } else {
-      await prisma.lettreRecommandation.create({ data });
-    }
+      data,
+      'id_lettre'
+    );
   }
 }
 
@@ -1011,27 +961,26 @@ async function seedPostes(etudiants) {
 
   for (let i = 0; i < etudiants.length; i += 1) {
     const contenu = `Poste${i + 1} : je viens de terminer mon projet ${i + 1} avec succes.`;
-    const existing = await prisma.poste.findFirst({
-      where: { id_etudiant: etudiants[i].id_utilisateur, contenu },
-    });
+    const data = {
+      id_auteur: etudiants[i].id_utilisateur,
+      contenu,
+      visibilite: 'PUBLIC',
+    };
 
     result.push(
-      existing
-        ? await prisma.poste.update({ where: { id_poste: existing.id_poste }, data: { contenu } })
-        : await prisma.poste.create({
-            data: {
-              id_etudiant: etudiants[i].id_utilisateur,
-              contenu,
-              visibilite: 'PUBLIC',
-            },
-          })
+      await upsertByFirst(
+        prisma.poste,
+        { id_auteur: data.id_auteur, contenu: data.contenu },
+        data,
+        'id_poste'
+      )
     );
   }
 
   return result;
 }
 
-async function seedCommentairesReactionsRecommandations(postes, portfolios, etudiants, professeurs, pros, profiles) {
+async function seedCommentairesReactionsRecommandations(postes, portfolios, etudiants, professeurs, pros) {
   await prisma.reaction.upsert({
     where: {
       id_auteur_id_poste: {
@@ -1063,68 +1012,62 @@ async function seedCommentairesReactionsRecommandations(postes, portfolios, etud
   ];
 
   for (const commentaire of commentaires) {
-    const existing = await prisma.commentaire.findFirst({
-      where: {
+    await upsertByFirst(
+      prisma.commentaire,
+      {
         id_auteur: commentaire.id_auteur,
         id_portfolio: commentaire.id_portfolio,
         id_poste: commentaire.id_poste,
         contenu: commentaire.contenu,
       },
-    });
-
-    const data = { ...commentaire, statut: 'VALIDE', date: new Date() };
-
-    if (existing) {
-      await prisma.commentaire.update({ where: { id_commentaire: existing.id_commentaire }, data });
-    } else {
-      await prisma.commentaire.create({ data });
-    }
+      { ...commentaire, statut: 'VALIDE', date: new Date() },
+      'id_commentaire'
+    );
   }
 
   const recommandations = [
     {
       id_auteur: pros[0].id_utilisateur,
-      id_profil: profiles[0].id_profil,
+      id_etudiant_cible: etudiants[0].id_utilisateur,
       message: 'Etudiant tres competent, je le recommande chaleureusement.',
       role_auteur: 'PROFESSIONNEL',
       statut: 'VALIDE',
+      portfolioIdx: 0,
     },
     {
       id_auteur: professeurs[0].id_utilisateur,
-      id_profil: profiles[1].id_profil,
+      id_etudiant_cible: etudiants[1].id_utilisateur,
       message: 'Etudiant serieux et motive.',
       role_auteur: 'PROFESSEUR',
       statut: 'EN_ATTENTE',
+      portfolioIdx: 1,
     },
   ];
 
   for (const recommandation of recommandations) {
-    const existing = await prisma.recommandation.findFirst({
-      where: {
-        id_auteur: recommandation.id_auteur,
-        id_profil: recommandation.id_profil,
-        message: recommandation.message,
+    const { portfolioIdx, ...data } = recommandation;
+    const reco = await upsertByFirst(
+      prisma.recommandation,
+      {
+        id_auteur: data.id_auteur,
+        id_etudiant_cible: data.id_etudiant_cible,
+        message: data.message,
       },
-    });
+      data,
+      'id_recommandation'
+    );
 
-    const reco = existing
-      ? await prisma.recommandation.update({
-          where: { id_recommandation: existing.id_recommandation },
-          data: recommandation,
-        })
-      : await prisma.recommandation.create({ data: recommandation });
-
-    if (recommandation.statut === 'VALIDE') {
+    if (data.statut === 'VALIDE') {
       await prisma.portfolioRecommandation.upsert({
         where: {
           id_portfolio_id_recommandation: {
-            id_portfolio: portfolios[0].id_portfolio,
+            id_portfolio: portfolios[portfolioIdx].id_portfolio,
             id_recommandation: reco.id_recommandation,
           },
         },
         update: { position: 1, est_affichee: true },
         create: {
-          id_portfolio: portfolios[0].id_portfolio,
+          id_portfolio: portfolios[portfolioIdx].id_portfolio,
           id_recommandation: reco.id_recommandation,
           position: 1,
           est_affichee: true,
@@ -1160,29 +1103,21 @@ async function seedNotifications(etudiants, professeurs) {
   ];
 
   for (const notification of notifications) {
-    const existing = await prisma.notification.findFirst({
-      where: {
+    await upsertByFirst(
+      prisma.notification,
+      {
         utilisateur_id: notification.utilisateur_id,
         type: notification.type,
         message: notification.message,
       },
-    });
-
-    const data = {
-      ...notification,
-      date_reception: new Date(),
-      cible_id: null,
-      cible_type: null,
-    };
-
-    if (existing) {
-      await prisma.notification.update({
-        where: { id_notification: existing.id_notification },
-        data,
-      });
-    } else {
-      await prisma.notification.create({ data });
-    }
+      {
+        ...notification,
+        date_reception: new Date(),
+        cible_id: null,
+        cible_type: null,
+      },
+      'id_notification'
+    );
   }
 }
 
@@ -1228,17 +1163,12 @@ async function seedGithub(etudiant) {
   ];
 
   for (const depot of depots) {
-    const existing = await prisma.depotGithub.findFirst({
-      where: { id_integration: integration.id_integration, nom_depot: depot.nom_depot },
-    });
-
-    const data = { ...depot, id_integration: integration.id_integration };
-
-    if (existing) {
-      await prisma.depotGithub.update({ where: { id_depot: existing.id_depot }, data });
-    } else {
-      await prisma.depotGithub.create({ data });
-    }
+    await upsertByFirst(
+      prisma.depotGithub,
+      { id_integration: integration.id_integration, nom_depot: depot.nom_depot },
+      { ...depot, id_integration: integration.id_integration },
+      'id_depot'
+    );
   }
 }
 
@@ -1250,21 +1180,18 @@ async function seedElementsValidables(projets, stages, activites, admin) {
   ];
 
   for (const element of elements) {
-    const existing = await prisma.elementValidable.findFirst({
-      where: { type: element.type, reference_id: element.reference_id },
-    });
-
-    const data = {
-      ...element,
-      validateur_id: admin.id_utilisateur,
-      date_soumission: toDate('2026-01-10'),
-      date_validation: element.statut === 'VALIDE' ? toDate('2026-01-12') : null,
-      motif_refus: null,
-    };
-
-    const saved = existing
-      ? await prisma.elementValidable.update({ where: { id_element: existing.id_element }, data })
-      : await prisma.elementValidable.create({ data });
+    const saved = await upsertByFirst(
+      prisma.elementValidable,
+      { type: element.type, reference_id: element.reference_id },
+      {
+        ...element,
+        validateur_id: admin.id_utilisateur,
+        date_soumission: toDate('2026-01-10'),
+        date_validation: element.statut === 'VALIDE' ? toDate('2026-01-12') : null,
+        motif_refus: null,
+      },
+      'id_element'
+    );
 
     if (saved.type === 'ACTIVITE') {
       await prisma.attestation.upsert({
@@ -1307,16 +1234,17 @@ async function main() {
   const professionnels = await seedProfessionnels(hashProfessionnel);
   const competences = await seedCompetences();
   const technologies = await seedTechnologies();
-  const profiles = await seedProfilCompetences(etudiants, competences);
+
+  await seedProfilCompetences(etudiants, competences);
   const projets = await seedProjets(etudiants, professeurs, technologies);
   const stages = await seedStages(etudiants, professeurs);
   const activites = await seedActivites(etudiants, professeurs);
   const diplomes = await seedDiplomes(etudiants);
-  const badges = await seedBadges(profiles);
+  const badges = await seedBadges(etudiants);
 
   await seedReglesBadge(badges);
   await seedReglesScore(admins[0]);
-  await seedScoresCredibilite(profiles);
+  await seedScoresCredibilite(etudiants);
 
   const modeles = await seedModelesPortfolio(admins[0]);
   const portfolios = await seedPortfolios(etudiants, modeles);
@@ -1330,8 +1258,7 @@ async function main() {
     portfolios,
     etudiants,
     professeurs,
-    professionnels,
-    profiles
+    professionnels
   );
   await seedNotifications(etudiants, professeurs);
   await seedGithub(etudiants[0]);
@@ -1359,5 +1286,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  });
   });

@@ -1,21 +1,18 @@
 const { prisma, toBigInt } = require("../models/prisma");
+const { normalizeSkillCategory, separateSkills } = require("../utils/skillsLogic");
 
 /**
- * SCRUM-87 — Competence Reference Service
- * Gère le catalogue global des compétences (table `competences`).
- * Ce service ne touche PAS aux compétences d'un étudiant (profil_competence),
- * il expose uniquement le référentiel depuis lequel l'étudiant peut choisir.
+ * SCRUM-87 - Competence Reference Service
+ * Gere le catalogue global des competences (table `competences`).
+ * Ce service ne touche aux competences d'un etudiant que pour filtrer
+ * les suggestions deja ajoutees dans `profil_competence`.
  */
 
-/**
- * Récupérer toutes les compétences du catalogue
- * Utilisé dans E5 pour afficher les suggestions à l'étudiant
- */
 const getAllCompetences = async ({ categorie, search } = {}) => {
   const where = {};
 
   if (categorie) {
-    where.categorie = categorie; // "TECHNIQUE" | "SOFT"
+    where.categorie = normalizeSkillCategory(categorie);
   }
 
   if (search) {
@@ -25,116 +22,94 @@ const getAllCompetences = async ({ categorie, search } = {}) => {
     };
   }
 
-  const competences = await prisma.competence.findMany({
+  return prisma.competence.findMany({
     where,
     orderBy: [{ categorie: "asc" }, { nom: "asc" }],
   });
-
-  return competences;
 };
 
-/**
- * Récupérer une compétence par son ID
- */
+const getCompetencesByType = async ({ search } = {}) => {
+  const competences = await getAllCompetences({ search });
+  return separateSkills(competences);
+};
+
 const getCompetenceById = async (id) => {
-  const competence = await prisma.competence.findUnique({
+  return prisma.competence.findUnique({
     where: { id_competence: toBigInt(id) },
   });
-
-  return competence;
 };
 
-/**
- * Récupérer les compétences suggérées pour un étudiant
- * Retourne les compétences du catalogue que l'étudiant n'a pas encore ajoutées
- * Utilisé dans E5 — "Ajouter des compétences"
- */
 const getSuggestionsForEtudiant = async (etudiantId) => {
-  // Récupérer le profil de l'étudiant
-  const profil = await prisma.profil.findUnique({
+  const etudiant = await prisma.etudiant.findUnique({
     where: { id_utilisateur: toBigInt(etudiantId) },
-    select: { id_profil: true },
+    select: { id_utilisateur: true },
   });
 
-  if (!profil) return [];
+  if (!etudiant) return [];
 
-  // Compétences déjà ajoutées par l'étudiant
-  const dejAjoutees = await prisma.profilCompetence.findMany({
-    where: { id_profil: profil.id_profil },
+  const dejaAjoutees = await prisma.profilCompetence.findMany({
+    where: { id_etudiant: etudiant.id_utilisateur },
     select: { id_competence: true },
   });
 
-  const idsDejaAjoutees = dejAjoutees.map((pc) => pc.id_competence);
+  const idsDejaAjoutees = dejaAjoutees.map((pc) => pc.id_competence);
 
-  // Retourner uniquement celles qui ne sont pas encore dans son profil
-  const suggestions = await prisma.competence.findMany({
+  return prisma.competence.findMany({
     where: {
       id_competence: { notIn: idsDejaAjoutees },
     },
     orderBy: [{ categorie: "asc" }, { nom: "asc" }],
   });
-
-  return suggestions;
 };
 
-/**
- * Créer une nouvelle compétence dans le catalogue (admin)
- */
 const createCompetence = async ({ nom, categorie, niveau }) => {
-  // Vérifier si la compétence existe déjà
+  const normalizedCategorie = normalizeSkillCategory(categorie, nom);
+
   const existing = await prisma.competence.findFirst({
     where: { nom: { equals: nom, mode: "insensitive" } },
   });
 
   if (existing) {
-    const error = new Error("Cette compétence existe déjà dans le catalogue");
+    const error = new Error("Cette competence existe deja dans le catalogue");
     error.statusCode = 409;
     throw error;
   }
 
-  const competence = await prisma.competence.create({
-    data: { nom, categorie, niveau },
+  return prisma.competence.create({
+    data: { nom, categorie: normalizedCategorie, niveau },
   });
-
-  return competence;
 };
 
-/**
- * Mettre à jour une compétence du catalogue (admin)
- */
 const updateCompetence = async (id, { nom, categorie, niveau }) => {
   const existing = await prisma.competence.findUnique({
     where: { id_competence: toBigInt(id) },
   });
 
   if (!existing) {
-    const error = new Error("Compétence introuvable");
+    const error = new Error("Competence introuvable");
     error.statusCode = 404;
     throw error;
   }
 
-  const updated = await prisma.competence.update({
-    where: { id_competence: toBigInt(id) },
-    data: {
-      ...(nom && { nom }),
-      ...(categorie && { categorie }),
-      ...(niveau && { niveau }),
-    },
-  });
+  const data = {};
 
-  return updated;
+  if (nom) data.nom = nom;
+  if (categorie || nom) data.categorie = normalizeSkillCategory(categorie, nom || existing.nom);
+  if (niveau) data.niveau = niveau;
+
+  return prisma.competence.update({
+    where: { id_competence: toBigInt(id) },
+    data,
+  });
 };
 
-/**
- * Supprimer une compétence du catalogue (admin)
- */
 const deleteCompetence = async (id) => {
   const existing = await prisma.competence.findUnique({
     where: { id_competence: toBigInt(id) },
   });
 
   if (!existing) {
-    const error = new Error("Compétence introuvable");
+    const error = new Error("Competence introuvable");
     error.statusCode = 404;
     throw error;
   }
@@ -146,6 +121,7 @@ const deleteCompetence = async (id) => {
 
 module.exports = {
   getAllCompetences,
+  getCompetencesByType,
   getCompetenceById,
   getSuggestionsForEtudiant,
   createCompetence,
