@@ -1,111 +1,184 @@
-<script setup lang="ts">
-import { ChevronDown } from "lucide-vue-next";
-
-interface Props {
-  filters: {
-    year: number;
-    school: string;
-    field: string;
-    city: string;
-    score: number;
-    skills: string[];
-    recommendations: number;
-  };
-}
-
-defineProps<Props>();
-
-const sections = [
-  {
-    title: "Année",
-    options: [2026, 2025, 2024],
-    key: "year",
-    type: "number",
-  },
-  {
-    title: "Ecole/Faculte",
-    options: ["ENSA", "ENSAM", "FST"],
-    key: "school",
-    type: "text",
-  },
-  {
-    title: "Filiere",
-    options: ["GSR", "GINF", "GSEA"],
-    key: "field",
-    type: "text",
-  },
-  {
-    title: "Ville",
-    options: ["Tanger", "Rabat", "Fes"],
-    key: "city",
-    type: "text",
-  },
-  {
-    title: "Score",
-    options: ["90+", "80+", "70+"],
-    key: "score",
-    type: "number",
-  },
-  {
-    title: "Competences",
-    options: ["KiCad", "Sec.", "DevOps"],
-    key: "skills",
-    type: "text",
-  },
-  {
-    title: "Recommendations",
-    options: ["500+", "100+", "50+"],
-    key: "recommendations",
-    type: "number",
-  },
-];
-</script>
-
 <template>
   <aside
-    class="w-72 bg-[#0f1729] border-l border-slate-700/50 p-5 overflow-y-auto"
+    class="w-full max-w-xs space-y-6 rounded-[32px] border border-slate-800/90 bg-[#0f172a]/95 p-6 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.9)] lg:block"
   >
-    <div class="space-y-6">
-      <!-- Header -->
+    <div class="flex items-center justify-between">
       <div>
-        <p class="text-xs font-semibold text-cyan-400 tracking-wider">
-          FILTERS
+        <p class="text-sm uppercase tracking-[0.35em] text-cyan-300/80">
+          Filtres
         </p>
-        <h3 class="text-lg font-bold text-slate-100 mt-2">Refine Search</h3>
+        <h3 class="text-xl font-semibold text-white">Affiner la recherche</h3>
       </div>
-
-      <!-- Filter Sections -->
-      <template v-for="section in sections" :key="section.title">
-        <div>
-          <p class="text-xs font-semibold text-slate-300 mb-3">
-            {{ section.title }}
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <template v-for="option in section.options" :key="option">
-              <button
-                :class="[
-                  'px-3 py-1.5 rounded-full text-xs font-medium border transition',
-                  (
-                    section.key === 'skills'
-                      ? filters.skills.includes(String(option))
-                      : filters[section.key as keyof typeof filters] === option
-                  )
-                    ? 'bg-purple-600/20 border-purple-400 text-purple-200'
-                    : 'border-slate-600 text-slate-300 hover:border-slate-500 hover:text-slate-100',
-                ]"
-              >
-                {{ option }}
-              </button>
-            </template>
-            <button
-              class="px-3 py-1.5 rounded-full text-xs font-medium border border-slate-600 text-slate-400 hover:text-slate-300 transition flex items-center gap-1"
-            >
-              Plus
-              <ChevronDown class="w-3 h-3" />
-            </button>
-          </div>
-        </div>
-      </template>
+      <button
+        @click="clearFilters"
+        class="text-sm text-slate-400 transition hover:text-white"
+      >
+        Effacer
+      </button>
     </div>
+
+    <section class="space-y-4">
+      <div>
+        <p class="text-sm font-semibold text-slate-200">Année</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="year in options.years"
+            :key="year"
+            type="button"
+            @click="setFilter('year', year)"
+            :class="buttonClass(filters.year === year)"
+          >
+            {{ year }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-slate-200">École</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="school in options.schools"
+            :key="school"
+            type="button"
+            @click="setFilter('school', school)"
+            :class="buttonClass(filters.school === school)"
+          >
+            {{ school }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-slate-200">Filière</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="field in options.fields"
+            :key="field"
+            type="button"
+            @click="setFilter('field', field)"
+            :class="buttonClass(filters.field === field)"
+          >
+            {{ field }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-slate-200">Ville</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="city in options.cities"
+            :key="city"
+            type="button"
+            @click="setFilter('city', city)"
+            :class="buttonClass(filters.city === city)"
+          >
+            {{ city }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-slate-200">Score</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="score in options.scores"
+            :key="score"
+            type="button"
+            @click="setFilter('scoreMin', Number(score))"
+            :class="buttonClass(filters.scoreMin === Number(score))"
+          >
+            {{ score }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-slate-200">Compétences</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="skill in options.skills"
+            :key="skill"
+            type="button"
+            @click="toggleArrayFilter('skills', skill)"
+            :class="buttonClass(filters.skills.includes(skill))"
+          >
+            {{ skill }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-slate-200">Recommandations</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="rec in options.recommendations"
+            :key="rec"
+            type="button"
+            @click="setFilter('recMin', Number(rec))"
+            :class="buttonClass(filters.recMin === Number(rec))"
+          >
+            {{ rec }}+
+          </button>
+        </div>
+      </div>
+    </section>
   </aside>
 </template>
+
+<script setup lang="ts">
+import { defineEmits, defineProps } from "vue";
+
+interface FilterState {
+  year: number | null;
+  school: string | null;
+  field: string | null;
+  city: string | null;
+  scoreMin: number | null;
+  skills: string[];
+  recMin: number | null;
+}
+
+interface FilterOptions {
+  years: number[];
+  schools: string[];
+  fields: string[];
+  cities: string[];
+  scores: string[];
+  skills: string[];
+  recommendations: string[];
+}
+
+const props = defineProps<{
+  filters: FilterState;
+  options: FilterOptions;
+}>();
+
+const emit = defineEmits<{
+  (e: "update:filters", filters: FilterState): void;
+  (e: "clear-filters"): void;
+}>();
+
+const setFilter = (key: keyof FilterState, value: any) => {
+  const next = { ...props.filters };
+  if (props.filters[key] === value) {
+    next[key] = key === "skills" ? [] : null;
+  } else {
+    next[key] = value;
+  }
+  emit("update:filters", next);
+};
+
+const toggleArrayFilter = (key: "skills", value: string) => {
+  const next = { ...props.filters, skills: [...props.filters.skills] };
+  const index = next.skills.indexOf(value);
+  if (index === -1) next.skills.push(value);
+  else next.skills.splice(index, 1);
+  emit("update:filters", next);
+};
+
+const clearFilters = () => emit("clear-filters");
+
+const buttonClass = (active: boolean) => {
+  return [
+    "rounded-full border px-4 py-2 text-sm transition-colors duration-200",
+    active
+      ? "border-cyan-400 bg-cyan-500/15 text-cyan-200"
+      : "border-slate-700 bg-slate-950/70 text-slate-400 hover:border-slate-500 hover:text-slate-200",
+  ].join(" ");
+};
+</script>
