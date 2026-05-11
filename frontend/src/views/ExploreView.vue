@@ -245,20 +245,23 @@ const toggleLanguage = () => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen w-screen overflow-x-hidden bg-[#eef1fb] text-slate-900"
-  >
+  <div class="flex h-screen w-screen flex-col overflow-hidden bg-[#eef1fb] text-slate-900">
+    <!-- Fixed Topbar -->
     <Topbar />
 
-    <div class="flex min-h-[calc(100vh-60px)]">
-      <Sidebar />
+    <!-- Main content area with three columns -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Left Sidebar - Independent scroll -->
+      <div class="flex-shrink-0 overflow-y-auto" style="height: calc(100vh - 60px);">
+        <Sidebar />
+      </div>
 
-      <main class="flex-1 overflow-hidden">
-        <div
-          class="mx-auto flex h-full max-w-[1400px] flex-col gap-5 px-5 py-5"
-        >
+      <!-- Middle content - Independent scroll -->
+      <main class="flex-1 overflow-y-auto scroll-smooth" style="height: calc(100vh - 60px);">
+        <div class="mx-auto max-w-[1400px] px-5 py-5">
+          <!-- Search and controls section -->
           <section
-            class="rounded-xl bg-white px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
+            class="mb-5 rounded-xl bg-white px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
           >
             <div
               class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
@@ -296,22 +299,51 @@ const toggleLanguage = () => {
             </div>
           </section>
 
-          <div class="flex min-h-0 gap-5 overflow-hidden">
-            <div
-              class="flex-1 min-w-0 space-y-5 overflow-y-auto pr-0 sm:pr-4 scroll-smooth"
-              style="scrollbar-width: none; -ms-overflow-style: none"
-            >
-              <ProfileCard
-                v-for="profile in filteredProfiles"
-                :key="profile.id"
-                :profile="profile"
-              />
-            </div>
-
-            <FilterPanel :filters="filters" />
+          <!-- Profiles feed -->
+          <div class="space-y-5">
+            <ProfileCard
+              v-for="profile in filteredProfiles"
+              :key="profile.id"
+              :profile="profile"
+            />
           </div>
         </div>
       </main>
+
+      <!-- Right Filter Panel - Independent scroll -->
+      <div class="flex-shrink-0 overflow-y-auto" style="height: calc(100vh - 60px);">
+        <div class="sticky top-0">
+          <FilterPanel :filters="filters" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Custom scrollbar styling - thin modern scrollbar with dark track and rounded thumb */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+}
+</style>
