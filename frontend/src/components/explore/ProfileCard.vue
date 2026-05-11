@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from "vue";
+
 interface Profile {
   id: number;
   name: string;
@@ -12,6 +14,24 @@ interface Profile {
 }
 
 defineProps<{ profile: Profile }>();
+
+const showDetails = ref(true);
+
+const handlePortfolio = () => {
+  alert("Portfolio clicked!");
+};
+
+const handleViewProfile = () => {
+  alert("View Profile clicked!");
+};
+
+const handleContact = () => {
+  alert("Contact info clicked!");
+};
+
+const toggleDetails = () => {
+  showDetails.value = !showDetails.value;
+};
 </script>
 
 <template>
@@ -54,6 +74,7 @@ defineProps<{ profile: Profile }>();
           <a
             href="#"
             class="mt-3 inline-block text-sm font-semibold text-[#5b4df0] hover:text-[#4837d2]"
+            @click.prevent="handleContact"
           >
             Contact info
           </a>
@@ -63,12 +84,16 @@ defineProps<{ profile: Profile }>();
 
     <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
       <button
-        class="inline-flex items-center justify-center rounded-full bg-[#5b4df0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4837d2]"
+        type="button"
+        class="inline-flex cursor-pointer items-center justify-center rounded-full bg-[#5b4df0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4837d2]"
+        @click="handlePortfolio"
       >
         Portfolio
       </button>
       <button
-        class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+        type="button"
+        class="inline-flex cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+        @click="handleViewProfile"
       >
         Voir Profile
       </button>
@@ -77,15 +102,20 @@ defineProps<{ profile: Profile }>();
     <div
       class="mt-5 rounded-[1.5rem] bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
     >
-      <div
-        class="flex items-center justify-between text-sm font-semibold text-slate-900"
+      <button
+        type="button"
+        class="flex w-full items-center justify-between text-sm font-semibold text-slate-900"
+        @click="toggleDetails"
       >
         <span>Details recos</span>
-        <span class="text-slate-400">⌄</span>
-      </div>
+        <span class="text-slate-400">{{ showDetails ? "⌄" : "›" }}</span>
+      </button>
 
-      <template v-if="profile.recos && profile.recos.length > 0">
-        <div class="mt-4 space-y-3">
+      <template v-if="showDetails">
+        <div
+          v-if="profile.recos && profile.recos.length > 0"
+          class="mt-4 space-y-3"
+        >
           <template v-for="(reco, idx) in profile.recos" :key="idx">
             <div class="rounded-[1.5rem] bg-slate-100 p-4">
               <p class="text-sm font-semibold text-slate-950">
@@ -95,12 +125,12 @@ defineProps<{ profile: Profile }>();
             </div>
           </template>
         </div>
-      </template>
 
-      <template v-else>
-        <p class="mt-4 text-sm text-slate-500">
-          Aucune recommandation disponible.
-        </p>
+        <div v-else class="mt-4">
+          <p class="text-sm text-slate-500">
+            Aucune recommandation disponible.
+          </p>
+        </div>
       </template>
     </div>
   </div>

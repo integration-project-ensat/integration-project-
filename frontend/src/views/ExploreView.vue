@@ -73,6 +73,16 @@ const filteredProfiles = computed(() => {
     return matchesQuery;
   });
 });
+
+const language = ref("FR");
+
+const handleNotification = () => {
+  alert("Notifications clicked!");
+};
+
+const toggleLanguage = () => {
+  language.value = language.value === "FR" ? "EN" : "FR";
+};
 </script>
 
 <template>
@@ -109,15 +119,19 @@ const filteredProfiles = computed(() => {
                   />
                 </div>
                 <button
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#5b4df0] text-white shadow-sm transition hover:bg-[#4837d2]"
+                  type="button"
+                  class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-[#5b4df0] text-white shadow-sm transition hover:bg-[#4837d2]"
+                  @click="handleNotification"
                 >
                   <Bell class="h-3 w-3" />
                 </button>
                 <button
-                  class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                  type="button"
+                  class="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                  @click="toggleLanguage"
                 >
                   <Globe class="h-3 w-3 stroke-[2.2] text-slate-700" />
-                  FR
+                  {{ language }}
                 </button>
               </div>
             </div>
