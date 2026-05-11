@@ -1,3 +1,5 @@
+const { AppError } = require('../config/errors');
+
 const ERROR_STATUS_MAP = {
   ValidationError: 400,
   UnauthorizedError: 401,
@@ -8,6 +10,7 @@ const ERROR_STATUS_MAP = {
 };
 
 const resolveStatusCode = (err) => {
+  if (err instanceof AppError) return err.statusCode;
   if (err.statusCode && Number.isInteger(err.statusCode)) return err.statusCode;
   if (err.status && Number.isInteger(err.status)) return err.status;
   if (ERROR_STATUS_MAP[err.name]) return ERROR_STATUS_MAP[err.name];
