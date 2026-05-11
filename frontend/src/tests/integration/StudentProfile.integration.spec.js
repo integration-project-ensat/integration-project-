@@ -8,7 +8,7 @@
  *   - Tests d'intégration → ProfileView + StudentProfileHeader + store auth
  *     montés ensemble avec des flux de données réels entre eux.
  *
- * Ce qu'on teste ici :
+ * Ce qu'on teste :
  *   INT-SP-01 : ProfileView rend bien StudentProfileHeader
  *   INT-SP-02 : userId du store auth est transmis en prop
  *   INT-SP-03 : userId = null quand aucun utilisateur connecté
@@ -26,28 +26,31 @@ import ProfileView          from '@/views/ProfileView.vue'
 import StudentProfileHeader from '@/components/StudentProfileHeader.vue'
 import { useAuthStore }     from '@/store/auth.js'
 
-// ── Profil simulé ───────────────────────────────────────────────────────────
-const MOCK_PROFILE = {
-  id:          1,
-  name:        'Aimad Eddine Slimani',
-  email:       'aimad@test.com',
-  apogee:      '21009876',
-  field:       'Génie Informatique',
-  year:        '3ème année',
-  school:      'ENSA Marrakech',
-  city:        'Marrakech',
-  avatar:      null,
-  bannerColor: '#1a3c5e',
-  bio:         'Étudiant passionné par le développement web.',
-  isVerified:  true,
-  github:      'https://github.com/slimo777',
-  linkedin:    null,
-}
+// ── vi.hoisted : MOCK_PROFILE disponible avant le hoist de vi.mock ─────────
+const { MOCK_PROFILE, mockGetProfile } = vi.hoisted(() => {
+  const MOCK_PROFILE = {
+    id:          1,
+    name:        'Aimad Eddine Slimani',
+    email:       'aimad@test.com',
+    apogee:      '21009876',
+    field:       'Génie Informatique',
+    year:        '3ème année',
+    school:      'ENSA Marrakech',
+    city:        'Marrakech',
+    avatar:      null,
+    bannerColor: '#1a3c5e',
+    bio:         'Étudiant passionné par le développement web.',
+    isVerified:  true,
+    github:      'https://github.com/slimo777',
+    linkedin:    null,
+  }
+  const mockGetProfile = vi.fn().mockResolvedValue(MOCK_PROFILE)
+  return { MOCK_PROFILE, mockGetProfile }
+})
 
-// ── Mock du service ─────────────────────────────────────────────────────────
 vi.mock('@/services/profile.service.js', () => ({
   profileService: {
-    getProfile:    vi.fn().mockResolvedValue(MOCK_PROFILE),
+    getProfile:    mockGetProfile,
     updateProfile: vi.fn(),
     uploadAvatar:  vi.fn(),
   }
@@ -55,7 +58,6 @@ vi.mock('@/services/profile.service.js', () => ({
 
 describe('Intégration : ProfileView ↔ StudentProfileHeader ↔ profileService', () => {
 
-  // Chaque test repart avec un store Pinia vide (isolation)
   beforeEach(() => {
     setActivePinia(createPinia())
   })
@@ -113,19 +115,17 @@ describe('Intégration : ProfileView ↔ StudentProfileHeader ↔ profileService
 
     const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
     await flushPromises()
-
     expect(wrapper.text()).toContain('Aimad Eddine Slimani')
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-05
-  // But : avant que l'API réponde, le skeleton doit être visible — même
+  // But : avant que l'API réponde, le skeleton doit être visible même
   // depuis ProfileView. Vérifie que l'état loading se propage jusqu'au DOM.
   // ─────────────────────────────────────────────────────────────────────────
   it('INT-SP-05 : le skeleton est visible dans ProfileView avant la résolution API', () => {
     const pinia   = createPinia()
     const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    // Avant flushPromises → loading = true → skeleton présent
     expect(wrapper.find('.skeleton-name').exists()).toBe(true)
   })
 
@@ -142,7 +142,6 @@ describe('Intégration : ProfileView ↔ StudentProfileHeader ↔ profileService
 
     const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
     await flushPromises()
-
     expect(wrapper.find('.verified-badge').exists()).toBe(true)
   })
 
@@ -159,7 +158,6 @@ describe('Intégration : ProfileView ↔ StudentProfileHeader ↔ profileService
 
     const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
     await flushPromises()
-
     const githubBtn = wrapper.find('.social-btn.github')
     expect(githubBtn.exists()).toBe(true)
     expect(githubBtn.attributes('href')).toBe('https://github.com/slimo777')
@@ -167,7 +165,7 @@ describe('Intégration : ProfileView ↔ StudentProfileHeader ↔ profileService
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-08
-  // But : vérifier la réactivité du store → prop.
+  // But : vérifier la réactivité store → prop.
   // Quand on change d'utilisateur dans le store, la prop userId dans
   // StudentProfileHeader doit se mettre à jour automatiquement.
   // ─────────────────────────────────────────────────────────────────────────
@@ -180,7 +178,6 @@ describe('Intégration : ProfileView ↔ StudentProfileHeader ↔ profileService
     const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
     expect(wrapper.findComponent(StudentProfileHeader).props('userId')).toBe(10)
 
-    // Connexion d'un autre utilisateur
     auth.login({ id: 99 }, 'token-b', 'Prof')
     await wrapper.vm.$nextTick()
 

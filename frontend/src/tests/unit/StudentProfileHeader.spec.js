@@ -5,44 +5,50 @@
  * Le service profileService est mocké pour ne pas faire de vraies requêtes HTTP.
  *
  * Ce qu'on teste :
- *   1. Montage du composant sans erreur
- *   2. État de chargement (skeleton visible avant la réponse API)
- *   3. Affichage du nom après chargement
- *   4. Initiales calculées quand pas d'avatar
- *   5. Badge "vérifié" visible quand isVerified = true
- *   6. Badge "vérifié" absent quand isVerified = false
- *   7. Bio affichée
- *   8. Lien GitHub présent et correct
- *   9. Lien LinkedIn absent quand null
- *  10. Couleur de la bannière appliquée depuis le profil
+ *   SPH-U-01 : Montage du composant sans erreur
+ *   SPH-U-02 : Skeleton visible avant la réponse API
+ *   SPH-U-03 : Nom affiché après chargement
+ *   SPH-U-04 : Initiales calculées quand pas d'avatar
+ *   SPH-U-05 : Badge vérifié visible quand isVerified = true
+ *   SPH-U-06 : Badge absent quand isVerified = false
+ *   SPH-U-07 : Bio affichée
+ *   SPH-U-08 : Lien GitHub présent et correct
+ *   SPH-U-09 : Lien LinkedIn absent quand null
+ *   SPH-U-10 : Couleur de la bannière appliquée depuis le profil
  */
 
 import { mount, flushPromises } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import StudentProfileHeader from '@/components/StudentProfileHeader.vue'
 
-// ── Profil simulé retourné par le service ───────────────────────────────────
-const MOCK_PROFILE = {
-  id:          1,
-  name:        'Aimad Eddine Slimani',
-  email:       'aimad@test.com',
-  apogee:      '21009876',
-  field:       'Génie Informatique',
-  year:        '3ème année',
-  school:      'ENSA Marrakech',
-  city:        'Marrakech',
-  avatar:      null,
-  bannerColor: '#1a3c5e',
-  bio:         'Étudiant passionné par le développement web.',
-  isVerified:  true,
-  github:      'https://github.com/slimo777',
-  linkedin:    null,
-}
+// ── vi.hoisted : défini AVANT le hoist de vi.mock ──────────────────────────
+// vi.mock() est remonté au sommet du fichier par Vitest. Si on définit
+// MOCK_PROFILE après vi.mock(), la factory ne peut pas y accéder.
+// vi.hoisted() garantit que la valeur est disponible dès le hoist.
+const { MOCK_PROFILE, mockGetProfile } = vi.hoisted(() => {
+  const MOCK_PROFILE = {
+    id:          1,
+    name:        'Aimad Eddine Slimani',
+    email:       'aimad@test.com',
+    apogee:      '21009876',
+    field:       'Génie Informatique',
+    year:        '3ème année',
+    school:      'ENSA Marrakech',
+    city:        'Marrakech',
+    avatar:      null,
+    bannerColor: '#1a3c5e',
+    bio:         'Étudiant passionné par le développement web.',
+    isVerified:  true,
+    github:      'https://github.com/slimo777',
+    linkedin:    null,
+  }
+  const mockGetProfile = vi.fn().mockResolvedValue(MOCK_PROFILE)
+  return { MOCK_PROFILE, mockGetProfile }
+})
 
-// ── Mock du service : on remplace l'appel API par une promesse résolue ──────
 vi.mock('@/services/profile.service.js', () => ({
   profileService: {
-    getProfile:    vi.fn().mockResolvedValue(MOCK_PROFILE),
+    getProfile:    mockGetProfile,
     updateProfile: vi.fn(),
     uploadAvatar:  vi.fn(),
   }
@@ -63,21 +69,20 @@ describe('StudentProfileHeader — Tests Unitaires', () => {
 
   // ─────────────────────────────────────────────────────────────────────────
   // SPH-U-02
-  // But : vérifier que pendant le chargement (avant que l'API réponde),
-  // le composant affiche un skeleton animé à la place du vrai contenu.
-  // Ce pattern évite un écran blanc pendant le chargement.
+  // But : pendant le chargement (avant que l'API réponde), le composant
+  // affiche un skeleton animé à la place du vrai contenu. Ce pattern
+  // évite un écran blanc pendant le chargement.
   // ─────────────────────────────────────────────────────────────────────────
   it('SPH-U-02 : affiche le skeleton de chargement avant la réponse API', () => {
     const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    // Avant flushPromises → loading = true → skeleton visible
     expect(wrapper.find('.skeleton-name').exists()).toBe(true)
     expect(wrapper.find('.student-name').exists()).toBe(false)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // SPH-U-03
-  // But : après que l'API répond, le nom de l'étudiant doit remplacer le skeleton.
-  // flushPromises() simule l'attente de toutes les promesses async.
+  // But : après que l'API répond, le nom de l'étudiant doit remplacer
+  // le skeleton. flushPromises() simule l'attente de toutes les promesses.
   // ─────────────────────────────────────────────────────────────────────────
   it('SPH-U-03 : affiche le nom de l\'étudiant après le chargement API', async () => {
     const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
@@ -88,8 +93,8 @@ describe('StudentProfileHeader — Tests Unitaires', () => {
 
   // ─────────────────────────────────────────────────────────────────────────
   // SPH-U-04
-  // But : quand avatar = null, le composant doit calculer et afficher les
-  // initiales du nom ("Aimad Eddine" → "AE"). C'est le fallback visuel.
+  // But : quand avatar = null, le composant calcule et affiche les initiales
+  // du nom ("Aimad Eddine" → "AE"). C'est le fallback visuel de l'avatar.
   // ─────────────────────────────────────────────────────────────────────────
   it('SPH-U-04 : affiche les initiales "AE" quand avatar est null', async () => {
     const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
@@ -100,8 +105,8 @@ describe('StudentProfileHeader — Tests Unitaires', () => {
 
   // ─────────────────────────────────────────────────────────────────────────
   // SPH-U-05
-  // But : quand isVerified = true, un badge vert doit apparaître sur l'avatar.
-  // Ce badge indique que le profil étudiant a été validé par l'administration.
+  // But : quand isVerified = true, un badge vert apparaît sur l'avatar pour
+  // indiquer que le profil a été validé par l'administration.
   // ─────────────────────────────────────────────────────────────────────────
   it('SPH-U-05 : affiche le badge vérifié quand isVerified = true', async () => {
     const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
@@ -112,11 +117,10 @@ describe('StudentProfileHeader — Tests Unitaires', () => {
   // ─────────────────────────────────────────────────────────────────────────
   // SPH-U-06
   // But : quand isVerified = false, le badge ne doit PAS apparaître.
-  // On surcharge le mock pour ce test uniquement.
+  // mockResolvedValueOnce surcharge le mock uniquement pour cet appel.
   // ─────────────────────────────────────────────────────────────────────────
   it('SPH-U-06 : n\'affiche pas le badge vérifié quand isVerified = false', async () => {
-    const { profileService } = await import('@/services/profile.service.js')
-    profileService.getProfile.mockResolvedValueOnce({ ...MOCK_PROFILE, isVerified: false })
+    mockGetProfile.mockResolvedValueOnce({ ...MOCK_PROFILE, isVerified: false })
 
     const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
     await flushPromises()
@@ -152,7 +156,7 @@ describe('StudentProfileHeader — Tests Unitaires', () => {
   // ─────────────────────────────────────────────────────────────────────────
   // SPH-U-09
   // But : quand linkedin = null, le bouton LinkedIn ne doit PAS apparaître.
-  // Les boutons sociaux sont conditionnels (v-if).
+  // Les boutons sociaux sont conditionnels avec v-if.
   // ─────────────────────────────────────────────────────────────────────────
   it('SPH-U-09 : n\'affiche pas le bouton LinkedIn quand linkedin = null', async () => {
     const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
@@ -162,14 +166,17 @@ describe('StudentProfileHeader — Tests Unitaires', () => {
 
   // ─────────────────────────────────────────────────────────────────────────
   // SPH-U-10
-  // But : la bannière doit appliquer la couleur bannerColor du profil dans
-  // son style CSS (gradient dynamique). On vérifie l'attribut style.
+  // But : la bannière applique la couleur bannerColor du profil en CSS.
+  // Le style est généré dynamiquement via un computed (gradient).
   // ─────────────────────────────────────────────────────────────────────────
   it('SPH-U-10 : la bannière contient la couleur bannerColor du profil', async () => {
     const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
     await flushPromises()
     const banner = wrapper.find('.banner')
-    expect(banner.attributes('style')).toContain('#1a3c5e')
+    // jsdom convertit #1a3c5e en rgb(26, 60, 94) dans le style inline
+    const style = banner.attributes('style')
+    expect(style).toContain('linear-gradient')
+    expect(style).toContain('rgb(26, 60, 94)')
   })
 
 })
