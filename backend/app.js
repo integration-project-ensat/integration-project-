@@ -19,6 +19,7 @@ const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateL
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
+const profilRoutes = require('./src/routes/profil.routes');
 const app = express()
 
 //securite(headers, CORS, rate )
@@ -36,6 +37,8 @@ app.use('/api/auth/renvoyer-code', passwordLimiter)
 app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
+app.use('api/profil',profilRoutes)
+
 
 
 //health check
@@ -50,6 +53,7 @@ app.get('/', (req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes) 
+
 //404 not found handler (doit être après toutes les routes)
 app.use((req,res) => {
   res.status(404).json({
