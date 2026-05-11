@@ -1,3 +1,7 @@
+/**
+ * app.js
+ * Configuration de l'application Express
+ */
 require('dotenv').config({ path: '.env.local' })
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -8,7 +12,7 @@ const swaggerUi = require('swagger-ui-express')
 const swaggerSpec = require('./src/config/swagger.config')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
-const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateLimiter.middleware')
+const { apiLimiter, authLimiter, passwordLimiter } = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
@@ -22,19 +26,18 @@ const app = express()
 // Logger HTTP
 app.use(morgan('dev'))
 
-// Documentation Swagger — AVANT helmet
-app.use('/api-docs', swaggerUi.serve)
-app.get('/api-docs', swaggerUi.setup(swaggerSpec))
-app.get('/api-docs/', swaggerUi.setup(swaggerSpec))
+// Documentation Swagger — avant securityHeaders
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-// Securite (headers, CORS, rate)
+// Sécurité (headers, CORS, rate limiting)
 app.use(securityHeaders)
 app.use(corsMiddleware)
 
 // Body parser
-app.use(express.json({limit:'10Kb'}))
-app.use(express.urlencoded({extended:true, limit:'10Kb'}))
+app.use(express.json({ limit: '10Kb' }))
+app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
 
+// Rate limiting
 app.use('/api', apiLimiter)
 app.use('/api/auth/seconnecter', authLimiter)
 app.use('/api/auth/sinscrire', authLimiter)
@@ -52,18 +55,18 @@ app.get('/', (req, res) => {
   })
 })
 
-// Routes
+// Routes API
 app.use('/api/auth', authRoutes)
 app.use('/api/technologies', technologieRoutes)
 app.use('/api/competences', competenceRoutes)
 app.use('/api/profils', profileRoutes)
 app.use('/api/diplomes', diplomeRoutes)
 
-// 404
-app.use((req,res) => {
+// 404 handler
+app.use((req, res) => {
   res.status(404).json({
-    success:false,
-    statusCode:404,
+    success: false,
+    statusCode: 404,
     message: `Route ${req.method} ${req.originalUrl} not found`
   })
 })
