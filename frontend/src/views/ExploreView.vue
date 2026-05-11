@@ -75,27 +75,25 @@ const filteredProfiles = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen min-w-screen overflow-x-hidden bg-[#081224]">
-    <Topbar v-model="searchQuery" />
+  <div class="flex h-screen bg-[#081224]">
+    <Sidebar />
 
-    <div class="flex min-h-[calc(100vh-68px)] overflow-hidden">
-      <Sidebar />
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <Topbar v-model="searchQuery" />
 
-      <main class="flex-1 flex flex-col overflow-hidden">
-        <div class="flex flex-1 overflow-hidden">
-          <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <div class="space-y-5">
-              <ProfileCard
-                v-for="profile in filteredProfiles"
-                :key="profile.id"
-                :profile="profile"
-              />
-            </div>
+      <div class="flex flex-1 overflow-hidden">
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+          <div class="space-y-5">
+            <ProfileCard
+              v-for="profile in filteredProfiles"
+              :key="profile.id"
+              :profile="profile"
+            />
           </div>
-
-          <FilterPanel :filters="filters" />
         </div>
-      </main>
-    </div>
+
+        <FilterPanel :filters="filters" />
+      </div>
+    </main>
   </div>
 </template>
