@@ -1,5 +1,4 @@
 const competenceService = require("../services/competence.service");
-const profilCompetenceService = require("../services/profilCompetenceService");
 const { ApiResponse } = require("../utils/apiResponse");
 const { getPaginationParams, buildPaginationMeta } = require("../utils/pagination");
 

@@ -20,6 +20,9 @@ const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
 const competenceRoutes = require('./src/routes/competence.routes')
+const profileRoutes =require('./src/routes/profil.routes')
+const diplomeRoutes = require('./src/routes/diplome.routes');
+
 const app = express()
 
 //securite(headers, CORS, rate )
@@ -37,7 +40,7 @@ app.use('/api/auth/renvoyer-code', passwordLimiter)
 app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
-app.use('api/profil',profilRoutes)
+
 
 
 
@@ -55,6 +58,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes) 
 // Competence routes
 app.use('/api/competences', competenceRoutes)
+app.use('/api/profil',profileRoutes)
+app.use('/api/diplomes',diplomeRoutes)
 //404 not found handler (doit être après toutes les routes)
 app.use((req,res) => {
   res.status(404).json({

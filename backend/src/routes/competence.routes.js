@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const competenceController = require("../controllers/competence.controller");
-const { valider, addCompetenceRules, updateCompetenceRules, bulkAddRules } = require('../validators/competenceValidator');
+const { valider, addCompetenceRules, updateCompetenceRules, bulkAddRules } = require('../validators/competence.validator');
 const { authentifier, autoriserRoles } = require("../middlewares/auth.middleware");
 
 router.get(
