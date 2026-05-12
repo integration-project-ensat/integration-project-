@@ -150,8 +150,7 @@ form {
 
 input {
   width: 100%;
-  background: var(--input-bg);
-  border: 2px solid transparent;
+  border: 2px solid var(--input-bg);
   border-radius: var(--radius-pill);
   padding: 13px 20px;
   font-size: .87rem;

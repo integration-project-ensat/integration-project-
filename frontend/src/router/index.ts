@@ -6,6 +6,7 @@ import SignupView from '../views/SignupView.vue'
 import ForgetPasswordView from '@/views/ForgetPasswordView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import VerifyCodeView from '../views/VerifyCodeView.vue'
+import StudentProfileView from '../views/StudentProfileView.vue'
 
 export default createRouter({
   history: createWebHistory('/'),
@@ -15,6 +16,7 @@ export default createRouter({
     { path: '/signup', name: 'signup', component: SignupView },
     { path: '/forgot', name: 'forgot', component: ForgetPasswordView },
     { path: '/reset-password', name: 'reset', component: ResetPasswordView },
-    { path: '/verify-code', name: 'verify-code', component: VerifyCodeView }
+    { path: '/verify-code', name: 'verify-code', component: VerifyCodeView },
+    { path: '/profile', name: 'profile', component: StudentProfileView }
   ]
 })
