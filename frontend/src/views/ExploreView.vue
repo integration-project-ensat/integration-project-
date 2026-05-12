@@ -145,7 +145,7 @@ const handleNotification = () => {
   display: grid;
   grid-template-columns: 260px 1fr 290px;
   gap: 24px;
-  padding: 18px 20px;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -158,17 +158,26 @@ const handleNotification = () => {
   padding-bottom: 8px;
 }
 
+.explore-left {
+  padding-top: 0;
+}
+
+.explore-right {
+  padding: 18px 20px 18px 0;
+}
+
 .explore-middle {
   height: 100%;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding-bottom: 8px;
+  padding: 18px 0 18px;
 }
 
 .explore-middle-inner {
   margin: 0 auto;
   width: 100%;
   max-width: 900px;
+  padding: 0 20px;
 }
 
 .explore-panel {
