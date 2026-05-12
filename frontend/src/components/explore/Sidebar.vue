@@ -1,33 +1,19 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
-import {
-  Award,
-  BadgeCheck,
-  BriefcaseBusiness,
-  CalendarClock,
-  Compass,
-  Github,
-  GraduationCap,
-  LogOut,
-  MessageCircle,
-  Newspaper,
-  Settings,
-  SlidersHorizontal,
-} from "lucide-vue-next";
 
 const menuItems = [
-  { label: "Dashboard", icon: SlidersHorizontal, to: "/dashboard" },
-  { label: "Explorer", icon: Compass, to: "/explore", active: true },
-  { label: "Projets", icon: BriefcaseBusiness, to: "/projects" },
-  { label: "Stages", icon: GraduationCap, to: "/stages" },
-  { label: "Certifications", icon: Award, to: "/certifications" },
-  { label: "Activites", icon: CalendarClock, to: "/activities" },
-  { label: "My Portfolio", icon: Newspaper, to: "/portfolio" },
-  { label: "GitHub", icon: Github, to: "/github" },
-  { label: "Mes Recos", icon: BadgeCheck, to: "/recommendations" },
-  { label: "Commentaires", icon: MessageCircle, to: "/comments" },
-  { label: "Parametres", icon: Settings, to: "/settings" },
-  { label: "Deconnexion", icon: LogOut, to: "/login" },
+  { label: "Dashboard", icon: "tune", to: "/dashboard" },
+  { label: "Explorer", icon: "explore", to: "/explore", active: true },
+  { label: "Projets", icon: "projects", to: "/projects" },
+  { label: "Stages", icon: "stages", to: "/stages" },
+  { label: "Certifications", icon: "certif", to: "/certifications" },
+  { label: "Activites", icon: "activity", to: "/activities" },
+  { label: "My Portfolio", icon: "portfolio", to: "/portfolio" },
+  { label: "GitHub", icon: "github", to: "/github" },
+  { label: "Mes Recos", icon: "medal", to: "/recommendations" },
+  { label: "Commentaires", icon: "comment", to: "/comments" },
+  { label: "Parametres", icon: "settings", to: "/settings", groupTop: true },
+  { label: "Deconnexion", icon: "logout", to: "/login" },
 ];
 </script>
 
@@ -41,7 +27,7 @@ const menuItems = [
       </div>
     </div>
 
-    <nav class="sb-nav">
+    <nav class="sb-nav" aria-label="Explore sidebar">
       <RouterLink
         v-for="item in menuItems"
         :key="item.label"
@@ -49,7 +35,221 @@ const menuItems = [
         class="sb-item"
         :class="{ 'sb-itemActive': item.active }"
       >
-        <component :is="item.icon" class="sb-icon" />
+        <span v-if="item.groupTop" class="sb-divider" aria-hidden="true"></span>
+        <svg
+          class="sb-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <!-- Dashboard (tune / sliders) -->
+          <template v-if="item.icon === 'tune'">
+            <path
+              d="M4 6h10M18 6h2M4 12h2M10 12h12M4 18h7M15 18h7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              d="M14 6a2 2 0 1 0-4 0a2 2 0 0 0 4 0ZM8 12a2 2 0 1 0-4 0a2 2 0 0 0 4 0ZM13 18a2 2 0 1 0-4 0a2 2 0 0 0 4 0Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+          </template>
+
+          <!-- Explorer (compass in circle) -->
+          <template v-else-if="item.icon === 'explore'">
+            <path
+              d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M14.7 9.3 13 13l-3.7 1.7L11 11l3.7-1.7Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M12 12h.01"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+          </template>
+
+          <!-- Projets (document) -->
+          <template v-else-if="item.icon === 'projects'">
+            <path
+              d="M8 3h6l4 4v14H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M14 3v5h5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M9 12h8M9 16h8"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </template>
+
+          <!-- Stages (briefcase) -->
+          <template v-else-if="item.icon === 'stages'">
+            <path
+              d="M9 7V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M4 13h16"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </template>
+
+          <!-- Certifications (award / burst) -->
+          <template v-else-if="item.icon === 'certif'">
+            <path
+              d="M12 3l1.1 2.7 2.9.2-2.2 1.9.7 2.9-2.5-1.5-2.5 1.5.7-2.9-2.2-1.9 2.9-.2L12 3Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M9 14v7l3-2 3 2v-7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </template>
+
+          <!-- Activites (calendar) -->
+          <template v-else-if="item.icon === 'activity'">
+            <path
+              d="M7 3v3M17 3v3"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              d="M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M3 10h18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              d="M8 14h.01M12 14h.01M16 14h.01"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+          </template>
+
+          <!-- My Portfolio (grid) -->
+          <template v-else-if="item.icon === 'portfolio'">
+            <path
+              d="M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M7 9h4v4H7V9Zm6 0h4v4h-4V9ZM7 15h4v3H7v-3Zm6 0h4v3h-4v-3Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </template>
+
+          <!-- GitHub (octocat-ish mark) -->
+          <template v-else-if="item.icon === 'github'">
+            <path
+              d="M12 3a9 9 0 0 0-2.8 17.6c.4.1.6-.2.6-.4v-1.4c-2.5.6-3-1.1-3-1.1-.4-1-.9-1.3-.9-1.3-.7-.5 0-.5 0-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.4.7.1-.5.3-.9.5-1.1-2-.2-4.1-1-4.1-4.6 0-1 .4-1.9 1-2.6-.1-.2-.4-1 .1-2.2 0 0 .8-.3 2.6 1a9 9 0 0 1 4.8 0c1.8-1.3 2.6-1 2.6-1 .5 1.2.2 2 .1 2.2.6.7 1 1.6 1 2.6 0 3.6-2.1 4.4-4.1 4.6.3.3.6.8.6 1.6v2.3c0 .2.2.5.6.4A9 9 0 0 0 12 3Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </template>
+
+          <!-- Mes Recos (ribbon/medal) -->
+          <template v-else-if="item.icon === 'medal'">
+            <path
+              d="M12 14a5 5 0 1 0 0-10a5 5 0 0 0 0 10Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M9.5 13.5 8 21l4-2 4 2-1.5-7.5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </template>
+
+          <!-- Commentaires (chat bubble) -->
+          <template v-else-if="item.icon === 'comment'">
+            <path
+              d="M5 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H11l-4.5 3V16H8a3 3 0 0 1-3-3V6Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </template>
+
+          <!-- Parametres (gear) -->
+          <template v-else-if="item.icon === 'settings'">
+            <path
+              d="M12 15.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M19.4 13a7.8 7.8 0 0 0 .1-2l2-1.2-2-3.4-2.3.6a7.3 7.3 0 0 0-1.7-1l-.3-2.4H11l-.3 2.4a7.3 7.3 0 0 0-1.7 1L6.7 6.4l-2 3.4L6.7 11a7.8 7.8 0 0 0 .1 2l-2 1.2 2 3.4 2.3-.6c.5.4 1.1.7 1.7 1l.3 2.4h4.1l.3-2.4c.6-.3 1.2-.6 1.7-1l2.3.6 2-3.4-2-1.2Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </template>
+
+          <!-- Deconnexion (logout) -->
+          <template v-else-if="item.icon === 'logout'">
+            <path
+              d="M10 7V6a2 2 0 0 1 2-2h7v16h-7a2 2 0 0 1-2-2v-1"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M11 12H3m0 0 3-3M3 12l3 3"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </template>
+        </svg>
         <span class="sb-label">{{ item.label }}</span>
       </RouterLink>
     </nav>
@@ -103,17 +303,18 @@ const menuItems = [
 .sb-nav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 2px 6px;
-  overflow: hidden;
+  gap: 10px;
+  padding: 14px 6px 6px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .sb-item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 14px;
+  padding: 11px 12px;
   border-radius: 10px;
   color: rgb(71 85 105);
   font-size: 13px;
@@ -143,10 +344,11 @@ const menuItems = [
 }
 
 .sb-icon {
-  height: 18px;
-  width: 18px;
+  height: 20px;
+  width: 20px;
   color: rgb(2 6 23);
-  opacity: 0.9;
+  opacity: 1;
+  flex: none;
 }
 
 .sb-item:not(.sb-itemActive) .sb-icon {
@@ -157,5 +359,33 @@ const menuItems = [
 .sb-label {
   line-height: 1;
 }
-</style>
 
+.sb-divider {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: -10px;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.35);
+  content: "";
+}
+
+.sb-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sb-nav::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.sb-nav::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.16);
+  border-radius: 9999px;
+}
+
+.sb-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
+}
+</style>
