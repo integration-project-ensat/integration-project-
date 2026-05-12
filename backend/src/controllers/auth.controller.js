@@ -38,15 +38,25 @@ function hashToken(token) {
 }
 // ==================== INSCRIPTION PUBLIQUE ====================
 
+function isValidPublicRole(role) {
+    console.log("CHECK ROLE:", role, "IN", Object.values(PUBLIC_ROLES))
+    return Object.values(PUBLIC_ROLES).includes(role);
+}
+
 const register = asyncHandler(async (req, res) => {
-    // Validation des données d'inscription
-  const { nom, prenom, email, mot_de_passe, role, ...specificData } = req.body;
-  if (!isValidPublicRole(role)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Rôle invalide'
-    });
-  }
+    console.log("======== REGISTER ========")
+    console.log("BODY:", req.body)
+    console.log("ROLE:", req.body.role)
+    console.log("isValid?", isValidPublicRole(req.body.role))
+    
+    const { nom, prenom, email, mot_de_passe, role, ...specificData } = req.body;
+    if (!isValidPublicRole(role)) {
+        console.log("ROLE INVALIDE:", role)  
+        return res.status(400).json({
+            success: false,
+            message: 'Rôle invalide'
+        });
+    }
 // Vérification de l'unicité de l'email
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {

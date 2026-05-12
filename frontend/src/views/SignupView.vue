@@ -109,12 +109,18 @@ async function submit() {
   }
   loading.value = true
   try {
-    await authService.signup({ firstName, lastName, email, password, role })
-    router.push('/dashboard')
-  } catch (e: any) {
-    error.value = e.response?.data?.message || "Erreur lors de l'inscription"
+    await authService.signup({ ...form })
+    console.log('email avant push:', form.email) // ← ajoute ici
+    router.push({ path: '/verify-code', query: { email: form.email } })
+ } catch(e) {
+  const errors = e.response?.data?.errors
+  if (errors && errors.length > 0) {
+    error.value = errors[0].message  // ← prend le vrai message d'erreur
+  } else {
+    error.value = e.response?.data?.message || 'Une erreur est survenue.'
+  }
   } finally {
-    loading.value = false
+    loading.value = false  // ← ajouter ceci
   }
 }
 </script>

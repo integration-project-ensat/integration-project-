@@ -14,11 +14,26 @@ const findProfil = (id_utilisateur) =>
   prisma.profil.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
     include: {
-      competences: { include: { competence: true } },
-      badges: { include: { badge: true } },
-      score_credibilite: true,
-      recommandations: { include: { auteur: true } },
-      etudiant: { include: { publications: true } },
+      utilisateur: {
+        include: {
+          etudiant: {
+            include: {
+              activites: true,
+              badges: { include: { badge: true } },
+              competences: { include: { competence: true } },
+              diplomes: true,
+              portfolio: true,
+              recommandations_recues: { include: { auteur: true } },
+              score_credibilite: true,
+              stages: true,
+            },
+          },
+          professeur: true,
+          professionnel: true,
+          administrateur: true,
+          postes: true,
+        },
+      },
     },
   })
 

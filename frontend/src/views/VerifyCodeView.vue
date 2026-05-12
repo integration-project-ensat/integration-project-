@@ -61,6 +61,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
+import authService from '@/services/auth.service.js'
 
 const router   = useRouter()
 const route    = useRoute()
@@ -118,26 +119,29 @@ async function submit() {
 
   loading.value = true
   try {
-    // await authService.verifyCode(email, fullCode)
+    await authService.verifyCode(email, fullCode)
     success.value = 'Code vérifié !'
     setTimeout(() => {
-      router.push({ path: '/reset-password', query: { email, code: fullCode } })
+      router.push('/dashboard')
     }, 1000)
-  } catch {
-    error.value = 'Code incorrect ou expiré.'
-    code.forEach((_, i) => code[i] = '')
-    inputs.value[0]?.focus()
+  } catch(e) {
+    const errors = e.response?.data?.errors
+    if (errors && errors.length > 0) {
+      error.value = errors[0].message
+    } else {
+      error.value = e.response?.data?.message || 'Code incorrect ou expiré.'
+    }
   } finally {
     loading.value = false
   }
-}
+}                          // ← ferme submit()
 
 async function resend() {
-  // await authService.forgotPassword(email)
+  await authService.resendCode(email)
   startCountdown()
   success.value = 'Code renvoyé !'
   setTimeout(() => success.value = '', 3000)
-}
+}                          // ← ferme resend()
 </script>
 
 <style scoped>

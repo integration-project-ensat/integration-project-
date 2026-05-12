@@ -19,7 +19,7 @@ const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateL
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
-const profilRoutes = require('./src/routes/profil.routes');
+const competenceRoutes = require('./src/routes/competence.routes')
 const app = express()
 
 //securite(headers, CORS, rate )
@@ -53,7 +53,8 @@ app.get('/', (req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes) 
-
+// Competence routes
+app.use('/api/competences', competenceRoutes)
 //404 not found handler (doit être après toutes les routes)
 app.use((req,res) => {
   res.status(404).json({
