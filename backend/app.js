@@ -11,6 +11,7 @@
  */
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
+const path = require('path')
 const express = require('express')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
@@ -20,7 +21,10 @@ const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
 const competenceRoutes = require('./src/routes/competence.routes')
+const photoRoutes = require('./src/routes/photo.routes')
 const app = express()
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 //securite(headers, CORS, rate )
 app.use(securityHeaders)
@@ -50,10 +54,22 @@ app.get('/', (req, res) => {
 
 
 // Auth routes
-app.use('/api/auth', authRoutes) 
+app.use('/api/auth', authRoutes)
 // Competence routes
 app.use('/api/competences', competenceRoutes)
+// Photo upload routes
+app.use('/api/profil/photo', photoRoutes)
 //404 not found handler (doit être après toutes les routes)
+app.use((err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ message: 'Fichier trop lourd. Maximum 5 MB.' });
+  }
+  if (err.message?.includes('Format non supporté')) {
+    return res.status(415).json({ message: err.message });
+  }
+  next(err);
+});
+
 app.use((req,res) => {
   res.status(404).json({
     success:false,
@@ -61,7 +77,6 @@ app.use((req,res) => {
     message: `Route ${req.method} ${req.originalUrl} not found`
   })
 })
-
 
 app.use(errorMiddleware)
 
