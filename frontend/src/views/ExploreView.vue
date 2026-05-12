@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { Search, Bell, Globe } from "lucide-vue-next";
+import { computed, ref } from "vue";
+import { Bell, ChevronDown, Search } from "lucide-vue-next";
+import FilterPanel from "../components/explore/FilterPanel.vue";
+import ProfileCard from "../components/explore/ProfileCard.vue";
 import Sidebar from "../components/explore/Sidebar.vue";
 import Topbar from "../components/explore/Topbar.vue";
-import ProfileCard from "../components/explore/ProfileCard.vue";
-import FilterPanel from "../components/explore/FilterPanel.vue";
 
 interface Profile {
   id: number;
   name: string;
   role: string;
   school: string;
-  field: string;
   city: string;
   score: number;
   recommendations: number;
@@ -23,191 +22,28 @@ const searchQuery = ref("");
 const profiles = ref<Profile[]>([
   {
     id: 1,
-    name: "Amine Bennani",
-    role: "Full Stack Developer",
-    school: "ENSA",
-    field: "GINF",
-    city: "Tanger",
-    score: 92,
-    recommendations: 520,
-    skills: ["DevOps", "Vue.js", "Docker"],
+    name: "Nom Prenom",
+    role: "Ex Developer Operation & Support",
+    school: "Ex Dassault  Universite de Bretagne Occidentale",
+    city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
+    score: 90,
+    recommendations: 500,
     recos: [
+      { name: "Nom Prof", role: "Ex Ecole Nationale des Sciences Appliques" },
       {
-        name: "Sofia El Fassi",
-        role: "Excellent collaborateur sur les projets cloud",
-      },
-      {
-        name: "Youssef Kher",
-        role: "Très bon sens de l'architecture logicielle",
+        name: "Nom Professionelle",
+        role: "Ex Ecole Nationale des Sciences Appliques",
       },
     ],
   },
   {
     id: 2,
-    name: "Lina Bouziane",
-    role: "Data Analyst",
-    school: "ENSAM",
-    field: "GSEA",
-    city: "Rabat",
-    score: 88,
-    recommendations: 430,
-    skills: ["Python", "SQL", "PowerBI"],
-    recos: [],
-  },
-  {
-    id: 3,
-    name: "Rayan Saidi",
-    role: "DevOps Engineer",
-    school: "FST",
-    field: "GSR",
-    city: "Fes",
-    score: 87,
-    recommendations: 380,
-    skills: ["Kubernetes", "AWS", "Terraform"],
-    recos: [],
-  },
-  {
-    id: 4,
-    name: "Sara Idrissi",
-    role: "UI/UX Designer",
-    school: "ENSA",
-    field: "GINF",
-    city: "Tanger",
-    score: 84,
-    recommendations: 320,
-    skills: ["Figma", "Adobe XD", "Web Design"],
-    recos: [],
-  },
-  {
-    id: 5,
-    name: "Yassine Najib",
-    role: "Mobile Developer",
-    school: "ENSA",
-    field: "GSEA",
-    city: "Casablanca",
-    score: 90,
-    recommendations: 470,
-    skills: ["Flutter", "React Native"],
-    recos: [],
-  },
-  {
-    id: 6,
-    name: "Meryem Ziani",
-    role: "Cybersecurity Specialist",
-    school: "ENSAM",
-    field: "GINF",
-    city: "Rabat",
-    score: 86,
-    recommendations: 410,
-    skills: ["Pentesting", "Network Security"],
-    recos: [],
-  },
-  {
-    id: 7,
-    name: "Nabil Haddad",
-    role: "Cloud Architect",
-    school: "FST",
-    field: "GSR",
-    city: "Fes",
-    score: 89,
-    recommendations: 450,
-    skills: ["Azure", "Docker", "CI/CD"],
-    recos: [],
-  },
-  {
-    id: 8,
-    name: "Fatima Zahra",
-    role: "Product Manager",
-    school: "ENSA",
-    field: "GINF",
-    city: "Tanger",
-    score: 83,
-    recommendations: 340,
-    skills: ["Roadmapping", "Agile"],
-    recos: [],
-  },
-  {
-    id: 9,
-    name: "Omar El Amrani",
-    role: "QA Engineer",
-    school: "ENSAM",
-    field: "GSEA",
-    city: "Rabat",
-    score: 82,
-    recommendations: 300,
-    skills: ["Test Automation", "Selenium"],
-    recos: [],
-  },
-  {
-    id: 10,
-    name: "Salma Hachimi",
-    role: "AI Researcher",
-    school: "FST",
-    field: "GINF",
-    city: "Fes",
-    score: 91,
-    recommendations: 510,
-    skills: ["Machine Learning", "TensorFlow"],
-    recos: [],
-  },
-  {
-    id: 11,
-    name: "Hakim Boudhir",
-    role: "Back-end Developer",
-    school: "ENSA",
-    field: "GSR",
-    city: "Mohammedia",
-    score: 88,
-    recommendations: 420,
-    skills: ["Node.js", "Express"],
-    recos: [],
-  },
-  {
-    id: 12,
-    name: "Nora Amraoui",
-    role: "Digital Marketing",
-    school: "ENSAM",
-    field: "GSEA",
-    city: "Rabat",
-    score: 80,
-    recommendations: 295,
-    skills: ["SEO", "Content Strategy"],
-    recos: [],
-  },
-  {
-    id: 13,
-    name: "Youssef Chraibi",
-    role: "Frontend Developer",
-    school: "FST",
-    field: "GINF",
-    city: "Casablanca",
-    score: 86,
-    recommendations: 390,
-    skills: ["Vue.js", "Tailwind"],
-    recos: [],
-  },
-  {
-    id: 14,
-    name: "Imane Kabbaj",
-    role: "Business Analyst",
-    school: "ENSA",
-    field: "GSEA",
-    city: "Tanger",
+    name: "Nom Prenom",
+    role: "Ex Developer Operation & Support",
+    school: "Ex Dassault  Universite de Bretagne Occidentale",
+    city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 85,
-    recommendations: 375,
-    skills: ["Excel", "PowerBI"],
-    recos: [],
-  },
-  {
-    id: 15,
-    name: "Rachid Elmouden",
-    role: "Systems Engineer",
-    school: "ENSAM",
-    field: "GSR",
-    city: "Rabat",
-    score: 87,
-    recommendations: 405,
-    skills: ["Linux", "Virtualization"],
+    recommendations: 500,
     recos: [],
   },
 ]);
@@ -223,127 +59,257 @@ const filters = ref({
 });
 
 const filteredProfiles = computed(() => {
-  return profiles.value.filter((p) => {
-    const matchesQuery =
-      !searchQuery.value ||
-      p.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      p.role.toLowerCase().includes(searchQuery.value.toLowerCase());
-
-    return matchesQuery;
-  });
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return profiles.value;
+  return profiles.value.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.role.toLowerCase().includes(q) ||
+      p.school.toLowerCase().includes(q) ||
+      p.city.toLowerCase().includes(q),
+  );
 });
-
-const language = ref("FR");
 
 const handleNotification = () => {
   alert("Notifications clicked!");
 };
-
-const toggleLanguage = () => {
-  language.value = language.value === "FR" ? "EN" : "FR";
-};
 </script>
 
 <template>
-  <div class="flex h-screen w-screen flex-col overflow-hidden bg-[#eef1fb] text-slate-900">
-    <!-- Fixed Topbar -->
+  <div class="explore-page">
     <Topbar />
 
-    <!-- Main content area with three columns -->
-    <div class="flex flex-1 overflow-hidden">
-      <!-- Left Sidebar - Independent scroll -->
-      <div class="flex-shrink-0 overflow-y-auto" style="height: calc(100vh - 60px);">
+    <div class="explore-shell">
+      <div class="explore-left">
         <Sidebar />
       </div>
 
-      <!-- Middle content - Independent scroll -->
-      <main class="flex-1 overflow-y-auto scroll-smooth" style="height: calc(100vh - 60px);">
-        <div class="mx-auto max-w-[1400px] px-5 py-5">
-          <!-- Search and controls section -->
-          <section
-            class="mb-5 rounded-xl bg-white px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
-          >
-            <div
-              class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <h1 class="text-2xl font-semibold text-slate-950">Explore</h1>
+      <main class="explore-middle">
+        <div class="explore-middle-inner">
+          <section class="explore-header">
+            <h1 class="explore-title">Explore</h1>
 
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div class="relative w-full max-w-[280px]">
-                  <Search
-                    class="pointer-events-none absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Search profiles..."
-                    class="w-full rounded-lg border border-slate-200 bg-[#ececf4] py-2 pl-9 pr-4 text-xs text-slate-800 placeholder:text-slate-500 focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-100"
-                  />
-                </div>
-                <button
-                  type="button"
-                  class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-[#5b4df0] text-white shadow-sm transition hover:bg-[#4837d2]"
-                  @click="handleNotification"
-                >
-                  <Bell class="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                  @click="toggleLanguage"
-                >
-                  <Globe class="h-3 w-3 stroke-[2.2] text-slate-700" />
-                  {{ language }}
-                </button>
+            <div class="explore-actions">
+              <div class="explore-search">
+                <input v-model="searchQuery" type="text" />
+                <Search class="explore-search-icon" />
               </div>
+
+              <button
+                type="button"
+                class="explore-notif"
+                @click="handleNotification"
+              >
+                <span class="explore-notif-dot" />
+                <Bell class="h-4 w-4" />
+              </button>
+
+              <button type="button" class="explore-profile">
+                <span class="explore-flag">FR</span>
+                <ChevronDown class="h-4 w-4" />
+              </button>
             </div>
           </section>
 
-          <!-- Profiles feed -->
-          <div class="space-y-5">
+          <div class="explore-feed">
             <ProfileCard
               v-for="profile in filteredProfiles"
               :key="profile.id"
               :profile="profile"
+              :default-expanded="profile.id === 1"
             />
           </div>
         </div>
       </main>
 
-      <!-- Right Filter Panel - Independent scroll -->
-      <div class="flex-shrink-0 overflow-y-auto" style="height: calc(100vh - 60px);">
-        <div class="sticky top-0">
-          <FilterPanel :filters="filters" />
-        </div>
+      <div class="explore-right">
+        <FilterPanel :filters="filters" />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Custom scrollbar styling - thin modern scrollbar with dark track and rounded thumb */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+.explore-page {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #eef1fb;
+  color: rgb(15 23 42);
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
+.explore-shell {
+  height: calc(100vh - 60px);
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 24px;
+  padding: 24px;
+  overflow: hidden;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-  transition: background 0.2s ease;
+.explore-left,
+.explore-right {
+  position: sticky;
+  top: 0;
+  height: 100%;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+.explore-middle {
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 8px;
 }
 
-/* Firefox scrollbar */
-.overflow-y-auto {
+.explore-middle-inner {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 760px;
+}
+
+.explore-header {
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 18px 20px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.explore-title {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 650;
+  color: rgb(2 6 23);
+}
+
+.explore-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.explore-search {
+  position: relative;
+  width: 320px;
+}
+
+.explore-search input {
+  height: 36px;
+  width: 100%;
+  border-radius: 9999px;
+  border: 1px solid rgb(226 232 240);
+  background: #eef0f6;
+  padding: 0 40px 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(51 65 85);
+  outline: none;
+}
+
+.explore-search input:focus {
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.12);
+}
+
+.explore-search-icon {
+  pointer-events: none;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  height: 16px;
+  width: 16px;
+  transform: translateY(-50%);
+  color: rgb(148 163 184);
+}
+
+.explore-notif {
+  position: relative;
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.25);
+  transition: background 0.15s ease;
+}
+
+.explore-notif:hover {
+  background: #4338ca;
+}
+
+.explore-notif-dot {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  height: 10px;
+  width: 10px;
+  border-radius: 9999px;
+  background: rgb(244 63 94);
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.explore-profile {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9999px;
+  background: #0ea5b7;
+  color: white;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(14, 165, 183, 0.25);
+  transition: background 0.15s ease;
+}
+
+.explore-profile:hover {
+  background: #0b93a3;
+}
+
+.explore-flag {
+  display: inline-flex;
+  height: 16px;
+  width: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.explore-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 8px;
+}
+
+.explore-middle::-webkit-scrollbar {
+  width: 8px;
+}
+
+.explore-middle::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.explore-middle::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.2);
+  border-radius: 9999px;
+}
+
+.explore-middle {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+  scrollbar-color: rgba(2, 6, 23, 0.22) rgba(2, 6, 23, 0.05);
 }
 </style>
+
