@@ -41,7 +41,7 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
     <div class="fp-card">
       <div v-for="section in sections" :key="section.title" class="fp-section">
         <h4 class="fp-title">{{ section.title }}</h4>
-        <div class="fp-pills">
+        <div class="fp-pillsRow">
           <button
             v-for="option in section.options"
             :key="option"
@@ -51,7 +51,8 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
           >
             {{ option }}
           </button>
-
+        </div>
+        <div class="fp-plusRow">
           <button type="button" class="fp-pill fp-plus">
             Plus
             <ChevronDown class="h-3 w-3" />
@@ -73,10 +74,10 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
 .fp-card {
   width: 100%;
   background: #ffffff;
-  border: 1px solid rgb(226 232 240);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 18px;
-  padding: 18px 16px;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+  padding: 16px 14px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
   max-height: 100%;
   overflow-y: auto;
 }
@@ -86,27 +87,27 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
 }
 
 .fp-title {
-  font-size: 13px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   color: rgb(2 6 23);
   margin-bottom: 10px;
 }
 
-.fp-pills {
+.fp-pillsRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 10px 12px;
 }
 
 .fp-pill {
-  height: 30px;
-  padding: 0 14px;
+  height: 28px;
+  padding: 0 16px;
   border-radius: 9999px;
-  border: 1px solid rgb(148 163 184);
+  border: 1.5px solid rgba(15, 23, 42, 0.45);
   background: #ffffff;
   color: rgb(71 85 105);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 800;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -114,18 +115,22 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
 }
 
 .fp-pill:hover {
-  border-color: rgb(100 116 139);
+  border-color: rgba(15, 23, 42, 0.65);
   color: rgb(15 23 42);
 }
 
 .fp-pillActive {
   border-color: #6c5ce7;
-  background: #e9e7ff;
+  background: rgba(108, 92, 231, 0.16);
   color: rgb(2 6 23);
 }
 
+.fp-plusRow {
+  margin-top: 8px;
+}
+
 .fp-plus {
-  border-color: rgb(203 213 225);
+  border-color: rgba(15, 23, 42, 0.25);
   color: rgb(100 116 139);
   display: inline-flex;
   align-items: center;
