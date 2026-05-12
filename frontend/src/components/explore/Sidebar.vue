@@ -28,21 +28,20 @@ const menuItems = [
     </div>
 
     <nav class="sb-nav" aria-label="Explore sidebar">
-      <RouterLink
-        v-for="item in menuItems"
-        :key="item.label"
-        :to="item.to"
-        class="sb-item"
-        :class="{ 'sb-itemActive': item.active }"
-      >
-        <span v-if="item.groupTop" class="sb-divider" aria-hidden="true"></span>
-        <svg
-          class="sb-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
+      <template v-for="item in menuItems" :key="item.label">
+        <div v-if="item.groupTop" class="sb-divider" aria-hidden="true"></div>
+        <RouterLink
+          :to="item.to"
+          class="sb-item"
+          :class="{ 'sb-itemActive': item.active }"
         >
+          <svg
+            class="sb-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
           <!-- Dashboard (tune / sliders) -->
           <template v-if="item.icon === 'tune'">
             <path
@@ -251,9 +250,10 @@ const menuItems = [
               stroke-linejoin="round"
             />
           </template>
-        </svg>
-        <span class="sb-label">{{ item.label }}</span>
-      </RouterLink>
+          </svg>
+          <span class="sb-label">{{ item.label }}</span>
+        </RouterLink>
+      </template>
     </nav>
   </aside>
 </template>
@@ -261,12 +261,12 @@ const menuItems = [
 <style scoped>
 .sb-shell {
   height: 100%;
-  width: 280px;
+  width: 260px;
   background: #ffffff;
   border-right: 1px solid rgb(226 232 240);
-  border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-  padding: 18px 14px;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 18px 10px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -276,7 +276,7 @@ const menuItems = [
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 6px 8px 14px;
+  padding: 6px 8px 12px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.9);
   margin-bottom: 10px;
 }
@@ -307,7 +307,7 @@ const menuItems = [
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px 6px 6px;
+  padding: 10px 6px 6px;
   overflow-y: auto;
   flex: 1;
 }
@@ -319,7 +319,7 @@ const menuItems = [
   gap: 14px;
   padding: 11px 12px;
   border-radius: 10px;
-  color: rgb(71 85 105);
+  color: rgb(2 6 23);
   font-size: 13px;
   font-weight: 900;
   text-decoration: none;
@@ -327,11 +327,11 @@ const menuItems = [
 }
 
 .sb-item:hover {
-  background: rgba(148, 163, 184, 0.18);
+  background: rgba(148, 163, 184, 0.14);
 }
 
 .sb-itemActive {
-  background: #e9e7ff;
+  background: #d8d7ff;
   color: rgb(2 6 23);
 }
 
@@ -359,13 +359,9 @@ const menuItems = [
 }
 
 .sb-divider {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: -10px;
   height: 1px;
-  background: rgba(148, 163, 184, 0.35);
-  content: "";
+  background: rgba(148, 163, 184, 0.45);
+  margin: 6px 10px 2px;
 }
 
 .sb-nav::-webkit-scrollbar {

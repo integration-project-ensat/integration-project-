@@ -86,38 +86,40 @@ const handleNotification = () => {
 
       <main class="explore-middle">
         <div class="explore-middle-inner">
-          <section class="explore-header">
-            <h1 class="explore-title">Explore</h1>
+          <div class="explore-panel">
+            <section class="explore-header">
+              <h1 class="explore-title">Explore</h1>
 
-            <div class="explore-actions">
-              <div class="explore-search">
-                <input v-model="searchQuery" type="text" />
-                <Search class="explore-search-icon" />
+              <div class="explore-actions">
+                <div class="explore-search">
+                  <input v-model="searchQuery" type="text" />
+                  <Search class="explore-search-icon" />
+                </div>
+
+                <button
+                  type="button"
+                  class="explore-notif"
+                  @click="handleNotification"
+                >
+                  <span class="explore-notif-dot" />
+                  <Bell class="h-4 w-4" />
+                </button>
+
+                <button type="button" class="explore-profile">
+                  <span class="explore-flag">FR</span>
+                  <ChevronDown class="h-4 w-4" />
+                </button>
               </div>
+            </section>
 
-              <button
-                type="button"
-                class="explore-notif"
-                @click="handleNotification"
-              >
-                <span class="explore-notif-dot" />
-                <Bell class="h-4 w-4" />
-              </button>
-
-              <button type="button" class="explore-profile">
-                <span class="explore-flag">FR</span>
-                <ChevronDown class="h-4 w-4" />
-              </button>
+            <div class="explore-feed">
+              <ProfileCard
+                v-for="profile in filteredProfiles"
+                :key="profile.id"
+                :profile="profile"
+                :default-expanded="profile.id === 1"
+              />
             </div>
-          </section>
-
-          <div class="explore-feed">
-            <ProfileCard
-              v-for="profile in filteredProfiles"
-              :key="profile.id"
-              :profile="profile"
-              :default-expanded="profile.id === 1"
-            />
           </div>
         </div>
       </main>
@@ -141,9 +143,9 @@ const handleNotification = () => {
 .explore-shell {
   height: calc(100vh - 60px);
   display: grid;
-  grid-template-columns: 280px 1fr 320px;
+  grid-template-columns: 260px 1fr 290px;
   gap: 24px;
-  padding: 24px;
+  padding: 18px 20px;
   overflow: hidden;
 }
 
@@ -166,19 +168,24 @@ const handleNotification = () => {
 .explore-middle-inner {
   margin: 0 auto;
   width: 100%;
-  max-width: 760px;
+  max-width: 900px;
+}
+
+.explore-panel {
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  overflow: hidden;
 }
 
 .explore-header {
-  margin-bottom: 20px;
-  border-radius: 16px;
-  background: #ffffff;
-  padding: 18px 20px;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+  padding: 18px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 .explore-title {
@@ -196,7 +203,7 @@ const handleNotification = () => {
 
 .explore-search {
   position: relative;
-  width: 320px;
+  width: 340px;
 }
 
 .explore-search input {
@@ -292,7 +299,8 @@ const handleNotification = () => {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-bottom: 8px;
+  padding: 16px 18px 18px;
+  background: #ffffff;
 }
 
 .explore-middle::-webkit-scrollbar {
