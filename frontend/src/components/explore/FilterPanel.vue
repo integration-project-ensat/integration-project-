@@ -7,9 +7,9 @@ interface Props {
     school: string;
     field: string;
     city: string;
-    score: number;
+    score: string;
     skills: string[];
-    recommendations: number;
+    recommendations: string;
   };
 }
 
@@ -130,4 +130,3 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
   gap: 6px;
 }
 </style>
-

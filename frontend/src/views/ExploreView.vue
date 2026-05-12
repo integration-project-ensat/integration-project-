@@ -53,9 +53,9 @@ const filters = ref({
   school: "ENSA",
   field: "GINF",
   city: "Tanger",
-  score: 80,
+  score: "80+",
   skills: ["DevOps"],
-  recommendations: 500,
+  recommendations: "500+",
 });
 
 const filteredProfiles = computed(() => {
@@ -312,4 +312,3 @@ const handleNotification = () => {
   scrollbar-color: rgba(2, 6, 23, 0.22) rgba(2, 6, 23, 0.05);
 }
 </style>
-
