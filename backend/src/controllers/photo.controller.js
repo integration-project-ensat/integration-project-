@@ -1,4 +1,4 @@
-const { updateProfilePhoto, deleteProfilePhoto } = require('../services/photoService');
+const { updateProfilePhoto, deleteProfilePhoto } = require('../services/photo.service');
 
 async function uploadPhoto(req, res) {
   try {
