@@ -77,6 +77,8 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
   border-radius: 18px;
   padding: 18px 16px;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .fp-section + .fp-section {
@@ -128,5 +130,24 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.fp-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fp-card::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.fp-card::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.16);
+  border-radius: 9999px;
+}
+
+.fp-card {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
 }
 </style>

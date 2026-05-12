@@ -269,6 +269,7 @@ const menuItems = [
   padding: 18px 14px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .sb-profile {

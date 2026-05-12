@@ -152,6 +152,8 @@ const handleNotification = () => {
   position: sticky;
   top: 0;
   height: 100%;
+  overflow-y: auto;
+  padding-bottom: 8px;
 }
 
 .explore-middle {
@@ -310,5 +312,28 @@ const handleNotification = () => {
 .explore-middle {
   scrollbar-width: thin;
   scrollbar-color: rgba(2, 6, 23, 0.22) rgba(2, 6, 23, 0.05);
+}
+
+.explore-left::-webkit-scrollbar,
+.explore-right::-webkit-scrollbar {
+  width: 8px;
+}
+
+.explore-left::-webkit-scrollbar-track,
+.explore-right::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.explore-left::-webkit-scrollbar-thumb,
+.explore-right::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.16);
+  border-radius: 9999px;
+}
+
+.explore-left,
+.explore-right {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
 }
 </style>
