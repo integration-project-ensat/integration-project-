@@ -13,93 +13,121 @@ interface Props {
   };
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const sections = [
+  { title: "Annee", key: "year", options: [2026, 2025, 2024] },
+  { title: "Ecole/Faculte", key: "school", options: ["ENSA", "ENSAM", "FST"] },
+  { title: "Filiere", key: "field", options: ["GSR", "GINF", "GSEA"] },
+  { title: "Ville", key: "city", options: ["Tanger", "Rabat", "Fes"] },
+  { title: "Score", key: "score", options: ["90+", "80+", "70+"] },
+  { title: "Competences", key: "skills", options: ["KiCad", "Sec.", "DevOps"] },
   {
-    title: "Année",
-    options: [2026, 2025, 2024],
-    key: "year",
-    type: "number",
-  },
-  {
-    title: "Ecole/Faculte",
-    options: ["ENSA", "ENSAM", "FST"],
-    key: "school",
-    type: "text",
-  },
-  {
-    title: "Filiere",
-    options: ["GSR", "GINF", "GSEA"],
-    key: "field",
-    type: "text",
-  },
-  {
-    title: "Ville",
-    options: ["Tanger", "Rabat", "Fes"],
-    key: "city",
-    type: "text",
-  },
-  {
-    title: "Score",
-    options: ["90+", "80+", "70+"],
-    key: "score",
-    type: "number",
-  },
-  {
-    title: "Competences",
-    options: ["KiCad", "Sec.", "DevOps"],
-    key: "skills",
-    type: "text",
-  },
-  {
-    title: "Recommendations",
-    options: ["500+", "100+", "50+"],
+    title: "Recommandations",
     key: "recommendations",
-    type: "number",
+    options: ["500+", "100+", "50+"],
   },
-];
+] as const;
+
+const isSelected = (key: (typeof sections)[number]["key"], option: string | number) => {
+  if (key === "skills") return props.filters.skills.includes(String(option));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (props.filters as any)[key] === option;
+};
 </script>
 
 <template>
-  <aside class="w-[270px] flex-shrink-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
-    <div class="space-y-6">
-      <div>
-        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-          Filtres
-        </p>
-        <h3 class="mt-2 text-sm font-semibold text-slate-950">Affiner la recherche</h3>
-      </div>
+  <aside class="fp-wrap">
+    <div class="fp-card">
+      <div v-for="section in sections" :key="section.title" class="fp-section">
+        <h4 class="fp-title">{{ section.title }}</h4>
+        <div class="fp-pills">
+          <button
+            v-for="option in section.options"
+            :key="option"
+            type="button"
+            class="fp-pill"
+            :class="{ 'fp-pillActive': isSelected(section.key, option) }"
+          >
+            {{ option }}
+          </button>
 
-      <template v-for="section in sections" :key="section.title">
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">
-            {{ section.title }}
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <template v-for="option in section.options" :key="option">
-              <button
-                :class="[
-                  'rounded-full px-3 py-2 text-xs font-semibold transition',
-                  section.key === 'skills'
-                    ? filters.skills.includes(String(option))
-                      ? 'bg-[#f3efff] border border-[#6c5ce7] text-[#6c5ce7]'
-                      : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400'
-                    : filters[section.key as keyof typeof filters] === option
-                      ? 'bg-[#f3efff] border border-[#6c5ce7] text-[#6c5ce7]'
-                      : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400',
-                ]"
-              >
-                {{ option }}
-              </button>
-            </template>
-            <button class="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-slate-400 hover:text-slate-700">
-              Plus
-              <ChevronDown class="h-3 w-3" />
-            </button>
-          </div>
+          <button type="button" class="fp-pill fp-plus">
+            Plus
+            <ChevronDown class="h-3 w-3" />
+          </button>
         </div>
-      </template>
+      </div>
     </div>
   </aside>
 </template>
+
+<style scoped>
+.fp-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+}
+
+.fp-card {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgb(226 232 240);
+  border-radius: 18px;
+  padding: 18px 16px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+}
+
+.fp-section + .fp-section {
+  margin-top: 18px;
+}
+
+.fp-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgb(2 6 23);
+  margin-bottom: 10px;
+}
+
+.fp-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fp-pill {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1px solid rgb(148 163 184);
+  background: #ffffff;
+  color: rgb(71 85 105);
+  font-size: 12px;
+  font-weight: 900;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.fp-pill:hover {
+  border-color: rgb(100 116 139);
+  color: rgb(15 23 42);
+}
+
+.fp-pillActive {
+  border-color: #6c5ce7;
+  background: #e9e7ff;
+  color: rgb(2 6 23);
+}
+
+.fp-plus {
+  border-color: rgb(203 213 225);
+  color: rgb(100 116 139);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+</style>
+

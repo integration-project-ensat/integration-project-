@@ -4,7 +4,7 @@ import { Moon } from "lucide-vue-next";
 
 <template>
   <header
-    class="flex h-[60px] items-center justify-between bg-[#182846] px-6 text-white shadow-[0_16px_40px_rgba(15,23,42,0.25)]"
+    class="flex h-[60px] items-center justify-between bg-[#141e36] px-6 text-white shadow-[0_16px_40px_rgba(15,23,42,0.25)]"
   >
     <div class="flex items-center gap-3">
       <img
@@ -12,7 +12,6 @@ import { Moon } from "lucide-vue-next";
         alt="PheraCore"
         class="h-7 w-auto"
       />
-      <span class="text-base font-semibold tracking-tight">PheraCore</span>
     </div>
 
     <button
