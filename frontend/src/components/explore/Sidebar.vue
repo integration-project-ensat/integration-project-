@@ -46,15 +46,15 @@ const menuItems = [
           <!-- Dashboard (tune / sliders) -->
           <template v-if="item.icon === 'tune'">
             <path
-              d="M4 6h10M18 6h2M4 12h2M10 12h12M4 18h7M15 18h7"
+              d="M6 7h12M6 12h12M6 17h12"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linecap="round"
             />
             <path
-              d="M14 6a2 2 0 1 0-4 0a2 2 0 0 0 4 0ZM8 12a2 2 0 1 0-4 0a2 2 0 0 0 4 0ZM13 18a2 2 0 1 0-4 0a2 2 0 0 0 4 0Z"
+              d="M9 7a1.8 1.8 0 1 0-3.6 0A1.8 1.8 0 0 0 9 7Zm9 5a1.8 1.8 0 1 0-3.6 0A1.8 1.8 0 0 0 18 12Zm-6 5a1.8 1.8 0 1 0-3.6 0A1.8 1.8 0 0 0 12 17Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
             />
           </template>
 
@@ -63,18 +63,18 @@ const menuItems = [
             <path
               d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
             />
             <path
-              d="M14.7 9.3 13 13l-3.7 1.7L11 11l3.7-1.7Z"
+              d="M15.2 8.8 13.2 13.2 8.8 15.2 10.8 10.8 15.2 8.8Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
               d="M12 12h.01"
               stroke="currentColor"
-              stroke-width="2.5"
+              stroke-width="3"
               stroke-linecap="round"
             />
           </template>
@@ -82,21 +82,21 @@ const menuItems = [
           <!-- Projets (document) -->
           <template v-else-if="item.icon === 'projects'">
             <path
-              d="M8 3h6l4 4v14H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+              d="M7 3h8l3 3v15H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
-              d="M14 3v5h5"
+              d="M15 3v4h4"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
               d="M9 12h8M9 16h8"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linecap="round"
             />
           </template>
@@ -106,19 +106,19 @@ const menuItems = [
             <path
               d="M9 7V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linecap="round"
             />
             <path
               d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
               d="M4 13h16"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linecap="round"
             />
           </template>
@@ -126,15 +126,15 @@ const menuItems = [
           <!-- Certifications (award / burst) -->
           <template v-else-if="item.icon === 'certif'">
             <path
-              d="M12 3l1.1 2.7 2.9.2-2.2 1.9.7 2.9-2.5-1.5-2.5 1.5.7-2.9-2.2-1.9 2.9-.2L12 3Z"
+              d="M12 4.5 13 7l2.5 1-2.5 1L12 11.5 11 9 8.5 8 11 7l1-2.5Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
               d="M9 14v7l3-2 3 2v-7"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
           </template>
@@ -144,26 +144,27 @@ const menuItems = [
             <path
               d="M7 3v3M17 3v3"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linecap="round"
             />
             <path
               d="M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
               d="M3 10h18"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linecap="round"
             />
             <path
-              d="M8 14h.01M12 14h.01M16 14h.01"
+              d="M8 15l2 2 4-5"
               stroke="currentColor"
-              stroke-width="2.5"
+              stroke-width="2.4"
               stroke-linecap="round"
+              stroke-linejoin="round"
             />
           </template>
 
@@ -172,14 +173,15 @@ const menuItems = [
             <path
               d="M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
-              d="M7 9h4v4H7V9Zm6 0h4v4h-4V9ZM7 15h4v3H7v-3Zm6 0h4v3h-4v-3Z"
+              d="M7.5 9.5h4v4h-4v-4Zm6 0h3v1.5h-3V9.5Zm0 3h3V14h-3v-1.5ZM7.5 15.5h9"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
+              stroke-linecap="round"
             />
           </template>
 
@@ -188,7 +190,7 @@ const menuItems = [
             <path
               d="M12 3a9 9 0 0 0-2.8 17.6c.4.1.6-.2.6-.4v-1.4c-2.5.6-3-1.1-3-1.1-.4-1-.9-1.3-.9-1.3-.7-.5 0-.5 0-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.4.7.1-.5.3-.9.5-1.1-2-.2-4.1-1-4.1-4.6 0-1 .4-1.9 1-2.6-.1-.2-.4-1 .1-2.2 0 0 .8-.3 2.6 1a9 9 0 0 1 4.8 0c1.8-1.3 2.6-1 2.6-1 .5 1.2.2 2 .1 2.2.6.7 1 1.6 1 2.6 0 3.6-2.1 4.4-4.1 4.6.3.3.6.8.6 1.6v2.3c0 .2.2.5.6.4A9 9 0 0 0 12 3Z"
               stroke="currentColor"
-              stroke-width="1.8"
+              stroke-width="2.1"
               stroke-linejoin="round"
             />
           </template>
@@ -198,12 +200,12 @@ const menuItems = [
             <path
               d="M12 14a5 5 0 1 0 0-10a5 5 0 0 0 0 10Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
             />
             <path
               d="M9.5 13.5 8 21l4-2 4 2-1.5-7.5"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
           </template>
@@ -213,7 +215,7 @@ const menuItems = [
             <path
               d="M5 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H11l-4.5 3V16H8a3 3 0 0 1-3-3V6Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
           </template>
@@ -223,12 +225,12 @@ const menuItems = [
             <path
               d="M12 15.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7Z"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
             />
             <path
               d="M19.4 13a7.8 7.8 0 0 0 .1-2l2-1.2-2-3.4-2.3.6a7.3 7.3 0 0 0-1.7-1l-.3-2.4H11l-.3 2.4a7.3 7.3 0 0 0-1.7 1L6.7 6.4l-2 3.4L6.7 11a7.8 7.8 0 0 0 .1 2l-2 1.2 2 3.4 2.3-.6c.5.4 1.1.7 1.7 1l.3 2.4h4.1l.3-2.4c.6-.3 1.2-.6 1.7-1l2.3.6 2-3.4-2-1.2Z"
               stroke="currentColor"
-              stroke-width="1.8"
+              stroke-width="2.1"
               stroke-linejoin="round"
             />
           </template>
@@ -238,13 +240,13 @@ const menuItems = [
             <path
               d="M10 7V6a2 2 0 0 1 2-2h7v16h-7a2 2 0 0 1-2-2v-1"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linejoin="round"
             />
             <path
               d="M11 12H3m0 0 3-3M3 12l3 3"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.4"
               stroke-linecap="round"
               stroke-linejoin="round"
             />
@@ -346,14 +348,9 @@ const menuItems = [
 .sb-icon {
   height: 20px;
   width: 20px;
-  color: rgb(2 6 23);
+  color: #000;
   opacity: 1;
   flex: none;
-}
-
-.sb-item:not(.sb-itemActive) .sb-icon {
-  color: rgb(15 23 42);
-  opacity: 0.75;
 }
 
 .sb-label {
