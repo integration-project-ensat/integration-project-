@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { RouterLink } from "vue-router";
+
 defineEmits<{
   (e: "toggleSidebar"): void;
   (e: "toggleTheme"): void;
@@ -26,9 +28,9 @@ defineEmits<{
         </svg>
       </button>
 
-      <div class="logo">
+      <RouterLink to="/profile" class="logo" aria-label="Open profile">
         <img src="@/assets/PheraCoreLogo.svg" alt="PheraCore" height="32" />
-      </div>
+      </RouterLink>
     </div>
 
     <button class="theme-btn" type="button" @click="$emit('toggleTheme')">
@@ -75,6 +77,17 @@ defineEmits<{
   font-size: 1.1rem;
   font-weight: 700;
   color: white;
+  text-decoration: none;
+}
+
+.logo:hover {
+  opacity: 0.95;
+}
+
+.logo:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.28);
+  border-radius: 8px;
 }
 
 .burger-btn {
