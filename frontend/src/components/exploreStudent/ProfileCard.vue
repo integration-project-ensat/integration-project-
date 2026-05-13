@@ -216,21 +216,23 @@ const toggleDetails = () => {
 }
 
 .pc-btn {
-  height: 28px;
+  height: 32px;
   padding: 0 18px;
   border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-body);
 }
 
 .pc-btnPrimary {
-  background: #4f46e5;
+  background: var(--purple);
   color: #ffffff;
-  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.22);
+  border-radius: 100px 180px 0px 100px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .pc-btnPrimary:hover {
-  background: #4338ca;
+  filter: brightness(0.95);
 }
 
 .pc-btnOutline {

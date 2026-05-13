@@ -197,11 +197,12 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pillActive {
-  border-color: #4f46e5;
-  background: #4f46e5;
-  color: #ffffff;
-  font-weight: 900;
-  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.22);
+  background: var(--purple);
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 100px 180px 0px 100px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .fp-pillYear {
