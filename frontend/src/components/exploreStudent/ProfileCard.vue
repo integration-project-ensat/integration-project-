@@ -1,4 +1,4 @@
-z<script setup lang="ts">
+<script setup lang="ts">
 import { ref } from "vue";
 import { ChevronUp } from "lucide-vue-next";
 
@@ -216,11 +216,11 @@ const toggleDetails = () => {
 }
 
 .pc-btn {
-  height: 34px;
+  height: 28px;
   padding: 0 18px;
   border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .pc-btnPrimary {
