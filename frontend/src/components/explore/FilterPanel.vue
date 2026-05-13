@@ -118,6 +118,7 @@ const sectionOptions = computed(() => {
             :class="{
               'fp-pillActive': isSelected(section.key, option),
               'fp-pillYear': section.key === 'year',
+              'fp-pillFixed': section.key !== 'skills',
             }"
             @click="toggleOption(section.key, option)"
           >
@@ -125,7 +126,12 @@ const sectionOptions = computed(() => {
           </button>
         </div>
         <div class="fp-plusRow">
-          <button type="button" class="fp-pill fp-plus" @click="toggleMore(section.key)">
+          <button
+            type="button"
+            class="fp-pill fp-plus"
+            :class="{ 'fp-pillFixed': section.key !== 'skills' }"
+            @click="toggleMore(section.key)"
+          >
             Plus
             <ChevronDown class="h-3 w-3" />
           </button>
@@ -173,7 +179,7 @@ const sectionOptions = computed(() => {
 
 .fp-pill {
   height: 32px;
-  padding: 0 18px;
+  padding: 0 16px;
   border-radius: 9999px;
   border: 2px solid rgba(15, 23, 42, 0.45);
   background: #ffffff;
@@ -201,16 +207,30 @@ const sectionOptions = computed(() => {
   letter-spacing: -0.01em;
 }
 
-.fp-pillYear {
-  height: 34px;
-  padding: 0 20px;
-  font-size: 15px;
+.fp-pillFixed {
+  height: 44px;
+  min-width: 132px;
+  padding: 0 18px;
+  font-size: 22px;
   font-weight: 900;
+  border-width: 3px;
+  border-color: rgba(107, 114, 128, 0.7);
+  color: #3f556f;
+}
+
+.fp-pillFixed.fp-pillActive {
+  border-color: #3f39ff;
+  background: #d6d7ff;
+  color: #000000;
+}
+
+.fp-pillYear {
+  letter-spacing: -0.02em;
 }
 
 .fp-pillYear.fp-pillActive {
-  background: #d3d2ff;
-  border-color: #4f46e5;
+  background: #d6d7ff;
+  border-color: #3f39ff;
 }
 
 .fp-plusRow {
@@ -218,11 +238,11 @@ const sectionOptions = computed(() => {
 }
 
 .fp-plus {
-  border-color: rgba(15, 23, 42, 0.25);
-  color: rgb(100 116 139);
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  justify-content: flex-start;
+  padding-left: 18px;
 }
 
 .fp-card::-webkit-scrollbar {
