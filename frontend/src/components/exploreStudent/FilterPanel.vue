@@ -182,14 +182,14 @@ const sectionOptions = computed(() => {
 .fp-pill {
   height: 24px;
   padding: 0 14px;
-  border-radius: 9999px;
+  border-radius: 100px 180px 0px 100px;
   border: 1px solid rgb(148 163 184);
   background: #ffffff;
   color: rgb(71 85 105);
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -202,10 +202,12 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pillActive {
-  border-color: #6c5ce7;
-  background: #d8d7ff;
-  color: rgb(15 23 42);
-  font-weight: 900;
+  background: var(--purple);
+  color: #ffffff;
+  border: none;
+  border-radius: 100px 180px 0px 100px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
 }
 
 .fp-pillYear {
@@ -223,9 +225,7 @@ const sectionOptions = computed(() => {
   justify-content: flex-start;
   padding-left: 14px;
   color: #6b7280;
-  background: #ffffff;
-  border: 1px solid rgb(148 163 184);
-  border-radius: 9999px;
+  background: transparent;
 }
 
 .fp-card::-webkit-scrollbar {
