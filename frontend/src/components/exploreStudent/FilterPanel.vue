@@ -178,13 +178,14 @@ const sectionOptions = computed(() => {
 .fp-pill {
   height: 28px;
   padding: 0 14px;
-  border-radius: 9999px;
+  border-radius: 100px 180px 0px 100px;
   border: 2px solid rgba(107, 114, 128, 0.65);
   background: #ffffff;
   color: #6b7280;
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,

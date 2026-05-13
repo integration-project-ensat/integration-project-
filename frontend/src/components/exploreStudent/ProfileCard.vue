@@ -218,7 +218,7 @@ const toggleDetails = () => {
 .pc-btn {
   height: 32px;
   padding: 0 18px;
-  border-radius: 9999px;
+  border-radius: 100px 180px 0px 100px;
   font-size: 0.85rem;
   font-weight: 600;
   font-family: var(--font-body);
@@ -239,6 +239,7 @@ const toggleDetails = () => {
   background: transparent;
   color: rgb(71 85 105);
   border: 1px solid rgb(148 163 184);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .pc-btnOutline:hover {
