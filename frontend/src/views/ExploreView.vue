@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { Bell, ChevronDown, Search } from "lucide-vue-next";
-import FilterPanel from "../components/explore/FilterPanel.vue";
-import ProfileCard from "../components/explore/ProfileCard.vue";
-import Sidebar from "../components/explore/Sidebar.vue";
-import Topbar from "../components/explore/Topbar.vue";
+import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
+import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
+import Sidebar from "../components/exploreStudent/Sidebar.vue";
+import Topbar from "../components/exploreStudent/Topbar.vue";
 
 interface Profile {
   id: number;
