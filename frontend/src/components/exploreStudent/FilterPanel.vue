@@ -202,12 +202,15 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pillActive {
-  background: var(--purple);
-  color: #ffffff;
-  border: none;
-  border-radius: 100px 180px 0px 100px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  font-weight: 600;
+  border: 2px solid #5b4dff;
+  background: #f1f1f5;
+  color: #111827;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  font-weight: 900;
+}
+
+.fp-pillActive:hover {
+  background: #e9e9ef;
 }
 
 .fp-pillYear {
