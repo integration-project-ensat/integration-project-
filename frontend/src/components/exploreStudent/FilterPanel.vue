@@ -109,7 +109,7 @@ const sectionOptions = computed(() => {
     <div class="fp-card">
       <div v-for="section in sections" :key="section.title" class="fp-section">
         <h4 class="fp-title">{{ section.title }}</h4>
-        <div class="fp-pillsRow">
+        <div class="fp-pillsRow" :class="{ 'fp-pillsRowYear': section.key === 'year' }">
           <button
             v-for="option in sectionOptions.get(section.key) ?? section.options"
             :key="option"
@@ -175,17 +175,21 @@ const sectionOptions = computed(() => {
   gap: 10px 12px;
 }
 
+.fp-pillsRowYear {
+  flex-wrap: nowrap;
+}
+
 .fp-pill {
-  height: 28px;
+  height: 24px;
   padding: 0 14px;
-  border-radius: 100px 180px 0px 100px;
+  border-radius: 9999px;
   border: 2px solid rgba(107, 114, 128, 0.65);
   background: #ffffff;
   color: #6b7280;
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -198,16 +202,14 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pillActive {
-  background: var(--purple);
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 100px 180px 0px 100px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-color: #3f39ff;
+  background: #d6d7ff;
+  color: #111827;
+  font-weight: 900;
 }
 
 .fp-pillYear {
-  color: #111827;
+  padding: 0 16px;
 }
 
 .fp-plusRow {
@@ -221,7 +223,9 @@ const sectionOptions = computed(() => {
   justify-content: flex-start;
   padding-left: 14px;
   color: #6b7280;
-  border-color: rgba(107, 114, 128, 0.45);
+  background: #ffffff;
+  border: 1px solid rgb(148 163 184);
+  border-radius: 9999px;
 }
 
 .fp-card::-webkit-scrollbar {
