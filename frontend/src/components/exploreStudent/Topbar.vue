@@ -34,6 +34,7 @@
   top: 0;
   z-index: 100;
   position: fixed;
+  overflow: hidden;
 }
 
 .left {
@@ -49,6 +50,13 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: white;
+}
+
+.logo img {
+  height: 32px;
+  width: auto;
+  max-height: 32px;
+  display: block;
 }
 
 .burger-btn {
@@ -72,4 +80,3 @@
 }
 .theme-btn:hover { color: white; }
 </style>
-
