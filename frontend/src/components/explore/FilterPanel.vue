@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref } from "vue";
 import { ChevronDown } from "lucide-vue-next";
 
 interface Props {
@@ -14,6 +15,9 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{
+  (e: "update:filters", value: Props["filters"]): void;
+}>();
 
 const sections = [
   { title: "Annee", key: "year", options: [2026, 2025, 2024] },
@@ -29,11 +33,75 @@ const sections = [
   },
 ] as const;
 
-const isSelected = (key: (typeof sections)[number]["key"], option: string | number) => {
+type SectionKey = (typeof sections)[number]["key"];
+
+const isSelected = (key: SectionKey, option: string | number) => {
   if (key === "skills") return props.filters.skills.includes(String(option));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (props.filters as any)[key] === option;
+  if (key === "year") return props.filters.year === option;
+  if (key === "school") return props.filters.school === option;
+  if (key === "field") return props.filters.field === option;
+  if (key === "city") return props.filters.city === option;
+  if (key === "score") return props.filters.score === option;
+  return props.filters.recommendations === option;
 };
+
+const toggleOption = (key: SectionKey, option: string | number) => {
+  if (key === "skills") {
+    const value = String(option);
+    const nextSkills = props.filters.skills.includes(value)
+      ? props.filters.skills.filter((s) => s !== value)
+      : [...props.filters.skills, value];
+    emit("update:filters", { ...props.filters, skills: nextSkills });
+    return;
+  }
+
+  if (key === "year") {
+    emit("update:filters", { ...props.filters, year: Number(option) });
+    return;
+  }
+  if (key === "school") {
+    emit("update:filters", { ...props.filters, school: String(option) });
+    return;
+  }
+  if (key === "field") {
+    emit("update:filters", { ...props.filters, field: String(option) });
+    return;
+  }
+  if (key === "city") {
+    emit("update:filters", { ...props.filters, city: String(option) });
+    return;
+  }
+  if (key === "score") {
+    emit("update:filters", { ...props.filters, score: String(option) });
+    return;
+  }
+  emit("update:filters", { ...props.filters, recommendations: String(option) });
+};
+
+const expanded = ref<Record<string, boolean>>({});
+
+const toggleMore = (key: SectionKey) => {
+  expanded.value = { ...expanded.value, [key]: !expanded.value[key] };
+};
+
+const extraOptions: Record<SectionKey, Array<string | number>> = {
+  year: [],
+  school: ["Plus 1", "Plus 2"],
+  field: ["Plus 1", "Plus 2"],
+  city: ["Plus 1", "Plus 2"],
+  score: ["60+", "50+"],
+  skills: ["UI/UX", "Cloud", "AI"],
+  recommendations: ["20+", "10+"],
+};
+
+const sectionOptions = computed(() => {
+  const map = new Map<string, Array<string | number>>();
+  for (const s of sections) {
+    const isOpen = Boolean(expanded.value[s.key]);
+    map.set(s.key, isOpen ? [...s.options, ...extraOptions[s.key]] : [...s.options]);
+  }
+  return map;
+});
 </script>
 
 <template>
@@ -43,17 +111,18 @@ const isSelected = (key: (typeof sections)[number]["key"], option: string | numb
         <h4 class="fp-title">{{ section.title }}</h4>
         <div class="fp-pillsRow">
           <button
-            v-for="option in section.options"
+            v-for="option in sectionOptions.get(section.key) ?? section.options"
             :key="option"
             type="button"
             class="fp-pill"
             :class="{ 'fp-pillActive': isSelected(section.key, option) }"
+            @click="toggleOption(section.key, option)"
           >
             {{ option }}
           </button>
         </div>
         <div class="fp-plusRow">
-          <button type="button" class="fp-pill fp-plus">
+          <button type="button" class="fp-pill fp-plus" @click="toggleMore(section.key)">
             Plus
             <ChevronDown class="h-3 w-3" />
           </button>

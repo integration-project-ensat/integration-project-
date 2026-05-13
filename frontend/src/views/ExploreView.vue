@@ -58,6 +58,10 @@ const filters = ref({
   recommendations: "500+",
 });
 
+const handleUpdateFilters = (next: typeof filters.value) => {
+  filters.value = next;
+};
+
 const filteredProfiles = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return profiles.value;
@@ -125,7 +129,7 @@ const handleNotification = () => {
       </main>
 
       <div class="explore-right">
-        <FilterPanel :filters="filters" />
+        <FilterPanel :filters="filters" @update:filters="handleUpdateFilters" />
       </div>
     </div>
   </div>
