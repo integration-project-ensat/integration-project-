@@ -86,9 +86,9 @@ const navItems = [
   display: flex;
   flex-direction: column;
   position: fixed;
-  min-height: calc(100vh - 80px);
+  min-height: calc(100vh - 60px);
   left: 0;
-  top: 50px;
+  top: 60px;
   bottom: 0;
   z-index: 99;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);

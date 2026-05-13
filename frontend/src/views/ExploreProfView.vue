@@ -142,11 +142,11 @@ const sidebarOpen = ref(true);
   overflow: hidden;
   background: #eef1fb;
   color: rgb(15 23 42);
-  padding-top: 50px;
+  padding-top: 60px;
 }
 
 .explore-shell {
-  height: calc(100vh - 50px);
+  height: calc(100vh - 60px);
   display: grid;
   grid-template-columns: 1fr 290px;
   gap: 24px;

@@ -29,7 +29,7 @@ defineEmits<{
       </button>
 
       <RouterLink to="/profile" class="logo" aria-label="Open profile">
-        <img src="@/assets/PheraCoreLogo.svg" alt="PheraCore" height="32" />
+        <img src="@/assets/PheraCoreLogo.svg" alt="PheraCore" />
       </RouterLink>
     </div>
 
@@ -54,7 +54,7 @@ defineEmits<{
 <style scoped>
 .topbar {
   width: 100%;
-  height: 50px;
+  height: 60px;
   background: #0d1b2a;
   display: flex;
   align-items: center;
@@ -78,6 +78,11 @@ defineEmits<{
   font-weight: 700;
   color: white;
   text-decoration: none;
+}
+
+.logo img {
+  height: 46px;
+  width: auto;
 }
 
 .logo:hover {
