@@ -8,6 +8,7 @@ import ResetPasswordView from "../views/ResetPasswordView.vue";
 import VerifyCodeView from "../views/VerifyCodeView.vue";
 import ExploreView from "../views/ExploreView.vue";
 import ExploreProfView from "../views/ExploreProfView.vue";
+import ExploreProView from "../views/ExploreProView.vue";
 
 export default createRouter({
   history: createWebHistory("/"),
@@ -20,5 +21,6 @@ export default createRouter({
     { path: "/verify-code", name: "verify-code", component: VerifyCodeView },
     { path: "/explore", name: "explore", component: ExploreView },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
+    { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
   ],
 });
