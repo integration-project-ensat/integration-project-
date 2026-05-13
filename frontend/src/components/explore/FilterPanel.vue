@@ -115,7 +115,10 @@ const sectionOptions = computed(() => {
             :key="option"
             type="button"
             class="fp-pill"
-            :class="{ 'fp-pillActive': isSelected(section.key, option) }"
+            :class="{
+              'fp-pillActive': isSelected(section.key, option),
+              'fp-pillYear': section.key === 'year',
+            }"
             @click="toggleOption(section.key, option)"
           >
             {{ option }}
@@ -190,10 +193,24 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pillActive {
+  border-width: 3px;
   border-color: #4f46e5;
-  background: #d8d7ff;
+  background: #d6d3ff;
   color: #0b0f19;
   font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.fp-pillYear {
+  height: 34px;
+  padding: 0 20px;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.fp-pillYear.fp-pillActive {
+  background: #d3d2ff;
+  border-color: #4f46e5;
 }
 
 .fp-plusRow {
