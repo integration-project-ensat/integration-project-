@@ -19,13 +19,15 @@ const menuItems = [
 
 <template>
   <aside class="sb-shell">
-    <div class="sb-profile">
-      <div class="sb-avatar" aria-hidden="true"></div>
-      <div class="sb-profileText">
-        <p class="sb-name">Nom Prenom</p>
-        <p class="sb-email">Exemple.exemple@univ.etu.ac.ma</p>
+    <RouterLink to="/portfolio" class="sb-profileLink" aria-label="Open profile">
+      <div class="sb-profile">
+        <div class="sb-avatar" aria-hidden="true"></div>
+        <div class="sb-profileText">
+          <p class="sb-name">Nom Prenom</p>
+          <p class="sb-email">Exemple.exemple@univ.etu.ac.ma</p>
+        </div>
       </div>
-    </div>
+    </RouterLink>
 
     <nav class="sb-nav" aria-label="Explore sidebar">
       <template v-for="item in menuItems" :key="item.label">
@@ -259,6 +261,16 @@ const menuItems = [
 </template>
 
 <style scoped>
+.sb-profileLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sb-profileLink:focus-visible {
+  outline: none;
+}
+
 .sb-shell {
   height: 100%;
   width: 260px;
@@ -279,6 +291,16 @@ const menuItems = [
   padding: 6px 8px 12px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.9);
   margin-bottom: 10px;
+  border-radius: 12px;
+  transition: background 0.12s ease;
+}
+
+.sb-profileLink:hover .sb-profile {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.sb-profileLink:focus-visible .sb-profile {
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25);
 }
 
 .sb-avatar {
