@@ -169,14 +169,15 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pill {
-  height: 28px;
-  padding: 0 16px;
+  height: 32px;
+  padding: 0 18px;
   border-radius: 9999px;
-  border: 1.5px solid rgba(15, 23, 42, 0.45);
+  border: 2px solid rgba(15, 23, 42, 0.45);
   background: #ffffff;
   color: rgb(71 85 105);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
+  line-height: 1;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -189,9 +190,10 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pillActive {
-  border-color: #6c5ce7;
-  background: rgba(108, 92, 231, 0.16);
-  color: rgb(2 6 23);
+  border-color: #4f46e5;
+  background: #d8d7ff;
+  color: #0b0f19;
+  font-weight: 900;
 }
 
 .fp-plusRow {
