@@ -1,407 +1,197 @@
-<script setup lang="ts">
-import { RouterLink } from "vue-router";
-
-const menuItems = [
-  { label: "Dashboard", icon: "tune", to: "/dashboard" },
-  { label: "Explorer", icon: "explore", to: "/explore", active: true },
-  { label: "Projets", icon: "projects", to: "/projects" },
-  { label: "Stages", icon: "stages", to: "/stages" },
-  { label: "Certifications", icon: "certif", to: "/certifications" },
-  { label: "Activites", icon: "activity", to: "/activities" },
-  { label: "My Portfolio", icon: "portfolio", to: "/portfolio" },
-  { label: "GitHub", icon: "github", to: "/github" },
-  { label: "Mes Recos", icon: "medal", to: "/recommendations" },
-  { label: "Commentaires", icon: "comment", to: "/comments" },
-  { label: "Parametres", icon: "settings", to: "/settings", groupTop: true },
-  { label: "Deconnexion", icon: "logout", to: "/login" },
-];
-</script>
-
 <template>
-  <aside class="sb-shell">
-    <RouterLink to="/portfolio" class="sb-profileLink" aria-label="Open profile">
-      <div class="sb-profile">
-        <div class="sb-avatar" aria-hidden="true"></div>
-        <div class="sb-profileText">
-          <p class="sb-name">Nom Prenom</p>
-          <p class="sb-email">Exemple.exemple@univ.etu.ac.ma</p>
-        </div>
+  <aside class="sidebar" :class="{ open: isOpen }">
+    <RouterLink to="/profile" class="sidebar-user">
+      <div class="avatar-sm">
+        <span>{{ initials }}</span>
+      </div>
+      <div class="user-info">
+        <p class="user-name">Nom Prenom</p>
+        <p class="user-email">Exemple.exemple@univ.etu.ac.ma</p>
       </div>
     </RouterLink>
 
-    <nav class="sb-nav" aria-label="Explore sidebar">
-      <template v-for="item in menuItems" :key="item.label">
-        <div v-if="item.groupTop" class="sb-divider" aria-hidden="true"></div>
-        <RouterLink
-          :to="item.to"
-          class="sb-item"
-          :class="{ 'sb-itemActive': item.active }"
-        >
-          <svg
-            class="sb-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-          <!-- Dashboard (tune / sliders) -->
-          <template v-if="item.icon === 'tune'">
-            <path
-              d="M6 7h12M6 12h12M6 17h12"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-            />
-            <path
-              d="M9 7a1.8 1.8 0 1 0-3.6 0A1.8 1.8 0 0 0 9 7Zm9 5a1.8 1.8 0 1 0-3.6 0A1.8 1.8 0 0 0 18 12Zm-6 5a1.8 1.8 0 1 0-3.6 0A1.8 1.8 0 0 0 12 17Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-            />
-          </template>
-
-          <!-- Explorer (compass in circle) -->
-          <template v-else-if="item.icon === 'explore'">
-            <path
-              d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-            />
-            <path
-              d="M15.2 8.8 13.2 13.2 8.8 15.2 10.8 10.8 15.2 8.8Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M12 12h.01"
-              stroke="currentColor"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-          </template>
-
-          <!-- Projets (document) -->
-          <template v-else-if="item.icon === 'projects'">
-            <path
-              d="M7 3h8l3 3v15H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M15 3v4h4"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M9 12h8M9 16h8"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-            />
-          </template>
-
-          <!-- Stages (briefcase) -->
-          <template v-else-if="item.icon === 'stages'">
-            <path
-              d="M9 7V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-            />
-            <path
-              d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M4 13h16"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-            />
-          </template>
-
-          <!-- Certifications (award / burst) -->
-          <template v-else-if="item.icon === 'certif'">
-            <path
-              d="M12 4.5 13 7l2.5 1-2.5 1L12 11.5 11 9 8.5 8 11 7l1-2.5Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M9 14v7l3-2 3 2v-7"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-          </template>
-
-          <!-- Activites (calendar) -->
-          <template v-else-if="item.icon === 'activity'">
-            <path
-              d="M7 3v3M17 3v3"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-            />
-            <path
-              d="M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M3 10h18"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-            />
-            <path
-              d="M8 15l2 2 4-5"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </template>
-
-          <!-- My Portfolio (grid) -->
-          <template v-else-if="item.icon === 'portfolio'">
-            <path
-              d="M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M7.5 9.5h4v4h-4v-4Zm6 0h3v1.5h-3V9.5Zm0 3h3V14h-3v-1.5ZM7.5 15.5h9"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-              stroke-linecap="round"
-            />
-          </template>
-
-          <!-- GitHub (octocat-ish mark) -->
-          <template v-else-if="item.icon === 'github'">
-            <path
-              d="M12 3a9 9 0 0 0-2.8 17.6c.4.1.6-.2.6-.4v-1.4c-2.5.6-3-1.1-3-1.1-.4-1-.9-1.3-.9-1.3-.7-.5 0-.5 0-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.4.7.1-.5.3-.9.5-1.1-2-.2-4.1-1-4.1-4.6 0-1 .4-1.9 1-2.6-.1-.2-.4-1 .1-2.2 0 0 .8-.3 2.6 1a9 9 0 0 1 4.8 0c1.8-1.3 2.6-1 2.6-1 .5 1.2.2 2 .1 2.2.6.7 1 1.6 1 2.6 0 3.6-2.1 4.4-4.1 4.6.3.3.6.8.6 1.6v2.3c0 .2.2.5.6.4A9 9 0 0 0 12 3Z"
-              stroke="currentColor"
-              stroke-width="2.1"
-              stroke-linejoin="round"
-            />
-          </template>
-
-          <!-- Mes Recos (ribbon/medal) -->
-          <template v-else-if="item.icon === 'medal'">
-            <path
-              d="M12 14a5 5 0 1 0 0-10a5 5 0 0 0 0 10Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-            />
-            <path
-              d="M9.5 13.5 8 21l4-2 4 2-1.5-7.5"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-          </template>
-
-          <!-- Commentaires (chat bubble) -->
-          <template v-else-if="item.icon === 'comment'">
-            <path
-              d="M5 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H11l-4.5 3V16H8a3 3 0 0 1-3-3V6Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-          </template>
-
-          <!-- Parametres (gear) -->
-          <template v-else-if="item.icon === 'settings'">
-            <path
-              d="M12 15.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7Z"
-              stroke="currentColor"
-              stroke-width="2.4"
-            />
-            <path
-              d="M19.4 13a7.8 7.8 0 0 0 .1-2l2-1.2-2-3.4-2.3.6a7.3 7.3 0 0 0-1.7-1l-.3-2.4H11l-.3 2.4a7.3 7.3 0 0 0-1.7 1L6.7 6.4l-2 3.4L6.7 11a7.8 7.8 0 0 0 .1 2l-2 1.2 2 3.4 2.3-.6c.5.4 1.1.7 1.7 1l.3 2.4h4.1l.3-2.4c.6-.3 1.2-.6 1.7-1l2.3.6 2-3.4-2-1.2Z"
-              stroke="currentColor"
-              stroke-width="2.1"
-              stroke-linejoin="round"
-            />
-          </template>
-
-          <!-- Deconnexion (logout) -->
-          <template v-else-if="item.icon === 'logout'">
-            <path
-              d="M10 7V6a2 2 0 0 1 2-2h7v16h-7a2 2 0 0 1-2-2v-1"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M11 12H3m0 0 3-3M3 12l3 3"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </template>
-          </svg>
-          <span class="sb-label">{{ item.label }}</span>
-        </RouterLink>
-      </template>
+    <nav class="sidebar-nav">
+      <RouterLink
+        v-for="item in navItems"
+        :key="item.path"
+        :to="item.path"
+        class="nav-item"
+        :class="{ active: route.path === item.path }"
+      >
+        <span class="nav-icon" v-html="item.icon" />
+        <span>{{ item.label }}</span>
+      </RouterLink>
     </nav>
+
+    <div class="sidebar-bottom">
+      <RouterLink to="/settings" class="nav-item">
+        <span class="nav-icon" v-html="icons.settings" />
+        <span>Parametres</span>
+      </RouterLink>
+      <RouterLink to="/login" class="nav-item logout">
+        <span class="nav-icon" v-html="icons.logout" />
+        <span>Deconnexion</span>
+      </RouterLink>
+    </div>
   </aside>
 </template>
 
+<script setup lang="ts">
+import { computed } from "vue";
+import { RouterLink, useRoute } from "vue-router";
+
+withDefaults(
+  defineProps<{
+    isOpen?: boolean;
+  }>(),
+  { isOpen: true },
+);
+
+const route = useRoute();
+
+const initials = computed(() => "NP");
+
+const icons = {
+  dashboard: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+  explore: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  projets: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>`,
+  stages: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>`,
+  certifications: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>`,
+  activites: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+  portfolio: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>`,
+  github: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>`,
+  recos: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  settings: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  logout: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+};
+
+const navItems = [
+  { path: "/dashboard", label: "Dashboard", icon: icons.dashboard },
+  { path: "/explore", label: "Explorer", icon: icons.explore },
+  { path: "/projets", label: "Projets", icon: icons.projets },
+  { path: "/stages", label: "Stages", icon: icons.stages },
+  { path: "/certifications", label: "Certifications", icon: icons.certifications },
+  { path: "/activites", label: "Activites", icon: icons.activites },
+  { path: "/portfolio", label: "My Portfolio", icon: icons.portfolio },
+  { path: "/github", label: "GitHub", icon: icons.github },
+  { path: "/recos", label: "Mes Recos", icon: icons.recos },
+  { path: "/commentaires", label: "Commentaires", icon: icons.recos },
+];
+</script>
+
 <style scoped>
-.sb-profileLink {
-  display: block;
+.sidebar {
+  width: 220px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  min-height: calc(100vh - 80px);
+  left: 0;
+  top: 50px;
+  bottom: 0;
+  z-index: 99;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px;
+  border-bottom: 1px solid #f0f0f0;
   text-decoration: none;
   color: inherit;
 }
 
-.sb-profileLink:focus-visible {
-  outline: none;
-}
-
-.sb-shell {
-  height: 100%;
-  width: 260px;
-  background: #ffffff;
-  border-right: 1px solid rgb(226 232 240);
-  border-radius: 0;
-  box-shadow: none;
-  padding: 18px 10px;
+.avatar-sm {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e0e0e0;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
   overflow: hidden;
 }
 
-.sb-profile {
+.user-info {
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 6px 8px 12px;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
-  margin-bottom: 10px;
-  border-radius: 12px;
-  transition: background 0.12s ease;
+  padding: 10px 16px;
+  color: #64748b;
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: 0.2s ease;
+  cursor: pointer;
 }
 
-.sb-profileLink:hover .sb-profile {
-  background: rgba(148, 163, 184, 0.12);
+.nav-item:hover {
+  color: #0f172a;
+  background: #f5f5ff;
 }
 
-.sb-profileLink:focus-visible .sb-profile {
-  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25);
+.nav-item.active {
+  color: #6c5ce7;
+  background: #eeecff;
+  border-left: 3px solid #6c5ce7;
+  font-weight: 600;
 }
 
-.sb-avatar {
-  height: 44px;
-  width: 44px;
-  border-radius: 9999px;
-  background: rgba(148, 163, 184, 0.25);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.sb-name {
-  font-size: 13px;
-  font-weight: 900;
-  color: rgb(2 6 23);
-  line-height: 1.1;
-}
-
-.sb-email {
-  margin-top: 2px;
-  font-size: 10px;
-  font-weight: 700;
-  color: rgb(100 116 139);
-}
-
-.sb-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px 6px 6px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.sb-item {
-  position: relative;
+.nav-icon {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 11px 12px;
-  border-radius: 10px;
-  color: rgb(2 6 23);
-  font-size: 13px;
-  font-weight: 900;
-  text-decoration: none;
-  transition: background 0.12s ease;
+  flex-shrink: 0;
 }
 
-.sb-item:hover {
-  background: rgba(148, 163, 184, 0.14);
+.sidebar-bottom {
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
 }
 
-.sb-itemActive {
-  background: #d8d7ff;
-  color: rgb(2 6 23);
-}
-
-.sb-itemActive::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 4px;
-  border-radius: 9999px;
-  background: #6c5ce7;
-}
-
-.sb-icon {
-  height: 20px;
-  width: 20px;
-  color: #000;
-  opacity: 1;
-  flex: none;
-}
-
-.sb-label {
-  line-height: 1;
-}
-
-.sb-divider {
-  height: 1px;
-  background: rgba(148, 163, 184, 0.45);
-  margin: 6px 10px 2px;
-}
-
-.sb-nav::-webkit-scrollbar {
-  width: 8px;
-}
-
-.sb-nav::-webkit-scrollbar-track {
-  background: rgba(2, 6, 23, 0.04);
-  border-radius: 9999px;
-}
-
-.sb-nav::-webkit-scrollbar-thumb {
-  background: rgba(2, 6, 23, 0.16);
-  border-radius: 9999px;
-}
-
-.sb-nav {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
+.logout {
+  color: #e53e3e;
 }
 </style>
+

@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
 
+withDefaults(
+  defineProps<{
+    isOpen?: boolean;
+  }>(),
+  { isOpen: true },
+);
+
 const menuItems = [
   { label: "Dashboard", icon: "tune", to: "/dashboard" },
   { label: "Explorer", icon: "explore", to: "/explore", active: true },
@@ -14,8 +21,8 @@ const menuItems = [
 </script>
 
 <template>
-  <aside class="sb-shell">
-    <RouterLink to="/portfolio" class="sb-profileLink" aria-label="Open profile">
+  <aside class="sb-shell" :class="{ open: isOpen }">
+    <RouterLink to="/profile" class="sb-profileLink" aria-label="Open profile">
       <div class="sb-profile">
         <div class="sb-avatar" aria-hidden="true"></div>
         <div class="sb-profileText">
@@ -177,16 +184,23 @@ const menuItems = [
 }
 
 .sb-shell {
-  height: 100%;
-  width: 260px;
-  background: #ffffff;
-  border-right: 1px solid rgb(226 232 240);
-  border-radius: 0;
-  box-shadow: none;
-  padding: 18px 10px;
+  width: 220px;
+  background: white;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  position: fixed;
+  min-height: calc(100vh - 80px);
+  left: 0;
+  top: 50px;
+  bottom: 0;
+  z-index: 99;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.sb-shell.open {
+  transform: translateX(0);
 }
 
 .sb-profile {

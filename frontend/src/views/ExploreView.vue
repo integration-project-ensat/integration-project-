@@ -77,16 +77,16 @@ const filteredProfiles = computed(() => {
 const handleNotification = () => {
   alert("Notifications clicked!");
 };
+
+const sidebarOpen = ref(true);
 </script>
 
 <template>
   <div class="explore-page">
-    <Topbar />
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
+    <Sidebar :isOpen="sidebarOpen" />
 
-    <div class="explore-shell">
-      <div class="explore-left">
-        <Sidebar />
-      </div>
+    <div class="explore-shell" :class="{ 'explore-shellShift': sidebarOpen }">
 
       <main class="explore-middle">
         <div class="explore-middle-inner">
@@ -142,18 +142,18 @@ const handleNotification = () => {
   overflow: hidden;
   background: #eef1fb;
   color: rgb(15 23 42);
+  padding-top: 50px;
 }
 
 .explore-shell {
-  height: calc(100vh - 60px);
+  height: calc(100vh - 50px);
   display: grid;
-  grid-template-columns: 260px 1fr 290px;
+  grid-template-columns: 1fr 290px;
   gap: 24px;
-  padding: 0;
+  padding: 18px 20px;
   overflow: hidden;
 }
 
-.explore-left,
 .explore-right {
   position: sticky;
   top: 0;
@@ -162,12 +162,12 @@ const handleNotification = () => {
   padding-bottom: 8px;
 }
 
-.explore-left {
-  padding-top: 0;
-}
-
 .explore-right {
   padding: 18px 20px 18px 0;
+}
+
+.explore-shellShift {
+  padding-left: 240px;
 }
 
 .explore-middle {
@@ -335,24 +335,20 @@ const handleNotification = () => {
   scrollbar-color: rgba(2, 6, 23, 0.22) rgba(2, 6, 23, 0.05);
 }
 
-.explore-left::-webkit-scrollbar,
 .explore-right::-webkit-scrollbar {
   width: 8px;
 }
 
-.explore-left::-webkit-scrollbar-track,
 .explore-right::-webkit-scrollbar-track {
   background: rgba(2, 6, 23, 0.04);
   border-radius: 9999px;
 }
 
-.explore-left::-webkit-scrollbar-thumb,
 .explore-right::-webkit-scrollbar-thumb {
   background: rgba(2, 6, 23, 0.16);
   border-radius: 9999px;
 }
 
-.explore-left,
 .explore-right {
   scrollbar-width: thin;
   scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
