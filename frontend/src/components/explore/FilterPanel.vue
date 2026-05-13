@@ -118,7 +118,6 @@ const sectionOptions = computed(() => {
             :class="{
               'fp-pillActive': isSelected(section.key, option),
               'fp-pillYear': section.key === 'year',
-              'fp-pillFixed': section.key !== 'skills',
             }"
             @click="toggleOption(section.key, option)"
           >
@@ -129,7 +128,6 @@ const sectionOptions = computed(() => {
           <button
             type="button"
             class="fp-pill fp-plus"
-            :class="{ 'fp-pillFixed': section.key !== 'skills' }"
             @click="toggleMore(section.key)"
           >
             Plus
@@ -178,13 +176,13 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pill {
-  height: 32px;
-  padding: 0 16px;
+  height: 28px;
+  padding: 0 14px;
   border-radius: 9999px;
-  border: 2px solid rgba(15, 23, 42, 0.45);
+  border: 2px solid rgba(107, 114, 128, 0.65);
   background: #ffffff;
-  color: rgb(71 85 105);
-  font-size: 13px;
+  color: #6b7280;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1;
   transition:
@@ -194,43 +192,19 @@ const sectionOptions = computed(() => {
 }
 
 .fp-pill:hover {
-  border-color: rgba(15, 23, 42, 0.65);
-  color: rgb(15 23 42);
+  border-color: rgba(107, 114, 128, 0.9);
+  color: #334155;
 }
 
 .fp-pillActive {
-  border-width: 3px;
-  border-color: #4f46e5;
-  background: #d6d3ff;
-  color: #0b0f19;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-}
-
-.fp-pillFixed {
-  height: 44px;
-  min-width: 132px;
-  padding: 0 18px;
-  font-size: 22px;
-  font-weight: 900;
-  border-width: 3px;
-  border-color: rgba(107, 114, 128, 0.7);
-  color: #3f556f;
-}
-
-.fp-pillFixed.fp-pillActive {
   border-color: #3f39ff;
   background: #d6d7ff;
-  color: #000000;
+  color: #111827;
+  font-weight: 900;
 }
 
 .fp-pillYear {
-  letter-spacing: -0.02em;
-}
-
-.fp-pillYear.fp-pillActive {
-  background: #d6d7ff;
-  border-color: #3f39ff;
+  color: #111827;
 }
 
 .fp-plusRow {
@@ -242,7 +216,9 @@ const sectionOptions = computed(() => {
   align-items: center;
   gap: 6px;
   justify-content: flex-start;
-  padding-left: 18px;
+  padding-left: 14px;
+  color: #6b7280;
+  border-color: rgba(107, 114, 128, 0.45);
 }
 
 .fp-card::-webkit-scrollbar {
