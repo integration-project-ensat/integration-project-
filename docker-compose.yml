@@ -110,8 +110,6 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
-    network_mode: host
-
 volumes:
   postgres-data:
   grafana_data:
