@@ -84,6 +84,8 @@ services:
       - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(roles[*], 'chef-equipe') && 'Admin' || contains(roles[*], 'adjoint') && 'Admin' || contains(roles[*], 'devops') && 'Editor' || contains(roles[*], 'qa') && 'Editor' || 'Viewer'
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json
+      - ./monitoring/provisioning/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
     depends_on:
       - prometheus
       - keycloak
