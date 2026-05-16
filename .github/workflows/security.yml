@@ -114,6 +114,15 @@ jobs:
           severity: HIGH,CRITICAL
         continue-on-error: true    
 
+      - name: "Publier rapports Trivy"
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-report-${{ github.run_number }}
+          path: reports/trivy/
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: "Generer Token SonarQube"
         id: sonar_token
         run: |
