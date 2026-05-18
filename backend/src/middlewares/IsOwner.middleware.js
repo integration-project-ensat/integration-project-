@@ -1,12 +1,5 @@
 const prisma = require('../../prisma/client');
 
-/**
- * Modèles supportés et leur configuration d'ownership
- * - model     : nom du modèle Prisma
- * - idParam   : nom du paramètre URL (req.params)
- * - idChamp   : clé primaire du modèle dans la DB
- * - ownerChamp: champ qui référence le propriétaire
- */
 const MODELES_CONFIG = {
   projet: {
     model: 'projet',
@@ -58,24 +51,11 @@ const MODELES_CONFIG = {
   },
 };
 
-/**
- * Middleware générique de vérification d'ownership.
- *
- * Usage dans une route :
- *   router.put('/:id', authentifier, isOwner('projet'), controller.update);
- *
- * L'ADMINISTRATEUR bypasse automatiquement la vérification.
- *
- * @param {string} nomModele - Clé dans MODELES_CONFIG
- * @param {Object} options
- * @param {boolean} [options.allowAdmin=true] - Autoriser l'ADMINISTRATEUR à bypasser
- */
 const isOwner = (nomModele, options = {}) => {
   const { allowAdmin = true } = options;
 
   return async (req, res, next) => {
     try {
-      // req.utilisateur doit être peuplé par le middleware authentifier
       if (!req.utilisateur) {
         return res.status(401).json({
           success: false,
@@ -83,7 +63,6 @@ const isOwner = (nomModele, options = {}) => {
         });
       }
 
-      // L'admin bypass la vérification d'ownership
       if (allowAdmin && req.utilisateur.role === 'ADMINISTRATEUR') {
         return next();
       }
@@ -97,15 +76,25 @@ const isOwner = (nomModele, options = {}) => {
         });
       }
 
-      const idRessource = BigInt(req.params[config.idParam]);
-      if (!idRessource) {
+      // FIX 1 — Vérifier que le param existe AVANT BigInt()
+      const rawId = req.params[config.idParam];
+      if (!rawId) {
         return res.status(400).json({
           success: false,
           message: `Paramètre "${config.idParam}" manquant ou invalide`,
         });
       }
 
-      // Récupérer uniquement le champ owner pour limiter la requête
+      let idRessource;
+      try {
+        idRessource = BigInt(rawId);
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: 'Identifiant de ressource invalide',
+        });
+      }
+
       const ressource = await prisma[config.model].findUnique({
         where: { [config.idChamp]: idRessource },
         select: { [config.ownerChamp]: true },
@@ -118,25 +107,20 @@ const isOwner = (nomModele, options = {}) => {
         });
       }
 
-      const idProprietaire = ressource[config.ownerChamp];
-      const idUtilisateur = req.utilisateur.id_utilisateur;
+      
+      const idProprietaire = BigInt(ressource[config.ownerChamp]);
+      const idUtilisateur = BigInt(req.utilisateur.id_utilisateur);
 
       if (idProprietaire !== idUtilisateur) {
-        return res.status(403).json({
+        
+        return res.status(404).json({
           success: false,
-          message: 'Accès refusé : vous n\'êtes pas propriétaire de cette ressource',
+          message: 'Ressource introuvable',
         });
       }
 
       next();
     } catch (erreur) {
-      // BigInt() peut lever une erreur si le param n'est pas un nombre valide
-      if (erreur instanceof SyntaxError || erreur.message?.includes('Cannot convert')) {
-        return res.status(400).json({
-          success: false,
-          message: 'Identifiant de ressource invalide',
-        });
-      }
       console.error('[isOwner]', erreur);
       return res.status(500).json({
         success: false,
