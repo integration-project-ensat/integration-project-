@@ -47,7 +47,7 @@
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
-import authService from '../services/auth.service'
+import authService from '../services/auth.service.js'
 
 const router   = useRouter()
 const email    = ref('')
@@ -63,7 +63,12 @@ async function submit() {
     await authService.login(email.value, password.value)
     router.push('/dashboard')
   } catch (e: any) {
-    error.value = e.response?.data?.message || 'Erreur de connexion'
+    const errors = e.response?.data?.errors
+    if (errors && errors.length > 0) {
+      error.value = errors[0].message
+    } else {
+      error.value = e.response?.data?.message || 'Erreur de connexion'
+    }
   } finally {
     loading.value = false
   }

@@ -82,6 +82,20 @@ import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
 
+type ApiError = {
+  response?: {
+    data?: {
+      errors?: Array<{ message?: string }>
+      message?: string
+    }
+  }
+}
+
+const getApiErrorMessage = (e: unknown, fallback: string) => {
+  const data = (e as ApiError).response?.data
+  return data?.errors?.[0]?.message || data?.message || fallback
+}
+
 const router  = useRouter()
 const error   = ref('')
 const loading = ref(false)
@@ -109,12 +123,13 @@ async function submit() {
   }
   loading.value = true
   try {
-    await authService.signup({ firstName, lastName, email, password, role })
-    router.push('/dashboard')
-  } catch (e: any) {
-    error.value = e.response?.data?.message || "Erreur lors de l'inscription"
+    await authService.signup({ ...form })
+    console.log('email avant push:', form.email) // ← ajoute ici
+    router.push({ path: '/verify-code', query: { email: form.email } })
+ } catch(e) {
+    error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
   } finally {
-    loading.value = false
+    loading.value = false  // ← ajouter ceci
   }
 }
 </script>

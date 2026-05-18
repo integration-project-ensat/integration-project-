@@ -121,7 +121,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineEmits, defineProps } from "vue";
 
 interface FilterState {
   year: number | null;
@@ -153,13 +152,33 @@ const emit = defineEmits<{
   (e: "clear-filters"): void;
 }>();
 
-const setFilter = (key: keyof FilterState, value: any) => {
-  const next = { ...props.filters };
-  if (props.filters[key] === value) {
-    next[key] = key === "skills" ? [] : null;
-  } else {
-    next[key] = value;
+type SingleFilterKey = Exclude<keyof FilterState, "skills">;
+
+const setFilter = (key: SingleFilterKey, value: string | number) => {
+  const next: FilterState = { ...props.filters, skills: [...props.filters.skills] };
+  const nextValue = props.filters[key] === value ? null : value;
+
+  switch (key) {
+    case "year":
+      next.year = nextValue as number | null;
+      break;
+    case "school":
+      next.school = nextValue as string | null;
+      break;
+    case "field":
+      next.field = nextValue as string | null;
+      break;
+    case "city":
+      next.city = nextValue as string | null;
+      break;
+    case "scoreMin":
+      next.scoreMin = nextValue as number | null;
+      break;
+    case "recMin":
+      next.recMin = nextValue as number | null;
+      break;
   }
+
   emit("update:filters", next);
 };
 

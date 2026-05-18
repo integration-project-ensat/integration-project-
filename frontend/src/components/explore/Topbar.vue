@@ -44,13 +44,15 @@
 
 <script setup lang="ts">
 import { Bell, Search } from "lucide-vue-next";
-import { computed, defineEmits, defineProps } from "vue";
+import { computed } from "vue";
 
-const props = defineProps({
-  searchQuery: { type: String, default: "" },
+const props = withDefaults(defineProps<{ searchQuery?: string }>(), {
+  searchQuery: "",
 });
 
-const emit = defineEmits(["update:searchQuery"]);
+const emit = defineEmits<{
+  (e: "update:searchQuery", value: string): void;
+}>();
 
 const searchQuery = computed({
   get: () => props.searchQuery,

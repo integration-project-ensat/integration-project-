@@ -11,6 +11,7 @@ import AdminDashboardView from "../views/AdminDashboardView.vue";
 import AdminProfilesView from "../views/AdminProfilesView.vue";
 import AdminPortfoliosView from "../views/AdminPortfoliosView.vue"
 
+
 export default createRouter({
   history: createWebHistory("/"),
   routes: [
