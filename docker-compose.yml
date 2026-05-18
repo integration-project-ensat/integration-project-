@@ -49,6 +49,8 @@ services:
       - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak_db
       - KC_DB_USERNAME=${DB_USER:-postgres}
       - KC_DB_PASSWORD=${DB_PASSWORD:-secret}
+      - KC_HTTP_RELATIVE_PATH=/auth
+      - KC_PROXY=edge
     command: start-dev
     depends_on:
       postgres:
@@ -58,6 +60,8 @@ services:
     image: nginx:alpine
     ports:
       - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - frontend
       - backend
