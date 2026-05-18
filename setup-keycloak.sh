@@ -1,5 +1,4 @@
 #!/bin/bash
-
 KEYCLOAK_URL="http://localhost:8081"
 ADMIN_USER="admin"
 ADMIN_PASSWORD="admin"
@@ -9,11 +8,11 @@ echo "=================================================="
 echo " PheraCore - Configuration Keycloak"
 echo "=================================================="
 
-
-# Obtenir le token admin
-
+# ----------------------------------------------------------
+# 1. Obtenir le token admin
+# ----------------------------------------------------------
 echo ""
-echo "[1/5] Obtention du token admin..."
+echo "[1/6] Obtention du token admin..."
 
 TOKEN=$(curl -s -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -29,11 +28,11 @@ fi
 
 echo "Token obtenu ✓"
 
-
-# Créer le realm portfolio-realm
-
+# ----------------------------------------------------------
+# 2. Créer le realm portfolio-realm avec hardening
+# ----------------------------------------------------------
 echo ""
-echo "[2/5] Création du realm '$REALM'..."
+echo "[2/6] Création du realm '$REALM' avec hardening..."
 
 curl -s -X POST "$KEYCLOAK_URL/admin/realms" \
   -H "Authorization: Bearer $TOKEN" \
@@ -44,15 +43,29 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms" \
     "enabled": true,
     "registrationAllowed": false,
     "loginWithEmailAllowed": true,
-    "duplicateEmailsAllowed": false
+    "duplicateEmailsAllowed": false,
+    "bruteForceProtected": true,
+    "failureFactor": 5,
+    "waitIncrementSeconds": 30,
+    "maxFailureWaitSeconds": 900,
+    "minimumQuickLoginWaitSeconds": 60,
+    "quickLoginCheckMilliSeconds": 1000,
+    "maxDeltaTimeSeconds": 43200,
+    "ssoSessionIdleTimeout": 1800,
+    "ssoSessionMaxLifespan": 28800,
+    "clientSessionIdleTimeout": 1800,
+    "clientSessionMaxLifespan": 28800,
+    "accessTokenLifespan": 300,
+    "passwordPolicy": "length(8) and upperCase(1) and lowerCase(1) and specialChars(1) and digits(1)"
   }' > /dev/null
 
-echo "Realm '$REALM' créé ✓"
+echo "Realm '$REALM' créé avec hardening ✓"
 
-# Créer les rôles
-
+# ----------------------------------------------------------
+# 3. Créer les 6 rôles
+# ----------------------------------------------------------
 echo ""
-echo "[3/5] Création des rôles..."
+echo "[3/6] Création des rôles..."
 
 create_role() {
   local ROLE_NAME=$1
@@ -71,10 +84,11 @@ create_role "devops"       "DevOps - Infrastructure et automatisation"
 create_role "qa"           "Assurance Qualite - Tests et strategie qualite"
 create_role "securite"     "Securite - Securite applicative et infrastructure"
 
-# Créer les 10 utilisateurs avec rôles et passwords
-
+# ----------------------------------------------------------
+# 4. Créer les 10 utilisateurs avec rôles et passwords
+# ----------------------------------------------------------
 echo ""
-echo "[4/5] Création des utilisateurs..."
+echo "[4/6] Création des utilisateurs..."
 
 create_user() {
   local USERNAME=$1
@@ -84,7 +98,6 @@ create_user() {
   local PASSWORD=$5
   local ROLE=$6
 
-  # Créer l'utilisateur
   curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/users" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
@@ -102,15 +115,12 @@ create_user() {
       }]
     }" > /dev/null
 
-  # Obtenir l'ID de l'utilisateur
   USER_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/users?username=$USERNAME" \
     -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
 
-  # Obtenir l'ID du rôle
   ROLE_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/roles/$ROLE" \
     -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
 
-  # Assigner le rôle
   curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/users/$USER_ID/role-mappings/realm" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
@@ -130,11 +140,12 @@ create_user "qa2"          "qa2@portfolio.com"       "Salma"        "Ouledbouyah
 create_user "securite1"    "securite1@portfolio.com" "Soumaya"      "Hajli"          "PheraCore2025!" "securite"
 create_user "securite2"    "securite2@portfolio.com" "Saad"         "Chair"          "PheraCore2025!" "securite"
 
+# ----------------------------------------------------------
 # 5. Créer le client grafana
+# ----------------------------------------------------------
 echo ""
-echo "[5/5] Création du client 'grafana'..."
+echo "[5/6] Création du client 'grafana'..."
 
-# Créer le client
 curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -154,15 +165,8 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
 
 echo "  Client 'grafana' créé ✓"
 
-# Obtenir l'ID du client
 CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=grafana" \
   -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
-
-# Obtenir le client scope dédié
-SCOPE_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/client-scopes" \
-  -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*"[^}]*"name":"grafana-dedicated"' | grep -o '"id":"[^"]*' | cut -d'"' -f4)
-
-
 
 echo "  Ajout du mapper 'realm-roles'..."
 
@@ -186,8 +190,24 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$CLIENT_ID/protocol-m
 
 echo "  Mapper 'realm-roles' ajouté ✓"
 
-# Summary
+# ----------------------------------------------------------
+# 6. Vérification finale
+# ----------------------------------------------------------
+echo ""
+echo "[6/6] Vérification..."
 
+REALM_CHECK=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM" \
+  -H "Authorization: Bearer $TOKEN" | grep -o '"realm":"[^"]*' | cut -d'"' -f4)
+
+if [ "$REALM_CHECK" = "$REALM" ]; then
+  echo "  Realm vérifié ✓"
+else
+  echo "  ERREUR : Realm non trouvé !"
+fi
+
+# ----------------------------------------------------------
+# Résumé final
+# ----------------------------------------------------------
 echo ""
 echo "=================================================="
 echo " Configuration terminée avec succès !"
@@ -199,6 +219,13 @@ echo " Users    : 10 utilisateurs créés"
 echo " Client   : grafana (secret: grafana-secret)"
 echo " Password : PheraCore2025! (pour tous les utilisateurs)"
 echo ""
-echo " Accès Keycloak : http://localhost:8081"
+echo " Hardening activé :"
+echo "   - Password policy : 8 chars, maj, min, spécial, chiffre"
+echo "   - Brute force : 5 tentatives max, 15min lockout"
+echo "   - Session idle : 30min"
+echo "   - Session max  : 8h"
+echo "   - Enregistrement public : désactivé"
+echo ""
+echo " Accès Keycloak : http://localhost/auth"
 echo " Accès Grafana  : http://localhost:3001"
 echo "=================================================="
