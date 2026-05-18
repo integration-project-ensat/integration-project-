@@ -1,8 +1,6 @@
 const { ForbiddenError, UnauthorizedError } = require('../config/errors');
 
-/**
- * Roles disponibles dans le système PheraCore
- */
+
 const ROLES = {
   ADMINISTRATEUR: 'ADMINISTRATEUR',
   ETUDIANT: 'ETUDIANT',
@@ -10,14 +8,11 @@ const ROLES = {
   PROFESSIONNEL: 'PROFESSIONNEL',
 };
 
+const ROLES_VALIDES = Object.values(ROLES);
+
 /**
- * Vérifie que l'utilisateur possède AU MOINS UN des rôles autorisés.
  *
  * @param {...string} rolesAutorises - Un ou plusieurs rôles autorisés
- *
- * Usage :
- *   router.get('/admin', authentifier, isRole('ADMINISTRATEUR'), controller.dashboard);
- *   router.post('/valider', authentifier, isRole('ADMINISTRATEUR', 'PROFESSEUR'), controller.valider);
  */
 const isRole = (...rolesAutorises) => {
   return (req, res, next) => {
@@ -25,12 +20,14 @@ const isRole = (...rolesAutorises) => {
       return next(new UnauthorizedError('Authentification requise'));
     }
 
+    if (!ROLES_VALIDES.includes(req.utilisateur.role)) {
+      console.warn(`[isRole] Rôle invalide détecté : "${req.utilisateur.role}" pour utilisateur ${req.utilisateur.id_utilisateur}`);
+      return next(new ForbiddenError('Accès refusé'));
+    }
+
     if (!rolesAutorises.includes(req.utilisateur.role)) {
-      return next(
-        new ForbiddenError(
-          `Accès refusé. Rôle(s) requis : ${rolesAutorises.join(', ')}`
-        )
-      );
+      console.warn(`[isRole] Accès refusé — rôle requis : [${rolesAutorises.join(', ')}], rôle actuel : ${req.utilisateur.role}`);
+      return next(new ForbiddenError('Accès refusé'));
     }
 
     next();
