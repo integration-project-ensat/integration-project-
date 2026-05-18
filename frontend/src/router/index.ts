@@ -7,6 +7,9 @@ import ForgetPasswordView from "@/views/ForgetPasswordView.vue";
 import ResetPasswordView from "../views/ResetPasswordView.vue";
 import VerifyCodeView from "../views/VerifyCodeView.vue";
 import ExploreView from "../views/ExploreView.vue";
+import AdminDashboardView from "../views/AdminDashboardView.vue";
+import AdminProfilesView from "../views/AdminProfilesView.vue";
+import AdminPortfoliosView from "../views/AdminPortfoliosView.vue"
 
 export default createRouter({
   history: createWebHistory("/"),
@@ -18,5 +21,8 @@ export default createRouter({
     { path: "/reset-password", name: "reset", component: ResetPasswordView },
     { path: "/verify-code", name: "verify-code", component: VerifyCodeView },
     { path: "/explore", name: "explore", component: ExploreView },
+    { path: '/admin',component: AdminDashboardView },
+    { path: '/admin/profils', component : AdminProfilesView },
+    { path: '/admin/portfolios', component: AdminPortfoliosView }
   ],
 });
