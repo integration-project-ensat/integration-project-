@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: |
             backend/package-lock.json
@@ -136,7 +136,7 @@ jobs:
       - name: "Exporter rapport SonarQube"
         if: always()
         run: |
-          mkdir -p reports/sonarqube
+          sudo mkdir -p reports/sonarqube
           curl -s -u "admin:admin" \
             "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR" \
             -o reports/sonarqube/sonarqube-report.json || true
@@ -146,7 +146,7 @@ jobs:
         with:
           name: sonarqube-report-${{ github.run_number }}
           path: reports/sonarqube/sonarqube-report.json
-          retention-days: 30
+          retention-days: 30  
 
       - name: "Preparer dossier ZAP"
         run: |
