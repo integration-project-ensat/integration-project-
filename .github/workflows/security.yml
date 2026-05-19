@@ -131,10 +131,28 @@ jobs:
           SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
           SONAR_HOST_URL: "http://127.0.0.1:9000"
 
-      - name: "Attendre analyse SonarQube"
+      - name: "Exporter rapport SonarQube"
+        if: always()
         run: |
-          sleep 90
-          echo "SonarQube analyse terminee"
+          sudo mkdir -p reports/sonarqube
+          curl -s -u "admin:admin" \
+            "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR&ps=500" \
+            -o reports/sonarqube/sonarqube-report.json || true
+          SIZE=$(wc -c < reports/sonarqube/sonarqube-report.json 2>/dev/null || echo "0")
+          if [ "$SIZE" -lt 50 ]; then
+            sleep 60
+            curl -s -u "admin:admin" \
+              "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR&ps=500" \
+              -o reports/sonarqube/sonarqube-report.json || true
+          fi
+          cat reports/sonarqube/sonarqube-report.json | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          issues = data.get('issues', [])
+          print(f'Total issues: {len(issues)}')
+          for issue in issues:
+              print(f\"[{issue.get('severity')}] {issue.get('component')} - {issue.get('message')}\")
+          " || true
 
       - name: "Exporter rapport SonarQube"
         if: always()
