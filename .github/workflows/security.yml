@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - fix/sonarqube-export-report
   pull_request:
     branches:
       - main
