@@ -1,6 +1,7 @@
 generator client {
   provider   = "prisma-client-js"
   engineType = "binary"
+  
 }
 
 datasource db {
@@ -33,7 +34,7 @@ enum Visibilite {
 
 enum CategorieCompetence {
   TECHNIQUE
-  SOFT
+  COMPORTEMENTALE
 }
 
 enum NiveauCompetence {
@@ -163,29 +164,43 @@ enum TypeReaction {
   LIKE
   
 }
-
+enum NiveauAcces {
+  SUPER_ADMIN
+  STANDARD
+}
 model Utilisateur {
-  id_utilisateur     BigInt           @id @default(autoincrement())
-  nom                String           @db.VarChar(100)
-  prenom             String           @db.VarChar(100)
-  email              String           @unique @db.VarChar(255)
+  id_utilisateur     BigInt  @id @default(autoincrement())
+  nom                String  @db.VarChar(100)
+  prenom             String  @db.VarChar(100)
+  email              String  @unique @db.VarChar(255)
   mot_de_passe_hashe String
   role               RoleUtilisateur
   est_actif          Boolean          @default(true)
   est_valide         Boolean          @default(false)
   date_creation      DateTime         @default(now())
   derniere_connexion DateTime?
+  email_verifie      Boolean          @default(false)
+  email_verification String?          @db.VarChar(255)
+  token_expires_at DateTime?
+  reset_token_hash String? @db.VarChar(255)
+  reset_token_expires_at DateTime?
+  admin_action_token String? @unique
+  admin_action_expires_at DateTime?
+
 
   etudiant       Etudiant?
   professeur     Professeur?
   administrateur Administrateur?
   professionnel  Professionnel?
 
+  profil          Profil?
+
   notifications       Notification[]
   elements_validables ElementValidable[] @relation("ValidateurElements")
   commentaires        Commentaire[]      @relation("AuteurCommentaires")
   recommandations     Recommandation[]   @relation("AuteurRecommandations")
   reactions           Reaction[]
+  postes              Poste[]
 
   @@map("utilisateurs")
 }
@@ -194,19 +209,23 @@ model Etudiant {
   id_utilisateur      BigInt  @id
   numero_etudiant     String? @unique @db.VarChar(20)
   filiere             String? @db.VarChar(100)
-  annee_universitaire String? @db.VarChar(9)
-
+  annee_universitaire String? @db.VarChar(9) 
+  date_naissance      DateTime? @db.Date    
+  
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
-  profil                  Profil?
+  competences             ProfilCompetence[]
   diplomes                Diplome[]
   projets                 Projet[]
   stages                  Stage[]
   activites               ActiviteParascolaire[]
   lettres_recommandation  LettreRecommandation[]
+  recommandations_recues  Recommandation[] @relation("RecommandationsRecues")
   portfolio               Portfolio?
   github_integration      GithubIntegration?
-  postes            Poste[]
+  score_credibilite       ScoreCredibilite?
+  badges                  ProfilBadge[]
+ 
 
   @@map("etudiants")
 }
@@ -216,8 +235,7 @@ model Professeur {
   departement         String? @db.VarChar(100)
   specialite          String? @db.VarChar(100)
   titre               String? @db.VarChar(100)
-  email_professionnel String? @db.VarChar(255)
-  telephone         String? @db.VarChar(20)
+  code_administratif String? @db.VarChar(50)
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
@@ -233,6 +251,7 @@ model Administrateur {
   id_utilisateur  BigInt    @id
   droits_admin    Json?
   date_validation DateTime?
+  niveau_acces   NiveauAcces @default(STANDARD)
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
@@ -246,7 +265,10 @@ model Professionnel {
   id_utilisateur   BigInt  @id
   entreprise       String  @db.VarChar(150)
   poste            String  @db.VarChar(150)
-  est_valide_admin Boolean @default(false)
+  secteur          String? @db.VarChar(100)
+  est_valide       Boolean @default(false)
+  statut_validation StatutValidation @default(EN_ATTENTE)
+  date_validation  DateTime?
   justificatifs_url String?
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
@@ -275,19 +297,13 @@ model Profil {
   id_utilisateur          BigInt            @unique
   photo_profil            String?           @db.VarChar(500)
   telephone               String?           @db.VarChar(20)
-  date_naissance          DateTime?         @db.Date
   pays                    String?           @db.VarChar(100)
-  objectif_professionnel  String?           @db.VarChar(100)
+  email_professionnel String?  @db.VarChar(255)
+  bio                String?          @db.Text
   linkedin_url            String?
-  bio                     String?
   visibilite              Visibilite  @default(PUBLIC)
 
-  etudiant Etudiant @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
-
-  competences        ProfilCompetence[]
-  score_credibilite  ScoreCredibilite?
-  badges             ProfilBadge[]
-  recommandations    Recommandation[]
+  utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
   @@map("profils")
 }
@@ -300,19 +316,19 @@ model Competence {
 
   profils ProfilCompetence[]
 
-  @@map("projet")
+  @@map("competences")
 }
 
 model ProfilCompetence {
-  id_profil      BigInt
+  id_etudiant      BigInt
   id_competence  BigInt
   niveau_maitrise Int?
   date_ajout     DateTime? @db.Date
 
-  profil     Profil     @relation(fields: [id_profil], references: [id_profil], onDelete: Cascade)
+  etudiant     Etudiant     @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
   competence Competence @relation(fields: [id_competence], references: [id_competence], onDelete: Cascade)
 
-  @@id([id_profil, id_competence])
+  @@id([id_etudiant, id_competence])
   @@map("profil_competence")
 }
 
@@ -416,7 +432,7 @@ model ActiviteParascolaire {
 model LettreRecommandation {
   id_lettre       BigInt            @id @default(autoincrement())
   id_etudiant     BigInt
-  id_professeur   BigInt
+  id_professeur   BigInt?
   motif           MotifLettre?
   date_souhaitee  DateTime?         @db.Date
   contenu         String?
@@ -425,7 +441,7 @@ model LettreRecommandation {
   url_fichier     String?           @db.VarChar(500)
 
   etudiant   Etudiant    @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
-  professeur Professeur  @relation(fields: [id_professeur], references: [id_utilisateur], onDelete: Cascade)
+  professeur Professeur?  @relation(fields: [id_professeur], references: [id_utilisateur], onDelete: SetNull)
 
   @@map("lettres_recommandation")
 }
@@ -497,7 +513,7 @@ model ModelePortfolio {
 
 model ScoreCredibilite {
   id_score                BigInt             @id @default(autoincrement())
-  id_profil               BigInt             @unique
+  id_etudiant              BigInt             @unique
   score_total             Decimal?           @db.Decimal(5, 2)
   score_projets           Decimal?           @db.Decimal(5, 2)
   score_github            Decimal?           @db.Decimal(5, 2)
@@ -507,7 +523,7 @@ model ScoreCredibilite {
   score_completude        Decimal?           @db.Decimal(5, 2)
   niveau                  NiveauCredibilite?
 
-  profil Profil @relation(fields: [id_profil], references: [id_profil], onDelete: Cascade)
+  etudiant Etudiant @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
 
   @@map("scores_credibilite")
 }
@@ -531,13 +547,13 @@ model Commentaire {
 model Recommandation {
   id_recommandation BigInt           @id @default(autoincrement())
   id_auteur         BigInt
-  id_profil         BigInt
+  id_etudiant_cible         BigInt
   message           String?
   role_auteur       RoleAuteur?
   statut            StatutValidation @default(EN_ATTENTE)
 
   auteur     Utilisateur @relation("AuteurRecommandations", fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
-  profil     Profil      @relation(fields: [id_profil], references: [id_profil], onDelete: Cascade)
+  etudiant_cible     Etudiant      @relation("RecommandationsRecues",fields: [id_etudiant_cible], references: [id_utilisateur], onDelete: Cascade)
   portfolios PortfolioRecommandation[]
 
   @@map("recommandations")
@@ -572,15 +588,15 @@ model Badge {
 }
 
 model ProfilBadge {
-  id_profil        BigInt
+  id_etudiant        BigInt
   id_badge         BigInt
   date_attribution DateTime?
   position         Int?
 
-  profil Profil @relation(fields: [id_profil], references: [id_profil], onDelete: Cascade)
+  etudiant Etudiant @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
   badge  Badge  @relation(fields: [id_badge], references: [id_badge], onDelete: Cascade)
 
-  @@id([id_profil, id_badge])
+  @@id([id_etudiant, id_badge])
   @@map("profil_badge")
 }
 
@@ -611,7 +627,7 @@ model RegleScoreCredibilite {
 
 model GithubIntegration {
   id_integration       BigInt    @id @default(autoincrement())
-  id_etudiant          BigInt    @unique
+  id_etudiant          BigInt   @unique
   github_username      String    @db.VarChar(100)
   access_token         String?
   total_depot          Int       @default(0)
@@ -642,12 +658,12 @@ model DepotGithub {
 }
 model Poste {
   id_poste  BigInt     @id @default(autoincrement())
-  id_etudiant     BigInt
+  id_auteur     BigInt
   contenu         String
   visibilite      Visibilite @default(PUBLIC)
   date_creation   DateTime   @default(now())
 
-  etudiant Etudiant @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
+  auteur Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
   commentaires Commentaire[]
   reactions    Reaction[]    // pour les "j'aime"
 
@@ -667,5 +683,3 @@ model Reaction {
   @@unique([id_auteur, id_poste]) // une seule réaction par personne
   @@map("reactions")
 }
-
-

@@ -1,6 +1,6 @@
 const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-const RECOMMANDATION_ID_FIELDS = ['id_recommandation', 'id_auteur', 'id_profil']
+const RECOMMANDATION_ID_FIELDS = ['id_recommandation', 'id_auteur', 'id_etudiant_cible']
 const PORTFOLIO_RECOMMANDATION_ID_FIELDS = ['id_portfolio', 'id_recommandation']
 
 const createRecommendation = (data) =>
@@ -9,50 +9,58 @@ const createRecommendation = (data) =>
   })
 
 const createRecommendationForUserProfile = async (id_utilisateur, data) => {
-  const profil = await prisma.profil.findUnique({
+  const etudiant = await prisma.etudiant.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
 
-  if (!profil) {
-    throw new Error('Profil introuvable pour cet utilisateur')
+  if (!etudiant) {
+    throw new Error('Etudiant introuvable pour cet utilisateur')
   }
 
   return createRecommendation({
     ...data,
-    id_profil: profil.id_profil,
+    id_etudiant_cible: etudiant.id_utilisateur,
   })
 }
 
 const findRecommendationsUser = async (id_utilisateur) => {
-  const profil = await prisma.profil.findUnique({
+  const etudiant = await prisma.etudiant.findUnique({
     where: { id_utilisateur: toBigInt(id_utilisateur) },
   })
 
-  if (!profil) return []
+  if (!etudiant) return []
 
   return prisma.recommandation.findMany({
-    where: { id_profil: profil.id_profil },
+    where: { id_etudiant_cible: etudiant.id_utilisateur },
     include: {
       auteur: true,
+      etudiant_cible: { include: { utilisateur: { include: { profil: true } } } },
       portfolios: { include: { portfolio: true } },
     },
   })
 }
 
-const findRecommendationsProfil = (id_profil) =>
-  prisma.recommandation.findMany({
+const findRecommendationsProfil = async (id_profil) => {
+  const profil = await prisma.profil.findUnique({
     where: { id_profil: toBigInt(id_profil) },
-    include: {
-      auteur: true,
-      portfolios: { include: { portfolio: true } },
-    },
+    select: { id_utilisateur: true },
   })
+
+  if (!profil) return []
+
+  return findRecommendationsUser(profil.id_utilisateur)
+}
 
 const findRecommendationsPortfolio = (id_portfolio) =>
   prisma.portfolioRecommandation.findMany({
     where: { id_portfolio: toBigInt(id_portfolio), est_affichee: true },
     include: {
-      recommandation: { include: { auteur: true, profil: true } },
+      recommandation: {
+        include: {
+          auteur: true,
+          etudiant_cible: { include: { utilisateur: { include: { profil: true } } } },
+        },
+      },
     },
     orderBy: { position: 'asc' },
   })

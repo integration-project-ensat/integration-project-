@@ -1,1 +1,0 @@
-<!-- Section commentaires d'un portfolio. Affiche les commentaires validés, permet d'en soumettre. Le propriétaire voit les commentaires en attente et peut accepter/refuser. -->

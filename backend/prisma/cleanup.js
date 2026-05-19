@@ -1,5 +1,6 @@
-const prisma = require('./client');
 
+const prisma = require('./client');
+require('dotenv').config();
 const emailsAGarder = [
   'youssef.alaoui@test.com',
   'fatima.bennani@test.com',
@@ -7,7 +8,8 @@ const emailsAGarder = [
   'non.verifie@entreprise.com',
   'expire@test.com',
   'admin@systeme.com',
-  'supadmin@portfolio.ma'
+  'supadmin@portfolio.ma',
+ process.env.ADMIN_EMAIL
 ];
 
 async function main() {

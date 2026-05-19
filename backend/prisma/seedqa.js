@@ -21,14 +21,12 @@ async function main() {
       role: 'ETUDIANT',
       est_actif: true,
       email_verifie: true,
+      profil: { create: {} },
       etudiant: {
         create: {
           numero_etudiant: 'ETU-2024-001',
           filiere: 'Informatique',
-          annee_universitaire: '2024-2025',
-          profil: {
-            create: {}
-          }
+          annee_universitaire: '2024/2025',
         }
       }
     }
@@ -47,11 +45,12 @@ async function main() {
       role: 'PROFESSEUR',
       est_actif: true,
       email_verifie: true,
+      profil: { create: {} },
       professeur: {
         create: {
           code_administratif: 'PROF-2024-042',
           departement: 'Informatique',
-          specialite: 'Réseaux'
+          specialite: 'Réseaux',
         }
       }
     }
@@ -70,11 +69,12 @@ async function main() {
       role: 'PROFESSIONNEL',
       est_actif: false,
       email_verifie: true,
+      profil: { create: {} },
       professionnel: {
         create: {
           entreprise: 'TechMaroc SA',
           poste: 'Ingénieur Senior',
-          secteur: 'Informatique'
+          secteur: 'Informatique',
         }
       }
     }
@@ -93,10 +93,12 @@ async function main() {
       role: 'PROFESSIONNEL',
       est_actif: false,
       email_verifie: false,
+      profil: { create: {} },
       professionnel: {
         create: {
           entreprise: 'StartupMA',
-          poste: 'Designer'
+          poste: 'Designer',
+          secteur: 'Design',
         }
       }
     }
@@ -115,11 +117,12 @@ async function main() {
       role: 'ETUDIANT',
       est_actif: false,
       email_verifie: false,
+      profil: { create: {} },
       etudiant: {
         create: {
           numero_etudiant: 'ETU-EXPIRE-001',
           filiere: 'Test',
-          annee_universitaire: '2020-2021'
+          annee_universitaire: '2020/2021',
         }
       }
     }
@@ -138,8 +141,11 @@ async function main() {
       role: 'ADMINISTRATEUR',
       est_actif: true,
       email_verifie: true,
+      profil: { create: {} },
       administrateur: {
-        create: {}
+        create: {
+          niveau_acces: 'STANDARD',
+        }
       }
     }
   });

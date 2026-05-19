@@ -9,33 +9,46 @@ const authentifier = async (req, res, next) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'Accés non autorisé: token manquant'
+        message: 'Accès non autorisé: token manquant'
       });
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET,{
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: ['HS256']
     });
 
     const utilisateur = await prisma.utilisateur.findUnique({
-      where: {
-        id_utilisateur: decoded.userId
-      },
+      where: { id_utilisateur: BigInt(decoded.userId) },
       select: {
         id_utilisateur: true,
         nom: true,
         prenom: true,
         email: true,
         role: true,
-        est_actif: true
+        est_actif: true,
+        email_verifie: true // ✅ AJOUTÉ (bug corrigé)
       }
     });
 
-    if (!utilisateur||!utilisateur.est_actif) {
+    if (!utilisateur) {
       return res.status(401).json({
         success: false,
-        message: 'Accès non autorisé: utilisateur introuvable ou désactivé'
+        message: 'Accès non autorisé : utilisateur introuvable'
+      });
+    }
+
+    if (!utilisateur.est_actif) {
+      return res.status(403).json({
+        success: false,
+        message: 'Compte désactivé. Contactez l\'administrateur.'
+      });
+    }
+
+    if (!utilisateur.email_verifie) {
+      return res.status(403).json({
+        success: false,
+        message: 'Email non vérifié. Veuillez vérifier votre email avant de continuer.'
       });
     }
 
@@ -85,19 +98,23 @@ const autoriserRoles = (...rolesAutorises) => {
 
 const authorizePermissions = (permissionArray) => {
   return (req, res, next) => {
-    if (!req.utilisateur) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentification requise'
-      });
+    try {
+      if (!req.utilisateur) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentification requise'
+        });
+      }
+      if (!hasPermission(req.utilisateur.role, permissionArray)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Action non autorisée pour votre rôle',
+        });
+      }
+      next();
+    } catch (err) {
+      next(err);
     }
-    if (!hasPermission(req.utilisateur.role, permissionArray)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Action non autorisée pour votre rôle',
-      });
-    }
-    next();
   };
 };
 

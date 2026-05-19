@@ -25,7 +25,14 @@ const findPortfolioPublic = (id_portfolio) =>
       commentaires: true,
       recommandations: {
         where: { est_affichee: true },
-        include: { recommandation: { include: { auteur: true, profil: true } } },
+        include: {
+          recommandation: {
+            include: {
+              auteur: true,
+              etudiant_cible: { include: { utilisateur: { include: { profil: true } } } },
+            },
+          },
+        },
         orderBy: { position: 'asc' },
       },
     },

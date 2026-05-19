@@ -1,0 +1,13 @@
+- name: Configure infrastructure
+  hosts: private
+  become: yes
+
+  tasks:
+    - name: update system
+      apt:
+        update_cache: yes
+
+    - name: install nginx
+      apt:
+        name: nginx
+        state: present

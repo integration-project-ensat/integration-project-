@@ -1,1 +1,257 @@
-# Pipeline CI/CD principal sur GitLab. 4 stages : build (images Docker), test (Jest + Cypress), scan (SonarQube + Trivy + OWASP ZAP), deploy (staging puis prod sur validation).
+stages:
+  - build-code
+  - sonarqube
+  - build-docker
+  - security
+  - deploy-staging
+  - dast
+  - deploy-production
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  IMAGE_FRONTEND: $CI_REGISTRY_IMAGE/frontend
+  IMAGE_BACKEND: $CI_REGISTRY_IMAGE/backend
+  NPM_REGISTRY: "http://192.168.246.132:8082/repository/npm-proxy/"
+
+# ─────────────────────────────────────────────
+# JOB 1 — BUILD & VÉRIFICATION FRONTEND
+# ─────────────────────────────────────────────
+build-frontend:
+  stage: build-code
+  image: node:20-alpine
+  tags:
+    - docker
+  script:
+    - cd frontend
+    - npm config set registry $NPM_REGISTRY
+    - npm ci
+    - npm run type-check
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist/
+    expire_in: 1 day
+  cache:
+    key: frontend-$CI_COMMIT_REF_SLUG
+    paths:
+      - frontend/node_modules/
+
+# ─────────────────────────────────────────────
+# JOB 2 — VÉRIFICATION BACKEND
+# ─────────────────────────────────────────────
+build-backend:
+  stage: build-code
+  image: node:20-alpine
+  tags:
+    - docker
+  script:
+    - cd backend
+    - npm config set registry $NPM_REGISTRY
+    - npm ci
+    - echo "Backend dependencies installed successfully"
+    - node --check server.js
+    - echo "Backend syntax OK"
+  cache:
+    key: backend-$CI_COMMIT_REF_SLUG
+    paths:
+      - backend/node_modules/
+
+# ─────────────────────────────────────────────
+# JOB 3 — SONARQUBE
+# ─────────────────────────────────────────────
+sonarqube:
+  stage: sonarqube
+  image: sonarsource/sonar-scanner-cli:latest
+  tags:
+    - docker
+  only:
+    - main
+    - dev
+  script:
+    - sonar-scanner
+      -Dsonar.projectKey=integration-project
+      -Dsonar.projectName="Portfolio ENSA"
+      -Dsonar.host.url=$SONAR_HOST_URL
+      -Dsonar.token=$SONAR_TOKEN
+      -Dsonar.sources=frontend/src,backend
+      -Dsonar.exclusions=**/node_modules/**,frontend/dist/**
+  allow_failure: true
+
+# ─────────────────────────────────────────────
+# JOB 4 — BUILD IMAGES DOCKER
+# ─────────────────────────────────────────────
+build-image-frontend:
+  stage: build-docker
+  image: ubuntu:24.04
+  tags:
+    - docker
+  only:
+    - main
+    - dev
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl ca-certificates
+    - install -m 0755 -d /etc/apt/keyrings
+    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    - echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list
+    - apt-get update -qq && apt-get install -y -qq docker-ce-cli
+    - docker info
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA ./frontend
+    - docker push $IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
+        docker tag $IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA $IMAGE_FRONTEND:latest
+        docker push $IMAGE_FRONTEND:latest
+      fi
+      if [ "$CI_COMMIT_BRANCH" == "dev" ]; then
+        docker tag $IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA $IMAGE_FRONTEND:staging
+        docker push $IMAGE_FRONTEND:staging
+      fi
+
+build-image-backend:
+  stage: build-docker
+  image: ubuntu:24.04
+  tags:
+    - docker
+  only:
+    - main
+    - dev
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl ca-certificates
+    - install -m 0755 -d /etc/apt/keyrings
+    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    - echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list
+    - apt-get update -qq && apt-get install -y -qq docker-ce-cli
+    - docker info
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA ./backend
+    - docker push $IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
+        docker tag $IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA $IMAGE_BACKEND:latest
+        docker push $IMAGE_BACKEND:latest
+      fi
+      if [ "$CI_COMMIT_BRANCH" == "dev" ]; then
+        docker tag $IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA $IMAGE_BACKEND:staging
+        docker push $IMAGE_BACKEND:staging
+      fi
+
+# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# JOB 5 — TRIVY SCAN
+# ─────────────────────────────────────────────
+trivy-scan:
+  stage: security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  tags:
+    - docker
+  only:
+    - main
+    - dev
+  variables:
+    TRIVY_USERNAME: $CI_REGISTRY_USER
+    TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD
+  script:
+    - trivy image
+      --severity HIGH,CRITICAL
+      --format json
+      --output trivy-frontend.json
+      --insecure
+      $IMAGE_FRONTEND:$CI_COMMIT_SHORT_SHA
+    - trivy image
+      --severity HIGH,CRITICAL
+      --format json
+      --output trivy-backend.json
+      --insecure
+      $IMAGE_BACKEND:$CI_COMMIT_SHORT_SHA
+  artifacts:
+    paths:
+      - trivy-frontend.json
+      - trivy-backend.json
+    expire_in: 14 days
+  allow_failure: true
+
+# ─────────────────────────────────────────────
+# JOB 6 — DEPLOY STAGING (branche dev)
+# ─────────────────────────────────────────────
+deploy-staging:
+  stage: deploy-staging
+  image: alpine:latest
+  tags:
+    - docker
+  only:
+    - dev
+  script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$STAGING_SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - ssh-keyscan $STAGING_HOST >> ~/.ssh/known_hosts
+    - ssh devsecops@$STAGING_HOST
+      "cd /opt/devsecops &&
+      docker compose -f docker-compose.yml
+      -f docker-compose.staging.yml
+      up -d"
+  environment:
+    name: staging
+    url: http://$STAGING_HOST:8081
+
+# ─────────────────────────────────────────────
+# JOB 7 — OWASP ZAP SCAN (DAST)
+# ─────────────────────────────────────────────
+zap-scan:
+  stage: dast
+  image:
+    name: ghcr.io/zaproxy/zaproxy:stable
+    entrypoint: [""]
+  tags:
+    - docker
+  only:
+    - dev
+  script:
+    - mkdir -p /zap/wrk
+    - zap-baseline.py
+      -t http://$STAGING_HOST:8081
+      -r zap-report.html
+      -J zap-report.json
+      -I
+  after_script:
+    - cp /zap/wrk/zap-report.html ./zap-report.html || true
+    - cp /zap/wrk/zap-report.json ./zap-report.json || true
+  artifacts:
+    paths:
+      - zap-report.html
+      - zap-report.json
+    expire_in: 14 days
+  allow_failure: true
+
+# ─────────────────────────────────────────────
+# JOB 8 — DEPLOY PRODUCTION (branche main)
+# ─────────────────────────────────────────────
+deploy-production:
+  stage: deploy-production
+  image: alpine:latest
+  tags:
+    - docker
+  only:
+    - main
+  when: manual
+  script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$PROD_SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - ssh-keyscan $PROD_HOST >> ~/.ssh/known_hosts
+    - ssh devsecops@$PROD_HOST
+      "cd /opt/devsecops &&
+      docker compose -f docker-compose.yml
+      -f docker-compose.prod.yml
+      up -d"
+  environment:
+    name: production
+    url: http://$PROD_HOST
