@@ -130,6 +130,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
           SONAR_HOST_URL: "http://127.0.0.1:9000"
+      - name: Wait for SonarQube processing
+        run: sleep 40   
 
       - name: "Exporter rapport SonarQube"
         if: always()
