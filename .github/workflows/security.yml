@@ -130,22 +130,43 @@ jobs:
         env:
           SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
           SONAR_HOST_URL: "http://127.0.0.1:9000"
+
       - name: "Attendre analyse SonarQube"
         run: |
+          echo "Getting last task ID..."
           timeout 120 bash -c '
             until curl -s -u "admin:admin" \
-              "http://127.0.0.1:9000/api/ce/activity?status=SUCCESS" \
-              | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get(\"tasks\") else 1)";
-            do sleep 5; done'
-          echo "Analysis complete" 
+              "http://127.0.0.1:9000/api/ce/activity?status=SUCCESS&component=integration-project" \
+              | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          tasks = d.get(\"tasks\", [])
+          if not tasks:
+              exit(1)
+          print(\"Task done:\", tasks[0][\"id\"])
+          exit(0)
+              "; do
+              echo "Still analyzing..."
+              sleep 5
+            done'
+          echo "Analysis complete"
 
       - name: "Exporter rapport SonarQube"
         if: always()
         run: |
-          mkdir -p reports/sonarqube
+          sudo mkdir -p reports/sonarqube
+          sudo chmod 777 reports/sonarqube
           curl -s -u "admin:admin" \
             "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR&ps=500" \
             -o reports/sonarqube/sonarqube-report.json || true
+          echo "Report size: $(wc -c < reports/sonarqube/sonarqube-report.json) bytes"
+          python3 -c "
+          import sys, json
+          with open('reports/sonarqube/sonarqube-report.json') as f:
+              data = json.load(f)
+          issues = data.get('issues', [])
+          print(f'Total issues found: {len(issues)}')
+          " || true
 
       - uses: actions/upload-artifact@v4
         if: always()
