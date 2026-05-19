@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      - fix/sonarqube-export-report
+      - feat/scan-https
   pull_request:
     branches:
       - main
@@ -130,38 +130,21 @@ jobs:
         env:
           SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
           SONAR_HOST_URL: "http://127.0.0.1:9000"
-      - name: Wait for SonarQube processing
-        run: sleep 40   
+      - name: "Attendre analyse SonarQube"
+        run: |
+          timeout 120 bash -c '
+            until curl -s -u "admin:admin" \
+              "http://127.0.0.1:9000/api/ce/activity?status=SUCCESS" \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get(\"tasks\") else 1)";
+            do sleep 5; done'
+          echo "Analysis complete" 
 
       - name: "Exporter rapport SonarQube"
         if: always()
         run: |
-          sudo mkdir -p reports/sonarqube
+          mkdir -p reports/sonarqube
           curl -s -u "admin:admin" \
             "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR&ps=500" \
-            -o reports/sonarqube/sonarqube-report.json || true
-          SIZE=$(wc -c < reports/sonarqube/sonarqube-report.json 2>/dev/null || echo "0")
-          if [ "$SIZE" -lt 50 ]; then
-            sleep 60
-            curl -s -u "admin:admin" \
-              "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR&ps=500" \
-              -o reports/sonarqube/sonarqube-report.json || true
-          fi
-          cat reports/sonarqube/sonarqube-report.json | python3 -c "
-          import sys, json
-          data = json.load(sys.stdin)
-          issues = data.get('issues', [])
-          print(f'Total issues: {len(issues)}')
-          for issue in issues:
-              print(f\"[{issue.get('severity')}] {issue.get('component')} - {issue.get('message')}\")
-          " || true
-
-      - name: "Exporter rapport SonarQube"
-        if: always()
-        run: |
-          sudo mkdir -p reports/sonarqube
-          curl -s -u "admin:admin" \
-            "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR" \
             -o reports/sonarqube/sonarqube-report.json || true
 
       - uses: actions/upload-artifact@v4
