@@ -52,6 +52,20 @@ import { useRouter, useRoute, RouterLink } from 'vue-router'
 import authService from '@/services/auth.service.js'
 import api from '@/services/api.js'
 
+type ApiError = {
+  response?: {
+    data?: {
+      errors?: Array<{ message?: string }>
+      message?: string
+    }
+  }
+}
+
+const getApiErrorMessage = (e: unknown, fallback: string) => {
+  const data = (e as ApiError).response?.data
+  return data?.errors?.[0]?.message || data?.message || fallback
+}
+
 const router      = useRouter()
 const route       = useRoute()
 const token       = route.query.token as string || ''
@@ -104,12 +118,7 @@ async function submit() {
     success.value = 'Mot de passe réinitialisé avec succès !'
     setTimeout(() => router.push('/login'), 2000)
   } catch(e) {
-    const errors = e.response?.data?.errors
-    if (errors && errors.length > 0) {
-      error.value = errors[0].message
-    } else {
-      error.value = e.response?.data?.message || 'Une erreur est survenue.'
-    }
+    error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
   } finally {
     loading.value = false
   }

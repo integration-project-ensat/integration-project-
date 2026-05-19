@@ -82,6 +82,20 @@ import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
 
+type ApiError = {
+  response?: {
+    data?: {
+      errors?: Array<{ message?: string }>
+      message?: string
+    }
+  }
+}
+
+const getApiErrorMessage = (e: unknown, fallback: string) => {
+  const data = (e as ApiError).response?.data
+  return data?.errors?.[0]?.message || data?.message || fallback
+}
+
 const router  = useRouter()
 const error   = ref('')
 const loading = ref(false)
@@ -113,12 +127,7 @@ async function submit() {
     console.log('email avant push:', form.email) // ← ajoute ici
     router.push({ path: '/verify-code', query: { email: form.email } })
  } catch(e) {
-  const errors = e.response?.data?.errors
-  if (errors && errors.length > 0) {
-    error.value = errors[0].message  // ← prend le vrai message d'erreur
-  } else {
-    error.value = e.response?.data?.message || 'Une erreur est survenue.'
-  }
+    error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
   } finally {
     loading.value = false  // ← ajouter ceci
   }

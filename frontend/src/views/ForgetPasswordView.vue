@@ -41,6 +41,20 @@ import { RouterLink } from 'vue-router'
 import { useRouter } from 'vue-router'
 import authService from '@/services/auth.service.js'
 
+type ApiError = {
+  response?: {
+    data?: {
+      errors?: Array<{ message?: string }>
+      message?: string
+    }
+  }
+}
+
+const getApiErrorMessage = (e: unknown, fallback: string) => {
+  const data = (e as ApiError).response?.data
+  return data?.errors?.[0]?.message || data?.message || fallback
+}
+
 const email   = ref('')
 const error   = ref('')
 const success = ref('')
@@ -56,18 +70,15 @@ async function submit() {
   }
   loading.value = true
   try {
-   await authService.forgotPassword(email.value)
+    await authService.forgotPassword(email.value)
     success.value = 'Lien envoyé ! Vérifiez votre boîte mail.'
 
-router.push({ path: '/reset-password', query: { email: email.value } })
+    router.push({ path: '/reset-password', query: { email: email.value } })
  } catch(e) {
-  const errors = e.response?.data?.errors
-  if (errors && errors.length > 0) {
-    error.value = errors[0].message
-  } else {
-    error.value = e.response?.data?.message || 'Une erreur est survenue.'
+    error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
+  } finally {
+    loading.value = false
   }
-}
 }
 </script>
 

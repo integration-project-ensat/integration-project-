@@ -63,6 +63,20 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import authService from '@/services/auth.service.js'
 
+type ApiError = {
+  response?: {
+    data?: {
+      errors?: Array<{ message?: string }>
+      message?: string
+    }
+  }
+}
+
+const getApiErrorMessage = (e: unknown, fallback: string) => {
+  const data = (e as ApiError).response?.data
+  return data?.errors?.[0]?.message || data?.message || fallback
+}
+
 const router   = useRouter()
 const route    = useRoute()
 const email    = route.query.email as string || ''
@@ -125,12 +139,7 @@ async function submit() {
       router.push('/dashboard')
     }, 1000)
   } catch(e) {
-    const errors = e.response?.data?.errors
-    if (errors && errors.length > 0) {
-      error.value = errors[0].message
-    } else {
-      error.value = e.response?.data?.message || 'Code incorrect ou expiré.'
-    }
+    error.value = getApiErrorMessage(e, 'Code incorrect ou expiré.')
   } finally {
     loading.value = false
   }

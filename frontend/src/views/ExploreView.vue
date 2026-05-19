@@ -1,4 +1,3 @@
-```vue
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import Sidebar from '../components/explore/Sidebar.vue'
@@ -162,7 +161,7 @@ const resetFilters = () => {
       <main class="flex-1 px-4 py-5 sm:px-6 lg:px-8">
         <Topbar
           :searchQuery="searchQuery"
-          @update:searchQuery="value => (searchQuery.value = value)"
+          @update:searchQuery="value => (searchQuery = value)"
         />
 
         <div class="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
@@ -207,4 +206,3 @@ const resetFilters = () => {
     </div>
   </div>
 </template>
-```
