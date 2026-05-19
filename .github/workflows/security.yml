@@ -130,6 +130,24 @@ jobs:
           SONAR_TOKEN: ${{ steps.sonar_token.outputs.token }}
           SONAR_HOST_URL: "http://127.0.0.1:9000"
 
+      - name: "Attendre analyse SonarQube"
+        run: sleep 30
+
+      - name: "Exporter rapport SonarQube"
+        if: always()
+        run: |
+          mkdir -p reports/sonarqube
+          curl -s -u "admin:admin" \
+            "http://127.0.0.1:9000/api/issues/search?componentKeys=integration-project&severities=BLOCKER,CRITICAL,MAJOR,MINOR" \
+            -o reports/sonarqube/sonarqube-report.json || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sonarqube-report-${{ github.run_number }}
+          path: reports/sonarqube/sonarqube-report.json
+          retention-days: 30
+
       - name: "Preparer dossier ZAP"
         run: |
           mkdir -p reports/zap
