@@ -131,7 +131,12 @@ jobs:
           SONAR_HOST_URL: "http://127.0.0.1:9000"
 
       - name: "Attendre analyse SonarQube"
-        run: sleep 30
+        run: |
+          timeout 120 bash -c \
+            'until curl -sf -u "admin:admin" \
+            "http://127.0.0.1:9000/api/ce/activity_status" \
+            | grep -q "\"pending\":0,\"inProgress\":0"; do sleep 5; done'
+          echo "SonarQube analyse terminee"
 
       - name: "Exporter rapport SonarQube"
         if: always()
