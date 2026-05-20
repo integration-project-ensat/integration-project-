@@ -1,4 +1,4 @@
-#stage  : Build Vuejs
+# Stage 1: Build Vuejs
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
@@ -6,8 +6,10 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-#stage2 Servire avec nginx 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
+# Stage 2: Just serve the files (no nginx)
+FROM node:20-alpine
+RUN npm install -g serve
+COPY --from=build /app/dist /app
+WORKDIR /app
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "-s", ".", "-l", "80"]
