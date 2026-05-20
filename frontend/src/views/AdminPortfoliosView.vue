@@ -338,10 +338,6 @@ const refresh = () => { filters.value = { search: '', category: '' } }
   opacity: 0.12;
   /* override: use a wrapper trick */
   flex-shrink: 0;
-}
- 
-/* Better icon approach */
-.kpi-icon {
   opacity: 1;
   background: transparent;
 }
