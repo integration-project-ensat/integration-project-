@@ -37,8 +37,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import authService from '@/services/auth.service.js'
 
 type ApiError = {
