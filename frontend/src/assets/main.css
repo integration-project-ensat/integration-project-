@@ -8,42 +8,59 @@
 
 :root {
   --navy:          #111827;
-  --navy-mid:      #243559; 
+  --navy-mid:      #243559;
   --purple:        #4f46e5;
-  --purple-light:  #5a89ed; /*ou bien ce coleur*/
+  --purple-hover:  #4338ca;
+  --purple-light:  #5a89ed;
   --blue-w:        #06B6D4;
   --text-dark:     #111827;
   --text-gray:     #7A7F88;
+  --text-muted:    #7A7F88;
   --input-bg:      #E5E7EB;
   --error:         #df1e21;
-  --font-head:     'Inter', sans-serif;
+  --font-head:     'Sora', sans-serif;
   --font-body:     'DM Sans', sans-serif;
   --radius-pill:   50px;
   --radius-card:   16px;
   --ease:          all 0.25s cubic-bezier(.4,0,.2,1);
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
+html,
+body,
+#app {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 }
 
-#app {
-   width: 100%;
-   height: 100vh;
-   display: flex;
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  min-height: 100vh;
   font-family: var(--font-body);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #ffffff;
+  color: var(--text-dark);
+}
+
+#app {
   min-height: 100vh;
 }
 
-button { cursor: pointer; border: none; font-family: var(--font-head); }
-input, select { outline: none; border: none; font-family: var(--font-body); }
-a { text-decoration: none; }
+button {
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-head);
+}
+
+input,
+select,
+textarea {
+  outline: none;
+  border: none;
+  font-family: var(--font-body);
+}
+
+a {
+  text-decoration: none;
+}

@@ -26,7 +26,6 @@ export default {
   },
 
   async resetPassword(payload) {
-    // payload: { email, code, newPassword }
     return api.post('/reinitialiser-mot-de-passe', payload)
   },
 

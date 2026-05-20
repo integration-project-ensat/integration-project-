@@ -1,4 +1,3 @@
-// solution rapide de probème qu ejavScript ne sait pas ce qi'il exporte
 declare const authService: {
   login(email: string, password: string): Promise<any>
   signup(payload: {
