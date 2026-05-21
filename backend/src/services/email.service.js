@@ -182,35 +182,53 @@ const sendAdminValidationRequest = async (professionnel, adminActionToken) => {
 };
 
 // ── Email professionnel : résultat de la validation ─────────────────────────
+const buildContenuHtml = (estValide, motifRefus) => {
+    if (estValide) {
+        return `
+        <p style="color:#374151;font-size:16px;line-height:1.6;">
+            Bonne nouvelle ! Votre compte professionnel sur <strong>Pheracore</strong> a été
+            <strong style="color:#16a34a;">validé par notre équipe</strong>.
+            Vous pouvez désormais vous connecter et accéder à toutes les fonctionnalités de la plateforme.
+        </p>
+        <div style="text-align:center;margin:28px 0;">
+            <a href="${escapeHtml(process.env.FRONTEND_URL + '/seconnecter')}"
+               style="display:inline-block;padding:14px 32px;background:#4F46E5;color:#fff;text-decoration:none;border-radius:6px;font-size:16px;font-weight:bold;">
+                Se connecter →
+            </a>
+        </div>`;
+    }
+
+    const blocMotif = motifRefus ? `
+        <div style="padding:16px;background:#fef2f2;border-left:4px solid #dc2626;border-radius:4px;margin:20px 0;">
+            <p style="margin:0;color:#7f1d1d;font-size:14px;"><strong>Motif :</strong> ${escapeHtml(motifRefus)}</p>
+        </div>` : '';
+
+    return `
+    <p style="color:#374151;font-size:16px;line-height:1.6;">
+        Nous avons examiné votre demande de création de compte professionnel sur <strong>Pheracore</strong>.
+        Malheureusement, votre compte n'a pas pu être <strong style="color:#dc2626;">validé</strong>.
+    </p>
+    ${blocMotif}
+    <p style="color:#6B7280;font-size:14px;">
+        Pour toute question, contactez-nous à <a href="mailto:${escapeHtml(process.env.SMTP_USER)}" style="color:#4F46E5;">${escapeHtml(process.env.SMTP_USER)}</a>.
+    </p>`;
+};
+
+const buildTexteBrut = (estValide, motifRefus) => {
+    if (estValide) {
+        return 'Votre compte a été validé. Connectez-vous : ' + process.env.FRONTEND_URL + '/seconnecter';
+    }
+    const motif = motifRefus ? '\n\nMotif : ' + motifRefus : '';
+    return 'Votre compte a été refusé.' + motif;
+};
+
 const sendValidationResultEmail = async (email, nom, estValide, motifRefus = null) => {
     const safeNom = escapeHtml(nom);
     const sujet = estValide
         ? '✅ Votre compte professionnel a été validé'
         : '❌ Votre compte professionnel a été refusé';
 
-    const contenuHtml = estValide
-        ? `<p style="color:#374151;font-size:16px;line-height:1.6;">
-             Bonne nouvelle ! Votre compte professionnel sur <strong>Pheracore</strong> a été
-             <strong style="color:#16a34a;">validé par notre équipe</strong>.
-             Vous pouvez désormais vous connecter et accéder à toutes les fonctionnalités de la plateforme.
-           </p>
-           <div style="text-align:center;margin:28px 0;">
-             <a href="${escapeHtml(process.env.FRONTEND_URL + '/seconnecter')}"
-                style="display:inline-block;padding:14px 32px;background:#4F46E5;color:#fff;text-decoration:none;border-radius:6px;font-size:16px;font-weight:bold;">
-               Se connecter →
-             </a>
-           </div>`
-        : `<p style="color:#374151;font-size:16px;line-height:1.6;">
-             Nous avons examiné votre demande de création de compte professionnel sur <strong>Pheracore</strong>.
-             Malheureusement, votre compte n'a pas pu être <strong style="color:#dc2626;">validé</strong>.
-           </p>
-           ${motifRefus ? `
-           <div style="padding:16px;background:#fef2f2;border-left:4px solid #dc2626;border-radius:4px;margin:20px 0;">
-             <p style="margin:0;color:#7f1d1d;font-size:14px;"><strong>Motif :</strong> ${escapeHtml(motifRefus)}</p>
-           </div>` : ''}
-           <p style="color:#6B7280;font-size:14px;">
-             Pour toute question, contactez-nous à <a href="mailto:${escapeHtml(process.env.SMTP_USER)}" style="color:#4F46E5;">${escapeHtml(process.env.SMTP_USER)}</a>.
-           </p>`;
+    const contenuHtml = buildContenuHtml(estValide, motifRefus);
 
     await sendEmail({
         from: `"Pheracore" <${process.env.SMTP_USER}>`,
@@ -219,10 +237,7 @@ const sendValidationResultEmail = async (email, nom, estValide, motifRefus = nul
         html: baseEmailTemplate(sujet, `
             <h3 style="color:#374151;margin:0 0 16px;">Bonjour ${safeNom},</h3>
             ${contenuHtml}`),
-        text: `${sujet}\n\nBonjour ${nom},\n\n${estValide
-            ? 'Votre compte a été validé. Connectez-vous : ' + process.env.FRONTEND_URL + '/seconnecter'
-            : 'Votre compte a été refusé.' + (motifRefus ? '\n\nMotif : ' + motifRefus : '')
-        }`
+        text: `${sujet}\n\nBonjour ${nom},\n\n${buildTexteBrut(estValide, motifRefus)}`
     });
 };
 
