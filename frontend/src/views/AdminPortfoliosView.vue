@@ -331,15 +331,12 @@ const refresh = () => { filters.value = { search: '', category: '' } }
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: currentColor;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.12;
-  /* override: use a wrapper trick */
-  flex-shrink: 0;
   opacity: 1;
-  background: transparent;
+  flex-shrink: 0;
 }
  
 /* ══ Filters bar ═════════════════════════════════ */
