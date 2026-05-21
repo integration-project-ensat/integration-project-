@@ -425,8 +425,8 @@ const id = BigInt(utilisateurId);
   }
   
 // Validation du professionnel et activation du compte dans une transaction
-await prisma.$transaction
-([prisma.professionnel.update({
+await prisma.$transaction([
+  prisma.professionnel.update({
     where: { id_utilisateur: id },
     data: { est_valide: true ,
       statut_validation:'VALIDE',
