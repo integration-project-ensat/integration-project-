@@ -10,7 +10,12 @@ const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
 const competenceRoutes = require('./src/routes/competence.routes')
+<<<<<<< HEAD
 const photoRoutes = require('./src/routes/photo.routes')
+=======
+const profileRoutes =require('./src/routes/profil.routes')
+const diplomeRoutes = require('./src/routes/diplome.routes');
+>>>>>>> f7844a2a1795ae15e7b77022fef2e8ab765a13c0
 
 const app = express()
 
@@ -30,6 +35,13 @@ app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
 
+<<<<<<< HEAD
+=======
+
+
+
+//health check
+>>>>>>> f7844a2a1795ae15e7b77022fef2e8ab765a13c0
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
@@ -42,6 +54,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/competences', competenceRoutes)
 app.use('/api/profil/photo', photoRoutes)
 
+<<<<<<< HEAD
 app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ message: 'Fichier trop lourd. Maximum 5 MB.' });
@@ -53,6 +66,16 @@ app.use((err, req, res, next) => {
 });
 
 app.use((req, res) => {
+=======
+// Auth routes
+app.use('/api/auth', authRoutes) 
+// Competence routes
+app.use('/api/competences', competenceRoutes)
+app.use('/api/profil',profileRoutes)
+app.use('/api/diplomes',diplomeRoutes)
+//404 not found handler (doit être après toutes les routes)
+app.use((req,res) => {
+>>>>>>> f7844a2a1795ae15e7b77022fef2e8ab765a13c0
   res.status(404).json({
     success: false,
     statusCode: 404,
