@@ -38,11 +38,6 @@ function hashToken(token) {
 }
 // ==================== INSCRIPTION PUBLIQUE ====================
 
-function isValidPublicRole(role) {
-    console.log("CHECK ROLE:", role, "IN", Object.values(PUBLIC_ROLES))
-    return Object.values(PUBLIC_ROLES).includes(role);
-}
-
 const register = asyncHandler(async (req, res) => {
     console.log("======== REGISTER ========")
     console.log("BODY:", req.body)
