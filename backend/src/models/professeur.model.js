@@ -17,15 +17,8 @@ const updateProfesseur = (id_utilisateur, data) =>
     data,
   })
 
-const validerProfesseur = (id_utilisateur) =>
-  prisma.professeur.findUnique({
-    where: { id_utilisateur: toBigInt(id_utilisateur) },
-    include: { utilisateur: true },
-  })
-
 module.exports = {
   createProfesseur,
   findProfesseurByUser,
   updateProfesseur,
-  validerProfesseur,
 }

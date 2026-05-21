@@ -27,21 +27,21 @@
         <div class="filters-card">
           <!-- Recherche texte -->
           <div class="filter-group">
-            <label class="filter-label">RECHERCHE</label>
+            <label class="filter-label" for="filter-search">RECHERCHE</label>
             <div class="input-search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
-              <input v-model="filters.search" type="text" placeholder="Nom, email ou école..." />
+              <input id="filter-search" v-model="filters.search" type="text" placeholder="Nom, email ou école..." />
             </div>
           </div>
  
           <!-- Ville -->
           <div class="filter-group">
-            <label class="filter-label">VILLE</label>
+            <label class="filter-label" for="filter-city">VILLE</label>
             <div class="select-wrapper">
-              <select v-model="filters.city">
+              <select id="filter-city" v-model="filters.city">
                 <option value="">Toutes les villes</option>
                 <option v-for="c in cities" :key="c" :value="c">{{ c }}</option>
               </select>
@@ -54,9 +54,9 @@
  
           <!-- Établissement -->
           <div class="filter-group">
-            <label class="filter-label">ÉTABLISSEMENT</label>
+            <label class="filter-label" for="filter-school">ÉTABLISSEMENT</label>
             <div class="select-wrapper">
-              <select v-model="filters.school">
+              <select id="filter-school" v-model="filters.school">
                 <option value="">Toutes les écoles</option>
                 <option v-for="s in schools" :key="s" :value="s">{{ s }}</option>
               </select>
@@ -69,7 +69,7 @@
  
           <!-- Score slider -->
           <div class="filter-group score-group">
-            <label class="filter-label">
+            <label class="filter-label" for="filter-score">
               SCORE MIN:
               <span class="score-val">{{ filters.minScore }}+</span>
               <button class="star-btn" @click="filters.minScore = 0" title="Réinitialiser">
@@ -80,6 +80,7 @@
               </button>
             </label>
             <input
+              id="filter-score"
               v-model.number="filters.minScore"
               type="range" min="0" max="100" step="5"
               class="score-slider"
