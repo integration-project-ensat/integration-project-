@@ -29,10 +29,25 @@ const sanitizeUrl = (url) => {
 };
 
 const errorMiddleware = (err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      success: false,
+      statusCode: 413,
+      message: 'Fichier trop lourd. Maximum 5 MB.',
+    });
+  }
+
+  if (err.message?.includes('Format non supporté')) {
+    return res.status(415).json({
+      success: false,
+      statusCode: 415,
+      message: err.message,
+    });
+  }
+
   const isDev = process.env.NODE_ENV === 'development';
   const statusCode = resolveStatusCode(err);
   const clientMessage = resolveClientMessage(err, statusCode);
-
 
   const logEntry = {
     timestamp: new Date().toISOString(),
