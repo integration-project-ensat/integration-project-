@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import {
-  Bell,
-  ChevronDown,
-  Search,
-} from "lucide-vue-next";
+import { Bell, ChevronDown, Search } from "lucide-vue-next";
 
 type UserType = "student" | "professeur" | "professionnel";
-type NotificationCategory = "Tout" | "Commentaires" | "Recommandations" | "Projets";
+type NotificationCategory =
+  | "Tout"
+  | "Commentaires"
+  | "Recommandations"
+  | "Projets"
+  | "Stages"
+  | "Attestations";
 
 interface NotificationItem {
   id: number;
@@ -45,14 +47,15 @@ const isLanguageOpen = ref(false);
 const selectedLanguage = ref("FR");
 const selectedNotificationFilter = ref<NotificationCategory>("Tout");
 const selectedNotificationId = ref<number | null>(null);
+const isHeaderHidden = ref(false);
+let lastScrollTop = 0;
+let isScrollTicking = false;
 
 const languages = ["FR", "EN", "AR"];
-const notificationFilters: NotificationCategory[] = [
-  "Tout",
-  "Commentaires",
-  "Recommandations",
-  "Projets",
-];
+const notificationFilters: NotificationCategory[] =
+  props.userType === "professeur"
+    ? ["Tout", "Stages", "Projets", "Attestations", "Recommandations"]
+    : ["Tout", "Commentaires", "Recommandations", "Projets"];
 
 const notificationsByUser: Record<UserType, NotificationItem[]> = {
   student: [
@@ -150,81 +153,93 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
   professeur: [
     {
       id: 1,
-      category: "Projets",
-      person: "Nom Etudiant",
-      action: "demande la confirmation du projet",
-      relatedTitle: "Portfolio Web",
-      time: "Il y a 12 min",
+      category: "Stages",
+      person: "Nom Étudiant",
+      action: "vous a envoyé une demande de validation de stage",
+      relatedTitle: "PFE",
+      time: "Il y a 3 min",
       initials: "NE",
       profilePath: "/profile/student-1",
-      targetPath: "/projects/portfolio-web",
+      targetPath: "/validations/stage-pfe",
       unread: true,
     },
     {
       id: 2,
-      category: "Recommandations",
-      person: "Nom Etudiant",
-      action: "a recu votre lettre de recommandation pour",
-      relatedTitle: "Candidature Master",
-      time: "Hier",
+      category: "Projets",
+      person: "Nom Étudiant",
+      action: "vous demande de valider le projet",
+      relatedTitle: "Portfolio Web",
+      time: "Il y a 10 min",
       initials: "NE",
-      profilePath: "/profile/student-1",
-      targetPath: "/recommendations/candidature-master",
+      profilePath: "/profile/student-2",
+      targetPath: "/validations/projet-portfolio-web",
+      unread: true,
     },
     {
       id: 3,
-      category: "Commentaires",
-      person: "Nom Professionnel",
-      action: "a commente votre avis sur",
-      relatedTitle: "Projet DevOps",
-      time: "Il y a 3 j",
-      initials: "NP",
-      profilePath: "/profile/professional-1",
-      targetPath: "/posts/projet-devops",
+      category: "Attestations",
+      person: "Nom Étudiant",
+      action: "a demandé la validation d’une attestation de stage",
+      relatedTitle: "Stage DevOps",
+      time: "Il y a 1 h",
+      initials: "NE",
+      profilePath: "/profile/student-3",
+      targetPath: "/validations/attestation-stage-devops",
     },
     {
       id: 4,
-      category: "Projets",
-      person: "Nom Etudiant",
-      action: "a soumis une nouvelle version du projet",
-      relatedTitle: "Dashboard Analytics",
-      time: "Il y a 4 j",
+      category: "Recommandations",
+      person: "Nom Étudiant",
+      action: "vous a demandé d’écrire une lettre de recommandation",
+      relatedTitle: "Lettre de recommandation",
+      time: "Hier",
       initials: "NE",
-      profilePath: "/profile/student-2",
-      targetPath: "/projects/dashboard-analytics",
+      profilePath: "/profile/student-4",
+      targetPath: "/validations/recommandation-lettre",
     },
     {
       id: 5,
-      category: "Recommandations",
-      person: "Nom Etudiant",
-      action: "vous a demande une lettre pour",
-      relatedTitle: "Stage DevOps",
-      time: "Il y a 5 j",
+      category: "Stages",
+      person: "Nom Étudiant",
+      action: "vous a envoyé une demande de validation de stage",
+      relatedTitle: "Stage été",
+      time: "Il y a 2 j",
       initials: "NE",
-      profilePath: "/profile/student-3",
-      targetPath: "/recommendations/stage-devops",
+      profilePath: "/profile/student-5",
+      targetPath: "/validations/stage-ete",
     },
     {
       id: 6,
-      category: "Commentaires",
-      person: "Nom Professionnel",
-      action: "a reagi a votre commentaire sur",
-      relatedTitle: "Architecture Cloud",
-      time: "Il y a 6 j",
-      initials: "NP",
-      profilePath: "/profile/professional-2",
-      targetPath: "/posts/architecture-cloud",
+      category: "Projets",
+      person: "Nom Étudiant",
+      action: "vous demande de valider le projet",
+      relatedTitle: "Application Mobile",
+      time: "Il y a 3 j",
+      initials: "NE",
+      profilePath: "/profile/student-6",
+      targetPath: "/validations/projet-application-mobile",
     },
     {
       id: 7,
-      category: "Projets",
-      person: "Nom Etudiant",
-      action: "attend votre validation pour",
-      relatedTitle: "Plateforme Portfolio",
+      category: "Attestations",
+      person: "Nom Étudiant",
+      action: "a demandé la validation d’une attestation de stage",
+      relatedTitle: "Stage Cloud",
       time: "Il y a 1 sem",
       initials: "NE",
-      profilePath: "/profile/student-4",
-      targetPath: "/projects/plateforme-portfolio",
+      profilePath: "/profile/student-7",
+      targetPath: "/validations/attestation-stage-cloud",
+    },
+    {
+      id: 8,
+      category: "Recommandations",
+      person: "Nom Étudiant",
+      action: "vous a demandé d’écrire une lettre de recommandation",
+      relatedTitle: "Lettre de recommandation",
+      time: "Il y a 2 sem",
+      initials: "NE",
+      profilePath: "/profile/student-8",
+      targetPath: "/validations/recommandation-lettre-2",
     },
   ],
   professionnel: [
@@ -331,7 +346,8 @@ const filteredNotifications = computed(() => {
   if (selectedNotificationFilter.value === "Tout") return notifications.value;
 
   return notifications.value.filter(
-    (notification) => notification.category === selectedNotificationFilter.value,
+    (notification) =>
+      notification.category === selectedNotificationFilter.value,
   );
 });
 const hasUnreadNotifications = computed(() =>
@@ -339,11 +355,13 @@ const hasUnreadNotifications = computed(() =>
 );
 
 const toggleNotifications = () => {
+  isHeaderHidden.value = false;
   isNotificationOpen.value = !isNotificationOpen.value;
   isLanguageOpen.value = false;
 };
 
 const toggleLanguage = () => {
+  isHeaderHidden.value = false;
   isLanguageOpen.value = !isLanguageOpen.value;
   isNotificationOpen.value = false;
 };
@@ -353,7 +371,10 @@ const selectLanguage = (language: string) => {
   isLanguageOpen.value = false;
 };
 
-const navigateAfterSelection = (notification: NotificationItem, path: string) => {
+const navigateAfterSelection = (
+  notification: NotificationItem,
+  path: string,
+) => {
   selectedNotificationId.value = notification.id;
   window.setTimeout(() => {
     isNotificationOpen.value = false;
@@ -381,17 +402,61 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
+const updateHeaderVisibility = (scrollTop: number) => {
+  const scrollDelta = scrollTop - lastScrollTop;
+
+  // Always show header immediately when scrolling up, even a little
+  if (
+    scrollTop <= 16 ||
+    scrollDelta < 0 ||
+    isNotificationOpen.value ||
+    isLanguageOpen.value
+  ) {
+    isHeaderHidden.value = false;
+  } else if (scrollDelta > 0 && scrollTop > 56) {
+    isHeaderHidden.value = true;
+  }
+
+  lastScrollTop = scrollTop;
+};
+
+const handleExploreScroll = (event: Event) => {
+  const target = event.target;
+  if (
+    !(target instanceof HTMLElement) ||
+    !target.classList.contains("explore-middle")
+  )
+    return;
+
+  const scrollTop = target.scrollTop;
+  if (isScrollTicking) return;
+  isScrollTicking = true;
+
+  window.requestAnimationFrame(() => {
+    updateHeaderVisibility(scrollTop);
+    isScrollTicking = false;
+  });
+};
+
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
+  document.addEventListener("scroll", handleExploreScroll, {
+    passive: true,
+    capture: true,
+  });
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
+  document.removeEventListener("scroll", handleExploreScroll, true);
 });
 </script>
 
 <template>
-  <section class="explore-header">
+  <section
+    class="explore-header"
+    :class="{ 'explore-headerHidden': isHeaderHidden }"
+  >
     <h1 class="explore-title">Explore</h1>
 
     <div class="explore-actions">
@@ -440,7 +505,9 @@ onBeforeUnmount(() => {
               tabindex="0"
               @click="navigateToNotificationTarget(notification)"
               @keydown.enter="navigateToNotificationTarget(notification)"
-              @keydown.space.prevent="navigateToNotificationTarget(notification)"
+              @keydown.space.prevent="
+                navigateToNotificationTarget(notification)
+              "
             >
               <button
                 type="button"
@@ -461,7 +528,9 @@ onBeforeUnmount(() => {
                     {{ notification.person }}
                   </button>
                   {{ notification.action }}
-                  <span class="explore-related">{{ notification.relatedTitle }}</span>
+                  <span class="explore-related">{{
+                    notification.relatedTitle
+                  }}</span>
                 </span>
                 <span class="explore-notif-meta">
                   {{ notification.time }}
@@ -506,12 +575,27 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .explore-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   padding: 18px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  background: white;
   border-bottom: 1px solid var(--input-bg);
+  transform: translateY(0);
+  transition:
+    transform 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease;
+  will-change: transform;
+}
+
+.explore-headerHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(-100% - 1px));
 }
 
 .explore-title {
