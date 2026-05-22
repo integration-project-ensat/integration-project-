@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Bell, ChevronDown, Search } from "lucide-vue-next";
+import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
 import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
 import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
@@ -75,9 +75,6 @@ const filteredProfiles = computed(() => {
   );
 });
 
-const handleNotification = () => {
-  alert("Notifications clicked!");
-};
 </script>
 
 <template>
@@ -89,30 +86,7 @@ const handleNotification = () => {
       <main class="explore-middle">
         <div class="explore-middle-inner">
           <div class="explore-panel">
-            <section class="explore-header">
-              <h1 class="explore-title">Explore</h1>
-
-              <div class="explore-actions">
-                <div class="explore-search">
-                  <input v-model="searchQuery" type="text" />
-                  <Search class="explore-search-icon" />
-                </div>
-
-                <button
-                  type="button"
-                  class="explore-notif"
-                  @click="handleNotification"
-                >
-                  <span class="explore-notif-dot" />
-                  <Bell class="h-4 w-4" />
-                </button>
-
-                <button type="button" class="explore-profile">
-                  <span class="explore-flag">FR</span>
-                  <ChevronDown class="h-4 w-4" />
-                </button>
-              </div>
-            </section>
+            <ExploreHeader v-model="searchQuery" user-type="professionnel" />
 
             <div class="explore-feed">
               <ProfileCard

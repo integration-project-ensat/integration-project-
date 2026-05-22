@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
+import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
 import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
-import { Bell, ChevronDown, Search } from "lucide-vue-next";
 import { computed, ref } from "vue";
 
 interface Profile {
@@ -70,10 +70,6 @@ const filteredProfiles = computed(() => {
   );
 });
 
-const handleNotification = () => {
-  alert("Notifications clicked!");
-};
-
 const handleUpdateFilters = (next: typeof filters.value) => {
   filters.value = next;
 };
@@ -91,30 +87,7 @@ const sidebarOpen = ref(true);
       <main class="explore-middle">
         <div class="explore-middle-inner">
           <div class="explore-panel">
-            <section class="explore-header">
-              <h1 class="explore-title">Explore</h1>
-
-              <div class="explore-actions">
-                <div class="explore-search">
-                  <input v-model="searchQuery" type="text" />
-                  <Search class="explore-search-icon" />
-                </div>
-
-                <button
-                  type="button"
-                  class="explore-notif"
-                  @click="handleNotification"
-                >
-                  <span class="explore-notif-dot" />
-                  <Bell class="h-4 w-4" />
-                </button>
-
-                <button type="button" class="explore-profile">
-                  <span class="explore-flag">FR</span>
-                  <ChevronDown class="h-4 w-4" />
-                </button>
-              </div>
-            </section>
+            <ExploreHeader v-model="searchQuery" user-type="professeur" />
 
             <div class="explore-feed">
               <ProfileCard
