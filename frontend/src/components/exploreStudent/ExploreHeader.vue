@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import {
   Bell,
   ChevronDown,
@@ -17,6 +18,8 @@ interface NotificationItem {
   relatedTitle: string;
   time: string;
   initials: string;
+  profilePath: string;
+  targetPath: string;
   unread?: boolean;
 }
 
@@ -34,6 +37,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: string];
 }>();
 
+const router = useRouter();
 const notificationRef = ref<HTMLElement | null>(null);
 const languageRef = ref<HTMLElement | null>(null);
 const isNotificationOpen = ref(false);
@@ -59,6 +63,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Portfolio Web",
       time: "Il y a 5 min",
       initials: "NP",
+      profilePath: "/profile/prof-1",
+      targetPath: "/projects/portfolio-web",
       unread: true,
     },
     {
@@ -69,6 +75,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "DevOps",
       time: "Il y a 18 min",
       initials: "NP",
+      profilePath: "/profile/professional-1",
+      targetPath: "/posts/devops",
       unread: true,
     },
     {
@@ -79,6 +87,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Stage PFE",
       time: "Hier",
       initials: "NP",
+      profilePath: "/profile/prof-1",
+      targetPath: "/recommendations/stage-pfe",
     },
     {
       id: 4,
@@ -88,6 +98,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Profil ENSA",
       time: "Il y a 2 j",
       initials: "NE",
+      profilePath: "/profile/student-1",
+      targetPath: "/profile/student-1",
     },
   ],
   professeur: [
@@ -99,6 +111,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Portfolio Web",
       time: "Il y a 12 min",
       initials: "NE",
+      profilePath: "/profile/student-1",
+      targetPath: "/projects/portfolio-web",
       unread: true,
     },
     {
@@ -109,6 +123,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Candidature Master",
       time: "Hier",
       initials: "NE",
+      profilePath: "/profile/student-1",
+      targetPath: "/recommendations/candidature-master",
     },
     {
       id: 3,
@@ -118,6 +134,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Projet DevOps",
       time: "Il y a 3 j",
       initials: "NP",
+      profilePath: "/profile/professional-1",
+      targetPath: "/posts/projet-devops",
     },
   ],
   professionnel: [
@@ -129,6 +147,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Expert DevOps",
       time: "Il y a 8 min",
       initials: "NE",
+      profilePath: "/profile/student-1",
+      targetPath: "/profile/student-1",
       unread: true,
     },
     {
@@ -139,6 +159,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Automatisation CI/CD",
       time: "Il y a 22 min",
       initials: "NE",
+      profilePath: "/profile/student-1",
+      targetPath: "/posts/ci-cd",
       unread: true,
     },
     {
@@ -149,6 +171,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Portfolio Cloud",
       time: "Aujourd'hui",
       initials: "NP",
+      profilePath: "/profile/professional-1",
+      targetPath: "/projects/portfolio-cloud",
     },
     {
       id: 4,
@@ -158,6 +182,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Projet Infrastructure",
       time: "Il y a 2 j",
       initials: "NP",
+      profilePath: "/profile/prof-1",
+      targetPath: "/projects/infrastructure",
     },
   ],
 };
@@ -192,6 +218,16 @@ const toggleLanguage = () => {
 const selectLanguage = (language: string) => {
   selectedLanguage.value = language;
   isLanguageOpen.value = false;
+};
+
+const navigateToNotificationTarget = (path: string) => {
+  isNotificationOpen.value = false;
+  router.push(path);
+};
+
+const navigateToProfile = (path: string) => {
+  isNotificationOpen.value = false;
+  router.push(path);
 };
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -258,14 +294,30 @@ onBeforeUnmount(() => {
               :key="notification.id"
               class="explore-notif-item"
               :class="{ 'is-unread': notification.unread }"
+              role="button"
+              tabindex="0"
+              @click="navigateToNotificationTarget(notification.targetPath)"
+              @keydown.enter="navigateToNotificationTarget(notification.targetPath)"
+              @keydown.space.prevent="navigateToNotificationTarget(notification.targetPath)"
             >
-              <span class="explore-avatar">
+              <button
+                type="button"
+                class="explore-avatar"
+                :aria-label="`Voir le profil de ${notification.person}`"
+                @click.stop="navigateToProfile(notification.profilePath)"
+              >
                 {{ notification.initials }}
-              </span>
+              </button>
 
               <span class="explore-notif-copy">
                 <span class="explore-notif-text">
-                  <strong>{{ notification.person }}</strong>
+                  <button
+                    type="button"
+                    class="explore-person-link"
+                    @click.stop="navigateToProfile(notification.profilePath)"
+                  >
+                    {{ notification.person }}
+                  </button>
                   {{ notification.action }}
                   <span class="explore-related">{{ notification.relatedTitle }}</span>
                 </span>
@@ -518,6 +570,11 @@ onBeforeUnmount(() => {
   background: #f8fafc;
 }
 
+.explore-notif-item:focus-visible {
+  outline: 2px solid #0a66c2;
+  outline-offset: 2px;
+}
+
 .explore-notif-item.is-unread {
   background: #f8fbff;
 }
@@ -535,9 +592,17 @@ onBeforeUnmount(() => {
   justify-content: center;
   border-radius: 9999px;
   background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+  border: 0;
   color: #075985;
+  cursor: pointer;
   font-size: 13px;
   font-weight: 900;
+  padding: 0;
+  transition: transform 0.15s ease;
+}
+
+.explore-avatar:hover {
+  transform: scale(1.04);
 }
 
 .explore-notif-copy {
@@ -555,9 +620,19 @@ onBeforeUnmount(() => {
   overflow-wrap: anywhere;
 }
 
-.explore-notif-text strong {
+.explore-person-link {
+  background: transparent;
+  border: 0;
   color: rgb(15 23 42);
+  cursor: pointer;
+  font: inherit;
   font-weight: 900;
+  padding: 0;
+}
+
+.explore-person-link:hover {
+  color: #0a66c2;
+  text-decoration: underline;
 }
 
 .explore-related {
