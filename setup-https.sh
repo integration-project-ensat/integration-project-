@@ -6,7 +6,5 @@ mkdir -p nginx/ssl
   -key-file nginx/ssl/nginx.key \
   -cert-file nginx/ssl/nginx.crt \
   localhost 127.0.0.1
-echo "nginx/ssl/nginx.key" >> .gitignore
-echo "nginx/ssl/nginx.crt" >> .gitignore
 docker compose down
 docker compose up -d
