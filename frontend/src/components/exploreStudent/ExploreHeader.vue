@@ -3,22 +3,20 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
   Bell,
   ChevronDown,
-  FileCheck,
-  MessageCircle,
   Search,
-  Send,
-  Sparkles,
-  Star,
-  Users,
 } from "lucide-vue-next";
 
 type UserType = "student" | "professeur" | "professionnel";
+type NotificationCategory = "Tout" | "Commentaires" | "Recommandations" | "Projets";
 
 interface NotificationItem {
   id: number;
-  text: string;
+  category: Exclude<NotificationCategory, "Tout">;
+  person: string;
+  action: string;
+  relatedTitle: string;
   time: string;
-  icon: typeof Bell;
+  initials: string;
   unread?: boolean;
 }
 
@@ -41,61 +39,125 @@ const languageRef = ref<HTMLElement | null>(null);
 const isNotificationOpen = ref(false);
 const isLanguageOpen = ref(false);
 const selectedLanguage = ref("FR");
+const selectedNotificationFilter = ref<NotificationCategory>("Tout");
 
 const languages = ["FR", "EN", "AR"];
+const notificationFilters: NotificationCategory[] = [
+  "Tout",
+  "Commentaires",
+  "Recommandations",
+  "Projets",
+];
 
 const notificationsByUser: Record<UserType, NotificationItem[]> = {
   student: [
     {
       id: 1,
-      text: "Nouvelles recommandations recues",
+      category: "Projets",
+      person: "Nom Prof",
+      action: "a confirme votre projet",
+      relatedTitle: "Portfolio Web",
       time: "Il y a 5 min",
-      icon: Sparkles,
+      initials: "NP",
       unread: true,
     },
     {
       id: 2,
-      text: "Nouveaux commentaires recus",
+      category: "Commentaires",
+      person: "Nom Professionnel",
+      action: "a commente votre post sur",
+      relatedTitle: "DevOps",
       time: "Il y a 18 min",
-      icon: MessageCircle,
+      initials: "NP",
       unread: true,
+    },
+    {
+      id: 3,
+      category: "Recommandations",
+      person: "Nom Prof",
+      action: "a ecrit une lettre de recommandation pour vous",
+      relatedTitle: "Stage PFE",
+      time: "Hier",
+      initials: "NP",
+    },
+    {
+      id: 4,
+      category: "Recommandations",
+      person: "Nom Etudiant",
+      action: "a recommande votre profil",
+      relatedTitle: "Profil ENSA",
+      time: "Il y a 2 j",
+      initials: "NE",
     },
   ],
   professeur: [
     {
       id: 1,
-      text: "Demandes de confirmation de projet",
+      category: "Projets",
+      person: "Nom Etudiant",
+      action: "demande la confirmation du projet",
+      relatedTitle: "Portfolio Web",
       time: "Il y a 12 min",
-      icon: FileCheck,
+      initials: "NE",
       unread: true,
     },
     {
       id: 2,
-      text: "Lettres de recommandation envoyees",
+      category: "Recommandations",
+      person: "Nom Etudiant",
+      action: "a recu votre lettre de recommandation pour",
+      relatedTitle: "Candidature Master",
       time: "Hier",
-      icon: Send,
+      initials: "NE",
+    },
+    {
+      id: 3,
+      category: "Commentaires",
+      person: "Nom Professionnel",
+      action: "a commente votre avis sur",
+      relatedTitle: "Projet DevOps",
+      time: "Il y a 3 j",
+      initials: "NP",
     },
   ],
   professionnel: [
     {
       id: 1,
-      text: "Nouvelles recommandations",
+      category: "Recommandations",
+      person: "Nom Etudiant",
+      action: "a recommande votre profil",
+      relatedTitle: "Expert DevOps",
       time: "Il y a 8 min",
-      icon: Star,
+      initials: "NE",
       unread: true,
     },
     {
       id: 2,
-      text: "Nouveaux commentaires",
+      category: "Commentaires",
+      person: "Nom Etudiant",
+      action: "a commente votre post sur",
+      relatedTitle: "Automatisation CI/CD",
       time: "Il y a 22 min",
-      icon: MessageCircle,
+      initials: "NE",
       unread: true,
     },
     {
       id: 3,
-      text: "Interactions sur profil et projets",
+      category: "Projets",
+      person: "Nom Professionnel",
+      action: "a consulte votre portfolio",
+      relatedTitle: "Portfolio Cloud",
       time: "Aujourd'hui",
-      icon: Users,
+      initials: "NP",
+    },
+    {
+      id: 4,
+      category: "Projets",
+      person: "Nom Prof",
+      action: "a partage une interaction sur",
+      relatedTitle: "Projet Infrastructure",
+      time: "Il y a 2 j",
+      initials: "NP",
     },
   ],
 };
@@ -106,6 +168,13 @@ const searchQuery = computed({
 });
 
 const notifications = computed(() => notificationsByUser[props.userType] ?? []);
+const filteredNotifications = computed(() => {
+  if (selectedNotificationFilter.value === "Tout") return notifications.value;
+
+  return notifications.value.filter(
+    (notification) => notification.category === selectedNotificationFilter.value,
+  );
+});
 const hasUnreadNotifications = computed(() =>
   notifications.value.some((notification) => notification.unread),
 );
@@ -170,19 +239,42 @@ onBeforeUnmount(() => {
         <div v-if="isNotificationOpen" class="explore-menu explore-notif-menu">
           <div class="explore-menu-title">Notifications</div>
 
-          <div v-if="notifications.length" class="explore-notif-list">
+          <div class="explore-notif-tabs">
+            <button
+              v-for="filter in notificationFilters"
+              :key="filter"
+              type="button"
+              class="explore-notif-tab"
+              :class="{ 'is-active': selectedNotificationFilter === filter }"
+              @click="selectedNotificationFilter = filter"
+            >
+              {{ filter }}
+            </button>
+          </div>
+
+          <div v-if="filteredNotifications.length" class="explore-notif-list">
             <div
-              v-for="notification in notifications"
+              v-for="notification in filteredNotifications"
               :key="notification.id"
               class="explore-notif-item"
+              :class="{ 'is-unread': notification.unread }"
             >
-              <span class="explore-notif-icon">
-                <component :is="notification.icon" class="h-4 w-4" />
+              <span class="explore-avatar">
+                {{ notification.initials }}
               </span>
+
               <span class="explore-notif-copy">
-                <span>{{ notification.text }}</span>
-                <small>{{ notification.time }}</small>
+                <span class="explore-notif-text">
+                  <strong>{{ notification.person }}</strong>
+                  {{ notification.action }}
+                  <span class="explore-related">{{ notification.relatedTitle }}</span>
+                </span>
+                <span class="explore-notif-meta">
+                  {{ notification.time }}
+                </span>
               </span>
+
+              <span v-if="notification.unread" class="explore-item-dot" />
             </div>
           </div>
 
@@ -356,65 +448,137 @@ onBeforeUnmount(() => {
 }
 
 .explore-menu-title {
-  padding: 14px 14px 8px;
-  font-size: 13px;
+  padding: 18px 18px 10px;
+  font-size: 18px;
   font-weight: 800;
   color: rgb(15 23 42);
 }
 
 .explore-notif-menu {
-  width: 286px;
+  width: 430px;
+  max-width: calc(100vw - 40px);
+  overflow: hidden;
+}
+
+.explore-notif-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid rgb(226 232 240);
+}
+
+.explore-notif-tab {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: rgb(71 85 105);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 8px 12px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.explore-notif-tab:hover,
+.explore-notif-tab.is-active {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .explore-notif-list {
   display: flex;
   flex-direction: column;
-  padding: 4px 8px 8px;
+  max-height: 430px;
+  overflow-y: auto;
+  padding: 8px;
 }
 
 .explore-notif-item {
   display: flex;
-  gap: 10px;
+  position: relative;
+  gap: 12px;
   align-items: flex-start;
-  border-radius: 10px;
-  padding: 10px 8px;
+  border-radius: 12px;
+  padding: 12px 34px 12px 10px;
   color: rgb(51 65 85);
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .explore-notif-item:hover {
   background: #f8fafc;
 }
 
-.explore-notif-icon {
+.explore-notif-item.is-unread {
+  background: #f8fbff;
+}
+
+.explore-notif-item.is-unread:hover {
+  background: #eef6ff;
+}
+
+.explore-avatar {
   display: inline-flex;
-  height: 28px;
-  width: 28px;
-  flex: 0 0 28px;
+  height: 44px;
+  width: 44px;
+  flex: 0 0 44px;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: #eef2ff;
-  color: #4f46e5;
+  background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+  color: #075985;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .explore-notif-copy {
   display: grid;
-  gap: 3px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
-.explore-notif-copy small {
-  font-size: 11px;
+.explore-notif-text {
+  color: rgb(30 41 59);
   font-weight: 600;
+}
+
+.explore-notif-text strong {
+  color: rgb(15 23 42);
+  font-weight: 900;
+}
+
+.explore-related {
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.explore-notif-meta {
+  font-size: 12px;
+  font-weight: 700;
   color: rgb(148 163 184);
+}
+
+.explore-item-dot {
+  position: absolute;
+  right: 14px;
+  top: 20px;
+  height: 9px;
+  width: 9px;
+  border-radius: 9999px;
+  background: #0a66c2;
 }
 
 .explore-empty {
   margin: 0;
-  padding: 10px 14px 16px;
-  font-size: 12px;
+  padding: 28px 18px 32px;
+  text-align: center;
+  font-size: 13px;
   font-weight: 700;
   color: rgb(100 116 139);
 }
