@@ -161,9 +161,7 @@ const next = () => idx.value = (idx.value + 1) % slides.length
   font-size: 1.7rem;
   font-weight: 700;
   color: white;
-  margin-bottom: 10px;
   margin: 40px;
-
 }
 
 .slide-text p {
