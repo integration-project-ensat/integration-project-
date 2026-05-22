@@ -547,12 +547,13 @@ onBeforeUnmount(() => {
 .explore-notif-list {
   display: flex;
   flex-direction: column;
-  height: min(520px, calc(100vh - 220px));
-  max-height: 520px;
+  height: min(360px, calc(100vh - 220px));
+  max-height: 360px;
   min-height: 260px;
   overflow-x: hidden;
-  overflow-y: auto;
-  padding: 10px;
+  overflow-y: scroll;
+  padding: 10px 8px 10px 10px;
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: #aeb5c3 #e7ebf5;
 }
