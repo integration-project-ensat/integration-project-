@@ -547,11 +547,31 @@ onBeforeUnmount(() => {
 .explore-notif-list {
   display: flex;
   flex-direction: column;
+  height: min(520px, calc(100vh - 220px));
   max-height: 520px;
-  min-height: 220px;
+  min-height: 260px;
   overflow-x: hidden;
   overflow-y: auto;
   padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.24) transparent;
+}
+
+.explore-notif-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.explore-notif-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.explore-notif-list::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.22);
+  border-radius: 9999px;
+}
+
+.explore-notif-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.34);
 }
 
 .explore-notif-item {
