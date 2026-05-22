@@ -455,21 +455,24 @@ onBeforeUnmount(() => {
 }
 
 .explore-notif-menu {
-  width: 430px;
+  right: -8px;
+  width: 520px;
   max-width: calc(100vw - 40px);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .explore-notif-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
+  overflow: hidden;
   padding: 0 16px 12px;
   border-bottom: 1px solid rgb(226 232 240);
 }
 
 .explore-notif-tab {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   border: 0;
   border-radius: 9999px;
   background: #f1f5f9;
@@ -492,9 +495,11 @@ onBeforeUnmount(() => {
 .explore-notif-list {
   display: flex;
   flex-direction: column;
-  max-height: 430px;
+  max-height: 520px;
+  min-height: 220px;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 8px;
+  padding: 10px;
 }
 
 .explore-notif-item {
@@ -539,6 +544,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 6px;
   min-width: 0;
+  max-width: 100%;
   font-size: 13px;
   line-height: 1.35;
 }
@@ -546,6 +552,7 @@ onBeforeUnmount(() => {
 .explore-notif-text {
   color: rgb(30 41 59);
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .explore-notif-text strong {
@@ -556,6 +563,7 @@ onBeforeUnmount(() => {
 .explore-related {
   color: #0f766e;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .explore-notif-meta {
