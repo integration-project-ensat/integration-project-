@@ -554,24 +554,26 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   padding: 10px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(15, 23, 42, 0.24) transparent;
+  scrollbar-color: #aeb5c3 #e7ebf5;
 }
 
 .explore-notif-list::-webkit-scrollbar {
-  width: 8px;
+  width: 14px;
 }
 
 .explore-notif-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: #e7ebf5;
+  border-radius: 9999px;
 }
 
 .explore-notif-list::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.22);
+  background: #aeb5c3;
+  border: 4px solid #e7ebf5;
   border-radius: 9999px;
 }
 
 .explore-notif-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(15, 23, 42, 0.34);
+  background: #949cae;
 }
 
 .explore-notif-item {
