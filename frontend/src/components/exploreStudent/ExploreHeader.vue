@@ -44,6 +44,7 @@ const isNotificationOpen = ref(false);
 const isLanguageOpen = ref(false);
 const selectedLanguage = ref("FR");
 const selectedNotificationFilter = ref<NotificationCategory>("Tout");
+const selectedNotificationId = ref<number | null>(null);
 
 const languages = ["FR", "EN", "AR"];
 const notificationFilters: NotificationCategory[] = [
@@ -352,14 +353,20 @@ const selectLanguage = (language: string) => {
   isLanguageOpen.value = false;
 };
 
-const navigateToNotificationTarget = (path: string) => {
-  isNotificationOpen.value = false;
-  router.push(path);
+const navigateAfterSelection = (notification: NotificationItem, path: string) => {
+  selectedNotificationId.value = notification.id;
+  window.setTimeout(() => {
+    isNotificationOpen.value = false;
+    router.push(path);
+  }, 180);
 };
 
-const navigateToProfile = (path: string) => {
-  isNotificationOpen.value = false;
-  router.push(path);
+const navigateToNotificationTarget = (notification: NotificationItem) => {
+  navigateAfterSelection(notification, notification.targetPath);
+};
+
+const navigateToProfile = (notification: NotificationItem) => {
+  navigateAfterSelection(notification, notification.profilePath);
 };
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -425,18 +432,21 @@ onBeforeUnmount(() => {
               v-for="notification in filteredNotifications"
               :key="notification.id"
               class="explore-notif-item"
-              :class="{ 'is-unread': notification.unread }"
+              :class="{
+                'is-unread': notification.unread,
+                'is-selected': selectedNotificationId === notification.id,
+              }"
               role="button"
               tabindex="0"
-              @click="navigateToNotificationTarget(notification.targetPath)"
-              @keydown.enter="navigateToNotificationTarget(notification.targetPath)"
-              @keydown.space.prevent="navigateToNotificationTarget(notification.targetPath)"
+              @click="navigateToNotificationTarget(notification)"
+              @keydown.enter="navigateToNotificationTarget(notification)"
+              @keydown.space.prevent="navigateToNotificationTarget(notification)"
             >
               <button
                 type="button"
                 class="explore-avatar"
                 :aria-label="`Voir le profil de ${notification.person}`"
-                @click.stop="navigateToProfile(notification.profilePath)"
+                @click.stop="navigateToProfile(notification)"
               >
                 {{ notification.initials }}
               </button>
@@ -446,7 +456,7 @@ onBeforeUnmount(() => {
                   <button
                     type="button"
                     class="explore-person-link"
-                    @click.stop="navigateToProfile(notification.profilePath)"
+                    @click.stop="navigateToProfile(notification)"
                   >
                     {{ notification.person }}
                   </button>
@@ -501,14 +511,14 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  border-bottom: 1px solid var(--input-bg);
 }
 
 .explore-title {
   font-size: 28px;
   line-height: 1;
   font-weight: 650;
-  color: rgb(2 6 23);
+  color: var(--text-dark);
 }
 
 .explore-actions {
@@ -526,18 +536,18 @@ onBeforeUnmount(() => {
   height: 36px;
   width: 100%;
   border-radius: 9999px;
-  border: 1px solid rgb(226 232 240);
-  background: #eef0f6;
+  border: 1px solid var(--input-bg);
+  background: var(--input-bg);
   padding: 0 40px 0 14px;
   font-size: 12px;
   font-weight: 600;
-  color: rgb(51 65 85);
+  color: var(--text-dark);
   outline: none;
 }
 
 .explore-search input:focus {
-  border-color: #6c5ce7;
-  box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.12);
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px var(--purple-light);
 }
 
 .explore-search-icon {
@@ -548,7 +558,7 @@ onBeforeUnmount(() => {
   height: 16px;
   width: 16px;
   transform: translateY(-50%);
-  color: rgb(148 163 184);
+  color: var(--text-gray);
 }
 
 .explore-dropdown-wrap {
@@ -565,15 +575,15 @@ onBeforeUnmount(() => {
   justify-content: center;
   border: 0;
   border-radius: 9999px;
-  background: #4f46e5;
-  color: white;
-  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.25);
+  background: var(--purple);
+  color: var(--input-bg);
+  box-shadow: 0 8px 18px var(--text-gray);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .explore-notif:hover {
-  background: #4338ca;
+  background: var(--navy-mid);
 }
 
 .explore-notif-dot {
@@ -583,8 +593,8 @@ onBeforeUnmount(() => {
   height: 10px;
   width: 10px;
   border-radius: 9999px;
-  background: rgb(244 63 94);
-  box-shadow: 0 0 0 2px #ffffff;
+  background: var(--error);
+  box-shadow: 0 0 0 2px var(--input-bg);
 }
 
 .explore-profile {
@@ -594,18 +604,18 @@ onBeforeUnmount(() => {
   gap: 8px;
   border: 0;
   border-radius: 9999px;
-  background: #0ea5b7;
-  color: white;
+  background: var(--purple);
+  color: var(--text-dark);
   padding: 0 12px;
   font-size: 12px;
   font-weight: 700;
-  box-shadow: 0 8px 18px rgba(14, 165, 183, 0.25);
+  box-shadow: 0 8px 18px var(--text-gray);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .explore-profile:hover {
-  background: #0b93a3;
+  background: var(--navy-mid);
 }
 
 .explore-flag {
@@ -615,7 +625,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--input-bg);
   font-size: 10px;
   font-weight: 800;
 }
@@ -626,16 +636,16 @@ onBeforeUnmount(() => {
   right: 0;
   z-index: 20;
   border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  background: var(--input-bg);
+  border: 1px solid var(--input-bg);
+  box-shadow: 0 18px 38px var(--text-gray);
 }
 
 .explore-menu-title {
   padding: 18px 18px 10px;
   font-size: 18px;
   font-weight: 800;
-  color: rgb(15 23 42);
+  color: var(--text-dark);
 }
 
 .explore-notif-menu {
@@ -649,31 +659,47 @@ onBeforeUnmount(() => {
 .explore-notif-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 10px 12px;
   overflow: hidden;
-  padding: 0 16px 12px;
-  border-bottom: 1px solid rgb(226 232 240);
+  padding: 0 18px 14px;
+  border-bottom: 1px solid var(--input-bg);
 }
 
 .explore-notif-tab {
   flex: 0 1 auto;
-  border: 0;
-  border-radius: 9999px;
-  background: #f1f5f9;
-  color: rgb(71 85 105);
+  height: 24px;
+  border: 1px solid var(--text-gray);
+  border-radius: 100px 180px 0px 100px;
+  background: transparent;
+  color: var(--text-gray);
   cursor: pointer;
   font-size: 12px;
   font-weight: 800;
-  padding: 8px 12px;
+  line-height: 1;
+  padding: 0 14px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-dark) 8%, transparent);
   transition:
     background 0.15s ease,
+    border-color 0.15s ease,
     color 0.15s ease;
 }
 
-.explore-notif-tab:hover,
+.explore-notif-tab:hover {
+  border-color: var(--text-dark);
+  color: var(--text-dark);
+}
+
 .explore-notif-tab.is-active {
-  background: #e0f2fe;
-  color: #0369a1;
+  border: 2px solid var(--purple);
+  background: color-mix(in srgb, var(--input-bg) 90%, var(--text-dark));
+  color: var(--text-dark);
+  font-weight: 900;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-dark) 10%, transparent);
+}
+
+.explore-notif-tab.is-active:hover {
+  background: color-mix(in srgb, var(--input-bg) 84%, var(--text-dark));
 }
 
 .explore-notif-list {
@@ -687,7 +713,7 @@ onBeforeUnmount(() => {
   padding: 10px 8px 10px 10px;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: #aeb5c3 #e7ebf5;
+  scrollbar-color: var(--text-gray) var(--input-bg);
 }
 
 .explore-notif-list::-webkit-scrollbar {
@@ -695,18 +721,18 @@ onBeforeUnmount(() => {
 }
 
 .explore-notif-list::-webkit-scrollbar-track {
-  background: #e7ebf5;
+  background: var(--input-bg);
   border-radius: 9999px;
 }
 
 .explore-notif-list::-webkit-scrollbar-thumb {
-  background: #aeb5c3;
-  border: 4px solid #e7ebf5;
+  background: var(--text-gray);
+  border: 4px solid var(--input-bg);
   border-radius: 9999px;
 }
 
 .explore-notif-list::-webkit-scrollbar-thumb:hover {
-  background: #949cae;
+  background: var(--navy-mid);
 }
 
 .explore-notif-item {
@@ -716,26 +742,37 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   border-radius: 12px;
   padding: 12px 34px 12px 10px;
-  color: rgb(51 65 85);
+  color: var(--text-dark);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .explore-notif-item:hover {
-  background: #f8fafc;
+  background: #eeecff;
 }
 
 .explore-notif-item:focus-visible {
-  outline: 2px solid #0a66c2;
+  outline: 2px solid var(--purple);
   outline-offset: 2px;
 }
 
 .explore-notif-item.is-unread {
-  background: #f8fbff;
+  background: var(--input-bg);
 }
 
 .explore-notif-item.is-unread:hover {
-  background: #eef6ff;
+  background: #eeecff;
+}
+
+.explore-notif-item:active,
+.explore-notif-item.is-selected,
+.explore-notif-item.is-unread.is-selected {
+  background: color-mix(in srgb, var(--purple) 14%, var(--input-bg));
+}
+
+.explore-notif-item.is-selected .explore-person-link,
+.explore-notif-item.is-selected .explore-related {
+  color: var(--purple);
 }
 
 .explore-avatar {
@@ -746,9 +783,9 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+  background: var(--input-bg);
   border: 0;
-  color: #075985;
+  color: var(--text-dark);
   cursor: pointer;
   font-size: 13px;
   font-weight: 900;
@@ -770,7 +807,7 @@ onBeforeUnmount(() => {
 }
 
 .explore-notif-text {
-  color: rgb(30 41 59);
+  color: var(--text-dark);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
@@ -778,7 +815,7 @@ onBeforeUnmount(() => {
 .explore-person-link {
   background: transparent;
   border: 0;
-  color: rgb(15 23 42);
+  color: var(--text-dark);
   cursor: pointer;
   font: inherit;
   font-weight: 900;
@@ -786,12 +823,12 @@ onBeforeUnmount(() => {
 }
 
 .explore-person-link:hover {
-  color: #0a66c2;
+  color: var(--purple);
   text-decoration: underline;
 }
 
 .explore-related {
-  color: #0f766e;
+  color: var(--purple);
   font-weight: 800;
   overflow-wrap: anywhere;
 }
@@ -799,7 +836,7 @@ onBeforeUnmount(() => {
 .explore-notif-meta {
   font-size: 12px;
   font-weight: 700;
-  color: rgb(148 163 184);
+  color: var(--text-gray);
 }
 
 .explore-item-dot {
@@ -809,7 +846,7 @@ onBeforeUnmount(() => {
   height: 9px;
   width: 9px;
   border-radius: 9999px;
-  background: #0a66c2;
+  background: var(--purple);
 }
 
 .explore-empty {
@@ -818,7 +855,7 @@ onBeforeUnmount(() => {
   text-align: center;
   font-size: 13px;
   font-weight: 700;
-  color: rgb(100 116 139);
+  color: var(--text-gray);
 }
 
 .explore-language-menu {
@@ -832,7 +869,7 @@ onBeforeUnmount(() => {
   border-radius: 9px;
   background: transparent;
   padding: 8px 12px;
-  color: rgb(51 65 85);
+  color: var(--text-dark);
   font-size: 12px;
   font-weight: 800;
   text-align: left;
@@ -841,8 +878,8 @@ onBeforeUnmount(() => {
 
 .explore-language-option:hover,
 .explore-language-option.is-selected {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: var(--purple);
+  color: var(--input-bg);
 }
 
 @media (max-width: 860px) {
