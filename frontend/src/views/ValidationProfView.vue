@@ -1,29 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
+import {
+  type ValidationRequest,
+  type ValidationStatus,
+  useProfValidationRequests,
+} from "../store/profValidationRequests";
 
-type ValidationTab =
-  | "Tout"
-  | "Projets"
-  | "Stages"
-  | "Attestations"
-  | "Refusées";
-type ValidationStatus = "En attente" | "Validé" | "Refusé";
-type ValidationType = Exclude<ValidationTab, "Tout" | "Refusées">;
+type ValidationTab = "Tout" | "Projets" | "Stages" | "Attestations" | "Refusées";
 
-interface ValidationRequest {
-  id: number;
-  studentName: string;
-  initials: string;
-  type: ValidationType;
-  title: string;
-  description: string;
-  date: string;
-  status: ValidationStatus;
-  attachments: string[];
-}
-
+const router = useRouter();
+const { requests, updateRequestStatus } = useProfValidationRequests();
 const sidebarOpen = ref(true);
 const activeTab = ref<ValidationTab>("Tout");
 const selectedRequest = ref<ValidationRequest | null>(null);
@@ -35,53 +24,6 @@ const tabs: ValidationTab[] = [
   "Attestations",
   "Refusées",
 ];
-
-const requests = ref<ValidationRequest[]>([
-  {
-    id: 1,
-    studentName: "Khadija Bennani",
-    initials: "KB",
-    type: "Projets",
-    title: "Portfolio Web",
-    description: "Validation du projet final avec lien GitHub et démonstration.",
-    date: "Aujourd'hui, 10:20",
-    status: "En attente",
-    attachments: ["github.com/khadija/portfolio-web", "Rapport-projet.pdf"],
-  },
-  {
-    id: 2,
-    studentName: "Yassine El Amrani",
-    initials: "YE",
-    type: "Stages",
-    title: "Stage PFE DevOps",
-    description: "Demande de validation du stage et des missions réalisées.",
-    date: "Il y a 35 min",
-    status: "En attente",
-    attachments: ["Convention-stage.pdf", "Fiche-evaluation.pdf"],
-  },
-  {
-    id: 3,
-    studentName: "Sara Alaoui",
-    initials: "SA",
-    type: "Attestations",
-    title: "Attestation de stage Cloud",
-    description: "Vérification des informations avant génération de l'attestation.",
-    date: "Hier, 16:45",
-    status: "Validé",
-    attachments: ["Attestation-stage-cloud.pdf"],
-  },
-  {
-    id: 5,
-    studentName: "Nora Tazi",
-    initials: "NT",
-    type: "Projets",
-    title: "Application Mobile ENSA",
-    description: "Validation de projet mobile avec maquettes et rapport.",
-    date: "Il y a 3 j",
-    status: "Refusé",
-    attachments: ["Maquettes-mobile.fig", "Rapport-mobile.pdf"],
-  },
-]);
 
 const filteredRequests = computed(() => {
   if (activeTab.value === "Refusées") {
@@ -103,8 +45,7 @@ const statusClass = (status: ValidationStatus) => ({
 });
 
 const updateStatus = (requestId: number, status: ValidationStatus) => {
-  const request = requests.value.find((item) => item.id === requestId);
-  if (request) request.status = status;
+  updateRequestStatus(requestId, status);
 };
 
 const openDetailsModal = (request: ValidationRequest) => {
@@ -118,6 +59,10 @@ const closeDetailsModal = () => {
 const updateSelectedStatus = (status: ValidationStatus) => {
   if (selectedRequest.value) updateStatus(selectedRequest.value.id, status);
   closeDetailsModal();
+};
+
+const openStudentProfile = (request: ValidationRequest) => {
+  router.push(`/profile/student/${request.studentId}`);
 };
 </script>
 
@@ -161,12 +106,25 @@ const updateSelectedStatus = (status: ValidationStatus) => {
             :key="request.id"
             class="validation-card"
           >
-            <div class="student-avatar">{{ request.initials }}</div>
+            <button
+              type="button"
+              class="student-avatar"
+              :aria-label="`Voir le profil de ${request.studentName}`"
+              @click="openStudentProfile(request)"
+            >
+              {{ request.initials }}
+            </button>
 
             <div class="validation-content">
               <div class="validation-cardTop">
                 <div>
-                  <h2>{{ request.studentName }}</h2>
+                  <button
+                    type="button"
+                    class="student-name-btn"
+                    @click="openStudentProfile(request)"
+                  >
+                    {{ request.studentName }}
+                  </button>
                   <p class="validation-type">{{ request.type }}</p>
                 </div>
                 <span class="status-badge" :class="statusClass(request.status)">
@@ -216,7 +174,13 @@ const updateSelectedStatus = (status: ValidationStatus) => {
         <div class="modal-header">
           <div>
             <p>Détails de la demande</p>
-            <h2>{{ selectedRequest.studentName }}</h2>
+            <button
+              type="button"
+              class="modal-student-link"
+              @click="openStudentProfile(selectedRequest)"
+            >
+              {{ selectedRequest.studentName }}
+            </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
             ×
@@ -408,6 +372,7 @@ const updateSelectedStatus = (status: ValidationStatus) => {
 }
 
 .student-avatar {
+  border: 0;
   width: 54px;
   height: 54px;
   border-radius: 50%;
@@ -418,6 +383,12 @@ const updateSelectedStatus = (status: ValidationStatus) => {
   justify-content: center;
   font-family: var(--font-head);
   font-weight: 800;
+}
+
+.student-avatar:hover,
+.student-name-btn:hover,
+.modal-student-link:hover {
+  color: var(--purple);
 }
 
 .validation-content {
@@ -432,11 +403,13 @@ const updateSelectedStatus = (status: ValidationStatus) => {
   margin-bottom: 10px;
 }
 
-.validation-card h2 {
+.student-name-btn {
+  background: transparent;
   color: var(--text-dark);
   font-family: var(--font-head);
   font-size: 18px;
   font-weight: 800;
+  text-align: left;
 }
 
 .validation-type,
@@ -562,6 +535,15 @@ const updateSelectedStatus = (status: ValidationStatus) => {
   font-family: var(--font-head);
   font-size: 24px;
   font-weight: 800;
+}
+
+.modal-student-link {
+  background: transparent;
+  color: var(--text-dark);
+  font-family: var(--font-head);
+  font-size: 24px;
+  font-weight: 800;
+  text-align: left;
 }
 
 .modal-close {

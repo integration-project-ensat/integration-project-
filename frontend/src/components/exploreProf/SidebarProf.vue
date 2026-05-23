@@ -62,7 +62,7 @@ const icons = {
 };
 
 const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: icons.dashboard },
+  { path: "/prof/dashboard", label: "Dashboard", icon: icons.dashboard },
   { path: "/explore-prof", label: "Explorer", icon: icons.explore },
   { path: "/prof/validations", label: "Validations", icon: icons.validations },
   { path: "/students", label: "Etudiants", icon: icons.students },

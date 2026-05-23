@@ -9,6 +9,8 @@ import VerifyCodeView from "../views/VerifyCodeView.vue";
 import ExploreView from "../views/ExploreView.vue";
 import ExploreProfView from "../views/ExploreProfView.vue";
 import ExploreProView from "../views/ExploreProView.vue";
+import DashboardProfView from "../views/DashboardProfView.vue";
+import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
 
 export default createRouter({
@@ -24,10 +26,21 @@ export default createRouter({
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
     { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
     {
+      path: "/prof/dashboard",
+      name: "prof-dashboard",
+      component: DashboardProfView,
+    },
+    {
       path: "/prof/validations",
       name: "prof-validations",
       component: ValidationProfView,
     },
+    {
+      path: "/profile/student/:id",
+      name: "prof-student-profile",
+      component: ProfStudentProfileView,
+    },
+    { path: "/dashboard", redirect: "/prof/dashboard" },
     { path: "/validations", redirect: "/prof/validations" },
   ],
 });
