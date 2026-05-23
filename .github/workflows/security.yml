@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - feat/trivy-zap
   pull_request:
     branches:
       - main
@@ -86,14 +87,15 @@ jobs:
       - name: "Scanner images Docker avec Trivy"
         run: |
           mkdir -p reports/trivy
- 
+          sudo chmod 777 reports/trivy
+
           for IMAGE in \
             postgres:15-alpine \
             quay.io/keycloak/keycloak:23.0 \
             nginx:alpine \
             sonarqube:10-community \
             ghcr.io/zaproxy/zaproxy:stable; do
- 
+
             SAFE_NAME=$(echo $IMAGE | tr '/:' '--')
             echo "Scanning $IMAGE..."
             docker run --rm \
