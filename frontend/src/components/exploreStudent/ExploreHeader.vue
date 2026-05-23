@@ -688,7 +688,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   border: 0;
   border-radius: 9999px;
-  background: var(--purple);
+  background: var(--blue-w);
   color: var(--text-dark);
   padding: 0 12px;
   font-size: 12px;
@@ -944,6 +944,7 @@ onBeforeUnmount(() => {
 }
 
 .explore-language-menu {
+  background: white;
   min-width: 96px;
   padding: 6px;
 }
@@ -961,10 +962,14 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.explore-language-option:hover,
+.explore-language-option:hover {
+  background: #eeecff;
+  color: var(--text-dark);
+}
+
 .explore-language-option.is-selected {
-  background: var(--purple);
-  color: var(--input-bg);
+  background: #eeecff;
+  color: var(--text-dark);
 }
 
 @media (max-width: 860px) {

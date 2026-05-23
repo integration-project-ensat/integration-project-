@@ -3,7 +3,7 @@ services:
   frontend:
     build: 
       context: ./frontend
-      dockerfile: dockerfile.dev
+      dockerfile: Dockerfile.dev
     depends_on:
       - backend
  
