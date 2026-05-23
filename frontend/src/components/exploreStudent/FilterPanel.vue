@@ -20,20 +20,132 @@ const emit = defineEmits<{
 }>();
 
 const sections = [
-  { title: "Annee", key: "year", options: [2026, 2025, 2024] },
-  { title: "Ecole/Faculte", key: "school", options: ["ENSA", "ENSAM", "FST"] },
-  { title: "Filiere", key: "field", options: ["GSR", "GINF", "GSEA"] },
-  { title: "Ville", key: "city", options: ["Tanger", "Rabat", "Fes"] },
-  { title: "Score", key: "score", options: ["90+", "80+", "70+"] },
-  { title: "Competences", key: "skills", options: ["KiCad", "Sec.", "DevOps"] },
+  {
+    title: "Annee",
+    key: "year",
+    options: [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018],
+  },
+  {
+    title: "Ecole/Faculte",
+    key: "school",
+    options: [
+      "ENSA",
+      "ENSAM",
+      "FST",
+      "EMI",
+      "INPT",
+      "EHTP",
+      "ENSEM",
+      "ENSET",
+      "ENSIAS",
+      "ENCG",
+      "UIR",
+      "UM6P",
+      "EMSI",
+      "SUPMTI",
+      "1337",
+      "YouCode",
+    ],
+  },
+  {
+    title: "Filiere",
+    key: "field",
+    options: [
+      "GINF",
+      "GSTR",
+      "GSEA",
+      "GIL",
+      "GTR",
+      "IID",
+      "Data Science",
+      "Cybersecurity",
+      "IA",
+      "DevOps",
+      "Cloud",
+      "Big Data",
+      "Web",
+      "Mobile",
+      "Réseaux",
+    ],
+  },
+  {
+    title: "Ville",
+    key: "city",
+    options: [
+      "Tanger",
+      "Rabat",
+      "Fès",
+      "Casablanca",
+      "Marrakech",
+      "Agadir",
+      "Oujda",
+      "Tetouan",
+      "Kenitra",
+      "Meknes",
+      "El Jadida",
+      "Safi",
+      "Beni Mellal",
+      "Nador",
+      "Settat",
+      "Taza",
+      "Khouribga",
+      "Mohammedia",
+      "Laayoune",
+      "Dakhla",
+    ],
+  },
+  {
+    title: "Score",
+    key: "score",
+    options: [
+      "95+",
+      "90+",
+      "85+",
+      "80+",
+      "75+",
+      "70+",
+      "65+",
+      "60+",
+      "55+",
+      "50+",
+      "45+",
+      "40+",
+      "35+",
+      "30+",
+    ],
+  },
+  {
+    title: "Competences",
+    key: "skills",
+    options: [
+      "Java",
+      "Python",
+      "Spring",
+      "React",
+      "Vue.js",
+      "Node.js",
+      "Docker",
+      "Kubernetes",
+      "CI/CD",
+      "DevOps",
+      "Linux",
+      "Git",
+      "Cybersecurity",
+      "AWS",
+      "Figma",
+      "Flutter",
+    ],
+  },
   {
     title: "Recommandations",
     key: "recommendations",
-    options: ["500+", "100+", "50+"],
+    options: ["1000+", "500+", "300+", "200+", "100+", "50+", "20+"],
   },
 ] as const;
 
 type SectionKey = (typeof sections)[number]["key"];
+const INITIAL_VISIBLE_OPTIONS = 3;
+const VISIBLE_OPTIONS_STEP = 3;
 
 const isSelected = (key: SectionKey, option: string | number) => {
   if (key === "skills") return props.filters.skills.includes(String(option));
@@ -78,30 +190,52 @@ const toggleOption = (key: SectionKey, option: string | number) => {
   emit("update:filters", { ...props.filters, recommendations: String(option) });
 };
 
-const expanded = ref<Record<string, boolean>>({});
+const visibleCounts = ref<Record<string, number>>({});
 
-const toggleMore = (key: SectionKey) => {
-  expanded.value = { ...expanded.value, [key]: !expanded.value[key] };
+const showMore = (key: SectionKey) => {
+  const section = sections.find((item) => item.key === key);
+  if (!section) return;
+
+  const currentCount = visibleCounts.value[key] ?? INITIAL_VISIBLE_OPTIONS;
+
+  visibleCounts.value = {
+    ...visibleCounts.value,
+    [key]: Math.min(currentCount + VISIBLE_OPTIONS_STEP, section.options.length),
+  };
 };
 
-const extraOptions: Record<SectionKey, Array<string | number>> = {
-  year: [],
-  school: ["Plus 1", "Plus 2"],
-  field: ["Plus 1", "Plus 2"],
-  city: ["Plus 1", "Plus 2"],
-  score: ["60+", "50+"],
-  skills: ["UI/UX", "Cloud", "AI"],
-  recommendations: ["20+", "10+"],
+const showLess = (key: SectionKey) => {
+  visibleCounts.value = {
+    ...visibleCounts.value,
+    [key]: INITIAL_VISIBLE_OPTIONS,
+  };
+};
+
+const visibleCountFor = (key: SectionKey) => {
+  return visibleCounts.value[key] ?? INITIAL_VISIBLE_OPTIONS;
 };
 
 const sectionOptions = computed(() => {
   const map = new Map<string, Array<string | number>>();
   for (const s of sections) {
-    const isOpen = Boolean(expanded.value[s.key]);
-    map.set(s.key, isOpen ? [...s.options, ...extraOptions[s.key]] : [...s.options]);
+    map.set(s.key, [...s.options].slice(0, visibleCountFor(s.key)));
   }
   return map;
 });
+
+const canToggleMore = (key: SectionKey) => {
+  const section = sections.find((item) => item.key === key);
+  return Boolean(section && section.options.length > INITIAL_VISIBLE_OPTIONS);
+};
+
+const hasMoreOptions = (key: SectionKey) => {
+  const section = sections.find((item) => item.key === key);
+  return Boolean(section && visibleCountFor(key) < section.options.length);
+};
+
+const isExpanded = (key: SectionKey) => {
+  return visibleCountFor(key) > INITIAL_VISIBLE_OPTIONS;
+};
 </script>
 
 <template>
@@ -109,7 +243,12 @@ const sectionOptions = computed(() => {
     <div class="fp-card">
       <div v-for="section in sections" :key="section.title" class="fp-section">
         <h4 class="fp-title">{{ section.title }}</h4>
-        <div class="fp-pillsRow" :class="{ 'fp-pillsRowYear': section.key === 'year' }">
+        <TransitionGroup
+          name="fp-pillFade"
+          tag="div"
+          class="fp-pillsRow"
+          :class="{ 'fp-pillsRowYear': section.key === 'year' }"
+        >
           <button
             v-for="option in sectionOptions.get(section.key) ?? section.options"
             :key="option"
@@ -123,15 +262,25 @@ const sectionOptions = computed(() => {
           >
             {{ option }}
           </button>
-        </div>
-        <div class="fp-plusRow">
+        </TransitionGroup>
+        <div v-if="canToggleMore(section.key)" class="fp-plusRow">
           <button
+            v-if="hasMoreOptions(section.key)"
             type="button"
             class="fp-pill fp-plus"
-            @click="toggleMore(section.key)"
+            @click="showMore(section.key)"
           >
             Plus
             <ChevronDown class="h-3 w-3" />
+          </button>
+          <button
+            v-if="isExpanded(section.key)"
+            type="button"
+            class="fp-pill fp-plus"
+            @click="showLess(section.key)"
+          >
+            Voir moins
+            <ChevronDown class="h-3 w-3 fp-plusIconOpen" />
           </button>
         </div>
       </div>
@@ -175,8 +324,21 @@ const sectionOptions = computed(() => {
   gap: 10px 12px;
 }
 
+.fp-pillFade-enter-active,
+.fp-pillFade-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.fp-pillFade-enter-from,
+.fp-pillFade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
 .fp-pillsRowYear {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .fp-pill {
@@ -229,6 +391,10 @@ const sectionOptions = computed(() => {
   padding-left: 14px;
   color: #6b7280;
   background: transparent;
+}
+
+.fp-plusIconOpen {
+  transform: rotate(180deg);
 }
 
 .fp-card::-webkit-scrollbar {
