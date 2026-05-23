@@ -9,6 +9,7 @@ type NotificationCategory =
   | "Commentaires"
   | "Recommandations"
   | "Projets"
+  | "Connexions"
   | "Stages"
   | "Attestations";
 
@@ -55,6 +56,8 @@ const languages = ["FR", "EN", "AR"];
 const notificationFilters: NotificationCategory[] =
   props.userType === "professeur"
     ? ["Tout", "Stages", "Projets", "Attestations", "Recommandations"]
+    : props.userType === "professionnel"
+      ? ["Tout", "Connexions", "Commentaires"]
     : ["Tout", "Commentaires", "Recommandations", "Projets"];
 
 const notificationsByUser: Record<UserType, NotificationItem[]> = {
@@ -245,11 +248,11 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
   professionnel: [
     {
       id: 1,
-      category: "Recommandations",
+      category: "Connexions",
       person: "Nom Etudiant",
-      action: "a recommande votre profil",
-      relatedTitle: "Expert DevOps",
-      time: "Il y a 8 min",
+      action: "a demande une connexion avec vous",
+      relatedTitle: "Profil ENSA",
+      time: "Il y a 2 min",
       initials: "NE",
       profilePath: "/profile/student-1",
       targetPath: "/profile/student-1",
@@ -263,67 +266,34 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Automatisation CI/CD",
       time: "Il y a 22 min",
       initials: "NE",
-      profilePath: "/profile/student-1",
+      profilePath: "/profile/student-3",
       targetPath: "/posts/ci-cd",
       unread: true,
     },
     {
       id: 3,
-      category: "Projets",
-      person: "Nom Professionnel",
-      action: "a consulte votre portfolio",
-      relatedTitle: "Portfolio Cloud",
-      time: "Aujourd'hui",
-      initials: "NP",
-      profilePath: "/profile/professional-1",
-      targetPath: "/projects/portfolio-cloud",
-    },
-    {
-      id: 4,
-      category: "Projets",
-      person: "Nom Prof",
-      action: "a partage une interaction sur",
-      relatedTitle: "Projet Infrastructure",
-      time: "Il y a 2 j",
-      initials: "NP",
-      profilePath: "/profile/prof-1",
-      targetPath: "/projects/infrastructure",
-    },
-    {
-      id: 5,
       category: "Commentaires",
       person: "Nom Etudiant",
       action: "a repondu a votre conseil sur",
       relatedTitle: "Tests Automatises",
       time: "Il y a 3 j",
       initials: "NE",
-      profilePath: "/profile/student-2",
+      profilePath: "/profile/student-4",
       targetPath: "/posts/tests-automatises",
     },
     {
-      id: 6,
-      category: "Recommandations",
+      id: 4,
+      category: "Connexions",
       person: "Nom Prof",
-      action: "a recommande votre profil pour",
-      relatedTitle: "Mentorat DevOps",
+      action: "souhaite entrer en contact avec vous",
+      relatedTitle: "Collaboration DevOps",
       time: "Il y a 4 j",
       initials: "NP",
       profilePath: "/profile/prof-2",
-      targetPath: "/recommendations/mentorat-devops",
+      targetPath: "/profile/prof-2",
     },
     {
-      id: 7,
-      category: "Projets",
-      person: "Nom Etudiant",
-      action: "a consulte votre retour sur",
-      relatedTitle: "Portfolio Web",
-      time: "Il y a 6 j",
-      initials: "NE",
-      profilePath: "/profile/student-3",
-      targetPath: "/projects/portfolio-web",
-    },
-    {
-      id: 8,
+      id: 5,
       category: "Commentaires",
       person: "Nom Professionnel",
       action: "a mentionne votre profil dans",
