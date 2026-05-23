@@ -1,12 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../models/prisma');
 const { deleteOldPhoto } = require('../utils/photoCleanup');
 
-const prisma = new PrismaClient();
-
-/**
- * Met à jour la photo de profil dans la table `profils`
- * Supprime l'ancienne photo du disque
- */
 async function updateProfilePhoto(id_utilisateur, newPhotoUrl) {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur },
@@ -28,9 +22,6 @@ async function updateProfilePhoto(id_utilisateur, newPhotoUrl) {
   });
 }
 
-/**
- * Supprime la photo de profil (reset à null)
- */
 async function deleteProfilePhoto(id_utilisateur) {
   const profil = await prisma.profil.findUnique({
     where: { id_utilisateur },
