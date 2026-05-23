@@ -100,11 +100,12 @@ jobs:
             echo "Scanning $IMAGE..."
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd)/reports/trivy:/reports \
               aquasec/trivy:latest image \
               --format json \
-              --output /dev/stdout \
+              --output /reports/trivy-${SAFE_NAME}.json \
               --severity HIGH,CRITICAL \
-              $IMAGE > reports/trivy/trivy-${SAFE_NAME}.json || true
+              $IMAGE || true
           done
  
       - name: "Publier rapports Trivy"
