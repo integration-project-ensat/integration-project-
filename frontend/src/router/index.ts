@@ -11,6 +11,7 @@ import ExploreProfView from "../views/ExploreProfView.vue";
 import ExploreProView from "../views/ExploreProView.vue";
 import DashboardProfView from "../views/DashboardProfView.vue";
 import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
+import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
 
 export default createRouter({
@@ -34,6 +35,11 @@ export default createRouter({
       path: "/prof/validations",
       name: "prof-validations",
       component: ValidationProfView,
+    },
+    {
+      path: "/prof/recommandations",
+      name: "prof-recommandations",
+      component: RecommandationsProfView,
     },
     {
       path: "/profile/student/:id",

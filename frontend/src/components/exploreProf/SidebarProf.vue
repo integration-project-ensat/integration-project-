@@ -65,6 +65,11 @@ const navItems = [
   { path: "/prof/dashboard", label: "Dashboard", icon: icons.dashboard },
   { path: "/explore-prof", label: "Explorer", icon: icons.explore },
   { path: "/prof/validations", label: "Validations", icon: icons.validations },
+  {
+    path: "/prof/recommandations",
+    label: "Lettres de recommandation",
+    icon: icons.recos,
+  },
   { path: "/students", label: "Etudiants", icon: icons.students },
   { path: "/recos", label: "Mes Recos", icon: icons.recos },
   { path: "/commentaires", label: "Commentaires", icon: icons.comments },

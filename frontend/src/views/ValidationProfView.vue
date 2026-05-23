@@ -9,7 +9,7 @@ import {
   useProfValidationRequests,
 } from "../store/profValidationRequests";
 
-type ValidationTab = "Tout" | "Projets" | "Stages" | "Attestations" | "Refusées";
+type ValidationTab = "Tout" | "Projets" | "Stages" | "Attestations";
 
 const router = useRouter();
 const { requests, updateRequestStatus } = useProfValidationRequests();
@@ -17,21 +17,11 @@ const sidebarOpen = ref(true);
 const activeTab = ref<ValidationTab>("Tout");
 const selectedRequest = ref<ValidationRequest | null>(null);
 
-const tabs: ValidationTab[] = [
-  "Tout",
-  "Projets",
-  "Stages",
-  "Attestations",
-  "Refusées",
-];
+const tabs: ValidationTab[] = ["Tout", "Projets", "Stages", "Attestations"];
 
 const filteredRequests = computed(() => {
-  if (activeTab.value === "Refusées") {
-    return requests.value.filter((request) => request.status === "Refusé");
-  }
-
   const activeRequests = requests.value.filter(
-    (request) => request.status !== "Refusé",
+    (request) => request.status === "En attente",
   );
 
   if (activeTab.value === "Tout") return activeRequests;
@@ -105,12 +95,13 @@ const openStudentProfile = (request: ValidationRequest) => {
             v-for="request in filteredRequests"
             :key="request.id"
             class="validation-card"
+            @click="openDetailsModal(request)"
           >
             <button
               type="button"
               class="student-avatar"
               :aria-label="`Voir le profil de ${request.studentName}`"
-              @click="openStudentProfile(request)"
+              @click.stop="openStudentProfile(request)"
             >
               {{ request.initials }}
             </button>
@@ -121,7 +112,7 @@ const openStudentProfile = (request: ValidationRequest) => {
                   <button
                     type="button"
                     class="student-name-btn"
-                    @click="openStudentProfile(request)"
+                    @click.stop="openStudentProfile(request)"
                   >
                     {{ request.studentName }}
                   </button>
@@ -140,21 +131,21 @@ const openStudentProfile = (request: ValidationRequest) => {
                 <button
                   type="button"
                   class="action-btn primary"
-                  @click="updateStatus(request.id, 'Validé')"
+                  @click.stop="updateStatus(request.id, 'Validé')"
                 >
                   Valider
                 </button>
                 <button
                   type="button"
                   class="action-btn danger"
-                  @click="updateStatus(request.id, 'Refusé')"
+                  @click.stop="updateStatus(request.id, 'Refusé')"
                 >
                   Refuser
                 </button>
                 <button
                   type="button"
                   class="action-btn muted"
-                  @click="openDetailsModal(request)"
+                  @click.stop="openDetailsModal(request)"
                 >
                   Voir détails
                 </button>
@@ -263,17 +254,17 @@ const openStudentProfile = (request: ValidationRequest) => {
 .validation-shell {
   height: calc(100vh - 50px);
   overflow-y: auto;
-  padding: 28px;
+  padding: 20px;
   transition: padding-left 0.3s ease;
 }
 
 .validation-shellShift {
-  padding-left: 248px;
+  padding-left: 236px;
 }
 
 .validation-panel {
-  max-width: 1160px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   background: white;
   border: 1px solid rgba(15, 23, 42, 0.06);
   border-radius: var(--radius-card);
@@ -330,22 +321,34 @@ const openStudentProfile = (request: ValidationRequest) => {
 }
 
 .validation-tab {
-  min-height: 34px;
+  height: 40px;
   border: 1px solid rgba(15, 23, 42, 0.25);
-  border-radius: var(--radius-pill);
+  border-radius: 100px 180px 0px 100px;
   background: white;
-  color: var(--text-gray);
-  padding: 0 18px;
+  color: rgb(71 85 105);
+  padding: 0 22px;
   font-weight: 800;
-  transition: var(--ease);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.validation-tab:hover,
+.validation-tab:hover {
+  border-color: rgb(100 116 139);
+  color: rgb(15 23 42);
+}
+
 .validation-tab.active {
-  background: var(--purple);
-  border-color: var(--purple);
-  color: white;
-  box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22);
+  border: 2px solid #5b4dff;
+  background: #f1f1f5;
+  color: #111827;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.validation-tab.active:hover {
+  background: #e9e9ef;
 }
 
 .validation-list {
@@ -363,6 +366,7 @@ const openStudentProfile = (request: ValidationRequest) => {
   background: white;
   padding: 18px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
   transition: var(--ease);
 }
 
@@ -467,34 +471,46 @@ const openStudentProfile = (request: ValidationRequest) => {
 }
 
 .action-btn {
-  min-height: 36px;
-  border-radius: var(--radius-pill);
-  padding: 0 16px;
-  font-size: 13px;
-  font-weight: 800;
+  height: 32px;
+  min-width: 98px;
+  padding: 0 18px;
+  border-radius: 100px 180px 0px 100px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
   transition: var(--ease);
 }
 
 .action-btn.primary,
 .action-btn.letter {
   background: var(--purple);
+  border: 0;
   color: white;
-  box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .action-btn.danger {
-  background: #fef2f2;
+  background: transparent;
+  border: 1px solid rgb(148 163 184);
   color: #dc2626;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .action-btn.muted {
-  background: var(--input-bg);
-  color: var(--text-dark);
+  background: transparent;
+  border: 1px solid rgb(148 163 184);
+  color: rgb(71 85 105);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .action-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(0.98);
+  border-color: rgb(100 116 139);
+  color: rgb(15 23 42);
+}
+
+.action-btn.primary:hover {
+  color: #ffffff;
+  filter: brightness(0.95);
 }
 
 .modal-backdrop {

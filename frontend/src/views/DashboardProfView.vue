@@ -8,12 +8,23 @@ import {
   type ValidationStatus,
   useProfValidationRequests,
 } from "../store/profValidationRequests";
+import {
+  type RecommendationRequest,
+  type RecommendationStatus,
+  useProfRecommendationRequests,
+} from "../store/profRecommendationRequests";
 
 const router = useRouter();
 const sidebarOpen = ref(true);
 const selectedRequest = ref<ValidationRequest | null>(null);
+const selectedRecommendation = ref<RecommendationRequest | null>(null);
 const { stats, groupedRequests, updateRequestStatus } =
   useProfValidationRequests();
+const {
+  recommendationStats,
+  groupedRecommendations,
+  updateRecommendationStatus,
+} = useProfRecommendationRequests();
 
 const statusSections: Array<{
   key: "pending" | "validated" | "refused";
@@ -31,10 +42,32 @@ const statCards = [
   { label: "Refusées", key: "refused" },
 ] as const;
 
+const recommendationStatCards = [
+  { label: "Total lettres", key: "total" },
+  { label: "En attente", key: "pending" },
+  { label: "Acceptées", key: "accepted" },
+  { label: "Refusées", key: "refused" },
+] as const;
+
+const recommendationSections: Array<{
+  key: "pending" | "accepted" | "refused";
+  title: RecommendationStatus;
+}> = [
+  { key: "pending", title: "En attente" },
+  { key: "accepted", title: "Acceptée" },
+  { key: "refused", title: "Refusée" },
+];
+
 const statusClass = (status: ValidationStatus) => ({
   "is-pending": status === "En attente",
   "is-valid": status === "Validé",
   "is-refused": status === "Refusé",
+});
+
+const recommendationStatusClass = (status: RecommendationStatus) => ({
+  "is-pending": status === "En attente",
+  "is-valid": status === "Acceptée",
+  "is-refused": status === "Refusée",
 });
 
 const openDetailsModal = (request: ValidationRequest) => {
@@ -45,12 +78,27 @@ const closeDetailsModal = () => {
   selectedRequest.value = null;
 };
 
+const openRecommendationDetails = (request: RecommendationRequest) => {
+  selectedRecommendation.value = request;
+};
+
+const closeRecommendationDetails = () => {
+  selectedRecommendation.value = null;
+};
+
 const updateSelectedStatus = (status: ValidationStatus) => {
   if (selectedRequest.value) updateRequestStatus(selectedRequest.value.id, status);
   closeDetailsModal();
 };
 
-const openStudentProfile = (request: ValidationRequest) => {
+const updateSelectedRecommendationStatus = (status: RecommendationStatus) => {
+  if (selectedRecommendation.value) {
+    updateRecommendationStatus(selectedRecommendation.value.id, status);
+  }
+  closeRecommendationDetails();
+};
+
+const openStudentProfile = (request: ValidationRequest | RecommendationRequest) => {
   router.push(`/profile/student/${request.studentId}`);
 };
 </script>
@@ -72,6 +120,9 @@ const openStudentProfile = (request: ValidationRequest) => {
           </div>
           <RouterLink to="/prof/validations" class="dashboard-link">
             Gérer les validations
+          </RouterLink>
+          <RouterLink to="/prof/recommandations" class="dashboard-link">
+            Lettres de recommandation
           </RouterLink>
         </div>
 
@@ -128,6 +179,81 @@ const openStudentProfile = (request: ValidationRequest) => {
 
               <p
                 v-if="!groupedRequests[section.key].length"
+                class="empty-state"
+              >
+                Aucune demande
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <div class="dashboard-sectionHeader">
+          <div>
+            <p class="dashboard-kicker">Demandes de lettres</p>
+            <h2>Lettres de recommandation</h2>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article
+            v-for="card in recommendationStatCards"
+            :key="card.key"
+            class="stat-card"
+          >
+            <span>{{ card.label }}</span>
+            <strong>{{ recommendationStats[card.key] }}</strong>
+          </article>
+        </div>
+
+        <div class="status-grid">
+          <section
+            v-for="section in recommendationSections"
+            :key="section.key"
+            class="status-panel"
+          >
+            <div class="status-title">
+              <h2>{{ section.title }}</h2>
+              <span>{{ groupedRecommendations[section.key].length }}</span>
+            </div>
+
+            <div class="request-list">
+              <article
+                v-for="request in groupedRecommendations[section.key]"
+                :key="request.id"
+                class="request-row"
+                @click="openRecommendationDetails(request)"
+              >
+                <button
+                  type="button"
+                  class="student-avatar"
+                  :aria-label="`Voir le profil de ${request.studentName}`"
+                  @click.stop="openStudentProfile(request)"
+                >
+                  {{ request.initials }}
+                </button>
+
+                <div class="request-content">
+                  <button
+                    type="button"
+                    class="student-name-btn"
+                    @click.stop="openStudentProfile(request)"
+                  >
+                    {{ request.studentName }}
+                  </button>
+                  <p>Lettre · {{ request.title }}</p>
+                  <span>{{ request.date }}</span>
+                </div>
+
+                <span
+                  class="status-badge"
+                  :class="recommendationStatusClass(request.status)"
+                >
+                  {{ request.status }}
+                </span>
+              </article>
+
+              <p
+                v-if="!groupedRecommendations[section.key].length"
                 class="empty-state"
               >
                 Aucune demande
@@ -220,6 +346,88 @@ const openStudentProfile = (request: ValidationRequest) => {
         </div>
       </section>
     </div>
+
+    <div
+      v-if="selectedRecommendation"
+      class="modal-backdrop"
+      @click.self="closeRecommendationDetails"
+    >
+      <section class="details-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <p>Détails de la lettre</p>
+            <button
+              type="button"
+              class="modal-student-link"
+              @click="openStudentProfile(selectedRecommendation)"
+            >
+              {{ selectedRecommendation.studentName }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="modal-close"
+            @click="closeRecommendationDetails"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="details-grid">
+          <div>
+            <span>Profil</span>
+            <strong>{{ selectedRecommendation.profileInfo }}</strong>
+          </div>
+          <div>
+            <span>Date</span>
+            <strong>{{ selectedRecommendation.date }}</strong>
+          </div>
+          <div>
+            <span>Statut</span>
+            <strong>{{ selectedRecommendation.status }}</strong>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <span>Titre</span>
+          <h3>{{ selectedRecommendation.title }}</h3>
+        </div>
+
+        <div class="details-section">
+          <span>Message étudiant</span>
+          <p>{{ selectedRecommendation.message }}</p>
+        </div>
+
+        <div v-if="selectedRecommendation.writtenLetter" class="details-section">
+          <span>Lettre écrite</span>
+          <p>{{ selectedRecommendation.writtenLetter }}</p>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeRecommendationDetails"
+          >
+            Fermer
+          </button>
+          <button
+            type="button"
+            class="action-btn primary"
+            @click="updateSelectedRecommendationStatus('Acceptée')"
+          >
+            Accepter
+          </button>
+          <button
+            type="button"
+            class="action-btn danger"
+            @click="updateSelectedRecommendationStatus('Refusée')"
+          >
+            Refuser
+          </button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -257,6 +465,13 @@ const openStudentProfile = (request: ValidationRequest) => {
   margin-bottom: 16px;
 }
 
+.dashboard-header > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .dashboard-kicker {
   color: var(--text-gray);
   font-size: 13px;
@@ -270,6 +485,17 @@ const openStudentProfile = (request: ValidationRequest) => {
   font-size: 34px;
   font-weight: 800;
   line-height: 1;
+}
+
+.dashboard-sectionHeader {
+  margin: 22px 0 14px;
+}
+
+.dashboard-sectionHeader h2 {
+  color: var(--text-dark);
+  font-family: var(--font-head);
+  font-size: 26px;
+  font-weight: 800;
 }
 
 .dashboard-link {
