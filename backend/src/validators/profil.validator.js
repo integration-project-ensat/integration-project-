@@ -30,7 +30,7 @@ const ProfilValidator = {
 
     body('linkedin_url')
       .optional()
-      .isURL({protocols:['https'],host_whitelis: ['www.linkedin.com', 'linkedin.com']})
+      .isURL({protocols:['https'],host_whitelist: ['www.linkedin.com', 'linkedin.com']})
       .withMessage('URL LinkedIn invalide (doit commencer par https://linkedin.com)'),
       
 

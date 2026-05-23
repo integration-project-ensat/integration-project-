@@ -38,11 +38,6 @@ function hashToken(token) {
 }
 // ==================== INSCRIPTION PUBLIQUE ====================
 
-function isValidPublicRole(role) {
-    console.log("CHECK ROLE:", role, "IN", Object.values(PUBLIC_ROLES))
-    return Object.values(PUBLIC_ROLES).includes(role);
-}
-
 const register = asyncHandler(async (req, res) => {
     console.log("======== REGISTER ========")
     console.log("BODY:", req.body)
@@ -430,8 +425,8 @@ const id = BigInt(utilisateurId);
   }
   
 // Validation du professionnel et activation du compte dans une transaction
-await prisma.$transaction
-([prisma.professionnel.update({
+await prisma.$transaction([
+  prisma.professionnel.update({
     where: { id_utilisateur: id },
     data: { est_valide: true ,
       statut_validation:'VALIDE',

@@ -249,7 +249,6 @@ test.describe('Navigation entre les pages d\'auth', () => {
   test('ERR-01 : Une URL inexistante ne plante pas l\'application', async ({ page }) => {
     await page.goto('/abcxyz')
     // L'application doit soit rediriger, soit afficher une page d'erreur
-    const url = page.url()
     const body = await page.locator('body').isVisible()
     expect(body).toBe(true)
     // Ne pas être sur une page complètement blanche/cassée

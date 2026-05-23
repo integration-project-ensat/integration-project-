@@ -10,7 +10,12 @@ const { authentifier, autoriserRoles } = require('../middlewares/auth.middleware
 const { ROLES }                       = require('../config/roles');
 
 router.use(authentifier);
-
+// Politique d'accès diplômes :
+// - ETUDIANT : créer, consulter, modifier et supprimer uniquement ses propres diplômes.
+// - PROFESSEUR : consulter les diplômes des étudiants dans un contexte pédagogique.
+// - ADMINISTRATEUR : consulter les diplômes pour supervision globale,
+//   contrôle, statistiques et audit, sans création/modification/suppression.
+// - Toute modification/suppression reste réservée à l'étudiant propriétaire.
 // ─── Routes ETUDIANT uniquement ──────────────
 
 // POST /diplomes — créer un diplôme

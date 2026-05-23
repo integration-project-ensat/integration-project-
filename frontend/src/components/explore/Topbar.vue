@@ -51,7 +51,7 @@ const props = withDefaults(defineProps<{ searchQuery?: string }>(), {
 });
 
 const emit = defineEmits<{
-  (e: "update:searchQuery", value: string): void;
+  "update:searchQuery": [value: string];
 }>();
 
 const searchQuery = computed({
