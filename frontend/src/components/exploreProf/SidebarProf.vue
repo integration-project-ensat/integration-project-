@@ -64,7 +64,7 @@ const icons = {
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: icons.dashboard },
   { path: "/explore-prof", label: "Explorer", icon: icons.explore },
-  { path: "/validations", label: "Validations", icon: icons.validations },
+  { path: "/prof/validations", label: "Validations", icon: icons.validations },
   { path: "/students", label: "Etudiants", icon: icons.students },
   { path: "/recos", label: "Mes Recos", icon: icons.recos },
   { path: "/commentaires", label: "Commentaires", icon: icons.comments },

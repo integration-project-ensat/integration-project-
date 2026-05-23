@@ -9,6 +9,7 @@ import VerifyCodeView from "../views/VerifyCodeView.vue";
 import ExploreView from "../views/ExploreView.vue";
 import ExploreProfView from "../views/ExploreProfView.vue";
 import ExploreProView from "../views/ExploreProView.vue";
+import ValidationProfView from "../views/ValidationProfView.vue";
 
 export default createRouter({
   history: createWebHistory("/"),
@@ -22,5 +23,11 @@ export default createRouter({
     { path: "/explore", name: "explore", component: ExploreView },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
     { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
+    {
+      path: "/prof/validations",
+      name: "prof-validations",
+      component: ValidationProfView,
+    },
+    { path: "/validations", redirect: "/prof/validations" },
   ],
 });
