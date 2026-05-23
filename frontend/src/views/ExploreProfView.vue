@@ -121,9 +121,10 @@ const sidebarOpen = ref(true);
 .explore-shell {
   height: calc(100vh - 50px);
   display: grid;
-  grid-template-columns: 1fr 290px;
-  gap: 24px;
-  padding: 18px 20px;
+  grid-template-columns: minmax(730px, 1fr) 270px;
+  justify-content: start;
+  gap: 16px;
+  padding: 14px;
   overflow: hidden;
 }
 
@@ -132,25 +133,25 @@ const sidebarOpen = ref(true);
   top: 0;
   height: 100%;
   overflow-y: auto;
-  padding-bottom: 8px;
+  padding: 14px 0;
 }
 
 .explore-shellShift {
-  padding-left: 240px;
+  padding-left: 238px;
 }
 
 .explore-middle {
   height: 100%;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 18px 0 18px;
+  padding: 14px 0;
 }
 
 .explore-middle-inner {
-  margin: 0 auto;
+  margin: 0;
   width: 100%;
-  max-width: 900px;
-  padding: 0 20px;
+  max-width: none;
+  padding: 0;
 }
 
 .explore-panel {
