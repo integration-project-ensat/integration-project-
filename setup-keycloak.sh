@@ -12,7 +12,7 @@ echo "=================================================="
 # 1. Obtenir le token admin
 # ----------------------------------------------------------
 echo ""
-echo "[1/6] Obtention du token admin..."
+echo "[1/8] Obtention du token admin..."
 
 TOKEN=$(curl -s -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -32,7 +32,7 @@ echo "Token obtenu ✓"
 # 2. Créer le realm portfolio-realm avec hardening
 # ----------------------------------------------------------
 echo ""
-echo "[2/6] Création du realm '$REALM' avec hardening..."
+echo "[2/8] Création du realm '$REALM' avec hardening..."
 
 curl -s -X POST "$KEYCLOAK_URL/admin/realms" \
   -H "Authorization: Bearer $TOKEN" \
@@ -65,7 +65,7 @@ echo "Realm '$REALM' créé avec hardening ✓"
 # 3. Créer les 6 rôles
 # ----------------------------------------------------------
 echo ""
-echo "[3/6] Création des rôles..."
+echo "[3/8] Création des rôles..."
 
 create_role() {
   local ROLE_NAME=$1
@@ -88,7 +88,7 @@ create_role "securite"     "Securite - Securite applicative et infrastructure"
 # 4. Créer les 10 utilisateurs avec rôles et passwords
 # ----------------------------------------------------------
 echo ""
-echo "[4/6] Création des utilisateurs..."
+echo "[4/8] Création des utilisateurs..."
 
 create_user() {
   local USERNAME=$1
@@ -144,7 +144,7 @@ create_user "securite2"    "securite2@portfolio.com" "Saad"         "Chair"     
 # 5. Créer le client grafana
 # ----------------------------------------------------------
 echo ""
-echo "[5/6] Création du client 'grafana'..."
+echo "[5/8] Création du client 'grafana'..."
 
 curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
   -H "Authorization: Bearer $TOKEN" \
@@ -191,10 +191,150 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$CLIENT_ID/protocol-m
 echo "  Mapper 'realm-roles' ajouté ✓"
 
 # ----------------------------------------------------------
-# 6. Vérification finale
+# 6. Créer le client pgadmin
 # ----------------------------------------------------------
 echo ""
-echo "[6/6] Vérification..."
+echo "[6/8] Création du client 'pgadmin'..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clientId": "pgadmin",
+    "name": "PGAdmin",
+    "enabled": true,
+    "protocol": "openid-connect",
+    "publicClient": false,
+    "clientAuthenticatorType": "client-secret",
+    "secret": "pgadmin-secret",
+    "redirectUris": ["http://localhost:5050/*"],
+    "webOrigins": ["http://localhost:5050"],
+    "standardFlowEnabled": true,
+    "directAccessGrantsEnabled": true
+  }' > /dev/null
+
+echo "  Client 'pgadmin' créé ✓"
+
+PGADMIN_CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=pgadmin" \
+  -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+echo "  Ajout du mapper 'realm-roles' pour pgadmin..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$PGADMIN_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "realm-roles",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-realm-role-mapper",
+    "consentRequired": false,
+    "config": {
+      "multivalued": "true",
+      "userinfo.token.claim": "true",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "roles",
+      "jsonType.label": "String"
+    }
+  }' > /dev/null
+
+echo "  Ajout du mapper 'email' pour pgadmin..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$PGADMIN_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "email",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-property-mapper",
+    "consentRequired": false,
+    "config": {
+      "userinfo.token.claim": "true",
+      "user.attribute": "email",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "email",
+      "jsonType.label": "String"
+    }
+  }' > /dev/null
+
+echo "  Mappers pgadmin ajoutés ✓"
+
+# ----------------------------------------------------------
+# 7. Créer le client sonarqube
+# ----------------------------------------------------------
+echo ""
+echo "[7/8] Création du client 'sonarqube'..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clientId": "sonarqube",
+    "name": "SonarQube",
+    "enabled": true,
+    "protocol": "openid-connect",
+    "publicClient": false,
+    "clientAuthenticatorType": "client-secret",
+    "secret": "sonarqube-secret",
+    "redirectUris": ["http://localhost:9000/*"],
+    "webOrigins": ["http://localhost:9000"],
+    "standardFlowEnabled": true,
+    "directAccessGrantsEnabled": true
+  }' > /dev/null
+
+echo "  Client 'sonarqube' créé ✓"
+
+SONAR_CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=sonarqube" \
+  -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+echo "  Ajout du mapper 'realm-roles' pour sonarqube..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$SONAR_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "realm-roles",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-realm-role-mapper",
+    "consentRequired": false,
+    "config": {
+      "multivalued": "true",
+      "userinfo.token.claim": "true",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "roles",
+      "jsonType.label": "String"
+    }
+  }' > /dev/null
+
+echo "  Ajout du mapper 'login' (username) pour sonarqube..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$SONAR_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "login",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-property-mapper",
+    "consentRequired": false,
+    "config": {
+      "userinfo.token.claim": "true",
+      "user.attribute": "username",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "preferred_username",
+      "jsonType.label": "String"
+    }
+  }' > /dev/null
+
+echo "  Mappers sonarqube ajoutés ✓"
+
+# ----------------------------------------------------------
+# 8. Vérification finale
+# ----------------------------------------------------------
+echo ""
+echo "[8/8] Vérification..."
 
 REALM_CHECK=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM" \
   -H "Authorization: Bearer $TOKEN" | grep -o '"realm":"[^"]*' | cut -d'"' -f4)
@@ -216,7 +356,9 @@ echo ""
 echo " Realm    : portfolio-realm"
 echo " Rôles    : chef-equipe, adjoint, developpeur, devops, qa, securite"
 echo " Users    : 10 utilisateurs créés"
-echo " Client   : grafana (secret: grafana-secret)"
+echo " Clients  : grafana (secret: grafana-secret)"
+echo "          : pgadmin (secret: pgadmin-secret)"
+echo "          : sonarqube (secret: sonarqube-secret)"
 echo " Password : PheraCore2025! (pour tous les utilisateurs)"
 echo ""
 echo " Hardening activé :"
@@ -226,6 +368,8 @@ echo "   - Session idle : 30min"
 echo "   - Session max  : 8h"
 echo "   - Enregistrement public : désactivé"
 echo ""
-echo " Accès Keycloak : http://localhost/auth"
-echo " Accès Grafana  : http://localhost:3001"
+echo " Accès Keycloak  : http://localhost:8081/auth"
+echo " Accès Grafana   : http://localhost:3001"
+echo " Accès PGAdmin   : http://localhost:5050"
+echo " Accès SonarQube : http://localhost:9000"
 echo "=================================================="
