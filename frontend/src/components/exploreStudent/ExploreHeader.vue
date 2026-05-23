@@ -736,6 +736,7 @@ onBeforeUnmount(() => {
   right: -8px;
   width: 520px;
   max-width: calc(100vw - 40px);
+  background: white;
   overflow-x: hidden;
   overflow-y: visible;
 }
@@ -841,7 +842,7 @@ onBeforeUnmount(() => {
 }
 
 .explore-notif-item.is-unread {
-  background: var(--input-bg);
+  background: white;
 }
 
 .explore-notif-item.is-unread:hover {
