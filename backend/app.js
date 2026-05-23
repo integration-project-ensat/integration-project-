@@ -2,6 +2,9 @@ require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
 const path = require('path')
 const express = require('express')
+const morgan = require('morgan')
+const swaggerUi = require('swagger-ui-express')
+const swaggerSpec = require('./src/config/swagger.config')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
@@ -21,9 +24,26 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 app.use(securityHeaders)
 app.use(corsMiddleware)
 
+const profileRoutes = require('./src/routes/profile.routes')
+const diplomeRoutes = require('./src/routes/diploma.routes')
+
+const app = express()
+
+// Logger HTTP
+app.use(morgan('dev'))
+
+// Documentation Swagger — avant securityHeaders
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
+// Sécurité (headers, CORS, rate limiting)
+app.use(securityHeaders)
+app.use(corsMiddleware)
+
+// Body parser
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
 
+// Rate limiting
 app.use('/api', apiLimiter)
 app.use('/api/auth/seconnecter', authLimiter)
 app.use('/api/auth/sinscrire', authLimiter)
