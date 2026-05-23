@@ -1,3 +1,4 @@
+import os
 AUTHENTICATION_SOURCES = ['oauth2', 'internal']
 OAUTH2_AUTO_CREATE_USER = True
 OAUTH2_CONFIG = [
@@ -5,7 +6,7 @@ OAUTH2_CONFIG = [
         'OAUTH2_NAME': 'keycloak',
         'OAUTH2_DISPLAY_NAME': 'Keycloak',
         'OAUTH2_CLIENT_ID': 'pgadmin',
-        'OAUTH2_CLIENT_SECRET': 'dnk5lIs1btkV2orWv1SGqMrCBx5HI8MV',
+        'OAUTH2_CLIENT_SECRET': os.environ.get('PGADMIN_OAUTH_SECRET', 'pgadmin-secret'),
         'OAUTH2_TOKEN_URL': 'http://172.18.0.1:8081/auth/realms/portfolio-realm/protocol/openid-connect/token',
         'OAUTH2_AUTHORIZATION_URL': 'http://localhost:8081/auth/realms/portfolio-realm/protocol/openid-connect/auth',
         'OAUTH2_USERINFO_ENDPOINT': 'http://172.18.0.1:8081/auth/realms/portfolio-realm/protocol/openid-connect/userinfo',
