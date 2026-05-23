@@ -165,12 +165,12 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
 
 echo "  Client 'grafana' créé ✓"
 
-CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=grafana" \
+GRAFANA_CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=grafana" \
   -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
 
 echo "  Ajout du mapper 'realm-roles'..."
 
-curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$CLIENT_ID/protocol-mappers/models" \
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$GRAFANA_CLIENT_ID/protocol-mappers/models" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -261,10 +261,10 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$PGADMIN_CLIENT_ID/pr
 echo "  Mappers pgadmin ajoutés ✓"
 
 # ----------------------------------------------------------
-# 7. Créer le client sonarqube
+# 7. Créer le client sonarqube (SAML)
 # ----------------------------------------------------------
 echo ""
-echo "[7/8] Création du client 'sonarqube'..."
+echo "[7/8] Création du client 'sonarqube' (SAML)..."
 
 curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
   -H "Authorization: Bearer $TOKEN" \
@@ -273,62 +273,99 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
     "clientId": "sonarqube",
     "name": "SonarQube",
     "enabled": true,
-    "protocol": "openid-connect",
-    "publicClient": false,
-    "clientAuthenticatorType": "client-secret",
-    "secret": "sonarqube-secret",
+    "protocol": "saml",
     "redirectUris": ["http://localhost:9000/*"],
-    "webOrigins": ["http://localhost:9000"],
-    "standardFlowEnabled": true,
-    "directAccessGrantsEnabled": true
+    "baseUrl": "http://localhost:9000",
+    "adminUrl": "http://localhost:9000",
+    "attributes": {
+      "saml.authnstatement": "true",
+      "saml_name_id_format": "email",
+      "saml.force.name.id.format": "true",
+      "saml.server.signature": "true",
+      "saml.signature.algorithm": "RSA_SHA256",
+      "saml.signing.certificate": "",
+      "saml_assertion_consumer_url.post.0": "http://localhost:9000/saml2/callback",
+      "saml_single_logout_service_url.front.0": "http://localhost:9000",
+      "saml.force.post.binding": "true",
+      "saml.artifact.binding": "false",
+      "saml.onetimeuse.condition": "false",
+      "saml_idp_initiated_sso_relay_state": "",
+      "frontchannelLogout": "true"
+    }
   }' > /dev/null
 
-echo "  Client 'sonarqube' créé ✓"
+echo "  Client 'sonarqube' SAML créé ✓"
 
 SONAR_CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=sonarqube" \
   -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
 
-echo "  Ajout du mapper 'realm-roles' pour sonarqube..."
+echo "  Ajout des mappers SAML pour sonarqube..."
 
+# Mapper: name
 curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$SONAR_CLIENT_ID/protocol-mappers/models" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "realm-roles",
-    "protocol": "openid-connect",
-    "protocolMapper": "oidc-usermodel-realm-role-mapper",
+    "name": "name",
+    "protocol": "saml",
+    "protocolMapper": "saml-user-property-mapper",
     "consentRequired": false,
     "config": {
-      "multivalued": "true",
-      "userinfo.token.claim": "true",
-      "id.token.claim": "true",
-      "access.token.claim": "true",
-      "claim.name": "roles",
-      "jsonType.label": "String"
+      "attribute.nameformat": "Basic",
+      "user.attribute": "firstName",
+      "attribute.name": "name"
     }
   }' > /dev/null
 
-echo "  Ajout du mapper 'login' (username) pour sonarqube..."
+# Mapper: email
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$SONAR_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "email",
+    "protocol": "saml",
+    "protocolMapper": "saml-user-property-mapper",
+    "consentRequired": false,
+    "config": {
+      "attribute.nameformat": "Basic",
+      "user.attribute": "email",
+      "attribute.name": "email"
+    }
+  }' > /dev/null
 
+# Mapper: login
 curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$SONAR_CLIENT_ID/protocol-mappers/models" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "login",
-    "protocol": "openid-connect",
-    "protocolMapper": "oidc-usermodel-property-mapper",
+    "protocol": "saml",
+    "protocolMapper": "saml-user-property-mapper",
     "consentRequired": false,
     "config": {
-      "userinfo.token.claim": "true",
+      "attribute.nameformat": "Basic",
       "user.attribute": "username",
-      "id.token.claim": "true",
-      "access.token.claim": "true",
-      "claim.name": "preferred_username",
-      "jsonType.label": "String"
+      "attribute.name": "login"
     }
   }' > /dev/null
 
-echo "  Mappers sonarqube ajoutés ✓"
+# Mapper: groups (roles) - Single Role Attribute ON
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$SONAR_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "groups",
+    "protocol": "saml",
+    "protocolMapper": "saml-role-list-mapper",
+    "consentRequired": false,
+    "config": {
+      "attribute.nameformat": "Basic",
+      "attribute.name": "Role",
+      "single": "true"
+    }
+  }' > /dev/null
+
+echo "  Mappers SAML sonarqube ajoutés ✓"
 
 # ----------------------------------------------------------
 # 8. Vérification finale
@@ -356,9 +393,9 @@ echo ""
 echo " Realm    : portfolio-realm"
 echo " Rôles    : chef-equipe, adjoint, developpeur, devops, qa, securite"
 echo " Users    : 10 utilisateurs créés"
-echo " Clients  : grafana (secret: grafana-secret)"
-echo "          : pgadmin (secret: pgadmin-secret)"
-echo "          : sonarqube (secret: sonarqube-secret)"
+echo " Clients  : grafana  (OIDC - secret: grafana-secret)"
+echo "          : pgadmin  (OIDC - secret: pgadmin-secret)"
+echo "          : sonarqube (SAML)"
 echo " Password : PheraCore2025! (pour tous les utilisateurs)"
 echo ""
 echo " Hardening activé :"
@@ -372,4 +409,8 @@ echo " Accès Keycloak  : http://localhost:8081/auth"
 echo " Accès Grafana   : http://localhost:3001"
 echo " Accès PGAdmin   : http://localhost:5050"
 echo " Accès SonarQube : http://localhost:9000"
+echo ""
+echo " NOTE: Pour PGAdmin, lancez setup-pgadmin.sh après que"
+echo "       chef@portfolio.com et adjoint@portfolio.com"
+echo "       se soient connectés une première fois."
 echo "=================================================="
