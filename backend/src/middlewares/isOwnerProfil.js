@@ -2,6 +2,14 @@
 const { ROLES } = require('../config/roles');
 
 const isOwnerProfil = (req, res, next) => {
+  const rawId = req.params.id;
+
+  if (!rawId || !/^\d+$/.test(rawId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'ID profil invalide'
+    });
+  }
   const idCible = BigInt(req.params.id);
   const idConnecte = BigInt(req.utilisateur.id_utilisateur);
 

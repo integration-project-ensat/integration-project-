@@ -5,7 +5,7 @@ const express = require('express')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
-const { apiLimiter, authLimiter, passwordLimiter } = require('./src/middlewares/rateLimiter.middleware')
+const { apiLimiter, authLimiter, passwordLimiter,profilLimiter,diplomeLimiter } = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
 const authRoutes = require('./src/routes/auth.routes')
@@ -44,9 +44,9 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/competences', competenceRoutes)
-app.use('/api/profil', profileRoutes)
+app.use('/api/profil', diplomeLimiter,profileRoutes)
 app.use('/api/profil/photo', photoRoutes)
-app.use('/api/diplomes', diplomeRoutes)
+app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
 
 // 404 not found handler
 app.use((req, res) => {
