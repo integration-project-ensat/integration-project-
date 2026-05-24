@@ -3,12 +3,12 @@ const helmet = require('helmet');
 const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      defaultSrc: ["'none'"],
+      scriptSrc: ["'none'"],
+      styleSrc: ["'none'"],
+      imgSrc: ["'none'"],
       connectSrc: ["'self'"],
-      fontSrc: ["'self'", "https:", "data:"],
+      fontSrc: ["'none'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'none'"],
       frameSrc: ["'none'"],
@@ -28,7 +28,7 @@ const securityHeaders = helmet({
   permittedCrossDomainPolicies: { permittedPolicies: 'none' },
   crossOriginResourcePolicy: { policy: 'same-origin' },
   crossOriginOpenerPolicy: { policy: 'same-origin' },
-  crossOriginEmbedderPolicy: false,
+  crossOriginEmbedderPolicy: true,
 });
 
 module.exports = securityHeaders;

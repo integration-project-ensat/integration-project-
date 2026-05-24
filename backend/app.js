@@ -1,41 +1,39 @@
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
+
 const path = require('path')
 const express = require('express')
-const morgan = require('morgan')
-const swaggerUi = require('swagger-ui-express')
-const swaggerSpec = require('./src/config/swagger.config')
+
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
 const { apiLimiter, authLimiter, passwordLimiter,profilLimiter,diplomeLimiter } = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
+// Routes existantes
 const authRoutes = require('./src/routes/auth.routes')
 const competenceRoutes = require('./src/routes/competence.routes')
-const photoRoutes = require('./src/routes/photo.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
+const photoRoutes = require('./src/routes/photo.routes')
+
+// Routes à venir (décommenter au fur et à mesure)
+// const projetRoutes = require('./src/routes/projet.routes')
+// const stageRoutes = require('./src/routes/stage.routes')
+// const activiteRoutes = require('./src/routes/activite.routes')
+// const attestationRoutes = require('./src/routes/attestation.routes')
 
 const app = express()
+const projetRoutes = require('./src/routes/projet.routes')
+const stageRoutes = require('./src/routes/stage.routes')
 
+const activiteRoutes = require('./src/routes/activite.routes')
+const attestationRoutes = require('./src/routes/attestation.routes')
+
+// Fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
-app.use(securityHeaders)
-app.use(corsMiddleware)
-
-const profileRoutes = require('./src/routes/profile.routes')
-const diplomeRoutes = require('./src/routes/diploma.routes')
-
-const app = express()
-
-// Logger HTTP
-app.use(morgan('dev'))
-
-// Documentation Swagger — avant securityHeaders
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-
-// Sécurité (headers, CORS, rate limiting)
+// Sécurité & CORS
 app.use(securityHeaders)
 app.use(corsMiddleware)
 
@@ -52,7 +50,7 @@ app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
 
-// health check
+// Health check
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
@@ -77,6 +75,13 @@ app.use((req, res) => {
   })
 })
 
+// Erreurs globales
 app.use(errorMiddleware)
+
+app.use('/api/projets', projetRoutes)
+app.use('/api/stages', stageRoutes)
+app.use('/api/activites', activiteRoutes)
+app.use('/api/attestations', attestationRoutes)
+
 
 module.exports = app

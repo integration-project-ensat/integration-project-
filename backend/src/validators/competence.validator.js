@@ -1,85 +1,71 @@
-const { body, param } = require('express-validator');
+// validators/competenceValidator.js
+const { body } = require('express-validator');
 
-const etudiantIdParam = [
-  param('etudiantId')
-    .isInt({ min: 1 })
-    .withMessage('ID étudiant invalide')
-    .toInt()
-];
+const addCompetenceRules = [
+  body('nom')
+    .trim().escape()
+    .notEmpty().withMessage('Le nom de la compétence est obligatoire').bail()
+    .isLength({ min: 1, max: 100 }).withMessage('Le nom doit contenir entre 1 et 100 caractères'),
 
-const addUserCompetence = [
-  body('id_competence')
-    .isInt({ min: 1 })
-    .withMessage('ID compétence invalide'),
-
-  body('niveau_maitrise')
+  body('niveau')
     .optional()
-    .isInt({ min: 0, max: 100 })
-    .withMessage('Le niveau doit être entre 0 et 100')
+    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
+    .withMessage('Niveau invalide. Choix : DEBUTANT, INTERMEDIAIRE, AVANCE, EXPERT'),
+
+  body('categorie')
+    .optional()
+    .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
+    .withMessage('Catégorie invalide. Choix : TECHNIQUE, COMPORTEMENTALE'),
 ];
 
-const bulkUserCompetences = [
+const updateCompetenceRules = [
+  body('nom')
+    .optional()
+    .trim().escape()
+    .isLength({ min: 1, max: 100 }).withMessage('Le nom doit contenir entre 1 et 100 caractères'),
+
+  body('niveau')
+    .optional()
+    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
+    .withMessage('Niveau invalide. Choix : DEBUTANT, INTERMEDIAIRE, AVANCE, EXPERT'),
+
+  body('categorie')
+    .optional()
+    .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
+    .withMessage('Catégorie invalide. Choix : TECHNIQUE, COMPORTEMENTALE'),
+];
+
+const bulkAddRules = [
   body('competences')
-    .isArray({ min: 1 })
-    .withMessage('La liste des compétences est requise'),
-
-  body('competences.*.id_competence')
-    .isInt({ min: 1 })
-    .withMessage('ID compétence invalide'),
-
-  body('competences.*.niveau_maitrise')
+    .isArray({ min: 1 }).withMessage('Au moins une compétence est requise'),
+  body('competences.*.nom')
+    .trim().escape()
+    .notEmpty().withMessage('Le nom de la compétence est obligatoire')
+    .isLength({ min: 1, max: 100 }).withMessage('Le nom doit contenir entre 1 et 100 caractères'),
+  body('competences.*.niveau')
     .optional()
-    .isInt({ min: 0, max: 100 })
-    .withMessage('Niveau invalide')
-];
-
-const updateUserCompetence = [
-  body('niveau_maitrise')
-    .optional()
-    .isInt({ min: 0, max: 100 })
-    .withMessage('Le niveau doit être entre 0 et 100')
-];
-
-const createCompetence = [
-  body('nom')
-    .trim()
-    .notEmpty()
-    .withMessage('Le nom de la compétence est requis'),
-
-  body('categorie')
+    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
+    .withMessage('Niveau invalide'),
+  body('competences.*.categorie')
     .optional()
     .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
     .withMessage('Catégorie invalide'),
-
-  body('niveau')
-    .optional()
-    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
-    .withMessage('Niveau invalide')
 ];
 
-const updateCompetence = [
-  body('nom')
-    .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('Le nom ne peut pas être vide'),
-
-  body('categorie')
-    .optional()
-    .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
-    .withMessage('Catégorie invalide'),
-
-  body('niveau')
-    .optional()
-    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
-    .withMessage('Niveau invalide')
-];
+function valider(rules) {
+  return async (req, res, next) => {
+    const errors = await Promise.all(rules.map(rule => rule.run(req)));
+    const validationErrors = errors.filter(error => !error.isEmpty()).map(error => error.array());
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ errors: validationErrors.flat() });
+    }
+    next();
+  };
+}
 
 module.exports = {
-  etudiantIdParam,
-  addUserCompetence,
-  bulkUserCompetences,
-  updateUserCompetence,
-  createCompetence,
-  updateCompetence
+  addCompetenceRules,
+  updateCompetenceRules,
+  bulkAddRules,
+  valider,
 };
