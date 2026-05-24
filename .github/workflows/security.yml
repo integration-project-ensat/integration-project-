@@ -181,11 +181,6 @@ jobs:
 
       - name: "Preparer dossier ZAP"
         run: |
-          mkdir -p reports/zap
-          docker exec --user root portfolio_zap chmod 777 /zap/wrk || true
-
-      - name: "Preparer dossier ZAP"
-        run: |
           sudo mkdir -p reports/zap
           sudo chmod 777 reports/zap
           docker exec --user root portfolio_zap chmod 777 /zap/wrk || true
@@ -213,7 +208,7 @@ jobs:
           docker cp portfolio_zap:/zap/wrk/zap_report.json reports/zap/ || true
           ls reports/zap/*.json 2>/dev/null || \
             echo '{"info":"no report generated"}' > reports/zap/zap_report.json
-            
+
       - uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
