@@ -26,6 +26,7 @@ const notificationRoutes = require('./src/routes/notification.routes');
 const badgeRoutes = require('./src/routes/badge.routes');
 const app = express()
 
+
 // Fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
@@ -80,7 +81,6 @@ app.use((req, res) => {
 
 // Erreurs globales
 app.use(errorMiddleware)
-
 
 
 module.exports = app
