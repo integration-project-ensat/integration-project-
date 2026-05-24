@@ -30,9 +30,11 @@ const props = withDefaults(
   defineProps<{
     modelValue: string;
     userType?: UserType;
+    title?: string;
   }>(),
   {
     userType: "student",
+    title: "Explore",
   },
 );
 
@@ -55,13 +57,25 @@ let isScrollTicking = false;
 const languages = ["FR", "EN", "AR"];
 const notificationFilters: NotificationCategory[] =
   props.userType === "professeur"
-    ? ["Tout", "Stages", "Projets", "Attestations", "Recommandations"]
+    ? ["Tout", "Connexions", "Stages", "Projets", "Attestations", "Recommandations"]
     : props.userType === "professionnel"
       ? ["Tout", "Connexions", "Commentaires"]
-    : ["Tout", "Commentaires", "Recommandations", "Projets"];
+    : ["Tout", "Connexions", "Commentaires", "Recommandations", "Projets"];
 
 const notificationsByUser: Record<UserType, NotificationItem[]> = {
   student: [
+    {
+      id: 9,
+      category: "Connexions",
+      person: "Nom Professionnel",
+      action: "vous a envoye une demande de connexion",
+      relatedTitle: "Profil DevOps",
+      time: "Il y a 2 min",
+      initials: "NP",
+      profilePath: "/profile/professional-1",
+      targetPath: "/profile/professional-1",
+      unread: true,
+    },
     {
       id: 1,
       category: "Projets",
@@ -155,6 +169,18 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
   ],
   professeur: [
     {
+      id: 9,
+      category: "Connexions",
+      person: "Nom Etudiant",
+      action: "vous a envoye une demande de connexion",
+      relatedTitle: "Profil ENSA",
+      time: "Il y a 2 min",
+      initials: "NE",
+      profilePath: "/profile/student/khadija-bennani",
+      targetPath: "/profile/student/khadija-bennani",
+      unread: true,
+    },
+    {
       id: 1,
       category: "Stages",
       person: "Nom Étudiant",
@@ -162,8 +188,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "PFE",
       time: "Il y a 3 min",
       initials: "NE",
-      profilePath: "/profile/student-1",
-      targetPath: "/validations/stage-pfe",
+      profilePath: "/profile/student/yassine-el-amrani",
+      targetPath: "/prof/validations",
       unread: true,
     },
     {
@@ -174,8 +200,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Portfolio Web",
       time: "Il y a 10 min",
       initials: "NE",
-      profilePath: "/profile/student-2",
-      targetPath: "/validations/projet-portfolio-web",
+      profilePath: "/profile/student/khadija-bennani",
+      targetPath: "/prof/validations",
       unread: true,
     },
     {
@@ -186,8 +212,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Stage DevOps",
       time: "Il y a 1 h",
       initials: "NE",
-      profilePath: "/profile/student-3",
-      targetPath: "/validations/attestation-stage-devops",
+      profilePath: "/profile/student/mehdi-berrada",
+      targetPath: "/prof/validations",
     },
     {
       id: 4,
@@ -197,8 +223,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Lettre de recommandation",
       time: "Hier",
       initials: "NE",
-      profilePath: "/profile/student-4",
-      targetPath: "/validations/recommandation-lettre",
+      profilePath: "/profile/student/khadija-bennani",
+      targetPath: "/prof/recommandations",
     },
     {
       id: 5,
@@ -208,8 +234,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Stage été",
       time: "Il y a 2 j",
       initials: "NE",
-      profilePath: "/profile/student-5",
-      targetPath: "/validations/stage-ete",
+      profilePath: "/profile/student/hajar-mansouri",
+      targetPath: "/prof/validations",
     },
     {
       id: 6,
@@ -219,8 +245,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Application Mobile",
       time: "Il y a 3 j",
       initials: "NE",
-      profilePath: "/profile/student-6",
-      targetPath: "/validations/projet-application-mobile",
+      profilePath: "/profile/student/amine-lahlou",
+      targetPath: "/prof/validations",
     },
     {
       id: 7,
@@ -230,8 +256,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Stage Cloud",
       time: "Il y a 1 sem",
       initials: "NE",
-      profilePath: "/profile/student-7",
-      targetPath: "/validations/attestation-stage-cloud",
+      profilePath: "/profile/student/sara-alaoui",
+      targetPath: "/prof/validations",
     },
     {
       id: 8,
@@ -241,8 +267,8 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
       relatedTitle: "Lettre de recommandation",
       time: "Il y a 2 sem",
       initials: "NE",
-      profilePath: "/profile/student-8",
-      targetPath: "/validations/recommandation-lettre-2",
+      profilePath: "/profile/student/yassine-el-amrani",
+      targetPath: "/prof/recommandations",
     },
   ],
   professionnel: [
@@ -427,7 +453,7 @@ onBeforeUnmount(() => {
     class="explore-header"
     :class="{ 'explore-headerHidden': isHeaderHidden }"
   >
-    <h1 class="explore-title">Explore</h1>
+    <h1 class="explore-title">{{ title }}</h1>
 
     <div class="explore-actions">
       <div class="explore-search">

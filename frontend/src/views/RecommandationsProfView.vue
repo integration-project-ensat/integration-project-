@@ -28,7 +28,11 @@ const tabs: RecommendationTab[] = [
 ];
 
 const filteredRequests = computed(() => {
-  if (activeTab.value === "Tout") return recommendations.value;
+  if (activeTab.value === "Tout") {
+    return recommendations.value.filter(
+      (request) => request.status === "En attente",
+    );
+  }
   if (activeTab.value === "Acceptées") {
     return recommendations.value.filter((request) => request.status === "Acceptée");
   }
@@ -306,6 +310,7 @@ const refuseRequest = (request: RecommendationRequest) => {
   width: 100vw;
   background: #eef1fb;
   color: var(--text-dark);
+  font-family: var(--font-body);
   padding-top: 50px;
   overflow: hidden;
 }
@@ -409,7 +414,24 @@ const refuseRequest = (request: RecommendationRequest) => {
 .recommendation-list {
   display: grid;
   gap: 16px;
+  max-height: 820px;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 22px 30px 30px;
+}
+
+.recommendation-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.recommendation-list::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.recommendation-list::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.18);
+  border-radius: 9999px;
 }
 
 .recommendation-card {

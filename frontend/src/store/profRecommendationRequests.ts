@@ -66,6 +66,54 @@ const recommendations = ref<RecommendationRequest[]>([
     date: "Il y a 3 j",
     status: "Refusée",
   },
+  {
+    id: 5,
+    studentId: "hajar-mansouri",
+    studentName: "Hajar Mansouri",
+    initials: "HM",
+    profileInfo: "Cloud AWS · ENSA Tanger · 4ème année",
+    title: "Lettre pour stage cloud",
+    message:
+      "Je candidate pour un stage cloud et j'aimerais une lettre qui parle de mon sérieux et de mes compétences AWS.",
+    date: "Il y a 4 j",
+    status: "En attente",
+  },
+  {
+    id: 6,
+    studentId: "amine-lahlou",
+    studentName: "Amine Lahlou",
+    initials: "AL",
+    profileInfo: "Full Stack · ENSA Tanger · 5ème année",
+    title: "Recommandation pour alternance",
+    message:
+      "J'ai besoin d'une lettre pour une alternance full stack avec React, Node.js et Docker.",
+    date: "Il y a 5 j",
+    status: "En attente",
+  },
+  {
+    id: 7,
+    studentId: "nora-tazi",
+    studentName: "Nora Tazi",
+    initials: "NT",
+    profileInfo: "Mobile · ENSA Tanger · 4ème année",
+    title: "Lettre pour école d'été",
+    message:
+      "Je prépare une candidature à une école d'été et je souhaite une recommandation sur mon projet mobile.",
+    date: "Il y a 1 sem",
+    status: "En attente",
+  },
+  {
+    id: 8,
+    studentId: "omar-idrissi",
+    studentName: "Omar Idrissi",
+    initials: "OI",
+    profileInfo: "Data Science · ENSA Tanger · 5ème année",
+    title: "Recommandation pour master data",
+    message:
+      "Je postule à un master data science et j'aimerais une lettre qui souligne mes travaux en machine learning.",
+    date: "Il y a 2 sem",
+    status: "En attente",
+  },
 ]);
 
 const recommendationStats = computed(() => ({

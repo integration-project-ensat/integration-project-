@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { Bookmark } from "lucide-vue-next";
 import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
 import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
 import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
+import { useProSavedProfiles } from "../store/proSavedProfiles";
 
 interface Profile {
   id: number;
@@ -19,6 +21,8 @@ interface Profile {
 
 const searchQuery = ref("");
 const sidebarOpen = ref(true);
+const savedFeedbackId = ref<string | null>(null);
+const { isSaved, saveProfile } = useProSavedProfiles();
 
 const profiles = ref<Profile[]>([
   {
@@ -63,6 +67,29 @@ const handleUpdateFilters = (next: typeof filters.value) => {
   filters.value = next;
 };
 
+const profileId = (profile: Profile) => `explore-pro-${profile.id}`;
+
+const toggleSavedProfile = (profile: Profile) => {
+  const id = profileId(profile);
+  const saved = saveProfile({
+    id,
+    name: profile.name,
+    school: profile.school,
+    field: profile.role,
+    city: profile.city,
+    score: profile.score,
+    recommendations: profile.recommendations,
+    hasPortfolio: true,
+    profilePath: `/profile/student/${id}`,
+    portfolioPath: `/projects/${id}`,
+  });
+
+  savedFeedbackId.value = id;
+  window.setTimeout(() => {
+    if (savedFeedbackId.value === id) savedFeedbackId.value = null;
+  }, 1200);
+};
+
 const filteredProfiles = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return profiles.value;
@@ -89,12 +116,41 @@ const filteredProfiles = computed(() => {
             <ExploreHeader v-model="searchQuery" user-type="professionnel" />
 
             <div class="explore-feed">
-              <ProfileCard
+              <div
                 v-for="profile in filteredProfiles"
                 :key="profile.id"
-                :profile="profile"
-                :default-expanded="profile.id === 1"
-              />
+                class="profile-save-wrap"
+              >
+                <button
+                  type="button"
+                  class="save-profile-btn"
+                  :class="{ saved: isSaved(profileId(profile)) }"
+                  :aria-label="
+                    isSaved(profileId(profile))
+                      ? 'Retirer le profil sauvegardé'
+                      : 'Sauvegarder le profil'
+                  "
+                  @click="toggleSavedProfile(profile)"
+                >
+                  <Bookmark class="save-icon" />
+                </button>
+
+                <span
+                  v-if="savedFeedbackId === profileId(profile)"
+                  class="save-feedback"
+                >
+                  {{
+                    isSaved(profileId(profile))
+                      ? "Profil sauvegardé"
+                      : "Profil retiré"
+                  }}
+                </span>
+
+                <ProfileCard
+                  :profile="profile"
+                  :default-expanded="profile.id === 1"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -283,6 +339,52 @@ const filteredProfiles = computed(() => {
   gap: 20px;
   padding: 16px 18px 18px;
   background: #ffffff;
+}
+
+.profile-save-wrap {
+  position: relative;
+}
+
+.save-profile-btn {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: white;
+  color: var(--text-gray);
+  border: 1px solid var(--input-bg);
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-profile-btn.saved {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: white;
+}
+
+.save-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.save-feedback {
+  position: absolute;
+  right: 62px;
+  top: 22px;
+  z-index: 6;
+  border-radius: var(--radius-pill);
+  background: var(--text-dark);
+  color: white;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.2);
 }
 </style>
 

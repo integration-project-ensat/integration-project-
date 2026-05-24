@@ -247,6 +247,7 @@ const openStudentProfile = (request: ValidationRequest) => {
   width: 100vw;
   background: #eef1fb;
   color: var(--text-dark);
+  font-family: var(--font-body);
   padding-top: 50px;
   overflow: hidden;
 }
@@ -354,7 +355,24 @@ const openStudentProfile = (request: ValidationRequest) => {
 .validation-list {
   display: grid;
   gap: 16px;
+  max-height: 960px;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 22px 30px 30px;
+}
+
+.validation-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.validation-list::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.validation-list::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.18);
+  border-radius: 9999px;
 }
 
 .validation-card {

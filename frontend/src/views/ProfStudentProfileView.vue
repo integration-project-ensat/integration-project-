@@ -66,6 +66,7 @@ const student = computed(() => studentRequests.value[0]);
   width: 100vw;
   background: #eef1fb;
   color: var(--text-dark);
+  font-family: var(--font-body);
   padding-top: 50px;
 }
 

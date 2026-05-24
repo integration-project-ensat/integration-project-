@@ -18,6 +18,8 @@ const router = useRouter();
 const sidebarOpen = ref(true);
 const selectedRequest = ref<ValidationRequest | null>(null);
 const selectedRecommendation = ref<RecommendationRequest | null>(null);
+const writingRecommendation = ref<RecommendationRequest | null>(null);
+const letterDraft = ref("");
 const { stats, groupedRequests, updateRequestStatus } =
   useProfValidationRequests();
 const {
@@ -91,9 +93,31 @@ const updateSelectedStatus = (status: ValidationStatus) => {
   closeDetailsModal();
 };
 
-const updateSelectedRecommendationStatus = (status: RecommendationStatus) => {
+const openWriteRecommendationModal = (request: RecommendationRequest) => {
+  selectedRecommendation.value = null;
+  writingRecommendation.value = request;
+  letterDraft.value = request.writtenLetter ?? "";
+};
+
+const closeWriteRecommendationModal = () => {
+  writingRecommendation.value = null;
+  letterDraft.value = "";
+};
+
+const sendRecommendationLetter = () => {
+  if (writingRecommendation.value) {
+    updateRecommendationStatus(
+      writingRecommendation.value.id,
+      "Acceptée",
+      letterDraft.value.trim(),
+    );
+  }
+  closeWriteRecommendationModal();
+};
+
+const refuseSelectedRecommendation = () => {
   if (selectedRecommendation.value) {
-    updateRecommendationStatus(selectedRecommendation.value.id, status);
+    updateRecommendationStatus(selectedRecommendation.value.id, "Refusée");
   }
   closeRecommendationDetails();
 };
@@ -118,12 +142,6 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
             <p class="dashboard-kicker">Espace professeur</p>
             <h1>Dashboard</h1>
           </div>
-          <RouterLink to="/prof/validations" class="dashboard-link">
-            Gérer les validations
-          </RouterLink>
-          <RouterLink to="/prof/recommandations" class="dashboard-link">
-            Lettres de recommandation
-          </RouterLink>
         </div>
 
         <div class="stats-grid">
@@ -414,16 +432,76 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
           <button
             type="button"
             class="action-btn primary"
-            @click="updateSelectedRecommendationStatus('Acceptée')"
+            @click="openWriteRecommendationModal(selectedRecommendation)"
           >
             Accepter
           </button>
           <button
             type="button"
             class="action-btn danger"
-            @click="updateSelectedRecommendationStatus('Refusée')"
+            @click="refuseSelectedRecommendation"
           >
             Refuser
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div
+      v-if="writingRecommendation"
+      class="modal-backdrop"
+      @click.self="closeWriteRecommendationModal"
+    >
+      <section class="details-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <p>Écrire la lettre</p>
+            <button
+              type="button"
+              class="modal-student-link"
+              @click="openStudentProfile(writingRecommendation)"
+            >
+              {{ writingRecommendation.studentName }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="modal-close"
+            @click="closeWriteRecommendationModal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="details-section">
+          <span>Demande</span>
+          <h3>{{ writingRecommendation.title }}</h3>
+          <p>{{ writingRecommendation.message }}</p>
+        </div>
+
+        <label class="letter-field">
+          <span>Lettre de recommandation</span>
+          <textarea
+            v-model="letterDraft"
+            rows="8"
+            placeholder="Écrivez la lettre de recommandation ici..."
+          />
+        </label>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeWriteRecommendationModal"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="action-btn primary"
+            @click="sendRecommendationLetter"
+          >
+            Envoyer
           </button>
         </div>
       </section>
@@ -437,6 +515,7 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
   width: 100vw;
   background: #eef1fb;
   color: var(--text-dark);
+  font-family: var(--font-body);
   padding-top: 50px;
   overflow: hidden;
 }
@@ -444,17 +523,17 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 .dashboard-shell {
   height: calc(100vh - 50px);
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
   transition: padding-left 0.3s ease;
 }
 
 .dashboard-shellShift {
-  padding-left: 236px;
+  padding-left: 264px;
 }
 
 .dashboard-panel {
-  max-width: 1220px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
 }
 
 .dashboard-header {
@@ -463,13 +542,6 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
-}
-
-.dashboard-header > div:last-child {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-end;
 }
 
 .dashboard-kicker {
@@ -481,7 +553,7 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 
 .dashboard-header h1 {
   color: var(--text-dark);
-  font-family: var(--font-head);
+  font-family: var(--font-body);
   font-size: 34px;
   font-weight: 800;
   line-height: 1;
@@ -493,19 +565,9 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 
 .dashboard-sectionHeader h2 {
   color: var(--text-dark);
-  font-family: var(--font-head);
+  font-family: var(--font-body);
   font-size: 26px;
   font-weight: 800;
-}
-
-.dashboard-link {
-  border-radius: var(--radius-pill);
-  background: var(--purple);
-  color: white;
-  padding: 12px 18px;
-  font-family: var(--font-head);
-  font-weight: 800;
-  box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22);
 }
 
 .stats-grid {
@@ -538,7 +600,7 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 .stat-card strong {
   display: block;
   color: var(--purple);
-  font-family: var(--font-head);
+  font-family: var(--font-body);
   font-size: 34px;
   font-weight: 800;
   margin-top: 8px;
@@ -565,7 +627,7 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 
 .status-title h2 {
   color: var(--text-dark);
-  font-family: var(--font-head);
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 800;
 }
@@ -581,7 +643,24 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 .request-list {
   display: grid;
   gap: 10px;
+  max-height: 360px;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 14px;
+}
+
+.request-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.request-list::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.request-list::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.18);
+  border-radius: 9999px;
 }
 
 .request-row {
@@ -609,7 +688,7 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-head);
+  font-family: var(--font-body);
   font-weight: 800;
 }
 
@@ -617,7 +696,7 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 .modal-student-link {
   background: transparent;
   color: var(--text-dark);
-  font-family: var(--font-head);
+  font-family: var(--font-body);
   font-weight: 800;
   text-align: left;
 }
@@ -719,7 +798,8 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 }
 
 .details-grid span,
-.details-section span {
+.details-section span,
+.letter-field span {
   display: block;
   color: var(--text-gray);
   font-size: 12px;
@@ -730,7 +810,7 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
 .details-grid strong,
 .details-section h3 {
   color: var(--text-dark);
-  font-family: var(--font-head);
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 800;
 }
@@ -739,11 +819,34 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
   margin-bottom: 14px;
 }
 
+.letter-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
 .details-section p {
   color: #475569;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.55;
+}
+
+.letter-field textarea {
+  width: 100%;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--text-dark);
+  padding: 12px 14px;
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.letter-field textarea:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
 }
 
 .attachment-list,
@@ -810,3 +913,4 @@ const openStudentProfile = (request: ValidationRequest | RecommendationRequest) 
   }
 }
 </style>
+
