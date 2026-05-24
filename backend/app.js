@@ -18,6 +18,7 @@ const diplomeRoutes = require('./src/routes/diplome.routes')
 const photoRoutes = require('./src/routes/photo.routes')
 const bannerRoutes = require('./src/routes/banner.routes')
 const portfolioRoutes = require('./src/routes/portfolio.routes')
+const lettreRoutes = require('./src/routes/lettre.routes')
 
 // Routes à venir (décommenter au fur et à mesure)
 // const projetRoutes = require('./src/routes/projet.routes')
@@ -69,6 +70,7 @@ app.use('/api/profil/photo', photoRoutes)
 app.use('/api/profil/banner', bannerRoutes)
 app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
 app.use('/api', portfolioRoutes)
+app.use('/api', lettreRoutes)
 
 // 404 not found handler
 app.use((req, res) => {
