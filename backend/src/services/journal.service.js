@@ -60,11 +60,18 @@ async function logConnexion({
 
     const userAgent = parseUserAgent(req.headers['user-agent'] || null);
 
+    const nom_complet = utilisateur
+      ? `${utilisateur.prenom} ${utilisateur.nom}`.trim()
+      : null;
+    
+      const email = emailTente ?? utilisateur?.email ?? null;
+
     await prisma.journalConnexion.create({
       data: {
         action: type,
         utilisateur_id: utilisateur?.id_utilisateur ?? null,
-        email: emailTente,
+        email,
+        com_complet,
         role: utilisateur?.role ?? null,
         raison,
         adresse_ip: ip,

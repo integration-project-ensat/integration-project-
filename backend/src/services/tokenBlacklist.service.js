@@ -5,12 +5,14 @@ const prisma = require('../../prisma/client');
 // ── Révoquer un token au logout ──────────────────────────────
 // jti      : identifiant unique du token (champ JWT)
 // expiresAt: timestamp en secondes (champ exp du JWT)
+// userId   : id de l'utilisateur (optionnel, pour audit)
 
-async function révoquerToken(jti, expiresAt) {
+async function révoquerToken(jti, expiresAt, userId = null) {
   await prisma.tokenRévoqué.create({
     data: {
       jti,
       expires_at: new Date(expiresAt * 1000),
+      ...(userId !== null && { user_id: userId }),
     },
   });
 }

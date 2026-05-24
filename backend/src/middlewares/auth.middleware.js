@@ -18,6 +18,13 @@ const authentifier = async (req, res, next) => {
       algorithms: ['HS256']
     });
 
+      if (decoded?.jti && await estRévoqué(decoded.jti)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session invalidée, veuillez vous reconnecter'
+      });
+    }
+    
     const utilisateur = await prisma.utilisateur.findUnique({
       where: { id_utilisateur: BigInt(decoded.userId) },
       select: {
