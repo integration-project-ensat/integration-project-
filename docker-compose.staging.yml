@@ -79,7 +79,7 @@ services:
     depends_on:
       - postgres
 
-zap:
+  zap:
     image: ghcr.io/zaproxy/zaproxy:stable
     container_name: portfolio_zap
     restart: unless-stopped
