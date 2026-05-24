@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
+import { SlidersHorizontal } from "lucide-vue-next";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProSavedProfiles } from "../store/proSavedProfiles";
-import { ref } from "vue";
 
 const router = useRouter();
 const sidebarOpen = ref(true);
@@ -15,6 +16,27 @@ const {
   profilesWithPortfolio,
   removeProfile,
 } = useProSavedProfiles();
+
+const showFilters = ref(false);
+const universitySearch = ref("");
+const fieldSearch = ref("");
+const minScore = ref("");
+const minRecommendations = ref("");
+
+const filteredProfiles = computed(() => {
+  const university = universitySearch.value.trim().toLowerCase();
+  const field = fieldSearch.value.trim().toLowerCase();
+  const score = Number(minScore.value) || 0;
+  const recommendations = Number(minRecommendations.value) || 0;
+
+  return savedProfiles.value.filter(
+    (profile) =>
+      profile.school.toLowerCase().includes(university) &&
+      profile.field.toLowerCase().includes(field) &&
+      profile.score >= score &&
+      profile.recommendations >= recommendations,
+  );
+});
 
 const openPath = (path: string) => {
   router.push(path);
@@ -54,11 +76,55 @@ const openPath = (path: string) => {
 
         <div class="profiles-table-card">
           <div class="table-title">
-            <h2>Profils sauvegardés</h2>
-            <span>{{ totalSaved }} profils</span>
+            <div>
+              <h2>Profils sauvegardés</h2>
+              <span>{{ filteredProfiles.length }} profils affichés</span>
+            </div>
+
+            <button
+              type="button"
+              class="filter-toggle"
+              :class="{ active: showFilters }"
+              @click="showFilters = !showFilters"
+            >
+              <SlidersHorizontal class="filter-icon" />
+              Filtrer
+            </button>
           </div>
 
-          <div v-if="savedProfiles.length" class="table-wrap">
+          <div v-if="showFilters" class="filters-panel">
+            <label>
+              Rechercher école / faculté
+              <input
+                v-model="universitySearch"
+                type="search"
+                placeholder="ENSA, FST, ENSAM..."
+              />
+            </label>
+            <label>
+              Filière
+              <input
+                v-model="fieldSearch"
+                type="search"
+                placeholder="GINF, DevOps, Cloud..."
+              />
+            </label>
+            <label>
+              Score minimum
+              <input v-model="minScore" type="number" min="0" placeholder="80" />
+            </label>
+            <label>
+              Recommandations minimum
+              <input
+                v-model="minRecommendations"
+                type="number"
+                min="0"
+                placeholder="100"
+              />
+            </label>
+          </div>
+
+          <div v-if="filteredProfiles.length" class="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -68,13 +134,12 @@ const openPath = (path: string) => {
                   <th>Ville</th>
                   <th>Score</th>
                   <th>Recommandations</th>
-                  <th>Portfolio</th>
                   <th>Date sauvegarde</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="profile in savedProfiles" :key="profile.id">
+                <tr v-for="profile in filteredProfiles" :key="profile.id">
                   <td>
                     <button
                       type="button"
@@ -92,14 +157,6 @@ const openPath = (path: string) => {
                     <span class="score-pill">{{ profile.score }}+</span>
                   </td>
                   <td>{{ profile.recommendations }}+</td>
-                  <td>
-                    <span
-                      class="portfolio-pill"
-                      :class="{ muted: !profile.hasPortfolio }"
-                    >
-                      {{ profile.hasPortfolio ? "Oui" : "Non" }}
-                    </span>
-                  </td>
                   <td>{{ profile.savedAt }}</td>
                   <td>
                     <div class="action-row">
@@ -214,6 +271,7 @@ const openPath = (path: string) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 18px;
   border-bottom: 1px solid var(--input-bg);
 }
@@ -222,6 +280,56 @@ const openPath = (path: string) => {
   color: var(--text-dark);
   font-size: 22px;
   font-weight: 900;
+}
+
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  border-radius: 100px 180px 0px 100px;
+  border: 1px solid rgba(17, 24, 39, 0.35);
+  background: white;
+  color: var(--navy-mid);
+  padding: 0 14px;
+  font-weight: 900;
+}
+
+.filter-toggle.active {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: white;
+}
+
+.filter-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.filters-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--input-bg);
+  background: rgba(229, 231, 235, 0.45);
+}
+
+.filters-panel label {
+  display: grid;
+  gap: 7px;
+  color: var(--text-gray);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.filters-panel input {
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: white;
+  color: var(--text-dark);
+  padding: 0 14px;
+  font-weight: 800;
 }
 
 .table-wrap {
@@ -269,17 +377,11 @@ th {
   font-size: 12px;
 }
 
-.score-pill,
-.portfolio-pill {
+.score-pill {
   border-radius: var(--radius-pill);
   background: rgba(79, 70, 229, 0.12);
   color: var(--purple);
   padding: 7px 12px;
-}
-
-.portfolio-pill.muted {
-  background: var(--input-bg);
-  color: var(--text-gray);
 }
 
 .action-row {
@@ -318,7 +420,8 @@ th {
 }
 
 @media (max-width: 1100px) {
-  .stats-grid {
+  .stats-grid,
+  .filters-panel {
     grid-template-columns: repeat(2, minmax(160px, 1fr));
   }
 }

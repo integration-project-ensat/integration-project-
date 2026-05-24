@@ -889,7 +889,7 @@ const addReply = (comment: FeedComment) => {
 .feed-save-btn {
   position: absolute;
   right: 18px;
-  top: 18px;
+  top: 22px;
   z-index: 4;
   width: 36px;
   height: 36px;
@@ -958,7 +958,7 @@ const addReply = (comment: FeedComment) => {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding-right: 46px;
+  padding-right: 52px;
 }
 
 .feed-score {
