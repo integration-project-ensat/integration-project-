@@ -44,13 +44,14 @@ import {
   Settings,
   LogOut,
 } from 'lucide-vue-next'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
  
 defineProps({
   open: { type: Boolean, default: true },
 })
  
 const route = useRoute()
+const router = useRouter()
  
 const navItems = [
   { label: 'Dashboard',      to: '/admin',                icon: LayoutDashboard },
@@ -68,7 +69,8 @@ const isActive = (path) => {
 }
  
 const handleLogout = () => {
-  console.log('Déconnexion')
+  localStorage.removeItem('token')
+  router.push('/login')
 }
 </script>
  

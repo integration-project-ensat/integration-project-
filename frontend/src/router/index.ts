@@ -9,8 +9,10 @@ import VerifyCodeView from "../views/VerifyCodeView.vue";
 import ExploreView from "../views/ExploreView.vue";
 import AdminDashboardView from "../views/AdminDashboardView.vue";
 import AdminProfilesView from "../views/AdminProfilesView.vue";
-import AdminPortfoliosView from "../views/AdminPortfoliosView.vue"
-
+import AdminPortfoliosView from "../views/AdminPortfoliosView.vue";
+import AdminActivitiesView from "../views/AdminActivitiesView.vue";
+import AdminProjetsView from "../views/AdminProjetsView.vue";
+ import AdminCertificationsView from '../views/AdminCertificationsView.vue';
 
 export default createRouter({
   history: createWebHistory("/"),
@@ -24,6 +26,9 @@ export default createRouter({
     { path: "/explore", name: "explore", component: ExploreView },
     { path: '/admin',component: AdminDashboardView },
     { path: '/admin/profils', component : AdminProfilesView },
-    { path: '/admin/portfolios', component: AdminPortfoliosView }
+    { path: '/admin/portfolios', component: AdminPortfoliosView },
+    { path:  '/admin/activites', component: AdminActivitiesView },
+    { path: "/admin/projets" , component:AdminProjetsView },
+    { path: '/admin/certifications', component: AdminCertificationsView }
   ],
 });
