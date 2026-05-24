@@ -206,6 +206,7 @@ jobs:
 
           docker cp portfolio_zap:/zap/wrk/zap_report.html reports/zap/ || true
           docker cp portfolio_zap:/zap/wrk/zap_report.json reports/zap/ || true
+          docker cp portfolio_zap:/home/zap/zap_out.json reports/zap/ || true
           ls reports/zap/*.json 2>/dev/null || \
             echo '{"info":"no report generated"}' > reports/zap/zap_report.json
 
