@@ -17,6 +17,9 @@ const competenceRoutes = require('./src/routes/competence.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
 const photoRoutes = require('./src/routes/photo.routes')
+const bannerRoutes = require('./src/routes/banner.routes')
+const portfolioRoutes = require('./src/routes/portfolio.routes')
+const lettreRoutes = require('./src/routes/lettre.routes')
 const projetRoutes = require('./src/routes/projet.routes')
 const stageRoutes = require('./src/routes/stage.routes')
 const activiteRoutes = require('./src/routes/activite.routes')
@@ -62,6 +65,7 @@ app.use('/api/admin',        adminRoutes)
 app.use('/api/competences', competenceRoutes)
 app.use('/api/profil', diplomeLimiter,profileRoutes)
 app.use('/api/profil/photo', photoRoutes)
+app.use('/api/profil/banner', bannerRoutes)
 app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
 app.use('/api/projets', projetRoutes)
 app.use('/api/stages', stageRoutes)
@@ -70,6 +74,9 @@ app.use('/api/attestations', attestationRoutes)
 app.use('/api/connexions', connexionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/badges', badgeRoutes);
+app.use('/api', portfolioRoutes)
+app.use('/api', lettreRoutes)
+
 // 404 not found handler
 app.use((req, res) => {
   res.status(404).json({
