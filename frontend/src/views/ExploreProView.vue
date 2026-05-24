@@ -188,7 +188,7 @@ const filteredProfiles = computed(() => {
   top: 0;
   height: 100%;
   overflow-y: auto;
-  padding: 14px 0;
+  padding: 0;
 }
 
 .explore-shellShift {

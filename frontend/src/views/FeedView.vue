@@ -316,25 +316,6 @@ const addReply = (comment: FeedComment) => {
         </div>
 
         <article v-for="post in visiblePosts" :key="post.id" class="feed-card">
-          <button
-            v-if="role === 'pro'"
-            type="button"
-            class="feed-save-btn"
-            :class="{ saved: isSaved(post.studentId) }"
-            :aria-label="
-              isSaved(post.studentId)
-                ? 'Retirer le profil sauvegardé'
-                : 'Sauvegarder le profil'
-            "
-            @click="toggleSavedPostProfile(post)"
-          >
-            <Bookmark class="feed-save-icon" />
-          </button>
-
-          <span v-if="savedFeedbackId === post.id" class="feed-save-feedback">
-            {{ isSaved(post.studentId) ? "Profil sauvegardé" : "Profil retiré" }}
-          </span>
-
           <div v-if="post.repostedBy" class="repost-line">
             {{ post.repostedBy }} a reposté ce projet
           </div>
@@ -370,6 +351,23 @@ const addReply = (comment: FeedComment) => {
                       connectedPosts[post.id] ? "Demande envoyée" : "Connecter"
                     }}
                   </button>
+                  <button
+                    v-if="role === 'pro'"
+                    type="button"
+                    class="feed-save-btn"
+                    :class="{ saved: isSaved(post.studentId) }"
+                    :aria-label="
+                      isSaved(post.studentId)
+                        ? 'Retirer le profil sauvegardé'
+                        : 'Sauvegarder le profil'
+                    "
+                    @click="toggleSavedPostProfile(post)"
+                  >
+                    <Bookmark class="feed-save-icon" />
+                  </button>
+                  <span v-if="savedFeedbackId === post.id" class="feed-save-feedback">
+                    {{ isSaved(post.studentId) ? "Profil sauvegardé" : "Profil retiré" }}
+                  </span>
                 </div>
               </div>
               <p>{{ post.school }} · {{ post.time }}</p>
@@ -887,12 +885,8 @@ const addReply = (comment: FeedComment) => {
 }
 
 .feed-save-btn {
-  position: absolute;
-  right: 18px;
-  top: 22px;
-  z-index: 4;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 9999px;
   background: white;
   color: var(--text-gray);
@@ -910,15 +904,11 @@ const addReply = (comment: FeedComment) => {
 }
 
 .feed-save-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .feed-save-feedback {
-  position: absolute;
-  right: 62px;
-  top: 22px;
-  z-index: 5;
   border-radius: var(--radius-pill);
   background: var(--text-dark);
   color: white;
@@ -926,6 +916,7 @@ const addReply = (comment: FeedComment) => {
   font-size: 12px;
   font-weight: 800;
   box-shadow: 0 10px 24px rgba(17, 24, 39, 0.2);
+  white-space: nowrap;
 }
 
 .repost-line {
@@ -958,7 +949,6 @@ const addReply = (comment: FeedComment) => {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding-right: 52px;
 }
 
 .feed-score {

@@ -74,9 +74,7 @@ const navItems = [
     label: "Lettres de recommandation",
     icon: icons.recos,
   },
-  { path: "/students", label: "Etudiants", icon: icons.students },
-  { path: "/recos", label: "Mes Recos", icon: icons.recos },
-  { path: "/commentaires", label: "Commentaires", icon: icons.comments },
+  { path: "/prof/etudiants", label: "Étudiants", icon: icons.students },
 ];
 </script>
 

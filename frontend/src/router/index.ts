@@ -11,9 +11,11 @@ import ExploreProfView from "../views/ExploreProfView.vue";
 import ExploreProView from "../views/ExploreProView.vue";
 import DashboardProfView from "../views/DashboardProfView.vue";
 import DashboardProView from "../views/DashboardProView.vue";
+import DashboardStudentView from "../views/DashboardStudentView.vue";
 import ConnexionsProView from "../views/ConnexionsProView.vue";
 import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
 import FeedView from "../views/FeedView.vue";
+import EtudiantsProfView from "../views/EtudiantsProfView.vue";
 import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
@@ -31,7 +33,17 @@ export default createRouter({
     { path: "/explore", name: "explore", component: ExploreView },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
     { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
-    { path: "/dashboard", name: "pro-dashboard", component: DashboardProView },
+    { path: "/dashboard", redirect: "/pro/dashboard" },
+    {
+      path: "/pro/dashboard",
+      name: "pro-dashboard",
+      component: DashboardProView,
+    },
+    {
+      path: "/student/dashboard",
+      name: "student-dashboard",
+      component: DashboardStudentView,
+    },
     { path: "/feed", redirect: "/student/feed" },
     { path: "/student/feed", name: "student-feed", component: FeedView },
     { path: "/prof/feed", name: "prof-feed", component: FeedView },
@@ -76,6 +88,11 @@ export default createRouter({
       path: "/prof/recommandations",
       name: "prof-recommandations",
       component: RecommandationsProfView,
+    },
+    {
+      path: "/prof/etudiants",
+      name: "prof-etudiants",
+      component: EtudiantsProfView,
     },
     {
       path: "/profile/student/:id",

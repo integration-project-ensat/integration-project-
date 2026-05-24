@@ -298,24 +298,25 @@ const isExpanded = (key: SectionKey) => {
 
 .fp-card {
   width: 100%;
+  height: 100%;
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 18px;
-  padding: 16px 14px;
+  border-radius: 0;
+  padding: 8px 14px 0;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
   max-height: 100%;
   overflow-y: auto;
 }
 
 .fp-section + .fp-section {
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .fp-title {
   font-size: 12px;
   font-weight: 800;
   color: rgb(2 6 23);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .fp-pillsRow {
@@ -380,7 +381,7 @@ const isExpanded = (key: SectionKey) => {
 }
 
 .fp-plusRow {
-  margin-top: 8px;
+  margin-top: 5px;
 }
 
 .fp-plus {

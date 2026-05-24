@@ -64,14 +64,11 @@ const icons = {
 };
 
 const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: icons.dashboard },
+  { path: "/pro/dashboard", label: "Dashboard", icon: icons.dashboard },
   { path: "/explore-pro", label: "Explorer", icon: icons.explore },
   { path: "/pro/feed", label: "Fil d’actualité", icon: icons.feed },
   { path: "/pro/top-profiles", label: "Top Profiles", icon: icons.topProfiles },
   { path: "/pro/connexions", label: "Connexions", icon: icons.connexions },
-  { path: "/stagiaires", label: "Stagiaires", icon: icons.stagiaires },
-  { path: "/recos", label: "Mes Recos", icon: icons.recos },
-  { path: "/commentaires", label: "Commentaires", icon: icons.comments },
 ];
 </script>
 

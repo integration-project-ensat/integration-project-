@@ -133,11 +133,10 @@ const sidebarOpen = ref(true);
   top: 0;
   height: 100%;
   overflow-y: auto;
-  padding-bottom: 8px;
 }
 
 .explore-right {
-  padding: 14px 0;
+  padding: 0;
 }
 
 .explore-shellShift {
