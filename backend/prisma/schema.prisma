@@ -168,6 +168,38 @@ enum NiveauAcces {
   SUPER_ADMIN
   STANDARD
 }
+
+enum ActionConnexion {
+  LOGIN_REUSSI
+  LOGIN_ECHOUE
+  DECONNEXION
+}
+
+enum RaisonEchec {
+  MOT_DE_PASSE_INCORRECT
+  EMAIL_INEXISTANT
+  EMAIL_NON_VERIFIE
+  COMPTE_INACTIF
+}
+model JournalConnexion {
+  id              BigInt           @id @default(autoincrement())
+  utilisateur_id  BigInt?
+  email           String?          @db.VarChar(255)
+  nom_complet     String?          @db.VarChar(200)
+  role            RoleUtilisateur?
+  action          ActionConnexion
+  raison          RaisonEchec?
+  adresse_ip      String?          @db.VarChar(45)
+  user_agent      String?          @db.VarChar(500)
+  date            DateTime         @default(now())
+ 
+  utilisateur     Utilisateur?     @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: SetNull)
+ 
+  @@index([action])
+  @@index([adresse_ip])
+  @@index([date])
+  @@map("journal_connexions")
+}
 model Utilisateur {
   id_utilisateur     BigInt  @id @default(autoincrement())
   nom                String  @db.VarChar(100)
@@ -201,6 +233,7 @@ model Utilisateur {
   recommandations     Recommandation[]   @relation("AuteurRecommandations")
   reactions           Reaction[]
   postes              Poste[]
+  journal_connexions JournalConnexion[]
 
   @@map("utilisateurs")
 }
@@ -682,4 +715,14 @@ model Reaction {
 
   @@unique([id_auteur, id_poste]) // une seule réaction par personne
   @@map("reactions")
+}
+model TokenRévoqué {
+  id         BigInt   @id @default(autoincrement())
+  jti        String   @unique @db.VarChar(100)
+  user_id    BigInt?
+  expires_at DateTime
+  date       DateTime @default(now())
+
+  @@index([expires_at])
+  @@map("tokens_revoques")
 }

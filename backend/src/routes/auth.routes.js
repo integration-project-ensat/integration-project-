@@ -9,6 +9,7 @@ const { PasswordValidator } = require('../validators/password.validator');
 const validate = require('../middlewares/validate');
 const { authentifier, autoriserRoles } = require('../middlewares/auth.middleware');
 const { ROLES } = require('../config/roles');
+const journalController = require('../controllers/journal.controller');
 
 // VALIDATION RÉUTILISABLE (liens admin valider/refuser)
 const validationLienAdmin = [
@@ -32,6 +33,9 @@ router.post('/renvoyer-code', validate(AuthValidator.renvoyerCode), authControll
 router.post('/mot-de-passe-oublie', validate(PasswordValidator.motDePasseOublie), passwordController.motDePasseOublie);
 router.get('/verifier-token-reset', validate(PasswordValidator.verifierTokenReset), passwordController.verifierTokenReset);
 router.post('/reinitialiser-mot-de-passe', validate(PasswordValidator.reinitialiserMotDePasse), passwordController.reinitialiserMotDePasse);
+
+//logout
+router.post('/deconnecter', authentifier, authController.logout);
 
 // ROUTES PROTÉGÉES (JWT REQUIS)
 router.get('/profil', authentifier, authController.getCurrentUser);
@@ -62,6 +66,12 @@ router.get(
   '/admin/refuser/:utilisateurId',
   validate(validationLienAdmin),
   authController.refuserProfessionnelParLien
+);
+router.get(
+  '/admin/journal-connexions',
+  authentifier,
+  autoriserRoles(ROLES.ADMINISTRATEUR),
+  journalController.getJournalConnexions
 );
 
 module.exports = router;

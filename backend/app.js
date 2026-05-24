@@ -16,19 +16,12 @@ const competenceRoutes = require('./src/routes/competence.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
 const photoRoutes = require('./src/routes/photo.routes')
-
-// Routes à venir (décommenter au fur et à mesure)
-// const projetRoutes = require('./src/routes/projet.routes')
-// const stageRoutes = require('./src/routes/stage.routes')
-// const activiteRoutes = require('./src/routes/activite.routes')
-// const attestationRoutes = require('./src/routes/attestation.routes')
-
-const app = express()
 const projetRoutes = require('./src/routes/projet.routes')
 const stageRoutes = require('./src/routes/stage.routes')
-
 const activiteRoutes = require('./src/routes/activite.routes')
 const attestationRoutes = require('./src/routes/attestation.routes')
+
+const app = express()
 
 // Fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
@@ -65,6 +58,11 @@ app.use('/api/competences', competenceRoutes)
 app.use('/api/profil', diplomeLimiter,profileRoutes)
 app.use('/api/profil/photo', photoRoutes)
 app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
+app.use('/api/projets', projetRoutes)
+app.use('/api/stages', stageRoutes)
+app.use('/api/activites', activiteRoutes)
+app.use('/api/attestations', attestationRoutes)
+
 
 // 404 not found handler
 app.use((req, res) => {
@@ -78,10 +76,6 @@ app.use((req, res) => {
 // Erreurs globales
 app.use(errorMiddleware)
 
-app.use('/api/projets', projetRoutes)
-app.use('/api/stages', stageRoutes)
-app.use('/api/activites', activiteRoutes)
-app.use('/api/attestations', attestationRoutes)
 
 
 module.exports = app

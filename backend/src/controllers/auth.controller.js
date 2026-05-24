@@ -1,10 +1,14 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');//ajouté pour les tokens sécurisés
+const { v4: uuidv4 } = require('uuid');
 const prisma = require('../../prisma/client');
 const{PUBLIC_ROLES, ROLES} = require('../config/roles');
 const { genererCode, sendVerificationCode, sendAdminValidationRequest,sendValidationResultEmail } = require('../services/email.service');
 const asyncHandler = require('../middlewares/asyncHandler');
+const { logConnexion, TypeEvenement, RaisonEchec } = require('../services/journal.service');
+const { révoquerToken } = require('../services/tokenBlacklist.service');
+const { timingSafeCompare } = require('../middlewares/auth.middleware');
 
 const SALT_ROUNDS = 12;
 const JWT_EXPIRES_IN = '24h';
@@ -13,14 +17,23 @@ const ADMIN_LINK_EXPIRY_HOURS = 48;
 // Fonction pour générer un token JWTavec les informations de l'utilisateur et une clé secrète, valable pendant 24 heures.
 function generateToken(user) {
   return jwt.sign(
-    { userId: user.id_utilisateur.toString(), email: user.email, role: user.role },
+    { userId: user.id_utilisateur.toString(), email: user.email, role: user.role,jti:uuidv4() },
     process.env.JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
 }
-//pour ne pas exposer le mot de passe dans les reponses
+//pour ne pas exposer le mot de passe dans les reponses et les champs sensibles liées aux tokens
 function sanitizeUser(user) {
-  const { mot_de_passe_hashe, ...safe } = user;
+  const {
+    mot_de_passe_hashe,
+    email_verification,
+    reset_token_hash,
+    admin_action_token,
+    admin_action_expires_at,
+    token_expires_at,
+    reset_token_expires_at,
+    ...safe
+  } = user;
   return safe;
 }
 //vérifie que le rôle est bien un rôle public autorisé
@@ -55,10 +68,10 @@ const register = asyncHandler(async (req, res) => {
 // Vérification de l'unicité de l'email
   const existing = await prisma.utilisateur.findUnique({ where: { email } });
   if (existing) {
-    return res.status(409).json({
-      success: false,
-      message: 'Cet email est déjà utilisé'
-    });
+      if (existing.email_verifie || existing.est_actif) {
+      return res.status(409).json({ success: false, message: 'Cet email est déjà utilisé' });
+    }
+     await prisma.utilisateur.delete({ where: { id_utilisateur: existing.id_utilisateur } });
   }
 // Hashage du mot de passe
   const hashedPassword = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
@@ -259,22 +272,50 @@ const login = asyncHandler(async (req, res) => {
   });
 // Vérification de l'existence de l'utilisateur et de son statut actif
   if (!user) {
+      await logConnexion({
+      type: TypeEvenement.LOGIN_ECHOUE,
+      req,
+      utilisateur: null,
+      emailTente: email,
+      raison: RaisonEchec.EMAIL_INEXISTANT,
+    });
     return res.status(401).json({
       success: false,
       message: 'Email ou mot de passe incorrect'
     });
   }
 if (!user.email_verifie) {
+   await logConnexion({
+      type: TypeEvenement.LOGIN_ECHOUE,
+      req,
+      utilisateur: user,
+      emailTente: email,
+      raison: RaisonEchec.EMAIL_NON_VERIFIE,
+    });
   return res.status(403).json({ message: 'Veuillez vérifier votre email.' });
 }
 // 2. Compte inactif (professionnel en attente admin)
 if (!user.est_actif) {
+      await logConnexion({
+      type: TypeEvenement.LOGIN_ECHOUE,
+      req,
+      utilisateur: user,
+      emailTente: email,
+      raison: RaisonEchec.COMPTE_INACTIF,
+    });
   return res.status(403).json({ message: 'En attente de validation administrative.' });
 }
 
 // Vérification du mot de passe par la fonction compare de bcrypt
   const isValid = await bcrypt.compare(mot_de_passe, user.mot_de_passe_hashe);
   if (!isValid) {
+    await logConnexion({
+      type: TypeEvenement.LOGIN_ECHOUE,
+      req,
+      utilisateur: user,
+      raison: RaisonEchec.MOT_DE_PASSE_INCORRECT,
+      emailTente: email,
+    });
     return res.status(401).json({
       success: false,
       message: 'Email ou mot de passe incorrect'
@@ -286,7 +327,12 @@ if (!user.est_actif) {
   });
 // Génération du token JWT et envoi de la réponse avec les données de l'utilisateur (sans le mot de passe)
   const token = generateToken(user);
-
+  await logConnexion({
+    type: TypeEvenement.LOGIN_REUSSI,
+    req,
+    utilisateur: user,
+    emailTente: email,
+  });
   res.json({
     success: true,
     message: 'Connexion réussie',
@@ -323,6 +369,27 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   });
 });
 
+// ==================== Déconnexion ====================
+
+const logout = asyncHandler(async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+ 
+  if (token) {
+    const decoded = jwt.decode(token);
+ 
+    if (decoded?.jti && decoded?.exp) {
+      const expiresAt = new Date(decoded.exp * 1000);
+ 
+      if (expiresAt > new Date()) {
+        // Correction : utiliser le service dédié au lieu de dupliquer la logique
+        await révoquerToken(decoded.jti, decoded.exp, req.utilisateur.id_utilisateur);
+      }
+    }
+  }
+ 
+  await logConnexion({ type: TypeEvenement.DECONNEXION, req, utilisateur: req.utilisateur });
+  res.json({ success: true, message: 'Déconnecté avec succès.' });
+});
 // ==================== CREATION ADMIN (RESERVE) ====================
 
 const createAdmin = asyncHandler(async (req, res) => {
@@ -345,7 +412,7 @@ const createAdmin = asyncHandler(async (req, res) => {
         mot_de_passe_hashe: hashedPassword,
         nom,
         prenom,
-        role: 'ADMINISTRATEUR',
+        role: ROLES.ADMINISTRATEUR,
         est_actif: true,
         email_verifie: true
 }
@@ -621,6 +688,7 @@ function renderErrorPage(title, message, submessage) {
 function renderWarningPage(title, message, submessage) {
     return renderPage(title, message, submessage, '#D97706', '⚠️');
 }
+
 module.exports = {
     register,
     login,
@@ -631,5 +699,6 @@ module.exports = {
     validerProfessionnelParLien,
     refuserProfessionnelParLien,
     getProfessionnelsEnAttente,
-    sanitizeUser
+    sanitizeUser,
+    logout
 };
