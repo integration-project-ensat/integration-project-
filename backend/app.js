@@ -12,6 +12,7 @@ const errorMiddleware = require('./src/middlewares/error.middleware')
 
 // Routes existantes
 const authRoutes = require('./src/routes/auth.routes')
+const adminRoutes      = require('./src/routes/admin.routes')
 const competenceRoutes = require('./src/routes/competence.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
@@ -20,7 +21,8 @@ const projetRoutes = require('./src/routes/projet.routes')
 const stageRoutes = require('./src/routes/stage.routes')
 const activiteRoutes = require('./src/routes/activite.routes')
 const attestationRoutes = require('./src/routes/attestation.routes')
-
+const connexionRoutes = require('./src/routes/connexion.routes');
+const notificationRoutes = require('./src/routes/notification.routes');
 const app = express()
 
 // Fichiers statiques
@@ -54,6 +56,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes)
+app.use('/api/admin',        adminRoutes)  
 app.use('/api/competences', competenceRoutes)
 app.use('/api/profil', diplomeLimiter,profileRoutes)
 app.use('/api/profil/photo', photoRoutes)
@@ -62,8 +65,8 @@ app.use('/api/projets', projetRoutes)
 app.use('/api/stages', stageRoutes)
 app.use('/api/activites', activiteRoutes)
 app.use('/api/attestations', attestationRoutes)
-
-
+app.use('/api/connexions', connexionRoutes);
+app.use('/api/notifications', notificationRoutes);
 // 404 not found handler
 app.use((req, res) => {
   res.status(404).json({

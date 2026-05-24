@@ -19,10 +19,27 @@ enum TypeNotification {
   SOUMISSION_PROJET
   VALIDATION_PROJET
   REFUS_PROJET
+
+  SOUMISSION_STAGE
+  VALIDATION_STAGE
+  REFUS_STAGE
+
   NOUVEAU_COMMENTAIRE
+  COMMENTAIRE_ACCEPTE
+  COMMENTAIRE_REFUSE
+
   NOUVELLE_RECOMMANDATION
+  RECOMMANDATION_ACCEPTEE
+  RECOMMANDATION_REFUSEE
+
   VALIDATION_ATTESTATION
+  REFUS_ATTESTATION
+
   BADGE_OBTENU
+  
+  DEMANDE_CONNEXION
+  CONNEXION_ACCEPTEE
+  CONNEXION_REFUSEE
 }
 
 enum Visibilite {
@@ -234,7 +251,9 @@ model Utilisateur {
   reactions           Reaction[]
   postes              Poste[]
   journal_connexions JournalConnexion[]
-
+  connexions_envoyees Connexion[] @relation("DemandeurConnexion")
+  connexions_recues   Connexion[] @relation("DestinataireConnexion")
+  
   @@map("utilisateurs")
 }
 
@@ -725,4 +744,28 @@ model TokenRévoqué {
 
   @@index([expires_at])
   @@map("tokens_revoques")
+}
+enum StatutConnexion {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+  BLOQUEE
+}
+
+model Connexion {
+  id_connexion    BigInt @id @default(autoincrement())
+
+  demandeur_id    BigInt
+  destinataire_id BigInt
+
+  statut          StatutConnexion @default(EN_ATTENTE)
+  date_demande    DateTime @default(now())
+  date_reponse    DateTime?
+
+  demandeur Utilisateur @relation("DemandeurConnexion", fields: [demandeur_id], references: [id_utilisateur], onDelete: Cascade)
+
+  destinataire Utilisateur @relation("DestinataireConnexion", fields: [destinataire_id], references: [id_utilisateur], onDelete: Cascade)
+
+  @@unique([demandeur_id, destinataire_id])
+  @@map("connexions")
 }
