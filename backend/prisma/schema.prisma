@@ -296,6 +296,7 @@ model Profil {
   id_profil               BigInt            @id @default(autoincrement())
   id_utilisateur          BigInt            @unique
   photo_profil            String?           @db.VarChar(500)
+  banniere_profil         String?           @db.VarChar(500)
   telephone               String?           @db.VarChar(20)
   adresse                 String?           @db.VarChar(100)
   email_professionnel String?  @db.VarChar(255)

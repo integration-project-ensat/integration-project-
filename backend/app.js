@@ -16,6 +16,7 @@ const competenceRoutes = require('./src/routes/competence.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
 const photoRoutes = require('./src/routes/photo.routes')
+const bannerRoutes = require('./src/routes/banner.routes')
 
 // Routes à venir (décommenter au fur et à mesure)
 // const projetRoutes = require('./src/routes/projet.routes')
@@ -64,6 +65,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/competences', competenceRoutes)
 app.use('/api/profil', diplomeLimiter,profileRoutes)
 app.use('/api/profil/photo', photoRoutes)
+app.use('/api/profil/banner', bannerRoutes)
 app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
 
 // 404 not found handler
