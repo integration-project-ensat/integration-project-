@@ -187,26 +187,17 @@ jobs:
 
       - name: "Scan OWASP ZAP"
         run: |
-          if curl -sf http://127.0.0.1:3000/api-docs > /dev/null; then
-            docker exec portfolio_zap \
-              zap-api-scan.py \
-              -t http://127.0.0.1:3000/api-docs \
-              -f openapi \
-              -r /zap/wrk/zap_report.html \
-              -J /zap/wrk/zap_report.json \
-              -I || true
-          else
-            docker exec portfolio_zap \
-              zap-baseline.py \
-              -t http://127.0.0.1:3000 \
-              -r /zap/wrk/zap_report.html \
-              -J /zap/wrk/zap_report.json \
-              -I || true
-          fi
+          docker stop portfolio_zap || true
+          docker run --rm \
+            --network host \
+            -v $(pwd)/reports/zap:/zap/wrk:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://127.0.0.1:3000 \
+            -r /zap/wrk/zap_report.html \
+            -J /zap/wrk/zap_report.json \
+            -I || true
 
-          docker cp portfolio_zap:/zap/wrk/zap_report.html reports/zap/ || true
-          docker cp portfolio_zap:/zap/wrk/zap_report.json reports/zap/ || true
-          docker cp portfolio_zap:/home/zap/zap_out.json reports/zap/ || true
           ls reports/zap/*.json 2>/dev/null || \
             echo '{"info":"no report generated"}' > reports/zap/zap_report.json
 
