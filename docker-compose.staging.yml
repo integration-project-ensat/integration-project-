@@ -88,6 +88,8 @@ services:
       -config api.addrs.addr.regex=true
     ports:
       - "8090:8090"
+    volumes:
+      - /tmp/zap:/zap/wrk
 
   trivy:
     image: aquasec/trivy:latest
