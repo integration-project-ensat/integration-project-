@@ -187,8 +187,9 @@ jobs:
       - name: "Scan OWASP ZAP"
         run: |
           docker exec portfolio_zap \
-            zap-baseline.py \
-            -t http://127.0.0.1:3000 \
+            zap-api-scan.py \
+            -t http://127.0.0.1:3000/api-docs \
+            -f openapi \
             -r /zap/wrk/zap_report.html \
             -J /zap/wrk/zap_report.json \
             -I || true
