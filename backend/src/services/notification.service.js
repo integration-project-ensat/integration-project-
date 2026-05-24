@@ -1,5 +1,11 @@
 const prisma = require('../../prisma/client');
 
+const NOTIFICATIONS_CONNEXION = [
+  'DEMANDE_CONNEXION',
+  'CONNEXION_ACCEPTEE',
+  'CONNEXION_REFUSEE'
+];
+
 const creerNotification = async ({
   utilisateurId,
   type,
@@ -8,6 +14,29 @@ const creerNotification = async ({
   cibleType = null,
   canal = 'APPLICATION'
 }) => {
+  const utilisateur = await prisma.utilisateur.findUnique({
+    where: {
+      id_utilisateur: BigInt(utilisateurId)
+    },
+    select: {
+      id_utilisateur: true,
+      role: true
+    }
+  });
+
+  if (!utilisateur) {
+    const err = new Error('Utilisateur introuvable');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (
+    utilisateur.role === 'ADMINISTRATEUR' &&
+    NOTIFICATIONS_CONNEXION.includes(type)
+  ) {
+    return null;
+  }
+
   return prisma.notification.create({
     data: {
       utilisateur_id: BigInt(utilisateurId),
@@ -22,13 +51,13 @@ const creerNotification = async ({
   });
 };
 
-const getNotifications = async (utilisateurId, filtre = null) => {
+const getNotifications = async (utilisateurId, type = null) => {
   const where = {
     utilisateur_id: BigInt(utilisateurId)
   };
 
-  if (filtre) {
-    where.type = filtre;
+  if (type) {
+    where.type = type;
   }
 
   return prisma.notification.findMany({
@@ -61,10 +90,7 @@ const marquerCommeLue = async (notificationId, utilisateurId) => {
     throw err;
   }
 
-  if (
-    BigInt(notification.utilisateur_id) !==
-    BigInt(utilisateurId)
-  ) {
+  if (BigInt(notification.utilisateur_id) !== BigInt(utilisateurId)) {
     const err = new Error('Accès refusé');
     err.statusCode = 403;
     throw err;
@@ -92,10 +118,7 @@ const toutMarquerCommeLu = async (utilisateurId) => {
   });
 };
 
-const supprimerNotification = async (
-  notificationId,
-  utilisateurId
-) => {
+const supprimerNotification = async (notificationId, utilisateurId) => {
   const notification = await prisma.notification.findUnique({
     where: {
       id_notification: BigInt(notificationId)
@@ -108,10 +131,7 @@ const supprimerNotification = async (
     throw err;
   }
 
-  if (
-    BigInt(notification.utilisateur_id) !==
-    BigInt(utilisateurId)
-  ) {
+  if (BigInt(notification.utilisateur_id) !== BigInt(utilisateurId)) {
     const err = new Error('Accès refusé');
     err.statusCode = 403;
     throw err;

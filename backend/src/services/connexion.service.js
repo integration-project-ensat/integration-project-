@@ -1,5 +1,26 @@
 const prisma = require('../../prisma/client');
 
+const verifierUtilisateur = async (id) => {
+  const utilisateur = await prisma.utilisateur.findUnique({
+    where: { id_utilisateur: BigInt(id) },
+    select: {
+      id_utilisateur: true,
+      nom: true,
+      prenom: true,
+      role: true,
+      est_actif: true
+    }
+  });
+
+  if (!utilisateur || !utilisateur.est_actif) {
+    const err = new Error('Utilisateur introuvable');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  return utilisateur;
+};
+
 const envoyerDemande = async (demandeurId, destinataireId) => {
   if (BigInt(demandeurId) === BigInt(destinataireId)) {
     const err = new Error('Vous ne pouvez pas vous connecter avec vous-même');
@@ -7,14 +28,12 @@ const envoyerDemande = async (demandeurId, destinataireId) => {
     throw err;
   }
 
-  const destinataire = await prisma.utilisateur.findUnique({
-    where: { id_utilisateur: BigInt(destinataireId) },
-    select: { id_utilisateur: true, est_actif: true }
-  });
+  const demandeur = await verifierUtilisateur(demandeurId);
+  const destinataire = await verifierUtilisateur(destinataireId);
 
-  if (!destinataire || !destinataire.est_actif) {
-    const err = new Error('Utilisateur introuvable');
-    err.statusCode = 404;
+  if (demandeur.role === 'ADMINISTRATEUR' || destinataire.role === 'ADMINISTRATEUR') {
+    const err = new Error('Les administrateurs ne participent pas aux connexions');
+    err.statusCode = 403;
     throw err;
   }
 
@@ -70,7 +89,7 @@ const envoyerDemande = async (demandeurId, destinataireId) => {
       data: {
         utilisateur_id: BigInt(destinataireId),
         type: 'DEMANDE_CONNEXION',
-        message: `${connexion.demandeur.prenom} ${connexion.demandeur.nom} vous a envoyé une demande de connexion`,
+        message: `${demandeur.prenom} ${demandeur.nom} vous a envoyé une demande de connexion`,
         cible_id: connexion.id_connexion,
         cible_type: 'CONNEXION',
         date_reception: new Date()
@@ -89,14 +108,16 @@ const accepterDemande = async (connexionId, utilisateurConnecteId) => {
         select: {
           id_utilisateur: true,
           nom: true,
-          prenom: true
+          prenom: true,
+          role: true
         }
       },
       destinataire: {
         select: {
           id_utilisateur: true,
           nom: true,
-          prenom: true
+          prenom: true,
+          role: true
         }
       }
     }
@@ -105,6 +126,12 @@ const accepterDemande = async (connexionId, utilisateurConnecteId) => {
   if (!connexion) {
     const err = new Error('Demande de connexion introuvable');
     err.statusCode = 404;
+    throw err;
+  }
+
+  if (connexion.demandeur.role === 'ADMINISTRATEUR' || connexion.destinataire.role === 'ADMINISTRATEUR') {
+    const err = new Error('Les administrateurs ne participent pas aux connexions');
+    err.statusCode = 403;
     throw err;
   }
 
@@ -164,12 +191,32 @@ const accepterDemande = async (connexionId, utilisateurConnecteId) => {
 
 const refuserDemande = async (connexionId, utilisateurConnecteId) => {
   const connexion = await prisma.connexion.findUnique({
-    where: { id_connexion: BigInt(connexionId) }
+    where: { id_connexion: BigInt(connexionId) },
+    include: {
+      demandeur: {
+        select: {
+          id_utilisateur: true,
+          role: true
+        }
+      },
+      destinataire: {
+        select: {
+          id_utilisateur: true,
+          role: true
+        }
+      }
+    }
   });
 
   if (!connexion) {
     const err = new Error('Demande de connexion introuvable');
     err.statusCode = 404;
+    throw err;
+  }
+
+  if (connexion.demandeur.role === 'ADMINISTRATEUR' || connexion.destinataire.role === 'ADMINISTRATEUR') {
+    const err = new Error('Les administrateurs ne participent pas aux connexions');
+    err.statusCode = 403;
     throw err;
   }
 
@@ -197,7 +244,13 @@ const refuserDemande = async (connexionId, utilisateurConnecteId) => {
 const getMesDemandes = async (utilisateurId) => {
   return prisma.connexion.findMany({
     where: {
-      demandeur_id: BigInt(utilisateurId)
+      demandeur_id: BigInt(utilisateurId),
+      demandeur: {
+        role: { not: 'ADMINISTRATEUR' }
+      },
+      destinataire: {
+        role: { not: 'ADMINISTRATEUR' }
+      }
     },
     include: {
       destinataire: {
@@ -221,7 +274,13 @@ const getDemandesRecues = async (utilisateurId) => {
   return prisma.connexion.findMany({
     where: {
       destinataire_id: BigInt(utilisateurId),
-      statut: 'EN_ATTENTE'
+      statut: 'EN_ATTENTE',
+      demandeur: {
+        role: { not: 'ADMINISTRATEUR' }
+      },
+      destinataire: {
+        role: { not: 'ADMINISTRATEUR' }
+      }
     },
     include: {
       demandeur: {
@@ -248,7 +307,13 @@ const getMesConnexions = async (utilisateurId) => {
       OR: [
         { demandeur_id: BigInt(utilisateurId) },
         { destinataire_id: BigInt(utilisateurId) }
-      ]
+      ],
+      demandeur: {
+        role: { not: 'ADMINISTRATEUR' }
+      },
+      destinataire: {
+        role: { not: 'ADMINISTRATEUR' }
+      }
     },
     include: {
       demandeur: {

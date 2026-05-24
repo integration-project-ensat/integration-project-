@@ -23,6 +23,7 @@ const activiteRoutes = require('./src/routes/activite.routes')
 const attestationRoutes = require('./src/routes/attestation.routes')
 const connexionRoutes = require('./src/routes/connexion.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
+const badgeRoutes = require('./src/routes/badge.routes');
 const app = express()
 
 // Fichiers statiques
@@ -67,6 +68,7 @@ app.use('/api/activites', activiteRoutes)
 app.use('/api/attestations', attestationRoutes)
 app.use('/api/connexions', connexionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/badges', badgeRoutes);
 // 404 not found handler
 app.use((req, res) => {
   res.status(404).json({

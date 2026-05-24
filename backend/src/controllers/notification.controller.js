@@ -2,11 +2,10 @@ const asyncHandler = require('../middlewares/asyncHandler');
 const notificationService = require('../services/notification.service');
 
 const getNotifications = asyncHandler(async (req, res) => {
-  const notifications =
-    await notificationService.getNotifications(
-      req.utilisateur.id_utilisateur,
-      req.query.type || null
-    );
+  const notifications = await notificationService.getNotifications(
+    req.utilisateur.id_utilisateur,
+    req.query.type || null
+  );
 
   res.json({
     success: true,
@@ -16,10 +15,9 @@ const getNotifications = asyncHandler(async (req, res) => {
 });
 
 const getUnreadCount = asyncHandler(async (req, res) => {
-  const count =
-    await notificationService.getUnreadCount(
-      req.utilisateur.id_utilisateur
-    );
+  const count = await notificationService.getUnreadCount(
+    req.utilisateur.id_utilisateur
+  );
 
   res.json({
     success: true,
@@ -30,11 +28,10 @@ const getUnreadCount = asyncHandler(async (req, res) => {
 });
 
 const marquerCommeLue = asyncHandler(async (req, res) => {
-  const notification =
-    await notificationService.marquerCommeLue(
-      req.params.id,
-      req.utilisateur.id_utilisateur
-    );
+  const notification = await notificationService.marquerCommeLue(
+    req.params.id,
+    req.utilisateur.id_utilisateur
+  );
 
   res.json({
     success: true,
