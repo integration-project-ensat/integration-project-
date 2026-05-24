@@ -382,6 +382,81 @@ else
   echo "  ERREUR : Realm non trouvé !"
 fi
 
+
+# ----------------------------------------------------------
+# Configuration SAML dans SonarQube
+# ----------------------------------------------------------
+echo ""
+echo "[+] Configuration SAML dans SonarQube..."
+
+SONAR_URL="http://localhost:9000"
+SONAR_ADMIN="admin"
+SONAR_PASSWORD="PheraCore2025!"
+
+# Récupérer le certificat du realm Keycloak
+SONAR_CERT=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/keys" \
+  -H "Authorization: Bearer $TOKEN" | \
+  grep -o '"certificate":"[^"]*' | head -1 | cut -d'"' -f4)
+
+# Attendre que SonarQube soit prêt
+echo "  Attente que SonarQube soit prêt..."
+MAX_WAIT=120
+WAIT=0
+until curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/dev/null | grep -q '"status":"UP"'; do
+  sleep 5
+  WAIT=$((WAIT + 5))
+  if [ $WAIT -ge $MAX_WAIT ]; then
+    echo "  ATTENTION : SonarQube non disponible, configuration SAML ignorée"
+    echo "  Relancez le script quand SonarQube sera démarré"
+    break
+  fi
+  echo "  En attente SonarQube... ($WAIT s)"
+done
+
+if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/dev/null | grep -q '"status":"UP"'; then
+  # Activer SAML
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "key=sonar.auth.saml.enabled&value=true" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "key=sonar.auth.saml.applicationId&value=sonarqube" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "key=sonar.auth.saml.providerName&value=Keycloak" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    --data-urlencode "key=sonar.auth.saml.providerId" \
+    --data-urlencode "value=http://localhost:8081/auth/realms/portfolio-realm" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    --data-urlencode "key=sonar.auth.saml.loginUrl" \
+    --data-urlencode "value=http://localhost:8081/auth/realms/portfolio-realm/protocol/saml" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    --data-urlencode "key=sonar.auth.saml.certificate.secured" \
+    --data-urlencode "value=$SONAR_CERT" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "key=sonar.auth.saml.user.login&value=login" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "key=sonar.auth.saml.user.name&value=name" > /dev/null
+
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "key=sonar.auth.saml.user.email&value=email" > /dev/null
+
+  echo "  SAML SonarQube configuré ✓"
+fi
+
 # ----------------------------------------------------------
 # Résumé final
 # ----------------------------------------------------------
