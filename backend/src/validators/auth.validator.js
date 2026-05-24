@@ -29,7 +29,7 @@ const Rules = {
     .matches(/[A-Z]/).withMessage('Doit contenir au moins une majuscule').bail()
     .matches(/[a-z]/).withMessage('Doit contenir au moins une minuscule').bail()
     .matches(/\d/).withMessage('Doit contenir au moins un chiffre').bail()
-    .matches(/[[@#!$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/).withMessage('Doit contenir au moins un caractère spécial(@,#,!,etc.)'),
+    .matches(/[@#!$%^&*()_+\-=[\]{};':"\\|,.<>/?]/).withMessage('Doit contenir au moins un caractère spécial(@,#,!,etc.)'),
 
     confirmation_mot_de_passe: body('confirmation_mot_de_passe')
   .notEmpty().withMessage('La confirmation est obligatoire').bail()

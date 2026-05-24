@@ -137,11 +137,12 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-<<<<<<< HEAD
 
 .env
 
-=======
 .vault_pass
 *.vault_pass
->>>>>>> 394f9ac15bb2c71b503326e4615e685e0065e79b
+.vscode
+mkcert.exe
+nginx/ssl/nginx.key
+nginx/ssl/nginx.crt

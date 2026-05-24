@@ -35,4 +35,17 @@ const passwordLimiter = createLimiter({
   message: 'Too many password reset requests. Please wait 1 hour before retrying.',
 });
 
-module.exports = { apiLimiter, authLimiter, passwordLimiter };
+const profilLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message:
+    'Too many profile requests. Please wait before retrying.',
+});
+const diplomeLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 40,
+  message:
+    'Too many diploma requests. Please wait before retrying.',
+});
+
+module.exports = { apiLimiter, authLimiter, passwordLimiter,profilLimiter,diplomeLimiter };
