@@ -197,7 +197,6 @@ jobs:
               -J /zap/wrk/zap_report.json \
               -I || true
           else
-            echo "api-docs not available, fallback baseline scan"
             docker exec portfolio_zap \
               zap-baseline.py \
               -t http://127.0.0.1:3000 \
