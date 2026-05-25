@@ -121,7 +121,7 @@ input:focus {
 
 .forgot {
   font-size: .76rem;
-  color: var(--error);
+  color: var(--text-dark);
   padding-left: 6px;
 }
 
@@ -139,7 +139,7 @@ input:focus {
   font-weight: 600;
   font-family: var(--font-head);
   padding: 12px 22px;
-  border-radius: 50px 50px 0 50px;
+  border-radius: 100px 180px 0 100px;
   min-height: 44px;
   display: flex;
   align-items: center;

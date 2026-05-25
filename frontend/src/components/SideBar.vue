@@ -100,8 +100,6 @@ const navByRole = {
     { path: '/activites',      label: 'Activites',      icon: icons.activites },
     { path: '/portfolio',      label: 'My Portfolio',   icon: icons.portfolio },
     { path: '/github',         label: 'GitHub',         icon: icons.github },
-    { path: '/recos',          label: 'Mes Recos',      icon: icons.recos },
-    { path: '/commentaires',   label: 'Commentaires',   icon: icons.commentaires },
   ],
   teacher: [
     { path: '/dashboard',      label: 'Dashboard',      icon: icons.dashboard },

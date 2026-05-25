@@ -9,7 +9,7 @@
         </svg>
       </button>
       <div class="logo">
-        <img src="@/assets/PheraCoreLogo.svg" alt="PheraCore" height="32" />
+        <img src="@/assets/PheraCoreLogo.svg" alt="PheraCore" />
         <span>heraCore</span>
       </div>
     </div>
@@ -49,6 +49,12 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: white;
+}
+
+.logo img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
 }
 
 .burger-btn {

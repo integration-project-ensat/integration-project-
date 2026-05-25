@@ -1,49 +1,57 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-*, *::before, *::after {
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap");
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 :root {
-  --navy:          #111827;
-  --navy-mid:      #243559;
-  --purple:        #4f46e5;
-  --purple-hover:  #4338ca;
-  --purple-light:  #5a89ed;
-  --blue-w:        #06B6D4;
-  --text-dark:     #111827;
-  --text-gray:     #7A7F88;
-  --text-muted:    #7A7F88;
-  --input-bg:      #E5E7EB;
-  --error:         #df1e21;
-  --font-head:     'Sora', sans-serif;
-  --font-body:     'DM Sans', sans-serif;
-  --radius-pill:   50px;
-  --radius-card:   16px;
-  --ease:          all 0.25s cubic-bezier(.4,0,.2,1);
+  --navy: #111827;
+  --navy-mid: #243559;
+  --purple: #4f46e5;
+  --purple-light: #5a89ed; /*ou bien ce coleur*/
+  --blue-w: #06b6d4;
+  --text-dark: #111827;
+  --text-gray: #7a7f88;
+  --input-bg: #e5e7eb;
+  --bg-soft-purple: #f0f2f8;
+  --error: #df1e21;
+  --font-head: "Inter", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --radius-pill: 50px;
+  --radius-card: 16px;
+  --ease: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html,
 body,
 #app {
   width: 100%;
+  min-width: 100%;
   min-height: 100%;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
-  min-height: 100vh;
-  font-family: var(--font-body);
-  background: #ffffff;
-  color: var(--text-dark);
+  margin: 0;
+  background: #f0f2f8;
 }
 
 #app {
+  min-height: 100vh;
+}
+
+body {
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 100vh;
 }
 
@@ -52,15 +60,63 @@ button {
   border: none;
   font-family: var(--font-head);
 }
-
 input,
-select,
-textarea {
+select {
   outline: none;
   border: none;
   font-family: var(--font-body);
 }
-
 a {
   text-decoration: none;
+}
+:root {
+  --purple-hover: #4338ca;
+}
+
+.avatar-fallback {
+  --avatar-bg-1: #4285f4;
+  --avatar-bg-2: #34a853;
+  --avatar-fg: #ffffff;
+
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,.35), transparent 28%),
+    linear-gradient(135deg, var(--avatar-bg-1), var(--avatar-bg-2));
+  color: var(--avatar-fg);
+  font-family: var(--font-head);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatar-blue {
+  --avatar-bg-1: #4285f4;
+  --avatar-bg-2: #0f62fe;
+}
+
+.avatar-green {
+  --avatar-bg-1: #34a853;
+  --avatar-bg-2: #0f9d58;
+}
+
+.avatar-yellow {
+  --avatar-bg-1: #fbbc05;
+  --avatar-bg-2: #f29900;
+}
+
+.avatar-red {
+  --avatar-bg-1: #ea4335;
+  --avatar-bg-2: #c5221f;
+}
+
+.avatar-purple {
+  --avatar-bg-1: #8b5cf6;
+  --avatar-bg-2: #4f46e5;
+}
+
+.avatar-cyan {
+  --avatar-bg-1: #06b6d4;
+  --avatar-bg-2: #0284c7;
 }

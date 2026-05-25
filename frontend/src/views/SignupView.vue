@@ -19,7 +19,16 @@
               <span :class="{ placeholder: !selectedRoleLabel }">
                 {{ selectedRoleLabel || 'Determiner le role' }}
               </span>
-              <span class="chevron">▾</span>
+              <span class="chevron"><svg width="10" height="13" viewBox="0 0 10 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_280_523)">
+<path d="M4.00096 8.81754C4.29109 9.11332 4.76685 9.1179 5.06263 8.82777L8.84859 5.11408C9.14437 4.82395 9.14896 4.34819 8.85882 4.05241C8.56869 3.75663 8.09293 3.75205 7.79715 4.04218L4.54596 7.23131L1.3568 3.98246C1.06667 3.68668 0.590913 3.68209 0.295135 3.97222C-0.000643947 4.26236 -0.00522906 4.73812 0.284903 5.03389L3.99859 8.81986L4.00096 8.81754Z" fill="#7F7F7F"/>
+</g>
+<defs>
+<clipPath id="clip0_280_523">
+<rect width="9" height="12" fill="white" transform="translate(0.115644) rotate(0.552169)"/>
+</clipPath>
+</defs>
+</svg></span>
             </button>
 
             <ul v-if="roleOpen" class="dropdown-menu">
@@ -142,7 +151,7 @@ async function submit() {
   loading.value = true
 
   try {
-    await authService.signup({ firstName, lastName, email, password, role })
+    await authService.signup({ firstName, lastName, email, password, confirmPassword, role })
     router.push('/dashboard')
   } catch (e: any) {
     error.value = e.response?.data?.message || "Erreur lors de l'inscription"
@@ -223,7 +232,6 @@ input:focus {
 
 .dropdown.open .dropdown-btn {
   border-color: var(--purple);
-  border-radius: 24px 24px 10px 10px;
 }
 
 .placeholder {
@@ -234,10 +242,18 @@ input:focus {
   position: absolute;
   right: 18px;
   top: 50%;
-  transform: translateY(-50%);
-  color: #aab2bf;
-  font-size: .8rem;
+  color: #7f7f7f;
   pointer-events: none;
+  transform: translateY(-50%);
+  transition: transform .2s ease;
+}
+
+.dropdown.open .chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.chevron svg {
+  display: block;
 }
 
 .dropdown-menu {
@@ -276,7 +292,7 @@ input:focus {
   font-weight: 600;
   font-family: var(--font-head);
   padding: 12px 22px;
-  border-radius: 50px 50px 0 50px;
+  border-radius: 100px 180px 0 100px;
   white-space: nowrap;
   min-height: 44px;
   display: flex;
