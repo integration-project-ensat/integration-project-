@@ -13,16 +13,17 @@ on:
 permissions:
   contents: read
   security-events: write
-
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
 
   appsec-dependency-audit:
     name: "Audit des Dependances"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: "22"
           cache: "npm"
@@ -46,7 +47,7 @@ jobs:
           npm audit --audit-level=moderate \
           --json > ../security-reports/npm-audit-backend.json || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: audit-dependances-${{ github.run_number }}
@@ -58,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: appsec-dependency-audit
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
 
@@ -86,27 +87,29 @@ jobs:
       - name: "Scanner images Docker avec Trivy"
         run: |
           mkdir -p reports/trivy
- 
+          sudo chmod 777 reports/trivy
+
           for IMAGE in \
             postgres:15-alpine \
             quay.io/keycloak/keycloak:23.0 \
             nginx:alpine \
             sonarqube:10-community \
             ghcr.io/zaproxy/zaproxy:stable; do
- 
+
             SAFE_NAME=$(echo $IMAGE | tr '/:' '--')
             echo "Scanning $IMAGE..."
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd)/reports/trivy:/reports \
               aquasec/trivy:latest image \
               --format json \
-              --output /dev/stdout \
+              --output /reports/trivy-${SAFE_NAME}.json \
               --severity HIGH,CRITICAL \
-              $IMAGE > reports/trivy/trivy-${SAFE_NAME}.json || true
+              $IMAGE || true
           done
  
       - name: "Publier rapports Trivy"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: trivy-report-${{ github.run_number }}
@@ -132,22 +135,23 @@ jobs:
 
       - name: "Attendre analyse SonarQube"
         run: |
-          echo "Getting last task ID..."
-          timeout 120 bash -c '
+          echo "Waiting for SonarQube analysis..."
+          timeout 180 bash -c '
             until curl -s -u "admin:admin" \
-              "http://127.0.0.1:9000/api/ce/activity?status=SUCCESS&component=integration-project" \
+              "http://127.0.0.1:9000/api/ce/activity?component=integration-project" \
               | python3 -c "
           import sys, json
           d = json.load(sys.stdin)
           tasks = d.get(\"tasks\", [])
-          if not tasks:
+          done = [t for t in tasks if t.get(\"status\") in [\"SUCCESS\", \"FAILED\"]]
+          if not done:
               exit(1)
-          print(\"Task done:\", tasks[0][\"id\"])
+          print(\"Task done:\", done[0][\"id\"], done[0][\"status\"])
           exit(0)
               "; do
               echo "Still analyzing..."
               sleep 5
-            done'
+            done' || echo "Timeout - proceeding anyway"
           echo "Analysis complete"
 
       - name: "Exporter rapport SonarQube"
@@ -167,7 +171,7 @@ jobs:
           print(f'Total issues found: {len(issues)}')
           " || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: sonarqube-report-${{ github.run_number }}
@@ -176,21 +180,41 @@ jobs:
 
       - name: "Preparer dossier ZAP"
         run: |
-          mkdir -p reports/zap
+          sudo mkdir -p reports/zap
+          sudo chmod 777 reports/zap
           docker exec --user root portfolio_zap chmod 777 /zap/wrk || true
 
       - name: "Scan OWASP ZAP"
         run: |
-          docker exec portfolio_zap \
-            zap-baseline.py \
-            -t http://127.0.0.1:3000 \
-            -r /zap/wrk/zap_report.html \
-            -J /zap/wrk/zap_report.json \
-            -I || true
-          docker cp portfolio_zap:/zap/wrk/zap_report.html reports/zap/ || true
-          docker cp portfolio_zap:/zap/wrk/zap_report.json reports/zap/ || true
+          docker stop portfolio_zap || true
 
-      - uses: actions/upload-artifact@v4
+          if curl -sf http://127.0.0.1:3000/api-docs > /dev/null; then
+            docker run --rm \
+              --network host \
+              -v $(pwd)/reports/zap:/zap/wrk:rw \
+              ghcr.io/zaproxy/zaproxy:stable \
+              zap-api-scan.py \
+              -t http://127.0.0.1:3000/api-docs \
+              -f openapi \
+              -r zap_report.html \
+              -J zap_report.json \
+              -I || true
+          else
+            docker run --rm \
+              --network host \
+              -v $(pwd)/reports/zap:/zap/wrk:rw \
+              ghcr.io/zaproxy/zaproxy:stable \
+              zap-baseline.py \
+              -t http://127.0.0.1:3000 \
+              -r zap_report.html \
+              -J zap_report.json \
+              -I || true
+          fi
+
+          ls reports/zap/*.json 2>/dev/null || \
+            echo '{"info":"no report generated"}' > reports/zap/zap_report.json
+
+      - uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: zap-dast-report-${{ github.run_number }}
