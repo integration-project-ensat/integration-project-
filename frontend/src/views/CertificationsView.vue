@@ -1,0 +1,293 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import Sidebar from "../components/exploreStudent/Sidebar.vue";
+import Topbar from "../components/exploreStudent/Topbar.vue";
+
+interface Certification {
+  id: number;
+  titre: string;
+  organisme: string;
+  type: "diplome" | "certification" | "formation";
+  dateObtention: string;
+  dateExpiration?: string;
+  lienVerification?: string;
+  description: string;
+}
+
+const sidebarOpen = ref(true);
+const showForm = ref(false);
+const activeTab = ref<"tous" | "diplome" | "certification" | "formation">("tous");
+
+const certifications = ref<Certification[]>([
+  {
+    id: 1,
+    titre: "Licence en Génie Informatique",
+    organisme: "ENSA Marrakech",
+    type: "diplome",
+    dateObtention: "2024-07",
+    description: "Formation d'ingénieur en génie informatique — réseaux, développement logiciel et systèmes embarqués.",
+  },
+  {
+    id: 2,
+    titre: "AWS Cloud Practitioner",
+    organisme: "Amazon Web Services",
+    type: "certification",
+    dateObtention: "2025-03",
+    dateExpiration: "2028-03",
+    lienVerification: "https://aws.amazon.com/verification",
+    description: "Certification fondamentale AWS couvrant les services cloud, la sécurité et la facturation.",
+  },
+]);
+
+const newCert = ref({
+  titre: "",
+  organisme: "",
+  type: "certification" as Certification["type"],
+  dateObtention: "",
+  dateExpiration: "",
+  lienVerification: "",
+  description: "",
+});
+
+const typeLabels: Record<Certification["type"], string> = {
+  diplome: "Diplôme",
+  certification: "Certification",
+  formation: "Formation",
+};
+
+const typeColors: Record<Certification["type"], string> = {
+  diplome: "#0ea5e9",
+  certification: "#6c5ce7",
+  formation: "#10b981",
+};
+
+function ajouterCertification() {
+  if (!newCert.value.titre || !newCert.value.organisme) return;
+  certifications.value.push({
+    id: Date.now(),
+    ...newCert.value,
+    dateExpiration: newCert.value.dateExpiration || undefined,
+    lienVerification: newCert.value.lienVerification || undefined,
+  });
+  newCert.value = {
+    titre: "", organisme: "", type: "certification",
+    dateObtention: "", dateExpiration: "", lienVerification: "", description: "",
+  };
+  showForm.value = false;
+}
+
+function supprimerCertification(id: number) {
+  certifications.value = certifications.value.filter((c) => c.id !== id);
+}
+
+function formatDate(d: string) {
+  if (!d) return "";
+  const [y, m] = d.split("-");
+  const mois = ["", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+  return `${mois[parseInt(m)]} ${y}`;
+}
+
+const filtered = () => {
+  if (activeTab.value === "tous") return certifications.value;
+  return certifications.value.filter((c) => c.type === activeTab.value);
+};
+</script>
+
+<template>
+  <div class="page">
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
+    <Sidebar :isOpen="sidebarOpen" />
+
+    <div class="shell" :class="{ shellShift: sidebarOpen }">
+      <div class="content-panel">
+
+        <!-- En-tête -->
+        <div class="panel-header">
+          <div class="header-left">
+            <div class="header-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="6"/>
+                <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+              </svg>
+            </div>
+            <div>
+              <h1 class="panel-title">Diplômes & Certifications</h1>
+              <p class="panel-subtitle">{{ certifications.length }} élément{{ certifications.length > 1 ? 's' : '' }}</p>
+            </div>
+          </div>
+          <button class="btn-add" @click="showForm = !showForm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Ajouter
+          </button>
+        </div>
+
+        <!-- Tabs filtres -->
+        <div class="tabs-row">
+          <button
+            v-for="tab in (['tous', 'diplome', 'certification', 'formation'] as const)"
+            :key="tab"
+            class="tab-btn"
+            :class="{ active: activeTab === tab }"
+            @click="activeTab = tab"
+          >
+            {{ tab === 'tous' ? 'Tous' : typeLabels[tab] }}
+            <span class="tab-count">{{ tab === 'tous' ? certifications.length : certifications.filter(c => c.type === tab).length }}</span>
+          </button>
+        </div>
+
+        <!-- Formulaire -->
+        <div v-if="showForm" class="form-card">
+          <h2 class="form-title">Nouvelle entrée</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Titre *</label>
+              <input v-model="newCert.titre" placeholder="Ex: Licence Génie Informatique, AWS Certified..." />
+            </div>
+            <div class="form-group">
+              <label>Organisme *</label>
+              <input v-model="newCert.organisme" placeholder="Ex: ENSA, Coursera, Google..." />
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select v-model="newCert.type">
+                <option value="diplome">Diplôme</option>
+                <option value="certification">Certification</option>
+                <option value="formation">Formation</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Lien de vérification</label>
+              <input v-model="newCert.lienVerification" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label>Date d'obtention</label>
+              <input type="month" v-model="newCert.dateObtention" />
+            </div>
+            <div class="form-group">
+              <label>Date d'expiration (si applicable)</label>
+              <input type="month" v-model="newCert.dateExpiration" />
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea v-model="newCert.description" placeholder="Décrivez le contenu ou les compétences couvertes..." rows="3" />
+          </div>
+          <div class="form-actions">
+            <button class="btn-cancel" @click="showForm = false">Annuler</button>
+            <button class="btn-save" @click="ajouterCertification">Enregistrer</button>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="filtered().length === 0 && !showForm" class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5">
+            <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+          </svg>
+          <p>Aucun élément dans cette catégorie.</p>
+        </div>
+
+        <!-- Liste -->
+        <div class="cert-list">
+          <div v-for="cert in filtered()" :key="cert.id" class="cert-card">
+            <div class="cert-left" :style="{ background: typeColors[cert.type] + '18', borderColor: typeColors[cert.type] + '33' }">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" :stroke="typeColors[cert.type]" stroke-width="2">
+                <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+              </svg>
+            </div>
+            <div class="cert-body">
+              <div class="cert-header-row">
+                <div>
+                  <div class="cert-type-badge" :style="{ background: typeColors[cert.type] + '18', color: typeColors[cert.type] }">
+                    {{ typeLabels[cert.type] }}
+                  </div>
+                  <h3 class="cert-title">{{ cert.titre }}</h3>
+                  <p class="cert-org">{{ cert.organisme }}</p>
+                </div>
+                <button class="btn-delete" @click="supprimerCertification(cert.id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="cert-meta">
+                <span v-if="cert.dateObtention" class="meta-chip">
+                  Obtenu : {{ formatDate(cert.dateObtention) }}
+                </span>
+                <span v-if="cert.dateExpiration" class="meta-chip expire">
+                  Expire : {{ formatDate(cert.dateExpiration) }}
+                </span>
+              </div>
+              <p v-if="cert.description" class="cert-desc">{{ cert.description }}</p>
+              <a v-if="cert.lienVerification" :href="cert.lienVerification" target="_blank" class="verify-link">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Vérifier le certificat
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.page { height: 100vh; width: 100vw; overflow: hidden; background: #eef1fb; padding-top: 50px; }
+.shell { height: calc(100vh - 50px); padding: 20px; overflow-y: auto; transition: padding-left 0.3s ease; }
+.shellShift { padding-left: 238px; }
+.content-panel { max-width: 820px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(15,23,42,0.08); overflow: hidden; }
+
+.panel-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid #f0f2f8; }
+.header-left { display: flex; align-items: center; gap: 14px; }
+.header-icon { width: 44px; height: 44px; background: #eeecff; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #6c5ce7; }
+.panel-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0; }
+.panel-subtitle { font-size: 0.78rem; color: #64748b; margin: 2px 0 0; }
+
+.btn-add { display: flex; align-items: center; gap: 6px; background: #6c5ce7; color: #fff; border: none; border-radius: 10px; padding: 9px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.btn-add:hover { background: #5a4bd1; }
+
+/* Tabs */
+.tabs-row { display: flex; gap: 4px; padding: 14px 28px; border-bottom: 1px solid #f0f2f8; }
+.tab-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; border: none; background: none; font-size: 0.83rem; color: #64748b; cursor: pointer; }
+.tab-btn:hover { background: #f5f5ff; }
+.tab-btn.active { background: #eeecff; color: #6c5ce7; font-weight: 600; }
+.tab-count { background: #e2deff; color: #6c5ce7; border-radius: 20px; padding: 1px 7px; font-size: 0.72rem; font-weight: 700; }
+.tab-btn.active .tab-count { background: #6c5ce7; color: #fff; }
+
+/* Formulaire */
+.form-card { margin: 20px 28px; padding: 22px; background: #f8f9ff; border: 1px solid #e8e4ff; border-radius: 14px; }
+.form-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0 0 16px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { margin: 12px 0 0; }
+.form-group label { font-size: 0.78rem; font-weight: 600; color: #475569; }
+.form-group input, .form-group select, .form-group textarea { border: 1px solid #dde1ef; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; color: #0f172a; background: #fff; outline: none; resize: vertical; font-family: inherit; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108,92,231,0.12); }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.btn-cancel { padding: 8px 16px; border-radius: 8px; border: 1px solid #dde1ef; background: #fff; color: #64748b; font-size: 0.85rem; cursor: pointer; }
+.btn-save { padding: 8px 20px; border-radius: 8px; border: none; background: #6c5ce7; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.btn-save:hover { background: #5a4bd1; }
+
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 60px 20px; color: #94a3b8; font-size: 0.9rem; }
+
+/* Liste certifications */
+.cert-list { padding: 16px 28px 28px; display: flex; flex-direction: column; gap: 14px; }
+.cert-card { display: flex; gap: 16px; padding: 18px; border: 1px solid #eef0f8; border-radius: 14px; transition: box-shadow 0.2s; }
+.cert-card:hover { box-shadow: 0 4px 16px rgba(108,92,231,0.1); }
+.cert-left { width: 48px; height: 48px; border-radius: 12px; border: 1px solid; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cert-body { flex: 1; min-width: 0; }
+.cert-header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+.cert-type-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 4px; }
+.cert-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0; }
+.cert-org { font-size: 0.82rem; color: #64748b; margin: 2px 0 0; }
+.btn-delete { background: none; border: none; cursor: pointer; color: #cbd5e1; padding: 4px; border-radius: 6px; }
+.btn-delete:hover { color: #e53e3e; background: #fff1f1; }
+.cert-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.meta-chip { display: inline-flex; align-items: center; gap: 4px; background: #f0f4ff; color: #475569; font-size: 0.75rem; padding: 3px 9px; border-radius: 20px; }
+.meta-chip.expire { background: #fff7ed; color: #ea580c; }
+.cert-desc { font-size: 0.83rem; color: #64748b; line-height: 1.6; margin: 6px 0 10px; }
+.verify-link { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; color: #6c5ce7; font-weight: 600; text-decoration: none; }
+.verify-link:hover { text-decoration: underline; }
+</style>

@@ -20,6 +20,9 @@ import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
+import StagesView from "../views/StagesView.vue";
+import CertificationsView from "../views/CertificationsView.vue";
+import ActivitesView from "../views/ActivitesView.vue";
 
 export default createRouter({
   history: createWebHistory("/"),
@@ -100,5 +103,8 @@ export default createRouter({
       component: ProfStudentProfileView,
     },
     { path: "/validations", redirect: "/prof/validations" },
+    { path: "/stages", name: "stages", component: StagesView },
+    { path: "/certifications", name: "certifications", component: CertificationsView },
+    { path: "/activites", name: "activites", component: ActivitesView },
   ],
 });
