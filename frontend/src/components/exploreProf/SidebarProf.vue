@@ -160,7 +160,7 @@ const navItems = [
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  color: #64748b;
+  color: var(--dark-text);
   font-size: 0.88rem;
   text-decoration: none;
   transition: 0.2s ease;
@@ -175,8 +175,9 @@ const navItems = [
 .nav-item.active {
   color: #6c5ce7;
   background: #eeecff;
-  border-left: 3px solid #6c5ce7;
+  border-left: 6px solid #6c5ce7;
   font-weight: 600;
+  border-radius: 5px 0 0 5px;
 }
 
 .nav-icon {
