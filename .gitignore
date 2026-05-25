@@ -143,3 +143,6 @@ vite.config.ts.timestamp-*
 .vault_pass
 *.vault_pass
 .vscode
+mkcert.exe
+nginx/ssl/nginx.key
+nginx/ssl/nginx.crt

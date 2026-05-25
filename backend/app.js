@@ -1,6 +1,6 @@
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
-
+const passport = require('./src/config/passport');
 const path = require('path')
 const express = require('express')
 
@@ -36,7 +36,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 // Sécurité & CORS
 app.use(securityHeaders)
 app.use(corsMiddleware)
-
+app.use(passport.initialize());
 // Body parser
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))

@@ -173,8 +173,10 @@ model Utilisateur {
   nom                String  @db.VarChar(100)
   prenom             String  @db.VarChar(100)
   email              String  @unique @db.VarChar(255)
-  mot_de_passe_hashe String
+  mot_de_passe_hashe String?
   role               RoleUtilisateur
+  google_id          String? @unique
+  auth_provider      String @default("LOCAL")
   est_actif          Boolean          @default(true)
   est_valide         Boolean          @default(false)
   date_creation      DateTime         @default(now())
