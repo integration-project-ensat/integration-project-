@@ -15,6 +15,9 @@ import LettersView from '../views/LettersView.vue';
 import ProjectsView from '../views/ProjectsView.vue';
 import SettingsView from '../views/SettingsView.vue';
 import StudentPortfolioView from "../views/StudentPortfolioView.vue";
+import StagesView from "../views/StagesView.vue";
+import CertificationsView from "../views/CertificationsView.vue";
+import ActivitesView from "../views/ActivitesView.vue";
 
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
@@ -34,11 +37,7 @@ export default createRouter({
     { path: '/profile', name: 'profile', component: StudentProfileView },
     { path: "/dashboard", name: "dashboard", component: DashboardView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
-
-    // ← Lettres : path corrigé pour correspondre à la sidebar
     { path: "/lettres", name: "letters", component: LettersView },
-
-    // ← Pages pas encore créées (placeholders)
     { path: "/projets", name: "projets", component: Placeholder },
     { path: "/stages", name: "stages", component: Placeholder },
     { path: "/certifications", name: "certifications", component: Placeholder },
@@ -47,5 +46,8 @@ export default createRouter({
     { path: "/settings", name: "settings", component: Placeholder },
     { path: '/projets', name: 'projets', component: ProjectsView },
     { path: '/settings', name: 'settings', component: SettingsView },
+    { path: "/stages", name: "stages", component: StagesView },
+    { path: "/certifications", name: "certifications", component: CertificationsView },
+    { path: "/activites", name: "activites", component: ActivitesView },
   ],
 });
