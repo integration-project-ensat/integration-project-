@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { param, query } = require('express-validator');
-
+const passport = require('passport');
 const authController = require('../controllers/auth.controller');
 const passwordController = require('../controllers/password.controller');
 const { AuthValidator } = require('../validators/auth.validator');
@@ -44,6 +44,29 @@ router.post(
   validate(AuthValidator.createAdmin),
   authController.createAdmin
 );
+
+router.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email']
+  })
+);
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: '/login'
+  }),
+  authController.googleCallback
+);
+
+router.post(
+  '/google/complete-profile',
+  authController.completeGoogleSignup
+);
+
+
 
 router.get(
   '/admin/professionnels-en-attente',
