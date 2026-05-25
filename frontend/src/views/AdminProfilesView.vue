@@ -407,16 +407,58 @@ const cities  = ['Casablanca', 'Agadir', 'Rabat', 'Ifrane', 'Fès', 'Marrakech']
 const schools = ['Université Hassan II', 'EST Agadir', 'EMI Rabat', 'Al Akhawayn University', 'ENCG Fès']
 
 /* ── Data ──────────────────────────────── */
-const profiles = ref([
-  { id: 1, name: 'Amine Bensaid',   email: 'amine.b@univ-casa.ma',     school: 'Université Hassan II',    city: 'Casablanca', score: 92, status: 'verified',    avatarColor: '#c7d2fe', photo: '' },
-  { id: 2, name: 'Sarah Mansouri',  email: 's.mansouri@est-agadir.ac.ma', school: 'EST Agadir',           city: 'Agadir',     score: 85, status: 'verified',    avatarColor: '#d1fae5', photo: '' },
-  { id: 3, name: 'Youssef Ame',     email: 'youssef.amrani@emi.ac.ma',  school: 'EMI Rabat',              city: 'Rabat',      score: 78, status: 'pending',     avatarColor: '#fde68a', photo: '' },
-  { id: 4, name: 'Sofia Kenzi',     email: 'sofia.kenzi@aui.ma',        school: 'Al Akhawayn University', city: 'Ifrane',     score: 95, status: 'verified',    avatarColor: '#fbcfe8', photo: '' },
-  { id: 5, name: 'Karim Tazi',      email: 'k.tazi@encg-fes.ma',        school: 'ENCG Fès',               city: 'Fès',        score: 64, status: 'unverified',  avatarColor: '#e2e8f0', photo: '' },
-  { id: 6, name: 'Nadia El Fassi',  email: 'n.elfassi@univ-casa.ma',    school: 'Université Hassan II',   city: 'Casablanca', score: 88, status: 'verified',    avatarColor: '#bfdbfe', photo: '' },
-  { id: 7, name: 'Omar Benali',     email: 'o.benali@emi.ac.ma',        school: 'EMI Rabat',              city: 'Rabat',      score: 71, status: 'pending',     avatarColor: '#fecaca', photo: '' },
-  { id: 8, name: 'Laila Chraibi',   email: 'l.chraibi@aui.ma',          school: 'Al Akhawayn University', city: 'Ifrane',     score: 90, status: 'verified',    avatarColor: '#a7f3d0', photo: '' },
-])
+const profiles = ref([])
+
+const avatarColorsForUI = ['#c7d2fe','#d1fae5','#fde68a','#fbcfe8','#bfdbfe','#fecaca','#a7f3d0','#ddd6fe']
+
+const mapEtudiantForUI = (u, idx) => {
+  // API backend: /api/admin/etudiants renvoie des clés:
+  // { id, nom_complet, email, photo, etablissement, localisation, score_portfolio, statut }
+  const name = u?.nom_complet || ''
+  return {
+    id: u?.id,
+    name,
+    email: u?.email ?? '',
+    school: u?.etablissement ?? '—',
+    city: u?.localisation ?? '—',
+    score: u?.score_portfolio ?? 0,
+    status: u?.statut === 'verifie' ? 'verified' : u?.statut === 'en_attente' ? 'pending' : 'unverified',
+avatarColor: avatarColorsForUI[idx % avatarColorsForUI.length],
+    photo: u?.photo ?? '',
+  }
+}
+
+const apiLoadingProfiles = ref(false)
+
+onMounted(async () => {
+  // charger listes villes/établissements + étudiants
+  try {
+    apiLoadingProfiles.value = true
+
+    const [
+      villesResp,
+      etabResp,
+      etudiantsResp,
+    ] = await Promise.all([
+      api.get('/admin/villes'),
+      api.get('/admin/etablissements'),
+      api.get('/admin/etudiants', { params: { page: 1, limit: 1000 } }),
+    ])
+
+    cities.splice(0, cities.length, ...(villesResp?.data?.data ?? []))
+    schools.splice(0, schools.length, ...(etabResp?.data?.data ?? []))
+
+    const list = etudiantsResp?.data?.data ?? []
+    profiles.value = Array.isArray(list)
+      ? list.map((u, i) => mapEtudiantForUI(u, i))
+      : []
+  } catch (e) {
+    profiles.value = []
+  } finally {
+    apiLoadingProfiles.value = false
+  }
+})
+
 
 /* ── Status helpers ────────────────────── */
 const statusLabel = { verified: 'Vérifié', pending: 'En attente', unverified: 'Non vérifié' }
@@ -496,7 +538,7 @@ const bulkVerify = () => {
 }
 
 /* ── Admin creation ─────────────────────── */
-const avatarColors = ['#c7d2fe','#d1fae5','#fde68a','#fbcfe8','#bfdbfe','#fecaca','#a7f3d0','#ddd6fe']
+const avatarColors = avatarColorsForUI
 const niveauLabel  = { standard: 'Standard', moderateur: 'Modérateur', super_admin: 'Super Admin' }
 
 const newAdmin = ref({ nom: '', prenom: '', email: '', password: '', niveau: 'standard' })

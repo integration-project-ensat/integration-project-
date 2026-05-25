@@ -42,6 +42,19 @@ const badges = [
     criteres: {
       min_recommandations_valides: 2
     }
+  },
+  {
+    nom: 'Ingénieur Full-Stack',
+    description: 'Attribué à l’étudiant capable de livrer plusieurs projets validés en combinant front-end, back-end et déploiement',
+    critere_type: 'WEB_DEV',
+    est_visible: true,
+    mis_en_avant: true,
+    criteres: {
+      min_projets_valides: 4,
+      technologies: ['React', 'Node.js', 'Docker', 'PostgreSQL', 'TypeScript', 'Express', 'GitHub Actions', 'Kubernetes'],
+      min_hackathons: 1,
+      min_recommandations_valides: 1
+    }
   }
 ];
 

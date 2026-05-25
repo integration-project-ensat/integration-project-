@@ -1,5 +1,4 @@
 const { PrismaClient } = require('@prisma/client')
-const { PrismaPg } = require('@prisma/adapter-pg')
 const dotenv = require('dotenv')
 
 dotenv.config({ path: '.env.local' })
@@ -11,10 +10,7 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is required to initialize Prisma')
 }
 
-const adapter = new PrismaPg({ connectionString })
-
 const prisma = new PrismaClient({
-  adapter,
   errorFormat: 'colorless',
 })
 

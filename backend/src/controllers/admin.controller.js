@@ -23,6 +23,8 @@ const getDashboard = asyncHandler(async (req, res) => {
     croissance,
     repartitionFilieres,
     activiteRecente,
+    nouveauxUsers,
+    recentPortfolios
   ] = await Promise.all([
 
     // Profils totaux (tous rôles actifs)
@@ -58,7 +60,7 @@ const getDashboard = asyncHandler(async (req, res) => {
       take: 4,
     }),
 
-    // Activité récente : dernières actions (connexions + soumissions)
+    // Activité récente : dernières actions (connexions)
     prisma.journalConnexion.findMany({
       take: 10,
       orderBy: { date: 'desc' },
@@ -73,6 +75,31 @@ const getDashboard = asyncHandler(async (req, res) => {
         },
       },
     }),
+
+    // Nouveaux utilisateurs
+    prisma.utilisateur.findMany({
+      take: 5,
+      orderBy: { date_creation: 'desc' },
+      select: {
+        id_utilisateur: true, nom: true, prenom: true, email: true, role: true, date_creation: true,
+        profil: { select: { photo_profil: true } }
+      }
+    }),
+
+    // Portfolios recents
+    prisma.portfolio.findMany({
+      take: 5,
+      orderBy: { date_modification: 'desc' },
+      include: {
+        etudiant: {
+          include: {
+            utilisateur: {
+              select: { nom: true, prenom: true, email: true, profil: { select: { photo_profil: true } } }
+            }
+          }
+        }
+      }
+    })
   ]);
 
   // Portfolios soumis par mois (pour la deuxième courbe du graphique)
@@ -87,7 +114,7 @@ const getDashboard = asyncHandler(async (req, res) => {
     ORDER BY mois_date ASC
   `;
 
-  // Formatage activité récente
+  // Formatage activité récente (connexions)
   const activiteFormatee = activiteRecente.map((log) => ({
     id: log.id,
     utilisateur: log.utilisateur
@@ -101,6 +128,39 @@ const getDashboard = asyncHandler(async (req, res) => {
     date: log.date,
     statut: _statutAction(log.action),
   }));
+
+  const activitesPlateforme = [];
+  nouveauxUsers.forEach(u => {
+    activitesPlateforme.push({
+      id: `u_${u.id_utilisateur}`,
+      utilisateur: {
+        nom_complet: `${u.prenom} ${u.nom}`,
+        email: u.email,
+        photo: u.profil?.photo_profil ?? null
+      },
+      action: `Nouvelle inscription (${u.role.toLowerCase()})`,
+      date: u.date_creation,
+      statut: 'complete'
+    });
+  });
+
+  recentPortfolios.forEach(p => {
+    if (p.etudiant && p.etudiant.utilisateur) {
+      activitesPlateforme.push({
+        id: `p_${p.id_portfolio}`,
+        utilisateur: {
+          nom_complet: `${p.etudiant.utilisateur.prenom} ${p.etudiant.utilisateur.nom}`,
+          email: p.etudiant.utilisateur.email,
+          photo: p.etudiant.utilisateur.profil?.photo_profil ?? null
+        },
+        action: 'Portfolio mis à jour',
+        date: p.date_modification ?? new Date(),
+        statut: 'pending'
+      });
+    }
+  });
+
+  activitesPlateforme.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   res.json({
     success: true,
@@ -126,6 +186,7 @@ const getDashboard = asyncHandler(async (req, res) => {
         count: f._count.filiere,
       })),
       activiteRecente: activiteFormatee,
+      activitesPlateforme: activitesPlateforme.slice(0, 5),
     },
   });
 });

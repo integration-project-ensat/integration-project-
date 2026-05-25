@@ -84,6 +84,34 @@ async function main() {
     });
   }
 
+  const fullStackBadge = await prisma.badge.findFirst({
+    where: { nom: 'Ingénieur Full-Stack' }
+  });
+
+  if (fullStackBadge) {
+    await prisma.regleBadge.create({
+      data: {
+        id_badge: fullStackBadge.id_badge,
+        criteres: {
+          min_projets_valides: 4,
+          technologies: [
+            'React',
+            'Node.js',
+            'Docker',
+            'PostgreSQL',
+            'TypeScript',
+            'Express',
+            'GitHub Actions',
+            'Kubernetes'
+          ],
+          min_hackathons: 1,
+          min_recommandations_valides: 1
+        },
+        est_valide: true
+      }
+    });
+  }
+
   console.log('Règles badges insérées avec succès');
 }
 

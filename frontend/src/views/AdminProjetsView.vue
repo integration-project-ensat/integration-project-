@@ -222,13 +222,13 @@
           <div class="modal-footer">
             <button class="btn-cancel" @click="closeModal">Fermer</button>
             <div class="mf-right">
-              <button v-if="modal.action !== 'view'" class="btn-refuse-sm" @click="modal.action = 'refuse'">
+              <button v-if="modal.action !== 'view'" class="btn-refuse-sm" @click="modal.action = 'refuse'" :disabled="loadingAction">
                 <X :size="13" /> Refuser
               </button>
-              <button v-if="modal.action !== 'view'" class="btn-validate-sm" @click="confirmValidate">
+              <button v-if="modal.action !== 'view'" class="btn-validate-sm" @click="confirmValidate" :disabled="loadingAction">
                 <Check :size="13" /> Valider
               </button>
-              <button v-if="modal.action === 'refuse' && modal.reason" class="btn-refuse-confirm" @click="confirmRefuse">
+              <button v-if="modal.action === 'refuse' && modal.reason" class="btn-refuse-confirm" @click="confirmRefuse" :disabled="loadingAction">
                 <X :size="13" /> Confirmer le refus
               </button>
             </div>
@@ -242,11 +242,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Search, Check, X, Eye, ExternalLink, FileText, Image as ImageIcon } from 'lucide-vue-next'
 import AdminNavbar  from '../components/admin/AdminNavbar.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import AdminSubbar  from '../components/admin/AdminSubbar.vue'
+import api from '@/services/api.js'
 
 const sidebarOpen = ref(true)
 const search      = ref('')
@@ -255,109 +256,73 @@ const perPage     = 5
 
 const statusLabel = { pending: 'En attente', validated: 'Validé', refused: 'Refusé' }
 
-/* ═══ DONNÉES — exactement ce que l'étudiant a saisi ═══ */
-const items = ref([
-  {
-    id: 1,
-    studentName: 'Amine Bensaid', studentEmail: 'amine.b@univ-casa.ma', studentSchool: 'Université Hassan II',
-    title: 'Application Mobile de Santé', type: 'React Native', date: '12 Oct 2023',
-    dateStart: '01 Sep 2023', dateEnd: '12 Oct 2023', duration: '6 semaines', location: 'Casablanca',
-    status: 'pending', avatarColor: '#c7d2fe',
-    description: "J'ai développé une application mobile de suivi médical personnel. L'app permet de suivre ses constantes (tension, glycémie), d'afficher des graphiques d'évolution et d'envoyer des alertes au médecin traitant. J'ai utilisé React Native pour le front, Firebase pour le backend et TensorFlow Lite pour un modèle de détection d'anomalies embarqué.",
-    skills: ['React Native', 'Firebase', 'TensorFlow Lite', 'Node.js', 'Figma'],
-    photos: [
-      { name: 'screen_accueil.png',   color: '#6366f1' },
-      { name: 'screen_graphiques.png', color: '#8b5cf6' },
-      { name: 'screen_alerte.png',    color: '#a78bfa' },
-    ],
-    links: [
-      { label: 'Dépôt GitHub',        url: 'https://github.com/amine/sante-mobile' },
-      { label: 'Demo Figma',          url: 'https://figma.com/file/amine-sante' },
-      { label: 'APK de démonstration', url: 'https://drive.google.com/file/apk-sante' },
-    ],
-    document: { name: 'rapport_projet_sante_mobile.pdf', type: 'Rapport technique PDF (28 pages)' },
-  },
-  {
-    id: 2,
-    studentName: 'Sarah Mansouri', studentEmail: 's.mansouri@est-agadir.ac.ma', studentSchool: 'EST Agadir',
-    title: 'Plateforme E-learning', type: 'Vue.js / Node', date: '14 Oct 2023',
-    dateStart: '01 Août 2023', dateEnd: '14 Oct 2023', duration: '2,5 mois', location: 'En ligne',
-    status: 'pending', avatarColor: '#d1fae5',
-    description: "Développement d'une plateforme d'apprentissage en ligne complète. Les fonctionnalités incluent : gestion de cours vidéo (upload S3), système de quiz avec correction automatique, tableau de bord étudiant avec progression, système de certification généré en PDF. L'application supporte 200 utilisateurs simultanés.",
-    skills: ['Vue.js 3', 'Node.js', 'PostgreSQL', 'AWS S3', 'Docker', 'JWT'],
-    photos: [
-      { name: 'dashboard_etudiant.png', color: '#10b981' },
-      { name: 'page_cours.png',         color: '#059669' },
-      { name: 'certificat_genere.png',  color: '#047857' },
-    ],
-    links: [
-      { label: 'Dépôt GitHub',   url: 'https://github.com/sarah/elearning-platform' },
-      { label: 'Site en ligne',  url: 'https://elearning-sarah.vercel.app' },
-      { label: 'Vidéo démo',     url: 'https://youtube.com/watch?v=demo-elearning' },
-    ],
-    document: { name: 'rapport_plateforme_elearning.pdf', type: 'Rapport de fin de projet PDF' },
-  },
-  {
-    id: 3,
-    studentName: 'Youssef Ame', studentEmail: 'youssef.amrani@emi.ac.ma', studentSchool: 'EMI Rabat',
-    title: "Système IoT Agricole", type: 'Python / IoT', date: '16 Oct 2023',
-    dateStart: '01 Jun 2023', dateEnd: '16 Oct 2023', duration: '4,5 mois', location: 'Rabat / Terrain',
-    status: 'validated', avatarColor: '#fde68a',
-    description: "Système de monitoring agricole basé sur capteurs IoT (humidité sol, température, pluviométrie). Les données sont envoyées via MQTT à un serveur Raspberry Pi qui les stocke dans InfluxDB et les affiche sur un dashboard Grafana. Un système d'alertes SMS (Twilio) prévient l'agriculteur en cas d'anomalie.",
-    skills: ['Python', 'MQTT', 'Raspberry Pi', 'InfluxDB', 'Grafana', 'Twilio API'],
-    photos: [
-      { name: 'capteurs_terrain.jpg', color: '#f59e0b' },
-      { name: 'dashboard_grafana.png', color: '#d97706' },
-      { name: 'schema_reseau.png',    color: '#b45309' },
-    ],
-    links: [
-      { label: 'Code source complet', url: 'https://github.com/youssef/iot-agri' },
-      { label: 'Documentation API',   url: 'https://docs.iot-agri.ma' },
-    ],
-    document: { name: 'rapport_iot_agricole.pdf', type: 'Rapport technique + mémoire PDF' },
-  },
-  {
-    id: 4,
-    studentName: 'Sofia Kenzi', studentEmail: 'sofia.kenzi@aui.ma', studentSchool: 'Al Akhawayn University',
-    title: 'Dashboard Analytics BI', type: 'Power BI', date: '18 Oct 2023',
-    dateStart: '15 Sep 2023', dateEnd: '18 Oct 2023', duration: '1 mois', location: 'Ifrane',
-    status: 'pending', avatarColor: '#fbcfe8',
-    description: "Création d'un dashboard Business Intelligence pour une chaîne de distribution marocaine. Le dashboard couvre l'analyse des ventes par région/produit/période, les prévisions via régression linéaire, et les KPIs RH. Connecté à des fichiers Excel via Power Query avec rafraîchissement automatique.",
-    skills: ['Power BI', 'DAX', 'Power Query', 'Excel avancé', 'Data Modeling'],
-    photos: [
-      { name: 'dashboard_ventes.png', color: '#ec4899' },
-      { name: 'rapport_rh.png',       color: '#db2777' },
-    ],
-    links: [
-      { label: 'Rapport Power BI (web)', url: 'https://app.powerbi.com/sofia-dashboard' },
-    ],
-    document: { name: 'rapport_bi_distribution.pdf', type: 'Rapport analytique PDF (18 pages)' },
-  },
-  {
-    id: 5,
-    studentName: 'Omar Benali', studentEmail: 'o.benali@emi.ac.ma', studentSchool: 'EMI Rabat',
-    title: 'Jeu Éducatif 2D', type: 'Unity / C#', date: '22 Oct 2023',
-    dateStart: '01 Juil 2023', dateEnd: '22 Oct 2023', duration: '3,5 mois', location: 'Rabat',
-    status: 'pending', avatarColor: '#fecaca',
-    description: "Développement d'un jeu 2D éducatif pour l'enseignement des mathématiques aux enfants de 8-12 ans. Le jeu comporte 5 niveaux couvrant : addition, soustraction, multiplication, divisions et fractions. Chaque niveau utilise des mécaniques de jeu différentes (puzzle, course, construction). Testé avec 30 élèves d'une école primaire de Rabat.",
-    skills: ['Unity 2022', 'C#', 'Aseprite (pixel art)', 'Game Design', 'UX enfants'],
-    photos: [
-      { name: 'niveau_addition.png',      color: '#ef4444' },
-      { name: 'niveau_fractions.png',     color: '#dc2626' },
-      { name: 'test_eleves.jpg',          color: '#b91c1c' },
-    ],
-    links: [
-      { label: 'Démo jouable (WebGL)', url: 'https://omar.itch.io/maths-adventure' },
-      { label: 'Code source Unity',    url: 'https://github.com/omar/edu-game' },
-      { label: 'Vidéo gameplay',       url: 'https://youtube.com/watch?v=edu-game-omar' },
-    ],
-    document: { name: 'rapport_jeu_educatif.pdf', type: 'Rapport de conception et tests PDF' },
-  },
-])
+/* ═══ DONNÉES — chargées depuis le backend ═══ */
+const items = ref([])
+const loading = ref(false)
+const loadingAction = ref(false)
 
+const mapProjetForUI = (p) => {
+  const statut = p?.statut ?? p?.status
+
+  const status =
+    typeof statut === 'string'
+      ? statut === 'EN_ATTENTE'
+        ? 'pending'
+        : statut === 'VALIDE'
+          ? 'validated'
+          : statut === 'REFUSE'
+            ? 'refused'
+            : statut === 'CORRECTION_DEMANDEE'
+              ? 'pending'
+              : 'pending'
+      : 'pending'
+
+  return {
+    ...p,
+    id: p.id_projet ?? p.id,
+    studentName: p.studentName ?? p.etudiant?.utilisateur ? [p.etudiant.utilisateur.prenom, p.etudiant.utilisateur.nom].filter(Boolean).join(' ') : (p.etudiant?.nom_etudiant || ''),
+    studentEmail: p.studentEmail ?? p.etudiant?.utilisateur?.email,
+    studentSchool: p.studentSchool ?? p.etudiant?.etablissement,
+
+    title: p.titre ?? p.title,
+    type: p.type,
+
+    // UI affichage (on essaie plusieurs champs)
+    date: p.date ?? p.createdAt ?? p.dateSoumission,
+    dateStart: p.date_debut ?? p.dateStart,
+    dateEnd: p.date_fin ?? p.dateEnd,
+    duration: p.duree ?? p.duration,
+    location: p.lieu ?? p.location,
+
+    status,
+    avatarColor: p.avatarColor ?? '#c7d2fe',
+
+    description: p.description,
+    skills: p.skills ?? p.competences ?? [],
+    photos: p.photos ?? p.preuves ?? [],
+    links: p.links ?? (p.lien_github ? [{ label: 'GitHub', url: p.lien_github }] : []),
+
+    document: p.document ?? (p.document_nom ? { name: p.document_nom, type: p.document_type ?? '' } : null),
+  }
+}
+
+const loadProjets = async () => {
+  loading.value = true
+  try {
+    const { data } = await api.get('/projets', { params: { statut: 'EN_ATTENTE' } })
+    const list = data?.data ?? data?.data?.data ?? []
+    items.value = Array.isArray(list) ? list.map(mapProjetForUI) : []
+  } catch (e) {
+    items.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadProjets)
 
 /* ── Stats, filter, pagination ── */
-const stats        = computed(() => [
+const stats = computed(() => [
   { label: 'Total',      value: items.value.length,                                       type: 'total' },
   { label: 'En attente', value: items.value.filter(i => i.status === 'pending').length,   type: 'pending' },
   { label: 'Validés',   value: items.value.filter(i => i.status === 'validated').length, type: 'validated' },
@@ -372,10 +337,39 @@ const pagEnd   = computed(() => Math.min(page.value * perPage, filteredItems.val
 
 /* ── Modal ── */
 const modal = ref({ open: false, item: null, action: 'view', reason: '' })
-const openDetail      = (item, action) => { modal.value = { open: true, item, action, reason: '' } }
-const closeModal      = () => { modal.value.open = false }
-const confirmValidate = () => { modal.value.item.status = 'validated'; closeModal() }
-const confirmRefuse   = () => { modal.value.item.status = 'refused';   closeModal() }
+const openDetail = (item, action) => { modal.value = { open: true, item, action, reason: '' } }
+const closeModal = () => { modal.value.open = false }
+
+const confirmValidate = async () => {
+  if (!modal.value.item) return
+  const id = modal.value.item.id
+  if (!id) return
+
+  loadingAction.value = true
+  try {
+    await api.patch(`/projets/${id}/statut`, { statut: 'VALIDE' })
+    await loadProjets()
+    closeModal()
+  } finally {
+    loadingAction.value = false
+  }
+}
+
+const confirmRefuse = async () => {
+  if (!modal.value.item) return
+  const id = modal.value.item.id
+  if (!id) return
+
+  loadingAction.value = true
+  try {
+    await api.patch(`/projets/${id}/statut`, { statut: 'REFUSE', motif_refus: modal.value.reason })
+    await loadProjets()
+    closeModal()
+  } finally {
+    loadingAction.value = false
+  }
+}
+
 const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 </script>
 

@@ -222,13 +222,13 @@
           <div class="modal-footer">
             <button class="btn-cancel" @click="closeModal">Fermer</button>
             <div class="mf-right">
-              <button v-if="modal.action !== 'view'" class="btn-refuse-sm" @click="modal.action = 'refuse'">
+              <button v-if="modal.action !== 'view'" class="btn-refuse-sm" @click="modal.action = 'refuse'" :disabled="loadingAction">
                 <X :size="13" /> Refuser
               </button>
-              <button v-if="modal.action !== 'view'" class="btn-validate-sm" @click="confirmValidate">
+              <button v-if="modal.action !== 'view'" class="btn-validate-sm" @click="confirmValidate" :disabled="loadingAction">
                 <Check :size="13" /> Valider
               </button>
-              <button v-if="modal.action === 'refuse' && modal.reason" class="btn-refuse-confirm" @click="confirmRefuse">
+              <button v-if="modal.action === 'refuse' && modal.reason" class="btn-refuse-confirm" @click="confirmRefuse" :disabled="loadingAction">
                 <X :size="13" /> Confirmer le refus
               </button>
             </div>
@@ -242,21 +242,89 @@
 </template>
  
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Search, Check, X, Eye, ExternalLink, FileText, Image as ImageIcon } from 'lucide-vue-next'
 import AdminNavbar  from '../components/admin/AdminNavbar.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import AdminSubbar  from '../components/admin/AdminSubbar.vue'
+import api from '@/services/api.js'
  
 const sidebarOpen = ref(true)
 const search      = ref('')
 const page        = ref(1)
 const perPage     = 5
  
-const statusLabel = { pending: 'En attente', validated: 'Validé', refused: 'Refusé' }
- 
-/* ═══ DONNÉES — exactement ce que l'étudiant a saisi ═══ */
-const items = ref([
+const statusLabel = {
+  // valeurs UI historiques
+  pending: 'En attente',
+  validated: 'Validé',
+  refused: 'Refusé'
+}
+
+/* ═══ DONNÉES (chargées depuis le backend) ═══ */
+const items = ref([])
+const loading = ref(false)
+const loadingAction = ref(false)
+
+// Backend renvoie :
+// - id_activite
+// - statut (DECLAREE | ATTESTEE_INSTITUTION)
+// - etudiant.utilisateur.{nom,prenom,email}
+// - validateur.utilisateur.{nom,prenom}
+const mapActivityForUI = (a) => {
+  const id = a.id_activite ?? a.id
+  const etu = a.etudiant?.utilisateur
+
+  const statut = a.statut ?? a.status
+
+  const status =
+    typeof statut === 'string'
+      ? statut === 'DECLAREE'
+        ? 'pending'
+        : statut === 'ATTESTEE_INSTITUTION'
+          ? 'validated'
+          : statut === 'REFUSEE'
+            ? 'refused'
+            : 'pending'
+      : 'pending'
+
+  return {
+    ...a,
+    id,
+    studentName: (a.studentName ?? [etu?.prenom, etu?.nom].filter(Boolean).join(' ')) || a.etudiant?.nom_etudiant || '',
+    studentEmail: (a.studentEmail ?? etu?.email) || '',
+    studentSchool: (a.studentSchool ?? a.etudiant?.etablissement) || '',
+    title: a.title ?? a.nom,
+    type: a.type,
+    date: a.date ?? a.periode,
+    duration: a.duration,
+    location: a.location,
+    dateStart: a.dateStart,
+    dateEnd: a.dateEnd,
+    description: a.description,
+    status,
+    avatarColor: a.avatarColor ?? '#c7d2fe'
+  }
+}
+
+const loadActivities = async () => {
+  loading.value = true
+  try {
+    // Le contrôleur supporte le query param: statut
+    const { data } = await api.get('/activites', { params: { statut: 'DECLAREE' } })
+    const list = data?.data ?? data?.data?.data ?? []
+    items.value = Array.isArray(list) ? list.map(mapActivityForUI) : []
+  } catch (e) {
+    items.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadActivities)
+
+/* fallback mock désactivé */
+/* const items = ref([
   {
     id: 1,
     studentName: 'Amine Bensaid', studentEmail: 'amine.b@univ-casa.ma', studentSchool: 'Université Hassan II',
@@ -402,8 +470,40 @@ const pagEnd   = computed(() => Math.min(page.value * perPage, filteredItems.val
 const modal = ref({ open: false, item: null, action: 'view', reason: '' })
 const openDetail      = (item, action) => { modal.value = { open: true, item, action, reason: '' } }
 const closeModal      = () => { modal.value.open = false }
-const confirmValidate = () => { modal.value.item.status = 'validated'; closeModal() }
-const confirmRefuse   = () => { modal.value.item.status = 'refused';   closeModal() }
+const confirmValidate = async () => {
+  if (!modal.value.item) return
+  const id = modal.value.item.id
+  if (!id) return
+
+  loadingAction.value = true
+  try {
+    await api.patch(`/activites/${id}/valider`, { statut: 'ATTESTEE_INSTITUTION' })
+    await loadActivities()
+    closeModal()
+  } catch (e) {
+    // garde silencieux
+  } finally {
+    loadingAction.value = false
+  }
+}
+
+const confirmRefuse = async () => {
+  if (!modal.value.item) return
+  const id = modal.value.item.id
+  if (!id) return
+
+  loadingAction.value = true
+  try {
+    await api.patch(`/activites/${id}/valider`, { statut: 'DECLAREE' })
+    await loadActivities()
+    closeModal()
+  } catch (e) {
+    // garde silencieux
+  } finally {
+    loadingAction.value = false
+  }
+}
+
 const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 </script>
  

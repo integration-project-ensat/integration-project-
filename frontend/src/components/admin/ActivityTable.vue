@@ -57,54 +57,13 @@
 import { Clock, MoreHorizontal } from 'lucide-vue-next'
 import StatusBadge from './StatusBadge.vue'
  
-const activities = [
-  {
-    id: 1,
-    name: 'Marc-Antoine Dubois',
-    email: 'marc.dubois@ecole.fr',
-    action: 'Nouveau Portfolio soumis',
-    date: 'Il y a 2 min',
-    status: 'pending',
-    avatarColor: '#c7d2fe',
-  },
-  {
-    id: 2,
-    name: 'Sophie Laurent',
-    email: 's.laurent@univ-paris.fr',
-    action: 'Certification validée',
-    date: 'Il y a 15 min',
-    status: 'completed',
-    avatarColor: '#bbf7d0',
-  },
-  {
-    id: 3,
-    name: 'Thomas Bernard',
-    email: 't.bernard@tech.edu',
-    action: 'Mise à jour de profil',
-    date: 'Il y a 42 min',
-    status: 'completed',
-    avatarColor: '#fed7aa',
-  },
-  {
-    id: 4,
-    name: 'Léa Morel',
-    email: 'lea.morel@design.fr',
-    action: 'Nouvelle inscription',
-    date: 'Il y a 1h',
-    status: 'completed',
-    avatarColor: '#fce7f3',
-  },
-  {
-    id: 5,
-    name: 'Jean-Pierre Petit',
-    email: 'jp.petit@science.fr',
-    action: 'Demande de vérification',
-    date: 'Il y a 3h',
-    status: 'cancelled',
-    avatarColor: '#e2e8f0',
-  },
-]
- 
+defineProps({
+  activities: {
+    type: Array,
+    default: () => []
+  }
+})
+
 const initials = (name) =>
   name
     .split(' ')
