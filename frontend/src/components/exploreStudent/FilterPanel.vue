@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from "vue";
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown } from "../../lib/icons";
 
 interface Props {
   filters: {
@@ -65,7 +65,7 @@ const sections = [
       "Big Data",
       "Web",
       "Mobile",
-      "Réseaux",
+      "RÃ©seaux",
     ],
   },
   {
@@ -74,7 +74,7 @@ const sections = [
     options: [
       "Tanger",
       "Rabat",
-      "Fès",
+      "FÃ¨s",
       "Casablanca",
       "Marrakech",
       "Agadir",
@@ -417,3 +417,4 @@ const isExpanded = (key: SectionKey) => {
   scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
 }
 </style>
+

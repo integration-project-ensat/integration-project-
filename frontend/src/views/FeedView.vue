@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { computed, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Bookmark } from "lucide-vue-next";
+import { Bookmark } from "../lib/icons";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
@@ -1186,3 +1186,4 @@ const addReply = (comment: FeedComment) => {
   }
 }
 </style>
+

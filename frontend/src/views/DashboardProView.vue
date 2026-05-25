@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
@@ -9,7 +9,7 @@ import {
   UserCheck,
   UserPlus,
   Users,
-} from "lucide-vue-next";
+} from "../lib/icons";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProConnections } from "../store/proConnections";
@@ -24,7 +24,7 @@ interface Intern {
   city: string;
   score: number;
   startDate: string;
-  status: "Actif" | "Terminé";
+  status: "Actif" | "TerminÃ©";
   profilePath: string;
   portfolioPath: string;
 }
@@ -66,12 +66,12 @@ const interns = ref<Intern[]>([
     id: "nora-tazi",
     initials: "NT",
     name: "Nora Tazi",
-    school: "FST Fès",
+    school: "FST FÃ¨s",
     field: "Mobile",
-    city: "Fès",
+    city: "FÃ¨s",
     score: 80,
     startDate: "15/02/2026",
-    status: "Terminé",
+    status: "TerminÃ©",
     profilePath: "/profile/student/nora-tazi",
     portfolioPath: "/projects/mobile-ensa",
   },
@@ -103,17 +103,17 @@ const stats = computed(() => [
   {
     title: "Demandes de connexion",
     value: pendingRequests.value.length,
-    info: "À traiter",
+    info: "Ã€ traiter",
     icon: UserPlus,
   },
   {
-    title: "Profils sauvegardés",
+    title: "Profils sauvegardÃ©s",
     value: totalSaved.value,
     info: "Top Profiles",
     icon: CheckCircle2,
   },
   {
-    title: "Offres publiées",
+    title: "Offres publiÃ©es",
     value: publishedOffers.value,
     info: "2 actives",
     icon: BriefcaseBusiness,
@@ -133,8 +133,8 @@ const schoolDistribution = [
 ];
 
 const connectionAnalytics = computed(() => [
-  { label: "Acceptées", value: acceptedRequests.value.length },
-  { label: "Refusées", value: refusedRequests.value.length },
+  { label: "AcceptÃ©es", value: acceptedRequests.value.length },
+  { label: "RefusÃ©es", value: refusedRequests.value.length },
   { label: "En attente", value: pendingRequests.value.length },
 ]);
 
@@ -205,11 +205,11 @@ const submitStage = () => {
               <thead>
                 <tr>
                   <th>Nom</th>
-                  <th>École / Faculté</th>
-                  <th>Filière</th>
+                  <th>Ã‰cole / FacultÃ©</th>
+                  <th>FiliÃ¨re</th>
                   <th>Ville</th>
                   <th>Score</th>
-                  <th>Date début stage</th>
+                  <th>Date dÃ©but stage</th>
                   <th>Statut</th>
                   <th>Actions</th>
                 </tr>
@@ -236,7 +236,7 @@ const submitStage = () => {
                   <td>
                     <span
                       class="status-pill"
-                      :class="{ done: intern.status === 'Terminé' }"
+                      :class="{ done: intern.status === 'TerminÃ©' }"
                     >
                       {{ intern.status }}
                     </span>
@@ -264,7 +264,7 @@ const submitStage = () => {
           <div class="section-heading">
             <div>
               <p>Top Profiles</p>
-              <h2>Profils sauvegardés récents</h2>
+              <h2>Profils sauvegardÃ©s rÃ©cents</h2>
             </div>
           </div>
 
@@ -279,14 +279,14 @@ const submitStage = () => {
               <span>{{ profile.name.slice(0, 2).toUpperCase() }}</span>
               <div>
                 <strong>{{ profile.name }}</strong>
-                <p>{{ profile.score }}+ · {{ profile.recommendations }} recos</p>
+                <p>{{ profile.score }}+ Â· {{ profile.recommendations }} recos</p>
                 <small>{{
                   profile.hasPortfolio ? "Portfolio disponible" : "Sans portfolio"
                 }}</small>
               </div>
             </button>
             <p v-if="!savedProfiles.length" class="empty-state">
-              Aucun profil sauvegardé.
+              Aucun profil sauvegardÃ©.
             </p>
           </div>
         </article>
@@ -295,13 +295,13 @@ const submitStage = () => {
           <div class="section-heading">
             <div>
               <p>Analytics</p>
-              <h2>Vue réseau</h2>
+              <h2>Vue rÃ©seau</h2>
             </div>
             <BarChart3 class="analytics-icon" />
           </div>
 
           <div class="chart-block">
-            <h3>Répartition des filières</h3>
+            <h3>RÃ©partition des filiÃ¨res</h3>
             <div v-for="item in fieldDistribution" :key="item.label" class="bar-row">
               <span>{{ item.label }}</span>
               <div class="bar-track">
@@ -313,7 +313,7 @@ const submitStage = () => {
 
           <div class="mini-chart-grid">
             <div>
-              <h3>Stagiaires par école</h3>
+              <h3>Stagiaires par Ã©cole</h3>
               <p v-for="item in schoolDistribution" :key="item.label">
                 <span>{{ item.label }}</span>
                 <strong>{{ item.value }}</strong>
@@ -338,7 +338,7 @@ const submitStage = () => {
             <p>Nouvelle offre</p>
             <h2>Ajouter un stage</h2>
           </div>
-          <button type="button" @click="isStageModalOpen = false">×</button>
+          <button type="button" @click="isStageModalOpen = false">Ã—</button>
         </div>
 
         <form class="stage-form" @submit.prevent="submitStage">
@@ -347,7 +347,7 @@ const submitStage = () => {
             <input v-model="newStage.title" required placeholder="Stage PFE DevOps" />
           </label>
           <label>
-            Filière recherchée
+            FiliÃ¨re recherchÃ©e
             <input v-model="newStage.field" required placeholder="DevOps, Cloud..." />
           </label>
           <label>
@@ -355,21 +355,21 @@ const submitStage = () => {
             <input v-model="newStage.city" required placeholder="Tanger" />
           </label>
           <label>
-            Durée
-            <input v-model="newStage.duration" required placeholder="4 à 6 mois" />
+            DurÃ©e
+            <input v-model="newStage.duration" required placeholder="4 Ã  6 mois" />
           </label>
           <label class="full-field">
             Description
             <textarea
               v-model="newStage.description"
               required
-              placeholder="Décrivez les missions, technologies et profil recherché..."
+              placeholder="DÃ©crivez les missions, technologies et profil recherchÃ©..."
             />
           </label>
 
           <div class="modal-actions">
             <button type="button" @click="isStageModalOpen = false">Annuler</button>
-            <button type="submit">Publier l’offre</button>
+            <button type="submit">Publier lâ€™offre</button>
           </div>
         </form>
       </section>
@@ -821,3 +821,4 @@ th {
   }
 }
 </style>
+

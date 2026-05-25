@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref } from "vue";
-import { ChevronUp } from "lucide-vue-next";
+import { ChevronUp } from "../../lib/icons";
 
 interface Profile {
   id: number;
@@ -50,7 +50,7 @@ const toggleDetails = () => {
         <p class="pc-school">{{ profile.school }}</p>
         <p class="pc-city">
           {{ profile.city }}
-          <span class="pc-dot">•</span>
+          <span class="pc-dot">â€¢</span>
           <a href="#" class="pc-contact" @click.prevent="handleContact"
             >Contact info</a
           >
@@ -327,4 +327,5 @@ const toggleDetails = () => {
   font-weight: 700;
 }
 </style>
+
 
