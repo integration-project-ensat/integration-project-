@@ -14,6 +14,7 @@ interface Profile {
   city: string;
   score: number;
   recommendations: number;
+  badges?: string[];
   recos?: Array<{ name: string; role: string }>;
 }
 
@@ -28,6 +29,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 90,
     recommendations: 500,
+    badges: ["🌊 DevOps", "🌐 Web Developer", "🔐 Security Aware"],
     recos: [
       { name: "Nom Prof", role: "Ex Ecole Nationale des Sciences Appliques" },
       {
@@ -44,6 +46,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 85,
     recommendations: 500,
+    badges: ["🧠 AI / Data", "🌐 Web Developer", "🏆 Hackathon Participant"],
     recos: [],
   },
 ]);

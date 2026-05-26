@@ -16,6 +16,7 @@ interface Profile {
   city: string;
   score: number;
   recommendations: number;
+  badges?: string[];
   recos?: Array<{ name: string; role: string }>;
 }
 
@@ -33,6 +34,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 90,
     recommendations: 500,
+    badges: ["🌊 DevOps", "🌐 Web Developer", "🔐 Security Aware"],
     recos: [
       { name: "Nom Prof", role: "Ex Ecole Nationale des Sciences Appliques" },
       {
@@ -49,6 +51,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 75,
     recommendations: 500,
+    badges: ["🌐 Web Developer", "🧠 AI / Data", "🏆 Hackathon Participant"],
     recos: [],
   },
 ]);
@@ -79,6 +82,7 @@ const toggleSavedProfile = (profile: Profile) => {
     city: profile.city,
     score: profile.score,
     recommendations: profile.recommendations,
+    badges: profile.badges,
     hasPortfolio: true,
     profilePath: `/profile/student/${id}`,
     portfolioPath: `/projects/${id}`,

@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 
 const route = useRoute();
@@ -15,6 +16,7 @@ interface ProjectDetails {
   school: string;
   title: string;
   description: string;
+  badges: string[];
   technologies: string[];
   github?: string;
   demo?: string;
@@ -29,6 +31,7 @@ const projects: ProjectDetails[] = [
     title: "Portfolio Web",
     description:
       "Application portfolio moderne avec recommandations, projets, authentification et dashboard de suivi.",
+    badges: ["🌐 Web Developer", "🔐 Security Aware", "🏆 Hackathon Participant"],
     technologies: ["Vue.js", "Node.js", "Docker", "PostgreSQL"],
     github: "github.com/khadija/portfolio-web",
     demo: "portfolio-demo.local",
@@ -41,6 +44,7 @@ const projects: ProjectDetails[] = [
     title: "Pipeline CI/CD pour microservices",
     description:
       "Mise en place d'un pipeline CI/CD avec tests automatisés, Docker Compose et monitoring Prometheus.",
+    badges: ["🌊 DevOps", "🔐 Security Aware"],
     technologies: ["Docker", "CI/CD", "GitLab", "Prometheus"],
     github: "github.com/yassine/devops-pipeline",
   },
@@ -52,6 +56,7 @@ const projects: ProjectDetails[] = [
     title: "Cloud Cost Dashboard",
     description:
       "Dashboard pour suivre les coûts cloud, détecter les anomalies et proposer des optimisations.",
+    badges: ["🧠 AI / Data", "🌐 Web Developer"],
     technologies: ["AWS", "Vue.js", "Python", "Figma"],
     demo: "cloud-cost-demo.local",
   },
@@ -63,6 +68,7 @@ const projects: ProjectDetails[] = [
     title: "Application Mobile ENSA",
     description:
       "Application mobile pour les annonces, événements, clubs et demandes administratives des étudiants.",
+    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
     technologies: ["Flutter", "Firebase", "Figma"],
   },
 ];
@@ -94,6 +100,7 @@ const project = computed<ProjectDetails>(() =>
             >
               {{ project.studentName }}
             </button>
+            <SkillBadges :badges="project.badges" compact />
             <p>{{ project.school }}</p>
           </div>
         </div>

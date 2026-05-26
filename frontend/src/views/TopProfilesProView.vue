@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { SlidersHorizontal } from "lucide-vue-next";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProSavedProfiles } from "../store/proSavedProfiles";
 
@@ -40,6 +41,15 @@ const filteredProfiles = computed(() => {
 
 const openPath = (path: string) => {
   router.push(path);
+};
+
+const fallbackBadges = (field: string) => {
+  const normalized = field.toLowerCase();
+  if (normalized.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (normalized.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (normalized.includes("data")) return ["🧠 AI / Data"];
+  if (normalized.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
+  return ["🌐 Web Developer"];
 };
 </script>
 
@@ -147,7 +157,13 @@ const openPath = (path: string) => {
                       @click="openPath(profile.profilePath)"
                     >
                       <span>{{ profile.name.slice(0, 2).toUpperCase() }}</span>
-                      {{ profile.name }}
+                      <div>
+                        <strong>{{ profile.name }}</strong>
+                        <SkillBadges
+                          :badges="profile.badges ?? fallbackBadges(profile.field)"
+                          compact
+                        />
+                      </div>
                     </button>
                   </td>
                   <td>{{ profile.school }}</td>

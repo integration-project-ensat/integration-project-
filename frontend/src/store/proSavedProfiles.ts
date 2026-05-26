@@ -8,6 +8,7 @@ export interface SavedProfile {
   city: string;
   score: number;
   recommendations: number;
+  badges?: string[];
   hasPortfolio: boolean;
   savedAt: string;
   profilePath: string;
@@ -23,6 +24,7 @@ const savedProfiles = ref<SavedProfile[]>([
     city: "Tanger",
     score: 90,
     recommendations: 500,
+    badges: ["🌐 Web Developer", "🔐 Security Aware"],
     hasPortfolio: true,
     savedAt: "Aujourd'hui",
     profilePath: "/profile/student/khadija-bennani",

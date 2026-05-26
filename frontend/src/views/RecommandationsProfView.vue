@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import {
   type RecommendationRequest,
@@ -86,6 +87,14 @@ const sendLetter = () => {
 const refuseRequest = (request: RecommendationRequest) => {
   updateRecommendationStatus(request.id, refusedStatus);
 };
+
+const studentBadges = (request: RecommendationRequest) => {
+  const text = `${request.profileInfo} ${request.title}`.toLowerCase();
+  if (text.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (text.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (text.includes("cyber")) return ["🔐 Security Aware", "🏆 Hackathon Participant"];
+  return ["🌐 Web Developer"];
+};
 </script>
 
 <template>
@@ -148,6 +157,7 @@ const refuseRequest = (request: RecommendationRequest) => {
                   >
                     {{ request.studentName }}
                   </button>
+                  <SkillBadges :badges="studentBadges(request)" compact />
                   <p class="profile-info">{{ request.profileInfo }}</p>
                 </div>
                 <span class="status-badge" :class="statusClass(request.status)">

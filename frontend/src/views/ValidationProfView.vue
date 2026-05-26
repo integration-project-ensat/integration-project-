@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import {
   type ValidationRequest,
@@ -53,6 +54,14 @@ const updateSelectedStatus = (status: ValidationStatus) => {
 
 const openStudentProfile = (request: ValidationRequest) => {
   router.push(`/profile/student/${request.studentId}`);
+};
+
+const studentBadges = (request: ValidationRequest) => {
+  const title = request.title.toLowerCase();
+  if (title.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (title.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (title.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
+  return ["🌐 Web Developer"];
 };
 </script>
 
@@ -116,6 +125,7 @@ const openStudentProfile = (request: ValidationRequest) => {
                   >
                     {{ request.studentName }}
                   </button>
+                  <SkillBadges :badges="studentBadges(request)" compact />
                   <p class="validation-type">{{ request.type }}</p>
                 </div>
                 <span class="status-badge" :class="statusClass(request.status)">

@@ -3,6 +3,7 @@ import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { SlidersHorizontal } from "lucide-vue-next";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 
 type RequestStatus = "En attente" | "Validée" | "Refusée" | "Aucun";
@@ -237,6 +238,14 @@ const openStudentProfile = (student: ProfStudent) => {
 const openPortfolio = (student: ProfStudent) => {
   router.push(student.portfolioPath);
 };
+
+const studentBadges = (student: ProfStudent) => {
+  const field = student.field.toLowerCase();
+  if (field.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (field.includes("gsea")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (field.includes("ginf")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
+  return ["🌐 Web Developer"];
+};
 </script>
 
 <template>
@@ -331,7 +340,10 @@ const openPortfolio = (student: ProfStudent) => {
                       @click="openStudentProfile(student)"
                     >
                       <span>{{ student.initials }}</span>
-                      {{ student.name }}
+                      <div>
+                        <strong>{{ student.name }}</strong>
+                        <SkillBadges :badges="studentBadges(student)" compact />
+                      </div>
                     </button>
                   </td>
                   <td>{{ student.school }}</td>
