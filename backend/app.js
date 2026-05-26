@@ -16,6 +16,12 @@ const competenceRoutes = require('./src/routes/competence.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
 const photoRoutes = require('./src/routes/photo.routes')
+const commentaireRoutes = require('./src/routes/commentaire.routes')
+const recommendationRoutes = require('./src/routes/recommendation.routes')
+const postRoutes = require('./src/routes/post.routes')
+const exploreRoutes = require('./src/routes/explore.routes')
+const profilePublicRoutes = require('./src/routes/profilePublic.routes')
+const connexionRoutes = require('./src/routes/connexion.routes')
 
 // Routes à venir (décommenter au fur et à mesure)
 // const projetRoutes = require('./src/routes/projet.routes')
@@ -65,6 +71,16 @@ app.use('/api/competences', competenceRoutes)
 app.use('/api/profil', diplomeLimiter,profileRoutes)
 app.use('/api/profil/photo', photoRoutes)
 app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
+app.use('/api/projets', projetRoutes)
+app.use('/api/stages', stageRoutes)
+app.use('/api/activites', activiteRoutes)
+app.use('/api/attestations', attestationRoutes)
+app.use('/api/commentaires', commentaireRoutes)
+app.use('/api/recommandations', recommendationRoutes)
+app.use('/api/posts', postRoutes)
+app.use('/api/profiles', profilePublicRoutes)
+app.use('/api/connexions', connexionRoutes)
+app.use('/api', exploreRoutes)
 
 // 404 not found handler
 app.use((req, res) => {
@@ -77,11 +93,6 @@ app.use((req, res) => {
 
 // Erreurs globales
 app.use(errorMiddleware)
-
-app.use('/api/projets', projetRoutes)
-app.use('/api/stages', stageRoutes)
-app.use('/api/activites', activiteRoutes)
-app.use('/api/attestations', attestationRoutes)
 
 
 module.exports = app

@@ -35,6 +35,7 @@ router.post('/reinitialiser-mot-de-passe', validate(PasswordValidator.reinitiali
 
 // ROUTES PROTÉGÉES (JWT REQUIS)
 router.get('/profil', authentifier, authController.getCurrentUser);
+router.get('/me', authentifier, authController.getCurrentUser);
 
 // ROUTES ADMIN (JWT + rôle)
 router.post(

@@ -4,6 +4,35 @@ generator client {
   
 }
 
+model Repost {
+  id_repost BigInt   @id @default(autoincrement())
+  id_auteur BigInt
+  id_poste  BigInt
+  date      DateTime @default(now())
+
+  auteur      Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
+  publication Poste       @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
+
+  @@unique([id_auteur, id_poste])
+  @@map("reposts")
+}
+
+model Connexion {
+  id_connexion    BigInt          @id @default(autoincrement())
+  id_demandeur    BigInt
+  id_destinataire BigInt
+  statut          StatutConnexion @default(EN_ATTENTE)
+  message         String?
+  date_demande    DateTime        @default(now())
+  date_reponse    DateTime?
+
+  demandeur    Utilisateur @relation("ConnexionsDemandeur", fields: [id_demandeur], references: [id_utilisateur], onDelete: Cascade)
+  destinataire Utilisateur @relation("ConnexionsDestinataire", fields: [id_destinataire], references: [id_utilisateur], onDelete: Cascade)
+
+  @@unique([id_demandeur, id_destinataire])
+  @@map("connexions")
+}
+
 datasource db {
   provider = "postgresql"
 }
@@ -101,6 +130,8 @@ enum TypeElementValidable {
   STAGE
   ACTIVITE
   ATTESTATION
+  COMMENTAIRE
+  RECOMMANDATION
 }
 
 enum ObjectifProfessionnel {
@@ -164,6 +195,11 @@ enum TypeReaction {
   LIKE
   
 }
+enum StatutConnexion {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+}
 enum NiveauAcces {
   SUPER_ADMIN
   STANDARD
@@ -203,6 +239,10 @@ model Utilisateur {
   recommandations     Recommandation[]   @relation("AuteurRecommandations")
   reactions           Reaction[]
   postes              Poste[]
+  postes_collabores   PosteCollaborateur[]
+  reposts             Repost[]
+  demandes_connexion_envoyees Connexion[] @relation("ConnexionsDemandeur")
+  demandes_connexion_recues   Connexion[] @relation("ConnexionsDestinataire")
 
   @@map("utilisateurs")
 }
@@ -662,14 +702,29 @@ model Poste {
   id_poste  BigInt     @id @default(autoincrement())
   id_auteur     BigInt
   contenu         String
+  image_url       String?    @db.VarChar(500)
   visibilite      Visibilite @default(PUBLIC)
   date_creation   DateTime   @default(now())
 
   auteur Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
   commentaires Commentaire[]
   reactions    Reaction[]    // pour les "j'aime"
+  collaborateurs PosteCollaborateur[]
+  reposts      Repost[]
 
   @@map("postes")
+}
+
+model PosteCollaborateur {
+  id_poste       BigInt
+  id_utilisateur BigInt
+  date_ajout     DateTime @default(now())
+
+  poste       Poste       @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
+  utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@id([id_poste, id_utilisateur])
+  @@map("poste_collaborateurs")
 }
 
 model Reaction {

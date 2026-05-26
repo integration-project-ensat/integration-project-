@@ -9,12 +9,6 @@ const app = require('./app.js')
 const http = require('http')
 const prisma = require('./prisma/client')
 
-// Added from Frontend branch
-const exploreRoutes = require('./src/routes/explore.routes')
-
-// Register explore routes
-app.use('/api', exploreRoutes)
-
 const PORT = process.env.PORT || 3000
 
 const server = http.createServer(app)
