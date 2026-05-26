@@ -6,15 +6,21 @@ import SignupView from "../views/SignupView.vue";
 import ForgetPasswordView from "@/views/ForgetPasswordView.vue";
 import ResetPasswordView from "../views/ResetPasswordView.vue";
 import VerifyCodeView from "../views/VerifyCodeView.vue";
+import StudentProfileView from '../views/StudentProfileView.vue';
 import ExploreView from "../views/ExploreView.vue";
-import AdminDashboardView from "../views/AdminDashboardView.vue";
-import AdminProfilesView from "../views/AdminProfilesView.vue";
-import AdminPortfoliosView from "../views/AdminPortfoliosView.vue";
-import AdminActivitiesView from "../views/AdminActivitiesView.vue";
-import AdminProjetsView from "../views/AdminProjetsView.vue";
-import AdminCertificationsView from '../views/AdminCertificationsView.vue';
-import OAuthSuccessView from "../views/OAuthSuccessView.vue";
-import CompleteProfileView from "../views/CompleteProfileView.vue";
+import ExploreProfView from "../views/ExploreProfView.vue";
+import ExploreProView from "../views/ExploreProView.vue";
+import DashboardView from '../views/DashboardView.vue';
+import LettersView from '../views/LettersView.vue';
+import ProjectsView from '../views/ProjectsView.vue';
+import SettingsView from '../views/SettingsView.vue';
+import StudentPortfolioView from "../views/StudentPortfolioView.vue";
+import StagesView from "../views/StagesView.vue";
+import CertificationsView from "../views/CertificationsView.vue";
+import ActivitesView from "../views/ActivitesView.vue";
+
+// Vues placeholder pour les pages pas encore développées
+const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
 
 export default createRouter({
   history: createWebHistory("/"),
@@ -26,13 +32,22 @@ export default createRouter({
     { path: "/reset-password", name: "reset", component: ResetPasswordView },
     { path: "/verify-code", name: "verify-code", component: VerifyCodeView },
     { path: "/explore", name: "explore", component: ExploreView },
-    { path: '/admin',component: AdminDashboardView },
-    { path: '/admin/profils', component : AdminProfilesView },
-    { path: '/admin/portfolios', component: AdminPortfoliosView },
-    { path:  '/admin/activites', component: AdminActivitiesView },
-    { path: "/admin/projets" , component:AdminProjetsView },
-    { path: '/admin/certifications', component: AdminCertificationsView },
-    { path: "/oauth-success", name: "oauth-success", component: OAuthSuccessView },
-    { path: "/complete-profile", name: "complete-profile", component: CompleteProfileView }
+    { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
+    { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
+    { path: '/profile', name: 'profile', component: StudentProfileView },
+    { path: "/dashboard", name: "dashboard", component: DashboardView },
+    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
+    { path: "/lettres", name: "letters", component: LettersView },
+    { path: "/projets", name: "projets", component: Placeholder },
+    { path: "/stages", name: "stages", component: Placeholder },
+    { path: "/certifications", name: "certifications", component: Placeholder },
+    { path: "/activites", name: "activites", component: Placeholder },
+    { path: "/portfolio", name: "portfolio", component: Placeholder },
+    { path: "/settings", name: "settings", component: Placeholder },
+    { path: '/projets', name: 'projets', component: ProjectsView },
+    { path: '/settings', name: 'settings', component: SettingsView },
+    { path: "/stages", name: "stages", component: StagesView },
+    { path: "/certifications", name: "certifications", component: CertificationsView },
+    { path: "/activites", name: "activites", component: ActivitesView },
   ],
 });
