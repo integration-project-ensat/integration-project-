@@ -1,0 +1,744 @@
+﻿<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
+import Topbar from "../components/exploreStudent/Topbar.vue";
+import {
+  type RecommendationRequest,
+  type RecommendationStatus,
+  useProfRecommendationRequests,
+} from "../store/profRecommendationRequests";
+
+type RecommendationTab = "Tout" | "En attente" | "Acceptées" | "Refusées";
+
+const router = useRouter();
+const sidebarOpen = ref(true);
+const activeTab = ref<RecommendationTab>("Tout");
+const selectedRequest = ref<RecommendationRequest | null>(null);
+const writingRequest = ref<RecommendationRequest | null>(null);
+const letterDraft = ref("");
+const { recommendations, updateRecommendationStatus } =
+  useProfRecommendationRequests();
+const acceptedStatus = "Acceptée" as RecommendationStatus;
+const refusedStatus = "Refusée" as RecommendationStatus;
+
+const tabs: RecommendationTab[] = [
+  "Tout",
+  "En attente",
+  "Acceptées",
+  "Refusées",
+];
+
+const filteredRequests = computed(() => {
+  if (activeTab.value === "Tout") {
+    return recommendations.value.filter(
+      (request) => request.status === "En attente",
+    );
+  }
+  if (activeTab.value === "Acceptées") {
+    return recommendations.value.filter((request) => request.status === acceptedStatus);
+  }
+  if (activeTab.value === "Refusées") {
+    return recommendations.value.filter((request) => request.status === refusedStatus);
+  }
+  return recommendations.value.filter((request) => request.status === "En attente");
+});
+
+const statusClass = (status: RecommendationStatus) => ({
+  "is-pending": status === "En attente",
+  "is-valid": status === acceptedStatus,
+  "is-refused": status === refusedStatus,
+});
+
+const openStudentProfile = (request: RecommendationRequest) => {
+  router.push(`/profile/student/${request.studentId}`);
+};
+
+const openDetailsModal = (request: RecommendationRequest) => {
+  selectedRequest.value = request;
+};
+
+const closeDetailsModal = () => {
+  selectedRequest.value = null;
+};
+
+const openWriteModal = (request: RecommendationRequest) => {
+  writingRequest.value = request;
+  letterDraft.value = request.writtenLetter ?? "";
+};
+
+const closeWriteModal = () => {
+  writingRequest.value = null;
+  letterDraft.value = "";
+};
+
+const sendLetter = () => {
+  if (writingRequest.value) {
+    updateRecommendationStatus(
+      writingRequest.value.id,
+      acceptedStatus,
+      letterDraft.value.trim(),
+    );
+  }
+  closeWriteModal();
+};
+
+const refuseRequest = (request: RecommendationRequest) => {
+  updateRecommendationStatus(request.id, refusedStatus);
+};
+
+const studentBadges = (request: RecommendationRequest) => {
+  const text = `${request.profileInfo} ${request.title}`.toLowerCase();
+  if (text.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (text.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (text.includes("cyber")) return ["🔐 Security Aware", "🏆 Hackathon Participant"];
+  return ["🌐 Web Developer"];
+};
+</script>
+
+<template>
+  <div class="recommendation-page">
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
+    <SidebarProf :isOpen="sidebarOpen" />
+
+    <main
+      class="recommendation-shell"
+      :class="{ 'recommendation-shellShift': sidebarOpen }"
+    >
+      <section class="recommendation-panel">
+        <div class="recommendation-header">
+          <div>
+            <p class="recommendation-kicker">Espace professeur</p>
+            <h1>Lettres de recommandation</h1>
+          </div>
+          <div class="recommendation-summary">
+            <strong>{{ filteredRequests.length }}</strong>
+            <span>demandes</span>
+          </div>
+        </div>
+
+        <div class="recommendation-tabs" aria-label="Filtres recommandations">
+          <button
+            v-for="tab in tabs"
+            :key="tab"
+            type="button"
+            class="recommendation-tab"
+            :class="{ active: activeTab === tab }"
+            @click="activeTab = tab"
+          >
+            {{ tab }}
+          </button>
+        </div>
+
+        <div class="recommendation-list">
+          <article
+            v-for="request in filteredRequests"
+            :key="request.id"
+            class="recommendation-card"
+            @click="openDetailsModal(request)"
+          >
+            <button
+              type="button"
+              class="student-avatar"
+              :aria-label="`Voir le profil de ${request.studentName}`"
+              @click.stop="openStudentProfile(request)"
+            >
+              {{ request.initials }}
+            </button>
+
+            <div class="recommendation-content">
+              <div class="recommendation-cardTop">
+                <div>
+                  <button
+                    type="button"
+                    class="student-name-btn"
+                    @click.stop="openStudentProfile(request)"
+                  >
+                    {{ request.studentName }}
+                  </button>
+                  <SkillBadges :badges="studentBadges(request)" compact />
+                  <p class="profile-info">{{ request.profileInfo }}</p>
+                </div>
+                <span class="status-badge" :class="statusClass(request.status)">
+                  {{ request.status }}
+                </span>
+              </div>
+
+              <h3>{{ request.title }}</h3>
+              <p class="recommendation-message">{{ request.message }}</p>
+              <p class="recommendation-date">{{ request.date }}</p>
+
+              <div class="recommendation-actions">
+                <button
+                  type="button"
+                  class="action-btn muted"
+                  @click.stop="openDetailsModal(request)"
+                >
+                  Voir détails
+                </button>
+                <button
+                  v-if="request.status === 'En attente'"
+                  type="button"
+                  class="action-btn primary"
+                  @click.stop="openWriteModal(request)"
+                >
+                  Accepter et écrire
+                </button>
+                <button
+                  v-if="request.status === 'En attente'"
+                  type="button"
+                  class="action-btn danger"
+                  @click.stop="refuseRequest(request)"
+                >
+                  Refuser
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <div
+      v-if="selectedRequest"
+      class="modal-backdrop"
+      @click.self="closeDetailsModal"
+    >
+      <section class="details-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <p>Détails de la demande</p>
+            <button
+              type="button"
+              class="modal-student-link"
+              @click="openStudentProfile(selectedRequest)"
+            >
+              {{ selectedRequest.studentName }}
+            </button>
+          </div>
+          <button type="button" class="modal-close" @click="closeDetailsModal">
+            ×
+          </button>
+        </div>
+
+        <div class="details-grid">
+          <div>
+            <span>Profil</span>
+            <strong>{{ selectedRequest.profileInfo }}</strong>
+          </div>
+          <div>
+            <span>Date</span>
+            <strong>{{ selectedRequest.date }}</strong>
+          </div>
+          <div>
+            <span>Statut</span>
+            <strong>{{ selectedRequest.status }}</strong>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <span>Titre</span>
+          <h3>{{ selectedRequest.title }}</h3>
+        </div>
+
+        <div class="details-section">
+          <span>Message étudiant</span>
+          <p>{{ selectedRequest.message }}</p>
+        </div>
+
+        <div v-if="selectedRequest.writtenLetter" class="details-section">
+          <span>Lettre écrite</span>
+          <p>{{ selectedRequest.writtenLetter }}</p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="action-btn muted" @click="closeDetailsModal">
+            Fermer
+          </button>
+          <button
+            v-if="selectedRequest.status === 'En attente'"
+            type="button"
+            class="action-btn primary"
+            @click="openWriteModal(selectedRequest)"
+          >
+            Accepter et écrire
+          </button>
+          <button
+            v-if="selectedRequest.status === 'En attente'"
+            type="button"
+            class="action-btn danger"
+            @click="refuseRequest(selectedRequest); closeDetailsModal()"
+          >
+            Refuser
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div
+      v-if="writingRequest"
+      class="modal-backdrop"
+      @click.self="closeWriteModal"
+    >
+      <section class="details-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <p>Écrire la lettre</p>
+            <h2>{{ writingRequest.studentName }}</h2>
+          </div>
+          <button type="button" class="modal-close" @click="closeWriteModal">
+            ×
+          </button>
+        </div>
+
+        <div class="details-section">
+          <span>Demande</span>
+          <h3>{{ writingRequest.title }}</h3>
+          <p>{{ writingRequest.message }}</p>
+        </div>
+
+        <label class="letter-field">
+          <span>Lettre de recommandation</span>
+          <textarea
+            v-model="letterDraft"
+            rows="8"
+            placeholder="Écrivez la lettre de recommandation ici..."
+          />
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="action-btn muted" @click="closeWriteModal">
+            Annuler
+          </button>
+          <button type="button" class="action-btn primary" @click="sendLetter">
+            Envoyer
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.recommendation-page {
+  min-height: 100vh;
+  width: 100vw;
+  background: #eef1fb;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  padding-top: 50px;
+  overflow: hidden;
+}
+
+.recommendation-shell {
+  height: calc(100vh - 50px);
+  overflow-y: auto;
+  padding: 20px;
+  transition: padding-left 0.3s ease;
+}
+
+.recommendation-shellShift {
+  padding-left: 236px;
+}
+
+.recommendation-panel {
+  max-width: none;
+  margin: 0;
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-card);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  overflow: hidden;
+}
+
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 30px 22px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.recommendation-kicker {
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.recommendation-header h1 {
+  color: var(--text-dark);
+  font-family: var(--font-head);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.recommendation-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  background: #eeecff;
+  color: var(--purple);
+  padding: 10px 16px;
+  font-weight: 800;
+}
+
+.recommendation-summary span {
+  color: var(--text-gray);
+  font-size: 13px;
+}
+
+.recommendation-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.recommendation-tab {
+  height: 40px;
+  border: 1px solid rgba(15, 23, 42, 0.25);
+  border-radius: 100px 180px 0px 100px;
+  background: white;
+  color: rgb(71 85 105);
+  padding: 0 22px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.recommendation-tab:hover {
+  border-color: rgb(100 116 139);
+  color: rgb(15 23 42);
+}
+
+.recommendation-tab.active {
+  border: 2px solid #5b4dff;
+  background: #f1f1f5;
+  color: #111827;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.recommendation-list {
+  display: grid;
+  gap: 16px;
+  max-height: 820px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 22px 30px 30px;
+}
+
+.recommendation-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.recommendation-list::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.recommendation-list::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.18);
+  border-radius: 9999px;
+}
+
+.recommendation-card {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 18px;
+  background: white;
+  padding: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  transition: var(--ease);
+}
+
+.recommendation-card:hover {
+  background: #f7f7ff;
+  transform: translateY(-2px);
+}
+
+.student-avatar {
+  border: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-weight: 800;
+}
+
+.student-avatar:hover,
+.student-name-btn:hover,
+.modal-student-link:hover {
+  color: var(--purple);
+}
+
+.recommendation-cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.student-name-btn,
+.modal-student-link {
+  background: transparent;
+  color: var(--text-dark);
+  font-family: var(--font-head);
+  font-weight: 800;
+  text-align: left;
+}
+
+.student-name-btn {
+  font-size: 18px;
+}
+
+.profile-info,
+.recommendation-date {
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.recommendation-card h3 {
+  color: var(--purple);
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.recommendation-message {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.status-badge.is-pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status-badge.is-valid {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.status-badge.is-refused {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.recommendation-actions,
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.action-btn {
+  height: 32px;
+  min-width: 98px;
+  padding: 0 18px;
+  border-radius: 100px 180px 0px 100px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: var(--ease);
+}
+
+.action-btn.primary {
+  background: var(--purple);
+  border: 0;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.action-btn.danger {
+  background: transparent;
+  border: 1px solid rgb(148 163 184);
+  color: #dc2626;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.action-btn.muted {
+  background: transparent;
+  border: 1px solid rgb(148 163 184);
+  color: rgb(71 85 105);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.action-btn:hover {
+  border-color: rgb(100 116 139);
+  color: rgb(15 23 42);
+}
+
+.action-btn.primary:hover {
+  color: #ffffff;
+  filter: brightness(0.95);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.42);
+  padding: 20px;
+}
+
+.details-modal {
+  width: min(680px, 100%);
+  border-radius: 22px;
+  background: white;
+  padding: 24px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-header p,
+.details-grid span,
+.details-section span,
+.letter-field span {
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.modal-header h2,
+.modal-student-link {
+  color: var(--text-dark);
+  font-family: var(--font-head);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.modal-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  color: var(--text-dark);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.details-grid div,
+.details-section {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 12px 14px;
+}
+
+.details-grid span,
+.details-section span,
+.letter-field span {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.details-grid strong,
+.details-section h3 {
+  color: var(--text-dark);
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.details-section,
+.letter-field {
+  margin-bottom: 14px;
+}
+
+.details-section p {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.letter-field textarea {
+  width: 100%;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--text-dark);
+  padding: 12px 14px;
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.letter-field textarea:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+}
+
+@media (max-width: 860px) {
+  .recommendation-shell,
+  .recommendation-shellShift {
+    padding: 16px;
+  }
+
+  .recommendation-header,
+  .recommendation-cardTop {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .recommendation-card {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+
+

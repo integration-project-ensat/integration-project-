@@ -62,11 +62,16 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/competences', competenceRoutes)
-app.use('/api/profil', diplomeLimiter,profileRoutes)
+app.use('/api/profil', diplomeLimiter, profileRoutes)
 app.use('/api/profil/photo', photoRoutes)
-app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
+app.use('/api/diplomes', diplomeLimiter, diplomeRoutes)
 
-// 404 not found handler
+app.use('/api/projets', projetRoutes)
+app.use('/api/stages', stageRoutes)
+app.use('/api/activites', activiteRoutes)
+app.use('/api/attestations', attestationRoutes)
+
+// 404
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -75,13 +80,7 @@ app.use((req, res) => {
   })
 })
 
-// Erreurs globales
+// error middleware LAST
 app.use(errorMiddleware)
-
-app.use('/api/projets', projetRoutes)
-app.use('/api/stages', stageRoutes)
-app.use('/api/activites', activiteRoutes)
-app.use('/api/attestations', attestationRoutes)
-
 
 module.exports = app

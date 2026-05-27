@@ -1,208 +1,331 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import Sidebar from '../components/explore/Sidebar.vue'
-import Topbar from '../components/explore/Topbar.vue'
-import ProfileCard from '../components/explore/ProfileCard.vue'
-import FilterPanel from '../components/explore/FilterPanel.vue'
+import { computed, ref } from "vue";
+import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
+import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
+import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
+import Sidebar from "../components/exploreStudent/Sidebar.vue";
+import Topbar from "../components/exploreStudent/Topbar.vue";
 
 interface Profile {
-  id: number
-  name: string
-  role: string
-  school: string
-  field: string
-  city: string
-  score: number
-  year: number
-  skills: string[]
-  recommendations: number
+  id: number;
+  name: string;
+  role: string;
+  school: string;
+  city: string;
+  score: number;
+  recommendations: number;
+  badges?: string[];
+  recos?: Array<{ name: string; role: string }>;
 }
 
-interface Filters {
-  year: number | null
-  school: string | null
-  field: string | null
-  city: string | null
-  scoreMin: number | null
-  skills: string[]
-  recMin: number | null
-}
-
-const searchQuery = ref('')
-const selectedFilters = reactive<Filters>({
-  year: null,
-  school: null,
-  field: null,
-  city: null,
-  scoreMin: null,
-  skills: [],
-  recMin: null
-})
-
+const searchQuery = ref("");
 const profiles = ref<Profile[]>([
   {
     id: 1,
-    name: 'Nora Bennis',
-    role: 'UX Designer & Frontend',
-    school: 'ENSA Tanger',
-    field: 'GINF',
-    city: 'Tangier',
-    score: 94,
-    year: 2026,
-    skills: ['Figma', 'Vue.js', 'Tailwind'],
-    recommendations: 120
+    name: "Nom Prenom",
+    role: "Ex Developer Operation & Support",
+    school: "Ex Dassault  Universite de Bretagne Occidentale",
+    city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
+    score: 90,
+    recommendations: 500,
+    badges: ["🌊 DevOps", "🌐 Web Developer", "🔐 Security Aware"],
+    recos: [
+      { name: "Nom Prof", role: "Ex Ecole Nationale des Sciences Appliques" },
+      {
+        name: "Nom Professionelle",
+        role: "Ex Ecole Nationale des Sciences Appliques",
+      },
+    ],
   },
   {
     id: 2,
-    name: 'Youssef Aarab',
-    role: 'DevOps Engineer',
-    school: 'ENSA Rabat',
-    field: 'GSEA',
-    city: 'Rabat',
-    score: 88,
-    year: 2025,
-    skills: ['Docker', 'GitOps', 'CI/CD'],
-    recommendations: 84
+    name: "Nom Prenom",
+    role: "Ex Developer Operation & Support",
+    school: "Ex Dassault  Universite de Bretagne Occidentale",
+    city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
+    score: 85,
+    recommendations: 500,
+    badges: ["🌐 Web Developer", "🧠 AI / Data", "🏆 Hackathon Participant"],
+    recos: [],
   },
-  {
-    id: 3,
-    name: 'Imane El Hadi',
-    role: 'Data Scientist',
-    school: 'ENSA',
-    field: 'GINF',
-    city: 'Casablanca',
-    score: 91,
-    year: 2026,
-    skills: ['Python', 'Machine Learning', 'SQL'],
-    recommendations: 104
-  },
-  {
-    id: 4,
-    name: 'Rachid Bakkali',
-    role: 'Full Stack Developer',
-    school: 'ENSA Tanger',
-    field: 'GINF',
-    city: 'Tanger',
-    score: 86,
-    year: 2024,
-    skills: ['Vue.js', 'Node.js', 'PostgreSQL'],
-    recommendations: 65
-  }
-])
+]);
 
-const filterOptions = {
-  years: [2026, 2025, 2024],
-  schools: ['ENSA', 'ENSA Tanger', 'ENSA Rabat'],
-  fields: ['GINF', 'GSEA', 'FST'],
-  cities: ['Tangier', 'Rabat', 'Casablanca'],
-  scores: ['90', '80', '70'],
-  skills: ['Vue.js', 'DevOps', 'Machine Learning', 'Backend', 'Figma'],
-  recommendations: ['50', '100', '200']
-}
+const filters = ref({
+  year: 2026,
+  school: "ENSA",
+  field: "GINF",
+  city: "Tanger",
+  score: "80+",
+  skills: ["DevOps"],
+  recommendations: "500+",
+});
 
-const normalizedQuery = (value: string) => value.trim().toLowerCase()
+const handleUpdateFilters = (next: typeof filters.value) => {
+  filters.value = next;
+};
 
-const filteredProfiles = computed(() =>
-  profiles.value.filter(profile => {
-    const query = normalizedQuery(searchQuery.value)
-    const matchesQuery =
-      !query ||
-      profile.name.toLowerCase().includes(query) ||
-      profile.role.toLowerCase().includes(query) ||
-      profile.school.toLowerCase().includes(query) ||
-      profile.field.toLowerCase().includes(query) ||
-      profile.city.toLowerCase().includes(query)
+const filteredProfiles = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return profiles.value;
+  return profiles.value.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.role.toLowerCase().includes(q) ||
+      p.school.toLowerCase().includes(q) ||
+      p.city.toLowerCase().includes(q),
+  );
+});
 
-    const matchesYear = !selectedFilters.year || profile.year === selectedFilters.year
-    const matchesSchool = !selectedFilters.school || profile.school === selectedFilters.school
-    const matchesField = !selectedFilters.field || profile.field === selectedFilters.field
-    const matchesCity = !selectedFilters.city || profile.city === selectedFilters.city
-    const matchesScore =
-      !selectedFilters.scoreMin || profile.score >= selectedFilters.scoreMin
-    const matchesRec =
-      !selectedFilters.recMin || profile.recommendations >= selectedFilters.recMin
-    const matchesSkills =
-      selectedFilters.skills.length === 0 ||
-      selectedFilters.skills.every(skill => profile.skills.includes(skill))
-
-    return (
-      matchesQuery &&
-      matchesYear &&
-      matchesSchool &&
-      matchesField &&
-      matchesCity &&
-      matchesScore &&
-      matchesRec &&
-      matchesSkills
-    )
-  })
-)
-
-const updateFilters = (filters: Filters) => Object.assign(selectedFilters, filters)
-
-const resetFilters = () => {
-  Object.assign(selectedFilters, {
-    year: null,
-    school: null,
-    field: null,
-    city: null,
-    scoreMin: null,
-    skills: [],
-    recMin: null
-  })
-}
+const sidebarOpen = ref(true);
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#081224] text-slate-100">
-    <div class="flex min-h-screen">
-      <Sidebar />
+  <div class="explore-page">
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
+    <Sidebar :isOpen="sidebarOpen" />
 
-      <main class="flex-1 px-4 py-5 sm:px-6 lg:px-8">
-        <Topbar
-          :searchQuery="searchQuery"
-          @update:searchQuery="value => (searchQuery = value)"
-        />
+    <div class="explore-shell" :class="{ 'explore-shellShift': sidebarOpen }">
 
-        <div class="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-          <section class="space-y-6">
-            <div
-              class="rounded-[32px] border border-slate-800/90 bg-[#0f172a]/95 p-6 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
-            >
-              <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
-                    PheraCore Explorer
-                  </p>
-                  <h1 class="mt-2 text-3xl font-semibold text-white">
-                    Découvrez les talents prêts à collaborer
-                  </h1>
-                </div>
+      <main class="explore-middle">
+        <div class="explore-middle-inner">
+          <div class="explore-panel">
+            <ExploreHeader v-model="searchQuery" user-type="student" />
 
-                <div class="rounded-3xl bg-slate-950/80 px-4 py-3 text-sm text-slate-400">
-                  <span class="font-semibold text-white">{{ filteredProfiles.length }}</span>
-                  profils correspondants
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-5">
+            <div class="explore-feed">
               <ProfileCard
                 v-for="profile in filteredProfiles"
                 :key="profile.id"
                 :profile="profile"
+                :default-expanded="profile.id === 1"
               />
             </div>
-          </section>
-
-          <FilterPanel
-            :filters="selectedFilters"
-            :options="filterOptions"
-            @update:filters="updateFilters"
-            @clear-filters="resetFilters"
-          />
+          </div>
         </div>
       </main>
+
+      <div class="explore-right">
+        <FilterPanel :filters="filters" @update:filters="handleUpdateFilters" />
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.explore-page {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #eef1fb;
+  color: rgb(15 23 42);
+  padding-top: 50px;
+}
+
+.explore-shell {
+  height: calc(100vh - 50px);
+  display: grid;
+  grid-template-columns: minmax(730px, 1fr) 270px;
+  justify-content: start;
+  gap: 16px;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.explore-right {
+  position: sticky;
+  top: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.explore-right {
+  padding: 0;
+}
+
+.explore-shellShift {
+  padding-left: 238px;
+}
+
+.explore-middle {
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding: 14px 0;
+}
+
+.explore-middle-inner {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+.explore-panel {
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  overflow: hidden;
+}
+
+.explore-header {
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.explore-title {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 650;
+  color: rgb(2 6 23);
+}
+
+.explore-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.explore-search {
+  position: relative;
+  width: 340px;
+}
+
+.explore-search input {
+  height: 36px;
+  width: 100%;
+  border-radius: 9999px;
+  border: 1px solid rgb(226 232 240);
+  background: #eef0f6;
+  padding: 0 40px 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(51 65 85);
+  outline: none;
+}
+
+.explore-search input:focus {
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.12);
+}
+
+.explore-search-icon {
+  pointer-events: none;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  height: 16px;
+  width: 16px;
+  transform: translateY(-50%);
+  color: rgb(148 163 184);
+}
+
+.explore-notif {
+  position: relative;
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.25);
+  transition: background 0.15s ease;
+}
+
+.explore-notif:hover {
+  background: #4338ca;
+}
+
+.explore-notif-dot {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  height: 10px;
+  width: 10px;
+  border-radius: 9999px;
+  background: rgb(244 63 94);
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.explore-profile {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9999px;
+  background: #0ea5b7;
+  color: white;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(14, 165, 183, 0.25);
+  transition: background 0.15s ease;
+}
+
+.explore-profile:hover {
+  background: #0b93a3;
+}
+
+.explore-flag {
+  display: inline-flex;
+  height: 16px;
+  width: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.explore-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 18px 18px;
+  background: #ffffff;
+}
+
+.explore-middle::-webkit-scrollbar {
+  width: 8px;
+}
+
+.explore-middle::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.explore-middle::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.2);
+  border-radius: 9999px;
+}
+
+.explore-middle {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 6, 23, 0.22) rgba(2, 6, 23, 0.05);
+}
+
+.explore-right::-webkit-scrollbar {
+  width: 8px;
+}
+
+.explore-right::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.04);
+  border-radius: 9999px;
+}
+
+.explore-right::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.16);
+  border-radius: 9999px;
+}
+
+.explore-right {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
+}
+</style>
