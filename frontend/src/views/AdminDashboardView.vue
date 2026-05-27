@@ -332,11 +332,12 @@ const exportConnCSV = () => {
 }
 
 .dashboard-content {
-  padding: 70px 60px;
+  padding: 60px 8px 30px 43px;
   display: flex;
   flex-direction: column;
   gap: 22px;
   flex: 1;
+  background: #dfe2ea;
 }
 
 /* ── Stat grid ─────────────────────────────────── */

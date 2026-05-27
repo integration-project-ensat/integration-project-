@@ -381,10 +381,18 @@ const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).jo
 
 <style scoped>
 /* ══ Layout ══════════════════════════════════ */
-.dashboard-layout { min-height: 100vh; background: #f5f7fb; }
-.main-content { position: fixed; top: 106px; left: 0; right: 0; bottom: 0; overflow-y: auto; transition: left 0.25s ease; }
+.dashboard-layout 
+{ min-height: 100vh; background: #f5f7fb; }
+.main-content 
+{ position: fixed; top: 106px; left: 0; right: 0
+  ; bottom: 0; overflow-y: auto; 
+  transition: left 0.25s ease; }
 .main-content.sidebar-open { left: 185px; }
-.page-content { padding: 28px 30px; display: flex; flex-direction: column; gap: 20px; min-height: 100%; }
+.page-content 
+{ padding: 28px 8px 30px 43px; display: flex;
+   flex-direction: column; gap: 20px;
+    min-height: 100%;
+  background: #dfe2ea; }
 
 .page-title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px; letter-spacing: -0.4px; }
 .page-desc  { font-size: 13px; color: #64748b; margin: 0; }
