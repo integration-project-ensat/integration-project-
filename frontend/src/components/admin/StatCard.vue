@@ -43,10 +43,12 @@ const formattedValue = computed(() =>
   gap: 14px;
   flex: 1;
   min-width: 0;
-  transition: box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 .stat-card:hover {
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);
+ box-shadow: 0 4px 20px rgba(99,102,241,0.12), 0 1px 4px rgba(0,0,0,0.06);
+ transform: translateY(-1px);
 }
  
 .stat-header {

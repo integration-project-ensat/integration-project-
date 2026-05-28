@@ -275,11 +275,12 @@ const refresh = () => { filters.value = { search: '', category: '' } }
 .main-content.sidebar-open { left: 185px; }
  
 .page-content {
-  padding: 26px 28px;
+  padding: 26px 43px;
   display: flex;
   flex-direction: column;
   gap: 18px;
   min-height: 100%;
+  background: #dfe2ea;
 }
  
 /* ══ Breadcrumb ══════════════════════════════════ */
