@@ -79,7 +79,7 @@ function formatDate(d: string) {
     "", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
     "Juil", "Août", "Sep", "Oct", "Nov", "Déc",
   ];
-  return `${mois[parseInt(m)]} ${y}`;
+  return `${mois[parseInt(m || "0")]} ${y}`;
 }
 </script>
 

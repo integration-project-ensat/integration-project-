@@ -1,4 +1,4 @@
-const { param } = require('express-validator');
+const { body, param } = require('express-validator')
 
 const ConnexionValidator = {
   userId: [
@@ -13,7 +13,16 @@ const ConnexionValidator = {
       .notEmpty().withMessage('ID connexion manquant').bail()
       .isInt({ min: 1 }).withMessage('ID connexion invalide')
       .toInt()
-  ]
-};
+  ],
 
-module.exports = { ConnexionValidator };
+  creerRules: [
+    body('id_destinataire').isInt({ min: 1 }).withMessage('Destinataire invalide'),
+    body('message').optional().isString().withMessage('Message invalide'),
+  ],
+
+  idParamRules: [
+    param('id').isInt({ min: 1 }).withMessage('ID connexion invalide'),
+  ],
+}
+
+module.exports = ConnexionValidator

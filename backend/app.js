@@ -21,11 +21,16 @@ const photoRoutes = require('./src/routes/photo.routes')
 const bannerRoutes = require('./src/routes/banner.routes')
 const portfolioRoutes = require('./src/routes/portfolio.routes')
 const lettreRoutes = require('./src/routes/lettre.routes')
+const commentaireRoutes = require('./src/routes/commentaire.routes')
+const recommendationRoutes = require('./src/routes/recommendation.routes')
+const postRoutes = require('./src/routes/post.routes')
+const exploreRoutes = require('./src/routes/explore.routes')
+const profilePublicRoutes = require('./src/routes/profilePublic.routes')
+const connexionRoutes = require('./src/routes/connexion.routes')
 const projetRoutes = require('./src/routes/projet.routes')
 const stageRoutes = require('./src/routes/stage.routes')
 const activiteRoutes = require('./src/routes/activite.routes')
 const attestationRoutes = require('./src/routes/attestation.routes')
-const connexionRoutes = require('./src/routes/connexion.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
 const badgeRoutes = require('./src/routes/badge.routes');
 const app = express()
@@ -78,7 +83,11 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api', portfolioRoutes)
 app.use('/api', lettreRoutes)
-
+app.use('/api/commentaires', commentaireRoutes)
+app.use('/api/recommandations', recommendationRoutes)
+app.use('/api/posts', postRoutes)
+app.use('/api/profiles', profilePublicRoutes)
+app.use('/api', exploreRoutes)
 app.use('/api/projets', projetRoutes)
 app.use('/api/stages', stageRoutes)
 app.use('/api/activites', activiteRoutes)

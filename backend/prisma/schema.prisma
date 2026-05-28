@@ -2,9 +2,20 @@ generator client {
   provider   = "prisma-client-js"
   engineType = "binary"
 }
-
 datasource db {
   provider = "postgresql"
+}
+model Repost {
+  id_repost BigInt   @id @default(autoincrement())
+  id_auteur BigInt
+  id_poste  BigInt
+  date      DateTime @default(now())
+
+  auteur      Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
+  publication Poste       @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
+
+  @@unique([id_auteur, id_poste])
+  @@map("reposts")
 }
 
 enum RoleUtilisateur {
@@ -117,6 +128,8 @@ enum TypeElementValidable {
   STAGE
   ACTIVITE
   ATTESTATION
+  COMMENTAIRE
+  RECOMMANDATION
 }
 
 enum ObjectifProfessionnel {
@@ -179,6 +192,12 @@ enum TypeReaction {
   BRAVO
   LIKE
   
+}
+enum StatutConnexion {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+  BLOQUEE
 }
 enum NiveauAcces {
   SUPER_ADMIN
@@ -256,6 +275,9 @@ model Utilisateur {
   connexions_recues   Connexion[] @relation("DestinataireConnexion")
   profils_sauvegardes   ProfilSauvegarde[] @relation("ProfilsSauvegardes")
 sauvegarde_par_autres ProfilSauvegarde[] @relation("ProfilsSauvegardesParAutres")
+  postes_collabores   PosteCollaborateur[]
+  reposts             Repost[]
+
   @@map("utilisateurs")
 }
 
@@ -715,14 +737,29 @@ model Poste {
   id_poste  BigInt     @id @default(autoincrement())
   id_auteur     BigInt
   contenu         String
+  image_url       String?    @db.VarChar(500)
   visibilite      Visibilite @default(PUBLIC)
   date_creation   DateTime   @default(now())
 
   auteur Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
   commentaires Commentaire[]
   reactions    Reaction[]    // pour les "j'aime"
+  collaborateurs PosteCollaborateur[]
+  reposts      Repost[]
 
   @@map("postes")
+}
+
+model PosteCollaborateur {
+  id_poste       BigInt
+  id_utilisateur BigInt
+  date_ajout     DateTime @default(now())
+
+  poste       Poste       @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
+  utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@id([id_poste, id_utilisateur])
+  @@map("poste_collaborateurs")
 }
 
 model Reaction {
@@ -748,25 +785,15 @@ model TokenRévoqué {
   @@index([expires_at])
   @@map("tokens_revoques")
 }
-enum StatutConnexion {
-  EN_ATTENTE
-  ACCEPTEE
-  REFUSEE
-  BLOQUEE
-}
-
 model Connexion {
   id_connexion    BigInt @id @default(autoincrement())
-
   demandeur_id    BigInt
   destinataire_id BigInt
-
   statut          StatutConnexion @default(EN_ATTENTE)
   date_demande    DateTime @default(now())
   date_reponse    DateTime?
 
-  demandeur Utilisateur @relation("DemandeurConnexion", fields: [demandeur_id], references: [id_utilisateur], onDelete: Cascade)
-
+  demandeur    Utilisateur @relation("DemandeurConnexion", fields: [demandeur_id], references: [id_utilisateur], onDelete: Cascade)
   destinataire Utilisateur @relation("DestinataireConnexion", fields: [destinataire_id], references: [id_utilisateur], onDelete: Cascade)
 
   @@unique([demandeur_id, destinataire_id])

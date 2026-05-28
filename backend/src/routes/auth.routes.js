@@ -39,6 +39,7 @@ router.post('/deconnecter', authentifier, authController.logout);
 
 // ROUTES PROTÉGÉES (JWT REQUIS)
 router.get('/profil', authentifier, authController.getCurrentUser);
+router.get('/me', authentifier, authController.getCurrentUser);
 
 // ROUTES ADMIN (JWT + rôle)
 router.post(

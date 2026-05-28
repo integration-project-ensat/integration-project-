@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { Bookmark } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 import ExploreHeader from '../components/exploreStudent/ExploreHeader.vue'
 import FilterPanel   from '../components/exploreStudent/FilterPanel.vue'

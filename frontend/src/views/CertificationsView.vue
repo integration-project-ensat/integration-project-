@@ -84,7 +84,7 @@ function formatDate(d: string) {
   if (!d) return "";
   const [y, m] = d.split("-");
   const mois = ["", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
-  return `${mois[parseInt(m)]} ${y}`;
+  return `${mois[parseInt(m || "0")]} ${y}`;
 }
 
 const filtered = () => {

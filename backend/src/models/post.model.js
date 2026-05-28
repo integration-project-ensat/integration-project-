@@ -1,21 +1,22 @@
 const { normalizeBigIntFields, prisma, toBigInt } = require('./prisma')
 
-const POSTE_ID_FIELDS = ['id_poste', 'id_etudiant']
+const POSTE_ID_FIELDS = ['id_poste', 'id_auteur']
 const REACTION_ID_FIELDS = ['id_reaction', 'id_auteur', 'id_poste']
 
-const createPublication = (id_etudiant, data) =>
+const createPublication = (id_auteur, data) =>
   prisma.poste.create({
     data: {
       ...normalizeBigIntFields(data, POSTE_ID_FIELDS),
-      id_etudiant: toBigInt(id_etudiant),
+      id_auteur: toBigInt(id_auteur),
     },
   })
 
-const findPublicationsEtudiant = (id_etudiant) =>
+const findPublicationsEtudiant = (id_auteur) =>
   prisma.poste.findMany({
-    where: { id_etudiant: toBigInt(id_etudiant) },
+    where: { id_auteur: toBigInt(id_auteur) },
     include: {
-      etudiant: { include: { utilisateur: true } },
+      auteur: true,
+      collaborateurs: { include: { utilisateur: true } },
       commentaires: { include: { auteur: true } },
       reactions: { include: { auteur: true } },
     },
@@ -26,7 +27,8 @@ const findPublicationById = (id_poste) =>
   prisma.poste.findUnique({
     where: { id_poste: toBigInt(id_poste) },
     include: {
-      etudiant: { include: { utilisateur: true } },
+      auteur: true,
+      collaborateurs: { include: { utilisateur: true } },
       commentaires: { include: { auteur: true } },
       reactions: { include: { auteur: true } },
     },

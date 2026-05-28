@@ -20,10 +20,12 @@
         <div v-if="activeTab === 'Portfolio'">
           <PostCard
             v-for="(post, i) in posts"
-            :key="i"
+            :key="post.id || i"
             :post="post"
             @comment="handleComment(i)"
-            @share="handleShare(i)"
+            @like="handleLike(post, $event)"
+            @share="handleRepost(post, $event)"
+            @submit-comment="handleSubmitComment(post, $event)"
           />
         </div>
 
@@ -175,21 +177,38 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
 import StudentProfileHeader from '../components/StudentProfileHeader.vue'
 import PostCard from '../components/PostCard.vue'
+import { commentaireService } from '../services/commentaire.service'
+import { connexionService } from '../services/connexion.service'
+import { postService } from '../services/post.service'
+import { profileService } from '../services/profile.service'
+import { recommendationService } from '../services/recommendation.service'
 
 type Recommendation = {
   id: number
   author: string
-  role: 'teacher' | 'professional'
+  role: 'teacher' | 'professional' | 'student'
   avatar?: string
   message?: string
   date: string
 }
 
+type ProfilePost = {
+  id?: number
+  author: string
+  subtitle: string
+  description: string
+  avatar?: string
+  images?: string[]
+  media?: Array<string | { url: string; type?: 'image' | 'video' | 'pdf' | 'file'; name?: string }>
+}
+
+const route = useRoute()
 const sidebarOpen = ref(false)
 const userRole = ref<'student' | 'teacher' | 'professional'>('teacher')
 const activeTab = ref('Portfolio')
@@ -202,7 +221,8 @@ const currentUser = {
   avatar: ''
 }
 
-const profile = {
+const profile = ref({
+  id: 1,
   name: 'Nom Prenom',
   score: 90,
   title: 'Ex Developpeur Operations & Support',
@@ -214,7 +234,7 @@ const profile = {
   email: 'exemple.exemple@univ.etu.ac.ma',
   website: 'https://portfolio.example.com',
   linkedin: 'https://linkedin.com/in/example'
-}
+})
 
 const recommendations = ref<Recommendation[]>([
   {
@@ -245,20 +265,28 @@ const recommendations = ref<Recommendation[]>([
 
 const connectionSent = ref(false)
 
-function sendConnectionRequest() {
-  connectionSent.value = true
-  console.log('Demande de connexion envoyée à', profile.name)
+async function sendConnectionRequest() {
+  try {
+    await connexionService.createConnexion({
+      id_destinataire: profileStudentId.value,
+      message: `Demande de connexion vers ${profile.value.name}`
+    })
+    connectionSent.value = true
+  } catch (error) {
+    console.error('Erreur demande de connexion', error)
+  }
 }
 
-const posts = [
+const posts = ref<ProfilePost[]>([
   {
+    id: 1,
     author: 'Nom Prenom & Nom Prenom',
     subtitle: 'Ex Collaboration pour un projet académique',
     description: 'Ex de description d\'un projet académique ou une stage application de gestion de biblio d\'une application web permettant de gérer les livres, les emprunts et les utilisateurs en sous supervision de Mme @k3blghzal et Mr @fianfiani en collaboration ... pour faire quelque chose.',
     avatar: '',
     images: []
   }
-]
+])
 
 const copied = ref(false)
 
@@ -266,8 +294,10 @@ const profileUrl = computed(() => {
   return `${window.location.origin}/profile`
 })
 
+const profileStudentId = computed(() => Number(route.query.id || route.query.etudiant || profile.value.id))
+
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
-const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${profile.name}`))
+const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${profile.value.name}`))
 
 const gmailShareUrl = computed(() => {
   return `mailto:?subject=${encodedShareText.value}&body=${encodedShareText.value}%0A${encodedProfileUrl.value}`
@@ -285,6 +315,55 @@ const xShareUrl = computed(() => {
   return `https://twitter.com/intent/tweet?text=${encodedShareText.value}&url=${encodedProfileUrl.value}`
 })
 
+async function loadPosts() {
+  try {
+    const { data } = await postService.getPosts()
+    const backendPosts = data.data || []
+    posts.value = backendPosts.map(mapBackendPost)
+  } catch (error) {
+    console.warn('Chargement des posts impossible, fallback mock conserve', error)
+  }
+}
+
+async function loadProfile() {
+  try {
+    const { data } = await profileService.getProfile(profileStudentId.value)
+    const backendProfile = data.data
+    profile.value = {
+      ...profile.value,
+      id: backendProfile.id,
+      name: backendProfile.name,
+      score: backendProfile.score,
+      title: backendProfile.title,
+      school: backendProfile.school,
+      location: backendProfile.location,
+      recos: backendProfile.recos,
+      avatar: backendProfile.avatar,
+      bio: backendProfile.bio,
+      email: backendProfile.email,
+      website: backendProfile.website,
+      linkedin: backendProfile.linkedin
+    }
+    posts.value = backendProfile.posts || posts.value
+    recommendations.value = backendProfile.recommendations || recommendations.value
+  } catch (error) {
+    console.warn('Chargement du profil complet impossible, fallback mock conserve', error)
+  }
+}
+
+async function loadRecommendations() {
+  try {
+    const { data } = await recommendationService.getRecommendations({
+      id_etudiant_cible: profileStudentId.value,
+      statut: 'VALIDE'
+    })
+    const backendRecommendations = data.data || []
+    recommendations.value = backendRecommendations.map(mapBackendRecommendation)
+  } catch (error) {
+    console.warn('Chargement des recommandations impossible, fallback mock conserve', error)
+  }
+}
+
 async function copyProfileLink() {
   await navigator.clipboard.writeText(profileUrl.value)
   copied.value = true
@@ -294,7 +373,23 @@ async function copyProfileLink() {
   }, 1600)
 }
 
-function sendRecommendation() {
+async function sendRecommendation() {
+  const message = recommendationMessage.value.trim()
+
+  try {
+    const { data } = await recommendationService.createRecommendation({
+      id_etudiant_cible: profileStudentId.value,
+      message,
+      role_auteur: 'PROFESSEUR'
+    })
+
+    recommendations.value.unshift(mapBackendRecommendation(data.data))
+    recommendationMessage.value = ''
+    return
+  } catch (error) {
+    console.error('Erreur envoi recommandation', error)
+  }
+
   recommendations.value.unshift({
     id: Date.now(),
     author: currentUser.name,
@@ -320,9 +415,102 @@ function handleComment(index: number) {
   console.log('Comment on post', index)
 }
 
+async function handleSubmitComment(post: ProfilePost, contenu: string) {
+  if (!post.id) return
+
+  try {
+    await commentaireService.createCommentaire({
+      id_poste: post.id,
+      contenu
+    })
+  } catch (error) {
+    console.error('Erreur ajout commentaire', error)
+  }
+}
+
+async function handleLike(post: ProfilePost, liked: boolean) {
+  if (!post.id) return
+
+  try {
+    if (liked) {
+      await postService.reactToPost(post.id, 'JAIME')
+    } else {
+      await postService.removeReaction(post.id)
+    }
+  } catch (error) {
+    console.error('Erreur reaction post', error)
+  }
+}
+
 function handleShare(index: number) {
   console.log('Share post', index)
 }
+
+async function handleRepost(post: ProfilePost, reposted: boolean) {
+  if (!post.id) return
+
+  try {
+    if (reposted) {
+      await postService.repost(post.id)
+    } else {
+      await postService.removeRepost(post.id)
+    }
+  } catch (error) {
+    console.error('Erreur republication post', error)
+  }
+}
+
+function mapBackendPost(post: any): ProfilePost {
+  const auteur = post.auteur
+  const collaborateurs = post.collaborateurs || []
+  const collaboratorNames = collaborateurs
+    .map((collaborateur: any) => fullName(collaborateur.utilisateur))
+    .filter(Boolean)
+
+  return {
+    id: Number(post.id_poste),
+    author: [fullName(auteur), ...collaboratorNames].filter(Boolean).join(' & ') || 'Auteur inconnu',
+    subtitle: post.visibilite || 'Post portfolio',
+    description: post.contenu,
+    avatar: '',
+    images: post.image_url ? [resolveBackendAsset(post.image_url)] : []
+  }
+}
+
+function mapBackendRecommendation(recommendation: any): Recommendation {
+  const auteur = recommendation.auteur || {}
+  const role = recommendation.role_auteur === 'PROFESSIONNEL'
+    ? 'professional'
+    : recommendation.role_auteur === 'ETUDIANT'
+      ? 'student'
+      : 'teacher'
+
+  return {
+    id: Number(recommendation.id_recommandation),
+    author: fullName(auteur) || 'Auteur inconnu',
+    role,
+    avatar: '',
+    message: recommendation.message || '',
+    date: 'Aujourdâ€™hui'
+  }
+}
+
+function fullName(user: any) {
+  return [user?.prenom, user?.nom].filter(Boolean).join(' ')
+}
+
+function resolveBackendAsset(path: string) {
+  if (!path || /^https?:\/\//.test(path)) return path
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+  const backendBase = apiBase.replace(/\/api\/?$/, '')
+  return `${backendBase}${path}`
+}
+
+onMounted(() => {
+  loadProfile()
+  loadPosts()
+  loadRecommendations()
+})
 </script>
 
 <style scoped>

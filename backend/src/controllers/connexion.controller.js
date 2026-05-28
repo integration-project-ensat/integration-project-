@@ -1,93 +1,97 @@
-const asyncHandler = require('../middlewares/asyncHandler');
-const connexionService = require('../services/connexion.service');
+const connexionService = require('../services/connexion.service')
+const { ApiResponse } = require('../utils/apiResponse')
 
-const envoyerDemande = asyncHandler(async (req, res) => {
-  const connexion = await connexionService.envoyerDemande(
-    req.utilisateur.id_utilisateur,
-    req.params.userId
-  );
+const connexionController = {
+  async envoyerDemande(req, res) {
+    try {
+      const connexion = await connexionService.envoyerDemande(
+        req.utilisateur.id_utilisateur,
+        req.params.userId
+      )
+      return res.status(201).json(ApiResponse.created(connexion, 'Demande de connexion envoyée'))
+    } catch (e) {
+      if (e.statusCode === 400) return res.status(400).json(ApiResponse.error(e.message))
+      if (e.statusCode === 403) return res.status(403).json(ApiResponse.forbidden())
+      if (e.statusCode === 409) return res.status(409).json(ApiResponse.error(e.message))
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
 
-  res.status(201).json({
-    success: true,
-    message: 'Demande de connexion envoyée',
-    data: connexion
-  });
-});
+  async accepter(req, res) {
+    try {
+      const connexion = await connexionService.changerStatut(
+        req.params.id, req.utilisateur.id_utilisateur, 'ACCEPTEE'
+      )
+      if (!connexion) return res.status(404).json(ApiResponse.notFound('Connexion'))
+      return res.json(ApiResponse.success(connexion, 'Connexion acceptée'))
+    } catch (e) {
+      if (e.statusCode === 403) return res.status(403).json(ApiResponse.forbidden())
+      if (e.statusCode === 400) return res.status(400).json(ApiResponse.error(e.message))
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
 
-const accepterDemande = asyncHandler(async (req, res) => {
-  const connexion = await connexionService.accepterDemande(
-    req.params.id,
-    req.utilisateur.id_utilisateur
-  );
+  async refuser(req, res) {
+    try {
+      const connexion = await connexionService.changerStatut(
+        req.params.id, req.utilisateur.id_utilisateur, 'REFUSEE'
+      )
+      if (!connexion) return res.status(404).json(ApiResponse.notFound('Connexion'))
+      return res.json(ApiResponse.success(connexion, 'Connexion refusée'))
+    } catch (e) {
+      if (e.statusCode === 403) return res.status(403).json(ApiResponse.forbidden())
+      if (e.statusCode === 400) return res.status(400).json(ApiResponse.error(e.message))
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
 
-  res.json({
-    success: true,
-    message: 'Demande de connexion acceptée',
-    data: connexion
-  });
-});
+  async getMine(req, res) {
+    try {
+      const connexions = await connexionService.findMine(req.utilisateur.id_utilisateur)
+      return res.json(ApiResponse.success(connexions, 'Connexions récupérées'))
+    } catch (e) {
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
 
-const refuserDemande = asyncHandler(async (req, res) => {
-  const connexion = await connexionService.refuserDemande(
-    req.params.id,
-    req.utilisateur.id_utilisateur
-  );
+  async getMesDemandes(req, res) {
+    try {
+      const connexions = await connexionService.getMesDemandes(req.utilisateur.id_utilisateur)
+      return res.json(ApiResponse.success(connexions, 'Mes demandes récupérées'))
+    } catch (e) {
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
 
-  res.json({
-    success: true,
-    message: 'Demande de connexion refusée',
-    data: connexion
-  });
-});
+  async getDemandesRecues(req, res) {
+    try {
+      const connexions = await connexionService.getDemandesRecues(req.utilisateur.id_utilisateur)
+      return res.json(ApiResponse.success(connexions, 'Demandes reçues récupérées'))
+    } catch (e) {
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
 
-const getMesDemandes = asyncHandler(async (req, res) => {
-  const connexions = await connexionService.getMesDemandes(req.utilisateur.id_utilisateur);
+  async getMesConnexions(req, res) {
+    try {
+      const connexions = await connexionService.getMesConnexions(req.utilisateur.id_utilisateur)
+      return res.json(ApiResponse.success(connexions, 'Mes connexions récupérées'))
+    } catch (e) {
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
 
-  res.json({
-    success: true,
-    count: connexions.length,
-    data: connexions
-  });
-});
+  async supprimerConnexion(req, res) {
+    try {
+      await connexionService.supprimerConnexion(req.params.id, req.utilisateur.id_utilisateur)
+      return res.json(ApiResponse.success(null, 'Connexion supprimée avec succès'))
+    } catch (e) {
+      if (e.statusCode === 403) return res.status(403).json(ApiResponse.forbidden())
+      if (e.statusCode === 404) return res.status(404).json(ApiResponse.notFound('Connexion'))
+      if (e.statusCode === 422) return res.status(422).json(ApiResponse.error(e.message))
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  }
+}
 
-const getDemandesRecues = asyncHandler(async (req, res) => {
-  const connexions = await connexionService.getDemandesRecues(req.utilisateur.id_utilisateur);
-
-  res.json({
-    success: true,
-    count: connexions.length,
-    data: connexions
-  });
-});
-
-const getMesConnexions = asyncHandler(async (req, res) => {
-  const connexions = await connexionService.getMesConnexions(req.utilisateur.id_utilisateur);
-
-  res.json({
-    success: true,
-    count: connexions.length,
-    data: connexions
-  });
-});
-
-const supprimerConnexion = asyncHandler(async (req, res) => {
-  await connexionService.supprimerConnexion(
-    req.params.id,
-    req.utilisateur.id_utilisateur
-  );
-
-  res.json({
-    success: true,
-    message: 'Connexion supprimée avec succès'
-  });
-});
-
-module.exports = {
-  envoyerDemande,
-  accepterDemande,
-  refuserDemande,
-  getMesDemandes,
-  getDemandesRecues,
-  getMesConnexions,
-  supprimerConnexion
-};
+module.exports = connexionController
