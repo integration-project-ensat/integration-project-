@@ -1,18 +1,37 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
-import {
-  type ValidationRequest,
-  type ValidationStatus,
-  useProfValidationRequests,
-} from "../store/profValidationRequests";
-import {
-  type RecommendationRequest,
-  type RecommendationStatus,
-  useProfRecommendationRequests,
-} from "../store/profRecommendationRequests";
+import profApi from "@/services/profApi";
+
+export type ValidationStatus = "En attente" | "Validé" | "Refusé";
+export type RecommendationStatus = "En attente" | "Acceptée" | "Refusée";
+
+export interface ValidationRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  initials: string;
+  type: string;
+  title: string;
+  description: string;
+  date: string;
+  status: ValidationStatus;
+}
+
+export interface RecommendationRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  initials: string;
+  profileInfo: string;
+  title: string;
+  message: string;
+  date: string;
+  status: RecommendationStatus;
+  writtenLetter?: string;
+}
 
 const router = useRouter();
 const sidebarOpen = ref(true);
@@ -20,13 +39,11 @@ const selectedRequest = ref<ValidationRequest | null>(null);
 const selectedRecommendation = ref<RecommendationRequest | null>(null);
 const writingRecommendation = ref<RecommendationRequest | null>(null);
 const letterDraft = ref("");
-const { stats, groupedRequests, updateRequestStatus } =
-  useProfValidationRequests();
-const {
-  recommendationStats,
-  groupedRecommendations,
-  updateRecommendationStatus,
-} = useProfRecommendationRequests();
+const stats = ref({ total: 0, pending: 0, validated: 0, refused: 0 });
+const requests = ref<ValidationRequest[]>([]);
+const recommendations = ref<RecommendationRequest[]>([]);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
 
 const statusSections: Array<{
   key: "pending" | "validated" | "refused";
@@ -60,6 +77,25 @@ const recommendationSections: Array<{
   { key: "refused", title: "Refusée" },
 ];
 
+const groupedRequests = computed(() => ({
+  pending: requests.value.filter((request) => request.status === "En attente"),
+  validated: requests.value.filter((request) => request.status === "Validé"),
+  refused: requests.value.filter((request) => request.status === "Refusé"),
+}));
+
+const groupedRecommendations = computed(() => ({
+  pending: recommendations.value.filter((request) => request.status === "En attente"),
+  accepted: recommendations.value.filter((request) => request.status === "Acceptée"),
+  refused: recommendations.value.filter((request) => request.status === "Refusée"),
+}));
+
+const recommendationStats = computed(() => ({
+  total: recommendations.value.length,
+  pending: groupedRecommendations.value.pending.length,
+  accepted: groupedRecommendations.value.accepted.length,
+  refused: groupedRecommendations.value.refused.length,
+}));
+
 const statusClass = (status: ValidationStatus) => ({
   "is-pending": status === "En attente",
   "is-valid": status === "Validé",
@@ -89,7 +125,9 @@ const closeRecommendationDetails = () => {
 };
 
 const updateSelectedStatus = (status: ValidationStatus) => {
-  if (selectedRequest.value) updateRequestStatus(selectedRequest.value.id, status);
+  if (!selectedRequest.value) return;
+  const request = requests.value.find((item) => item.id === selectedRequest.value?.id);
+  if (request) request.status = status;
   closeDetailsModal();
 };
 
@@ -106,18 +144,19 @@ const closeWriteRecommendationModal = () => {
 
 const sendRecommendationLetter = () => {
   if (writingRecommendation.value) {
-    updateRecommendationStatus(
-      writingRecommendation.value.id,
-      "Acceptée",
-      letterDraft.value.trim(),
-    );
+    const request = recommendations.value.find((item) => item.id === writingRecommendation.value?.id);
+    if (request) {
+      request.status = "Acceptée";
+      request.writtenLetter = letterDraft.value.trim();
+    }
   }
   closeWriteRecommendationModal();
 };
 
 const refuseSelectedRecommendation = () => {
   if (selectedRecommendation.value) {
-    updateRecommendationStatus(selectedRecommendation.value.id, "Refusée");
+    const request = recommendations.value.find((item) => item.id === selectedRecommendation.value?.id);
+    if (request) request.status = "Refusée";
   }
   closeRecommendationDetails();
 };
@@ -125,6 +164,32 @@ const refuseSelectedRecommendation = () => {
 const openStudentProfile = (request: ValidationRequest | RecommendationRequest) => {
   router.push(`/profile/student/${request.studentId}`);
 };
+
+const loadDashboard = async () => {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const response = await profApi.getProfDashboard();
+    if (response.data?.success) {
+      const data = response.data.data;
+      stats.value = data.stats ?? stats.value;
+      requests.value = Array.isArray(data.validationRequests) ? data.validationRequests : [];
+      recommendations.value = Array.isArray(data.recommendationRequests) ? data.recommendationRequests : [];
+    } else {
+      error.value = response.data?.message || "Impossible de charger le dashboard";
+    }
+  } catch (err: any) {
+    console.error(err);
+    error.value = err?.response?.data?.message || "Erreur lors du chargement du dashboard";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadDashboard();
+});
 </script>
 
 <template>

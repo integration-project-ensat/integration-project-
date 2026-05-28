@@ -1,5 +1,6 @@
 ﻿<script setup lang="ts">
 import { ref } from "vue";
+import { useRouter } from 'vue-router'
 
 import { ChevronUp } from "lucide-vue-next";
 import SkillBadges from "./SkillBadges.vue";
@@ -18,14 +19,15 @@ interface Profile {
 }
 
 const props = defineProps<{ profile: Profile; defaultExpanded?: boolean }>();
+const router = useRouter()
 const showDetails = ref(Boolean(props.defaultExpanded));
 
 const handlePortfolio = () => {
-  alert("Portfolio clicked!");
+  router.push(`/projects/${props.profile.id}`)
 };
 
 const handleViewProfile = () => {
-  alert("View Profile clicked!");
+  router.push(`/profile/student/${props.profile.id}`)
 };
 
 const handleContact = () => {

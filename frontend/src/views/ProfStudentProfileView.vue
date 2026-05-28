@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
@@ -22,6 +22,11 @@ const profileBadges = computed(() => {
   if (title.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
   return ["🌐 Web Developer"];
 });
+
+onMounted(() => {
+  console.log('[ProfStudentProfileView] route.params.id =', route.params.id)
+  console.log('[ProfStudentProfileView] studentRequests =', studentRequests.value)
+})
 </script>
 
 <template>

@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, RouterLink, useRouter } from 'vue-router'
+import authService from '@/services/auth.service.js'
  
 // ── Props ──
 const props = withDefaults(defineProps<{
@@ -120,8 +121,8 @@ const navByRole = {
  
 const navItems = computed(() => navByRole[props.role] ?? navByRole.student)
  
-function logout() {
-  localStorage.removeItem('token')
+async function logout() {
+  await authService.logout()
   router.push('/login')
 }
 </script>

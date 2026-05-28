@@ -3,15 +3,9 @@ import { computed, ref } from "vue";
 import { ChevronDown } from "../../lib/icons";
 
 interface Props {
-  filters: {
-    year: number;
-    school: string;
-    field: string;
-    city: string;
-    score: string;
-    skills: string[];
-    recommendations: string;
-  };
+  // The parent may use French or English keys (filiere/field, ville/city, competences/skills).
+  // Accept a loose shape and handle keys defensively in the component.
+  filters: Record<string, any>;
 }
 
 const props = defineProps<Props>();
@@ -148,46 +142,87 @@ const INITIAL_VISIBLE_OPTIONS = 3;
 const VISIBLE_OPTIONS_STEP = 3;
 
 const isSelected = (key: SectionKey, option: string | number) => {
-  if (key === "skills") return props.filters.skills.includes(String(option));
-  if (key === "year") return props.filters.year === option;
-  if (key === "school") return props.filters.school === option;
-  if (key === "field") return props.filters.field === option;
-  if (key === "city") return props.filters.city === option;
-  if (key === "score") return props.filters.score === option;
-  return props.filters.recommendations === option;
+  const f: Record<string, any> = props.filters || {};
+
+  if (key === "skills") {
+    const skills: string[] = f.skills ?? f.competences ?? [];
+    return Array.isArray(skills) && skills.includes(String(option));
+  }
+
+  if (key === "year") return f.year === option;
+
+  if (key === "school") return f.school === option;
+
+  if (key === "field") {
+    return (f.field ?? f.filiere) === option;
+  }
+
+  if (key === "city") return (f.city ?? f.ville) === option;
+
+  if (key === "score") return f.score === option;
+
+  return (f.recommendations ?? f.recommandations) === option;
 };
 
 const toggleOption = (key: SectionKey, option: string | number) => {
+  const f: Record<string, any> = props.filters || {};
+
   if (key === "skills") {
     const value = String(option);
-    const nextSkills = props.filters.skills.includes(value)
-      ? props.filters.skills.filter((s) => s !== value)
-      : [...props.filters.skills, value];
-    emit("update:filters", { ...props.filters, skills: nextSkills });
+    const currentSkills: string[] = f.skills ?? f.competences ?? [];
+    const nextSkills = Array.isArray(currentSkills) && currentSkills.includes(value)
+      ? currentSkills.filter((s) => s !== value)
+      : [...(Array.isArray(currentSkills) ? currentSkills : []), value];
+
+    // Preserve parent's property name if using French key
+    if (f.competences !== undefined) {
+      emit("update:filters", { ...f, competences: nextSkills });
+    } else {
+      emit("update:filters", { ...f, skills: nextSkills });
+    }
     return;
   }
 
   if (key === "year") {
-    emit("update:filters", { ...props.filters, year: Number(option) });
+    emit("update:filters", { ...f, year: Number(option) });
     return;
   }
+
   if (key === "school") {
-    emit("update:filters", { ...props.filters, school: String(option) });
+    emit("update:filters", { ...f, school: String(option) });
     return;
   }
+
   if (key === "field") {
-    emit("update:filters", { ...props.filters, field: String(option) });
+    // field may be named 'field' or 'filiere' in parent
+    if (f.filiere !== undefined) {
+      emit("update:filters", { ...f, filiere: String(option) });
+    } else {
+      emit("update:filters", { ...f, field: String(option) });
+    }
     return;
   }
+
   if (key === "city") {
-    emit("update:filters", { ...props.filters, city: String(option) });
+    if (f.ville !== undefined) {
+      emit("update:filters", { ...f, ville: String(option) });
+    } else {
+      emit("update:filters", { ...f, city: String(option) });
+    }
     return;
   }
+
   if (key === "score") {
-    emit("update:filters", { ...props.filters, score: String(option) });
+    emit("update:filters", { ...f, score: String(option) });
     return;
   }
-  emit("update:filters", { ...props.filters, recommendations: String(option) });
+
+  // recommendations / recommandations
+  if (f.recommandations !== undefined) {
+    emit("update:filters", { ...f, recommandations: String(option) });
+  } else {
+    emit("update:filters", { ...f, recommendations: String(option) });
+  }
 };
 
 const visibleCounts = ref<Record<string, number>>({});

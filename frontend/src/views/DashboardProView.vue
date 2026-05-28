@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
   BarChart3,
@@ -13,8 +13,7 @@ import {
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
-import { useProConnections } from "../store/proConnections";
-import { useProSavedProfiles } from "../store/proSavedProfiles";
+import profApi from "@/services/profApi";
 
 interface Intern {
   id: string;
@@ -33,57 +32,31 @@ interface Intern {
   portfolioPath: string;
 }
 
+interface SavedProfile {
+  id: string;
+  name: string;
+  school: string;
+  field: string;
+  city: string;
+  score: number;
+  recommendations: number;
+  badges: string[];
+  hasPortfolio: boolean;
+  profilePath: string;
+  portfolioPath: string;
+}
+
 const router = useRouter();
 const sidebarOpen = ref(true);
 const isStageModalOpen = ref(false);
-const { savedProfiles, totalSaved } = useProSavedProfiles();
-const { pendingRequests, acceptedRequests, refusedRequests } = useProConnections();
-
-const interns = ref<Intern[]>([
-  {
-    id: "yassine-el-amrani",
-    initials: "YE",
-    name: "Yassine El Amrani",
-    school: "ENSA Tanger",
-    field: "DevOps",
-    city: "Tanger",
-    score: 85,
-    startDate: "12/05/2026",
-    badges: ["🌊 DevOps", "🔐 Security Aware"],
-    status: "Actif",
-    profilePath: "/profile/student/yassine-el-amrani",
-    portfolioPath: "/projects/stage-devops",
-  },
-  {
-    id: "sara-alaoui",
-    initials: "SA",
-    name: "Sara Alaoui",
-    school: "ENSA Tanger",
-    field: "Cloud",
-    city: "Tanger",
-    score: 95,
-    startDate: "02/04/2026",
-    badges: ["🧠 AI / Data", "🌐 Web Developer"],
-    status: "Actif",
-    profilePath: "/profile/student/sara-alaoui",
-    portfolioPath: "/projects/cloud-dashboard",
-  },
-  {
-    id: "nora-tazi",
-    initials: "NT",
-    name: "Nora Tazi",
-    school: "FST FÃ¨s",
-    field: "Mobile",
-    city: "FÃ¨s",
-    score: 80,
-    startDate: "15/02/2026",
-
-    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
-    status: "Terminé",
-    profilePath: "/profile/student/nora-tazi",
-    portfolioPath: "/projects/mobile-ensa",
-  },
-]);
+const interns = ref<Intern[]>([]);
+const savedProfiles = ref<SavedProfile[]>([]);
+const pendingRequests = ref(0);
+const acceptedRequests = ref(0);
+const refusedRequests = ref(0);
+const publishedOffers = ref(0);
+const profileName = ref("Bienvenue, professionnel");
+const totalSaved = computed(() => savedProfiles.value.length);
 
 const newStage = ref({
   title: "",
@@ -92,8 +65,6 @@ const newStage = ref({
   duration: "",
   description: "",
 });
-
-const publishedOffers = ref(4);
 
 const stats = computed(() => [
   {
@@ -110,20 +81,20 @@ const stats = computed(() => [
   },
   {
     title: "Demandes de connexion",
-    value: pendingRequests.value.length,
-    info: "Ã€ traiter",
+    value: pendingRequests.value,
+    info: "À traiter",
     icon: UserPlus,
   },
   {
-    title: "Profils sauvegardÃ©s",
+    title: "Profils sauvegardés",
     value: totalSaved.value,
     info: "Top Profiles",
     icon: CheckCircle2,
   },
   {
-    title: "Offres publiÃ©es",
+    title: "Offres publiées",
     value: publishedOffers.value,
-    info: "2 actives",
+    info: "Actives",
     icon: BriefcaseBusiness,
   },
 ]);
@@ -141,10 +112,32 @@ const schoolDistribution = [
 ];
 
 const connectionAnalytics = computed(() => [
-  { label: "AcceptÃ©es", value: acceptedRequests.value.length },
-  { label: "RefusÃ©es", value: refusedRequests.value.length },
-  { label: "En attente", value: pendingRequests.value.length },
+  { label: "Acceptées", value: acceptedRequests.value },
+  { label: "Refusées", value: refusedRequests.value },
+  { label: "En attente", value: pendingRequests.value },
 ]);
+
+const loadDashboard = async () => {
+  try {
+    const response = await profApi.getProDashboard();
+    if (response.data?.success) {
+      const data = response.data.data;
+      profileName.value = data.profile?.name ?? profileName.value;
+      interns.value = Array.isArray(data.interns) ? data.interns : [];
+      savedProfiles.value = Array.isArray(data.savedProfiles) ? data.savedProfiles : [];
+      pendingRequests.value = data.connections?.pending ?? 0;
+      acceptedRequests.value = data.connections?.accepted ?? 0;
+      refusedRequests.value = data.connections?.refused ?? 0;
+      publishedOffers.value = data.stats?.publishedOffers ?? 0;
+    }
+  } catch (err: any) {
+    console.error("Erreur chargement dashboard professionnel", err);
+  }
+};
+
+onMounted(() => {
+  loadDashboard();
+});
 
 const openPath = (path: string) => {
   router.push(path);
@@ -172,7 +165,7 @@ const submitStage = () => {
       <section class="dashboard-header-card">
         <div>
           <p>Espace Professionnel</p>
-          <h1>Bienvenue, Nom Professionnel</h1>
+          <h1>{{ profileName }}</h1>
           <span>Suivez vos stagiaires, connexions et interactions.</span>
         </div>
         <button

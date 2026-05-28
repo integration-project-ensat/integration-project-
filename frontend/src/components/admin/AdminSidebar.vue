@@ -45,6 +45,7 @@ import {
   LogOut,
 } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
+import authService from '@/services/auth.service.js'
  
 defineProps({
   open: { type: Boolean, default: true },
@@ -68,8 +69,8 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
  
-const handleLogout = () => {
-  localStorage.removeItem('token')
+const handleLogout = async () => {
+  await authService.logout()
   router.push('/login')
 }
 </script>

@@ -1,4 +1,4 @@
-const prisma = require('../models/prisma')
+const { prisma, toBigInt } = require('../models/prisma')
 
 const includePost = {
   auteur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } },

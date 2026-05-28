@@ -1,4 +1,4 @@
-const prisma = require('../models/prisma')
+const { prisma, toBigInt } = require('../models/prisma')
 
 const projetService = {
   async findAll(filters = {}) {

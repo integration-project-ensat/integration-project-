@@ -14,6 +14,7 @@ const errorMiddleware = require('./src/middlewares/error.middleware')
 const authRoutes = require('./src/routes/auth.routes')
 const adminRoutes      = require('./src/routes/admin.routes')
 const studentRoutes    = require('./src/routes/student.routes')
+const dashboardRoutes  = require('./src/routes/dashboard.routes')
 const competenceRoutes = require('./src/routes/competence.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
@@ -67,6 +68,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes)
+app.use('/api', dashboardRoutes)
 app.use('/api/admin',        adminRoutes)  
 app.use('/api/student',      studentRoutes)
 app.use('/api/competences', competenceRoutes)

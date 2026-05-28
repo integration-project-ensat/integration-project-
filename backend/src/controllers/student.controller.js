@@ -58,12 +58,14 @@ const getDashboard = asyncHandler(async (req, res) => {
     success: true,
     data: {
       stats: {
-        scoreProfile:    etudiant.score_credibilite?.score_total ?? 0,
+        scoreProfile:    Number(etudiant.score_credibilite?.score_total ?? 0),
         niveau:          etudiant.score_credibilite?.niveau      ?? null,
         recommandations: etudiant.recommandations_recues.length,
         projets:         etudiant.projets.length,
         stages:          etudiant.stages.length,
-        badges:          etudiant.badges.length
+        badges:          etudiant.badges.length,
+        competences:     etudiant.competences.length,
+        portfolio:       etudiant.portfolio ? 1 : 0,
       },
       profileProgress,
       activities: activiteRecente.map(log => ({

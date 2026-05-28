@@ -71,7 +71,7 @@ const changerPage = (page: number) => {
 
 // ─── Adapter le profil pour ProfileCard ───────
 const adapterProfil = (p: ProfilExplore) => ({
-  id:              Number(p.id_utilisateur),
+  id:              p.id_utilisateur,
   name:            `${p.prenom} ${p.nom}`,
   role:            p.etudiant?.diplomes?.[0]?.titre_diplome ?? '',
   school:          p.etudiant?.diplomes?.[0]?.etablissement ?? '',

@@ -135,17 +135,17 @@
               <h2>Opportunités</h2>
               <div class="opportunity">
                 <strong>
-                  <span class="opp-badge green">3 stages</span>
-                  compatibles
+                  <span class="opp-badge green">{{ studentStats.find(s => s.label === 'Stages postulés')?.value || '0' }} stages</span>
+                  postuls
                 </strong>
-                <p>Basés sur vos compétences et votre filière.</p>
+                <p>Basés sur vos candidatures et votre activité récente.</p>
               </div>
               <div class="opportunity">
                 <strong>
-                  <span class="opp-badge coral">5 professionnels</span>
+                  <span class="opp-badge coral">{{ filteredProfiles.length }} professionnels</span>
                   à connecter
                 </strong>
-                <p>Profils proches de votre domaine.</p>
+                <p>Profils pertinents détectés par la plateforme.</p>
               </div>
             </article>
           </section>
@@ -162,7 +162,8 @@
                 class="profile-card"
               >
                 <div class="avatar" :class="avatarColorClass(profile.name)">
-                  {{ getInitials(profile.name) }}
+                  <img v-if="profile.photo" :src="profile.photo" :alt="profile.name" />
+                  <span v-else>{{ getInitials(profile.name) }}</span>
                 </div>
                 <div>
                   <h3>{{ profile.name }}</h3>
@@ -188,7 +189,8 @@ type UserRole = "student" | "teacher" | "professional";
 type FilterKey = "category" | "degree" | "certification" | "city" | "gender";
 
 const sidebarOpen = ref(true);
-const userRole = ref<UserRole>("student");
+const storedRole = localStorage.getItem("role") as UserRole | null;
+const userRole = ref<UserRole>(storedRole === "teacher" || storedRole === "professional" ? storedRole : "student");
 const openFilter = ref<FilterKey | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -199,7 +201,7 @@ const currentUser = ref({
   avatar: "",
 });
 
-const profileProgress = ref(75);
+const profileProgress = ref(0);
 
 const filters = reactive<Record<FilterKey, string>>({
   category: "Tous",
@@ -223,7 +225,7 @@ const studentStats = ref([
   { label: "Projets",         value: "0",    color: "#d85a30" },
   { label: "Stages postulés", value: "0",    color: "#ba7517" },
   { label: "Certifications",  value: "0",   color: "#185fa5" },
-  { label: "Vues du profil",  value: "0", color: "#d4537e" },
+  { label: "Compétences",     value: "0",   color: "#d4537e" },
 ]);
 
 const teacherStats = [
@@ -250,23 +252,11 @@ const stats = computed(() => {
   return studentStats.value;
 });
 
-const activities = ref([
-  "Nouvelle recommandation reçue",
-  "Projet ajouté au portfolio",
-  "Certification ajoutée",
-]);
+const activities = ref<string[]>([]);
+const profiles = ref<Array<{ name: string; role: string; city: string; level: string; skill: string; gender: string; photo?: string }>>([]);
 
-// Ajout de la propriété 'gender' sur chaque profil pour correspondre au filtre
-const profiles = [
-  { name: "Sara El Amrani",    role: "Étudiante",     city: "Tanger",     level: "Ingénieur", skill: "Vue.js",    gender: "Femme" },
-  { name: "Yassine Benali",    role: "Étudiant",      city: "Tétouan",    level: "Master",    skill: "Docker",    gender: "Homme" },
-  { name: "Mme Professeur Nom",  role: "Professeur",     city: "Rabat",      level: "Doctorat",  skill: "Python",    gender: "Femme" },
-  { name: "Mr Professionnel Nom",role: "Professionnel",  city: "Casablanca", level: "Master",    skill: "AWS",       gender: "Homme" },
-];
-
-// Prise en compte du filtre 'gender' dans le filtrage dynamique
 const filteredProfiles = computed(() =>
-  profiles.filter((profile) => {
+  profiles.value.filter((profile) => {
     const matchCategory      = filters.category === "Tous"       || profile.role.includes(filters.category);
     const matchDegree        = filters.degree === "Tous"         || profile.level === filters.degree;
     const matchCertification = filters.certification === "Toutes"|| profile.skill === filters.certification;
@@ -283,34 +273,45 @@ const loadDashboard = async () => {
     isLoading.value = true;
     error.value = null;
 
-    // Charger le dashboard étudiant
-    const dashboardResponse = await studentApi.getStudentDashboard();
-    
+    const [dashboardResponse, opportunitiesResponse] = await Promise.all([
+      studentApi.getStudentDashboard(),
+      studentApi.getOpportunities(),
+    ]);
+
     if (dashboardResponse.data.success) {
       const data = dashboardResponse.data.data;
-      
-      // Mettre à jour l'utilisateur courant
       currentUser.value = {
         name: data.profile.nom,
         email: data.profile.email,
         avatar: data.profile.photo || "",
       };
-      
-      // Mettre à jour la progression du profil
-      profileProgress.value = data.profileProgress || 75;
-      
-      // Mettre à jour les statistiques
+
+      profileProgress.value = data.profileProgress ?? 0;
+
       studentStats.value = [
-        { label: "Score profil",    value: String(data.stats.scoreProfile),    color: "#5b4fcf" },
-        { label: "Recommandations", value: String(data.stats.recommandations), color: "#0f9e74" },
-        { label: "Projets",         value: String(data.stats.projets),         color: "#d85a30" },
-        { label: "Stages postulés", value: String(data.stats.stagesPostules),  color: "#ba7517" },
-        { label: "Certifications",  value: String(data.stats.certifications),  color: "#185fa5" },
-        { label: "Vues du profil",  value: String(data.stats.vuesProfile),     color: "#d4537e" },
+        { label: "Score profil",    value: String(data.stats.scoreProfile ?? 0),    color: "#5b4fcf" },
+        { label: "Recommandations", value: String(data.stats.recommandations ?? 0), color: "#0f9e74" },
+        { label: "Projets",         value: String(data.stats.projets ?? 0),         color: "#d85a30" },
+        { label: "Stages postulés", value: String(data.stats.stages ?? 0),          color: "#ba7517" },
+        { label: "Certifications",  value: String(data.stats.badges ?? 0),          color: "#185fa5" },
+        { label: "Compétences",     value: String(data.stats.competences ?? 0),     color: "#d4537e" },
       ];
-      
-      // Mettre à jour l'activité récente
-      activities.value = data.activities.map((a: any) => a.action).slice(0, 3);
+
+      activities.value = Array.isArray(data.activities)
+        ? data.activities.map((a: any) => `${a.action}${a.date ? ` • ${new Date(a.date).toLocaleDateString('fr-FR')}` : ''}`)
+        : [];
+    }
+
+    if (opportunitiesResponse.data.success) {
+      profiles.value = (opportunitiesResponse.data.data.professionnels || []).map((pro: any) => ({
+        name: pro.nom || "Professionnel",
+        role: "Professionnel",
+        city: pro.profil?.adresse || "—",
+        level: pro.secteur || "—",
+        skill: pro.poste || "—",
+        gender: "N/A",
+        photo: pro.photo || undefined,
+      }));
     }
   } catch (err: any) {
     console.error("Erreur lors du chargement du dashboard:", err);
