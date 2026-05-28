@@ -1,12 +1,12 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { SlidersHorizontal } from "lucide-vue-next";
+import { SlidersHorizontal } from "../lib/icons";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 
-type RequestStatus = "En attente" | "Validée" | "Refusée" | "Aucun";
+type RequestStatus = "En attente" | "ValidÃ©e" | "RefusÃ©e" | "Aucun";
 type RequestType =
   | "Projet"
   | "Stage"
@@ -54,7 +54,7 @@ const students = reactive<ProfStudent[]>([
     portfolioPath: "/projects/portfolio-web",
     requestType: "Projet",
     requestTitle: "Portfolio Web",
-    requestDescription: "Validation du projet final avec lien GitHub et démonstration.",
+    requestDescription: "Validation du projet final avec lien GitHub et dÃ©monstration.",
     requestDate: "Aujourd'hui, 10:20",
     status: "En attente",
   },
@@ -70,7 +70,7 @@ const students = reactive<ProfStudent[]>([
     portfolioPath: "/projects/stage-pfe-devops",
     requestType: "Stage",
     requestTitle: "Stage PFE DevOps",
-    requestDescription: "Demande de validation du stage et des missions réalisées.",
+    requestDescription: "Demande de validation du stage et des missions rÃ©alisÃ©es.",
     requestDate: "Il y a 35 min",
     status: "En attente",
   },
@@ -80,15 +80,15 @@ const students = reactive<ProfStudent[]>([
     name: "Sara Alaoui",
     school: "FST",
     field: "GSEA",
-    city: "Fès",
+    city: "FÃ¨s",
     score: 95,
     recommendations: 680,
     portfolioPath: "/projects/attestation-cloud",
     requestType: "Attestation",
     requestTitle: "Attestation de stage Cloud",
-    requestDescription: "Attestation demandée après validation du stage cloud.",
+    requestDescription: "Attestation demandÃ©e aprÃ¨s validation du stage cloud.",
     requestDate: "Hier, 16:45",
-    status: "Validée",
+    status: "ValidÃ©e",
   },
   {
     id: "al",
@@ -118,9 +118,9 @@ const students = reactive<ProfStudent[]>([
     portfolioPath: "/projects/mobile-ensa",
     requestType: "Projet",
     requestTitle: "Application Mobile ENSA",
-    requestDescription: "Demande refusée à cause de documents manquants.",
+    requestDescription: "Demande refusÃ©e Ã  cause de documents manquants.",
     requestDate: "Il y a 3 j",
-    status: "Refusée",
+    status: "RefusÃ©e",
   },
   {
     id: "mb",
@@ -133,7 +133,7 @@ const students = reactive<ProfStudent[]>([
     recommendations: 140,
     portfolioPath: "/projects/cybersecurity-lab",
     requestType: "Lettre de recommandation",
-    requestTitle: "Recommandation concours cybersécurité",
+    requestTitle: "Recommandation concours cybersÃ©curitÃ©",
     requestDescription: "Demande de lettre pour un concours technique.",
     requestDate: "Il y a 3 j",
     status: "En attente",
@@ -144,7 +144,7 @@ const students = reactive<ProfStudent[]>([
     name: "Rania Haddad",
     school: "FST",
     field: "GSEA",
-    city: "Fès",
+    city: "FÃ¨s",
     score: 74,
     recommendations: 95,
     portfolioPath: "/projects/embedded-sensors",
@@ -181,7 +181,7 @@ const cities = computed(() => [
   "Toutes",
   ...new Set(scopedStudents.value.map((student) => student.city)),
 ]);
-const statuses = ["Toutes", "En attente", "Validées", "Refusées", "Aucune demande"];
+const statuses = ["Toutes", "En attente", "ValidÃ©es", "RefusÃ©es", "Aucune demande"];
 
 const filteredStudents = computed(() =>
   scopedStudents.value.filter((student) => {
@@ -193,8 +193,8 @@ const filteredStudents = computed(() =>
       cityFilter.value === "Toutes" || student.city === cityFilter.value;
     const matchesStatus =
       statusFilter.value === "Toutes" ||
-      (statusFilter.value === "Validées" && student.status === "Validée") ||
-      (statusFilter.value === "Refusées" && student.status === "Refusée") ||
+      (statusFilter.value === "ValidÃ©es" && student.status === "ValidÃ©e") ||
+      (statusFilter.value === "RefusÃ©es" && student.status === "RefusÃ©e") ||
       (statusFilter.value === "Aucune demande" && student.status === "Aucun") ||
       student.status === statusFilter.value;
 
@@ -206,27 +206,27 @@ const stats = computed(() => ({
   total: scopedStudents.value.length,
   pending: scopedStudents.value.filter((student) => student.status === "En attente")
     .length,
-  accepted: scopedStudents.value.filter((student) => student.status === "Validée")
+  accepted: scopedStudents.value.filter((student) => student.status === "ValidÃ©e")
     .length,
-  refused: scopedStudents.value.filter((student) => student.status === "Refusée")
+  refused: scopedStudents.value.filter((student) => student.status === "RefusÃ©e")
     .length,
 }));
 
 const statCards = computed(() => [
-  { label: "Total étudiants", value: stats.value.total },
+  { label: "Total Ã©tudiants", value: stats.value.total },
   { label: "Demandes en attente", value: stats.value.pending },
-  { label: "Validations acceptées", value: stats.value.accepted },
-  { label: "Validations refusées", value: stats.value.refused },
+  { label: "Validations acceptÃ©es", value: stats.value.accepted },
+  { label: "Validations refusÃ©es", value: stats.value.refused },
 ]);
 
 const statusClass = (status: RequestStatus) => ({
   "is-pending": status === "En attente",
-  "is-valid": status === "Validée",
-  "is-refused": status === "Refusée",
+  "is-valid": status === "ValidÃ©e",
+  "is-refused": status === "RefusÃ©e",
   "is-empty": status === "Aucun",
 });
 
-const updateStatus = (student: ProfStudent, status: "Validée" | "Refusée") => {
+const updateStatus = (student: ProfStudent, status: "ValidÃ©e" | "RefusÃ©e") => {
   student.status = status;
   if (selectedStudent.value?.id === student.id) selectedStudent.value.status = status;
 };
@@ -258,8 +258,8 @@ const studentBadges = (student: ProfStudent) => {
         <div class="page-heading">
           <div>
             <p>Espace professeur</p>
-            <h1>Mes étudiants</h1>
-            <span>Liste des étudiants liés à vos filières et écoles.</span>
+            <h1>Mes Ã©tudiants</h1>
+            <span>Liste des Ã©tudiants liÃ©s Ã  vos filiÃ¨res et Ã©coles.</span>
           </div>
         </div>
 
@@ -273,8 +273,8 @@ const studentBadges = (student: ProfStudent) => {
         <div class="students-table-card">
           <div class="table-title">
             <div>
-              <h2>Étudiants liés</h2>
-              <span>{{ filteredStudents.length }} étudiants affichés</span>
+              <h2>Ã‰tudiants liÃ©s</h2>
+              <span>{{ filteredStudents.length }} Ã©tudiants affichÃ©s</span>
             </div>
 
             <button
@@ -290,13 +290,13 @@ const studentBadges = (student: ProfStudent) => {
 
           <div v-if="showFilters" class="filters-panel">
             <label>
-              École / Faculté
+              Ã‰cole / FacultÃ©
               <select v-model="schoolFilter">
                 <option v-for="school in schools" :key="school">{{ school }}</option>
               </select>
             </label>
             <label>
-              Filière
+              FiliÃ¨re
               <select v-model="fieldFilter">
                 <option v-for="field in fields" :key="field">{{ field }}</option>
               </select>
@@ -319,9 +319,9 @@ const studentBadges = (student: ProfStudent) => {
             <table>
               <thead>
                 <tr>
-                  <th>Étudiant</th>
-                  <th>École / Faculté</th>
-                  <th>Filière</th>
+                  <th>Ã‰tudiant</th>
+                  <th>Ã‰cole / FacultÃ©</th>
+                  <th>FiliÃ¨re</th>
                   <th>Ville</th>
                   <th>Score</th>
                   <th>Recommandations</th>
@@ -387,9 +387,9 @@ const studentBadges = (student: ProfStudent) => {
     <div v-if="selectedStudent" class="modal-backdrop" @click.self="selectedStudent = null">
       <section class="details-modal">
         <button type="button" class="modal-close" @click="selectedStudent = null">
-          ×
+          Ã—
         </button>
-        <p>Détails de la demande</p>
+        <p>DÃ©tails de la demande</p>
         <h2>{{ selectedStudent.name }}</h2>
 
         <div class="details-grid">
@@ -424,7 +424,7 @@ const studentBadges = (student: ProfStudent) => {
             v-if="selectedStudent.status === 'En attente'"
             type="button"
             class="primary-btn"
-            @click="updateStatus(selectedStudent, 'Validée')"
+            @click="updateStatus(selectedStudent, 'ValidÃ©e')"
           >
             Valider
           </button>
@@ -432,7 +432,7 @@ const studentBadges = (student: ProfStudent) => {
             v-if="selectedStudent.status === 'En attente'"
             type="button"
             class="danger-btn"
-            @click="updateStatus(selectedStudent, 'Refusée')"
+            @click="updateStatus(selectedStudent, 'RefusÃ©e')"
           >
             Refuser
           </button>
@@ -806,3 +806,4 @@ th {
   }
 }
 </style>
+

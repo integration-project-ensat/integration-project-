@@ -168,8 +168,12 @@ const handleUpdateFilters = (next: typeof filters.value) => {
                 <button
                   type="button"
                   class="save-profile-btn"
-                  :class="{ saved: savedIds.has(profile.id_utilisateur) }"
-                  :aria-label="savedIds.has(profile.id_utilisateur) ? 'Retirer' : 'Sauvegarder'"
+                  :class="{ saved: isSaved(profileId(profile)) }"
+                  :aria-label="
+                    isSaved(profileId(profile))
+                      ? 'Retirer le profil sauvegardé'
+                      : 'Sauvegarder le profil'
+                  "
                   @click="toggleSavedProfile(profile)"
                 >
                   <Bookmark class="save-icon" />
@@ -179,7 +183,11 @@ const handleUpdateFilters = (next: typeof filters.value) => {
                   v-if="savedFeedbackId === profile.id_utilisateur"
                   class="save-feedback"
                 >
-                  {{ savedIds.has(profile.id_utilisateur) ? 'Profil sauvegardé' : 'Profil retiré' }}
+                  {{
+                    isSaved(profileId(profile))
+                      ? "Profil sauvegardé"
+                      : "Profil retiré"
+                  }}
                 </span>
 
                 <ProfileCard
@@ -299,23 +307,6 @@ const handleUpdateFilters = (next: typeof filters.value) => {
   font-weight: 800;
   box-shadow: 0 10px 24px rgba(17, 24, 39, 0.2);
 }
-.explore-pagination {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-}
-.page-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: white;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.page-btn.active { background: #6c5ce7; color: white; border-color: #6c5ce7; }
 </style>
+
+

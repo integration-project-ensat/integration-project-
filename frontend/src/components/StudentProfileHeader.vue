@@ -1,1047 +1,425 @@
 <template>
-  <div class="profile-header">
-    <div class="cover-section">
-      <div class="cover-img" />
-      <div class="avatar-wrap">
-        <div class="avatar" :class="avatarColorClass(profile.name)">
-          <img v-if="profile.avatar" :src="profile.avatar" alt="avatar" />
-          <span v-else>{{ initials }}</span>
-        </div>
-      </div>
-    </div>
+  <!-- ═══════════════════════════════════════════════════════
+       SCRUM-125 : Student Profile Header Section
+       Sous-tâches couvertes :
+         SCRUM-135 — Profile cover section
+         SCRUM-136 — Avatar display
+         SCRUM-137 — Banner display
+         SCRUM-138 — Student information
+         SCRUM-139 — API connection (via profileService)
+         SCRUM-140 — Responsive behavior
+  ═══════════════════════════════════════════════════════ -->
+  <section class="profile-header" aria-label="En-tête du profil étudiant">
 
-    <div class="profile-info">
-      <div class="name-row">
-        <h1>{{ profile.name }}</h1>
-        <span class="score">{{ profile.score }}+</span>
-      </div>
-
-      <p class="title">{{ profile.title }}</p>
-      <p class="school">{{ profile.school }}</p>
-
-      <p class="location">
-        {{ profile.location }}
-        <button type="button" class="contact" @click="showContact = !showContact">
-          • Contact info
-        </button>
-      </p>
-
-      <button type="button" class="recos-summary" @click="emit('open-recos')">
-        <span class="recos-count">{{ profile.recos }} recos</span>
-
-        <span class="recos-avatars">
-          <span
-            v-for="recommendation in recosPreview"
-            :key="recommendation.id"
-            class="recos-avatar"
-            :class="avatarColorClass(recommendation.author)"
-          >
-            <img v-if="recommendation.avatar" :src="recommendation.avatar" alt="" />
-            <span v-else>{{ getInitials(recommendation.author) }}</span>
-          </span>
-        </span>
-      </button>
-
-      <div class="tabs">
-        <button
-          v-for="tab in tabs"
-          :key="tab"
-          type="button"
-          class="tab"
-          :class="{
-            portfolio: tab === 'Portfolio',
-            recommendation: tab === 'Recommander',
-            connect: tab === 'Connecter',
-            competances: tab === 'Compétances',
-            about: tab === 'À propos',
-            share: tab === 'Partager'
-          }"
-          @click="handleTabClick(tab)"
-        >
-          {{ tab }}
-        </button>
-      </div>
-
-      <div v-if="showContact" class="contact-section">
-        <h3>Contact info</h3>
-
-        <div class="contact-details">
-          <div v-if="profile.email">
-            <strong>Email:</strong>
-            <a :href="'mailto:' + profile.email">{{ profile.email }}</a>
-          </div>
-
-          <div v-if="profile.website">
-            <strong>Site:</strong>
-            <a :href="profile.website" target="_blank" rel="noopener">
-              {{ profile.website }}
-            </a>
-          </div>
-
-          <div v-if="profile.linkedin">
-            <strong>LinkedIn:</strong>
-            <a :href="profile.linkedin" target="_blank" rel="noopener">
-              Profil
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="showAbout" class="about-section">
-        <h3>À propos</h3>
-        <p v-if="profile.bio" class="bio">{{ profile.bio }}</p>
-        <p v-else class="bio muted">Aucune bio pour l’instant.</p>
-      </div>
-
-      <div v-if="showCompetances" class="competances-dropdown">
-        <div class="competances-section">
-          <h3>Compétances Techniques</h3>
-          <div class="skills-flex-list">
-            <span 
-              v-for="skill in technicalSkills" 
-              :key="skill.name" 
-              class="skill-tag clickable"
-              @click="openSkillPopup(skill, 'tech')"
-            >
-              {{ skill.name }}
-            </span>
-          </div>
-        </div>
-
-        <div class="competances-section">
-          <h3>Compétances Comportementales</h3>
-          <div class="skills-flex-list">
-            <span 
-              v-for="skill in softSkills" 
-              :key="skill.name" 
-              class="skill-tag soft clickable"
-              @click="openSkillPopup(skill, 'soft')"
-            >
-              {{ skill.name }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="showShare" class="share-dropdown">
-        <div class="share-card-internal">
-          <h3>Partager ce profil</h3>
-          <p class="share-subtitle">Copiez le lien ou partagez directement avec votre réseau.</p>
-
-          <div class="link-box">
-            <span>{{ profileUrl }}</span>
-            <button type="button" class="copy-btn" @click="copyProfileLink">
-              {{ copied ? 'Copié' : 'Copier' }}
-            </button>
-          </div>
-
-          <div class="share-actions">
-            <a :href="gmailShareUrl" target="_blank" rel="noopener" class="share-card-btn gmail" title="Partager par Gmail">
-              <div class="icon-wrapper">
-                <i class="fa-solid fa-envelope"></i>
-              </div>
-              <span>Gmail</span>
-            </a>
-
-            <a :href="linkedinShareUrl" target="_blank" rel="noopener" class="share-card-btn linkedin" title="Partager sur LinkedIn">
-              <div class="icon-wrapper">
-                <i class="fa-brands fa-linkedin-in"></i>
-              </div>
-              <span>LinkedIn</span>
-            </a>
-
-            <a :href="whatsappShareUrl" target="_blank" rel="noopener" class="share-card-btn whatsapp" title="Partager sur WhatsApp">
-              <div class="icon-wrapper">
-                <i class="fa-brands fa-whatsapp"></i>
-              </div>
-              <span>WhatsApp</span>
-            </a>
-
-            <a :href="xShareUrl" target="_blank" rel="noopener" class="share-card-btn x-twitter" title="Partager sur X">
-              <div class="icon-wrapper">
-                <i class="fa-brands fa-x-twitter"></i>
-              </div>
-              <span>X</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="recos-section">
-        <div class="reco-card">
-          <p class="reco-label">Reco plus récent de profs</p>
-
-          <div v-if="latestTeacherReco" class="reco-item">
-            <span class="reco-avatar" :class="avatarColorClass(latestTeacherReco.author)">
-              <img v-if="latestTeacherReco.avatar" :src="latestTeacherReco.avatar" alt="" />
-              <span v-else>{{ getInitials(latestTeacherReco.author) }}</span>
-            </span>
-            <span>{{ latestTeacherReco.message || 'Recommandation sans commentaire.' }}</span>
-          </div>
-
-          <div v-else class="reco-item muted">
-            <span class="dot" />
-            <span>Aucune recommandation récente.</span>
-          </div>
-        </div>
-
-        <div class="reco-card">
-          <p class="reco-label">Reco plus récent de professionnels</p>
-
-          <div v-if="latestProfessionalReco" class="reco-item">
-            <span class="reco-avatar" :class="avatarColorClass(latestProfessionalReco.author)">
-              <img v-if="latestProfessionalReco.avatar" :src="latestProfessionalReco.avatar" alt="" />
-              <span v-else>{{ getInitials(latestProfessionalReco.author) }}</span>
-            </span>
-            <span>{{ latestProfessionalReco.message || 'Recommandation sans commentaire.' }}</span>
-          </div>
-
-          <div v-else class="reco-item muted">
-            <span class="dot" />
-            <span>Aucune recommandation récente.</span>
-          </div>
-        </div>
-
-        <div class="reco-card">
-          <p class="reco-label">Reco plus récent d'étudiants</p>
-
-          <div v-if="latestStudentReco" class="reco-item">
-            <span class="reco-avatar" :class="avatarColorClass(latestStudentReco.author)">
-              <img v-if="latestStudentReco.avatar" :src="latestStudentReco.avatar" alt="" />
-              <span v-else>{{ getInitials(latestStudentReco.author) }}</span>
-            </span>
-            <span>{{ latestStudentReco.message || 'Recommandation sans commentaire.' }}</span>
-          </div>
-
-          <div v-else class="reco-item muted">
-            <span class="dot" />
-            <span>Aucune recommandation récente.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <!-- ── SCRUM-137 : Banner ── -->
     <div
-      v-if="showSkillModal && selectedSkill"
-      class="modal-backdrop"
-      @click.self="showSkillModal = false"
+      class="banner"
+      :style="bannerStyle"
+      role="img"
+      :aria-label="`Bannière de ${profile.name}`"
     >
-      <div class="skill-detail-modal">
-        <div class="modal-head">
-          <div class="skill-title-wrapper">
-            <span class="modal-skill-badge" :class="selectedSkill.type">
-              {{ selectedSkill.name }}
+      <div class="banner-overlay" />
+    </div>
+
+    <!-- ── SCRUM-135 : Cover section ── -->
+    <div class="cover">
+
+      <!-- ── SCRUM-136 : Avatar ── -->
+      <div class="avatar-wrapper">
+        <img
+          v-if="profile.avatar"
+          :src="profile.avatar"
+          :alt="`Photo de ${profile.name}`"
+          class="avatar"
+          @error="onAvatarError"
+        />
+        <!-- Fallback initiales si pas d'image -->
+        <div v-else class="avatar avatar-initials" :style="{ background: accentColor }">
+          {{ initials }}
+        </div>
+
+        <!-- Badge vérifié -->
+        <span v-if="profile.isVerified" class="verified-badge" title="Profil vérifié">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+            <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </div>
+
+      <!-- ── SCRUM-138 : Student information ── -->
+      <div class="student-info">
+
+        <!-- Squelette de chargement -->
+        <template v-if="loading">
+          <div class="skeleton skeleton-name" />
+          <div class="skeleton skeleton-sub" />
+          <div class="skeleton skeleton-sub" style="width: 40%" />
+        </template>
+
+        <template v-else>
+          <h1 class="student-name">{{ profile.name }}</h1>
+
+          <p class="student-field">
+            <span class="field-badge">{{ profile.field }}</span>
+            <span class="separator">·</span>
+            <span>{{ profile.year }}</span>
+          </p>
+
+          <p class="student-school">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            {{ profile.school }}
+          </p>
+
+          <div class="meta-row">
+            <span class="meta-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              APOGEE : {{ profile.apogee }}
+            </span>
+
+            <span class="meta-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+              {{ profile.email }}
+            </span>
+
+            <span v-if="profile.city" class="meta-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {{ profile.city }}
             </span>
           </div>
-          <button type="button" class="close-modal-btn" @click="showSkillModal = false">×</button>
-        </div>
 
-        <div class="modal-body">
-          <div class="modal-level-section">
-            <span class="level-label">Niveau d'expertise :</span>
-            <div class="modal-progress-container">
-              <div class="progress-line-only">
-                <div class="line-fill" :class="selectedSkill.type" :style="{ width: selectedSkill.level + '%' }"></div>
-              </div>
-              <span class="percentage-text">{{ selectedSkill.level }}%</span>
-            </div>
+          <p v-if="profile.bio" class="student-bio">{{ profile.bio }}</p>
+
+          <!-- Liens réseaux sociaux -->
+          <div v-if="profile.github || profile.linkedin" class="social-links">
+            <a v-if="profile.github"   :href="profile.github"   target="_blank" rel="noopener" class="social-btn github"   aria-label="GitHub">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+            <a v-if="profile.linkedin" :href="profile.linkedin" target="_blank" rel="noopener" class="social-btn linkedin" aria-label="LinkedIn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              LinkedIn
+            </a>
           </div>
-
-          <hr class="modal-separator" />
-
-          <div class="modal-details-section">
-            <h4>Description & Application</h4>
-            <p class="skill-description">{{ selectedSkill.description }}</p>
-            
-            <div class="skill-meta-info">
-              <div class="meta-item">
-                <span class="meta-icon">📁</span>
-                <span>Utilisé activement dans <strong>{{ selectedSkill.projectsCount }} projet(s)</strong> portfolio</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        </template>
       </div>
     </div>
-  </div>
+
+    <!-- Message d'erreur API -->
+    <p v-if="error" class="api-error">
+      ⚠️ Impossible de charger le profil : {{ error }}
+    </p>
+
+  </section>
 </template>
 
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { profileService } from '@/services/profile.service.js'
 
-type Recommendation = {
-  id: number
-  author: string
-  role: 'teacher' | 'professional' | 'student'
-  avatar?: string
-  message?: string
-  date?: string
-}
-
-type SkillItem = {
-  name: string
-  level: number
-  description: string
-  projectsCount: number
-}
-
-type SelectedSkillState = SkillItem & {
-  type: 'tech' | 'soft'
-}
-
-const router = useRouter()
-
-const showCompetances = ref(false)
-const showAbout = ref(false)
-const showContact = ref(false)
-const showShare = ref(false)
-const copied = ref(false)
-
-// Gestion du pop-up des compétences
-const showSkillModal = ref(false)
-const selectedSkill = ref<SelectedSkillState | null>(null)
-
-const props = defineProps<{
-  profile: {
-    name: string
-    score: number
-    title: string
-    school: string
-    location: string
-    recos: string
-    avatar?: string
-    bio?: string
-    email?: string
-    website?: string
-    linkedin?: string
+// ── Props ──────────────────────────────────────────────
+const props = defineProps({
+  userId: {
+    type: [Number, String],
+    default: null
   }
-  modelValue: string
-  recentRecommendations?: Recommendation[]
-}>()
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-  (e: 'open-recos'): void
-}>()
-
-const tabs = ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
-
-// Données des compétences
-const technicalSkills = ref<SkillItem[]>([
-  { name: 'Vue.js', level: 90, description: 'Maîtrise avancée de l\'écosystème Vue 3 (Composition API, Pinia, Vue Router) et intégration de maquettes complexes.', projectsCount: 3 },
-  { name: 'TypeScript', level: 80, description: 'Typage strict, interfaces, génériques et sécurisation du code applicatif sur des architectures Front-End.', projectsCount: 2 },
-  { name: 'Python', level: 75, description: 'Développement de scripts d\'automatisation, manipulation de données et algorithmique avancée.', projectsCount: 1 },
-  { name: 'Docker', level: 65, description: 'Conteneurisation d\'applications, configuration de Dockerfile et orchestration légère de services de développement.', projectsCount: 1 },
-  { name: 'Git', level: 85, description: 'Gestion de versions, workflows d\'équipe (Git Flow), résolution de conflits et revues de code.', projectsCount: 4 }
-])
-
-const softSkills = ref<SkillItem[]>([
-  { name: 'Travail en équipe', level: 95, description: 'Excellente collaboration lors des projets de groupe académiques, écoute active et répartition agile des tâches.', projectsCount: 3 },
-  { name: 'Communication', level: 85, description: 'Capacité à vulgariser des concepts techniques complexes devant un jury ou des collaborateurs non-techniques.', projectsCount: 2 },
-  { name: 'Adaptabilité', level: 90, description: 'Facilité à monter rapidement en compétences sur de nouvelles technologies ou à s\'ajuster aux changements de scope.', projectsCount: 4 },
-  { name: 'Résolution de problèmes', level: 88, description: 'Approche analytique et méthodique face aux bugs ou aux blocages structurels dans un projet.', projectsCount: 2 }
-])
-
-// Liens de Partage Dynamiques
-const profileUrl = computed(() => {
-  return window.location.origin + '/profile'
 })
-const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
-const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${props.profile.name}`))
 
-const gmailShareUrl = computed(() => `mailto:?subject=${encodedShareText.value}&body=${encodedShareText.value}%0A${encodedProfileUrl.value}`)
-const linkedinShareUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodedProfileUrl.value}`)
-const whatsappShareUrl = computed(() => `https://wa.me/?text=${encodedShareText.value}%20${encodedProfileUrl.value}`)
-const xShareUrl = computed(() => `https://twitter.com/intent/tweet?text=${encodedShareText.value}&url=${encodedProfileUrl.value}`)
+// ── State ──────────────────────────────────────────────
+const profile  = ref({
+  name:        '',
+  email:       '',
+  apogee:      '',
+  field:       '',
+  year:        '',
+  school:      '',
+  city:        '',
+  avatar:      null,
+  bannerColor: '#1a3c5e',
+  bio:         '',
+  isVerified:  false,
+  github:      null,
+  linkedin:    null,
+})
+const loading  = ref(true)
+const error    = ref(null)
 
-const recosPreview = computed(() => props.recentRecommendations?.slice(0, 3) ?? [])
-const latestTeacherReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'teacher'))
-const latestProfessionalReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'professional'))
-const latestStudentReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'student'))
-const initials = computed(() => getInitials(props.profile.name))
-
-function openSkillPopup(skill: SkillItem, type: 'tech' | 'soft') {
-  selectedSkill.value = { ...skill, type }
-  showSkillModal.value = true
-}
-
-async function copyProfileLink() {
-  await navigator.clipboard.writeText(profileUrl.value)
-  copied.value = true
-  window.setTimeout(() => { copied.value = false }, 1600)
-}
-
-const handleTabClick = (tab: string) => {
-  showContact.value = false
-  
-  // Fermeture croisée des sections internes du Header
-  showCompetances.value = tab === 'Compétances' ? !showCompetances.value : false
-  showAbout.value = tab === 'À propos' ? !showAbout.value : false
-  showShare.value = tab === 'Partager' ? !showShare.value : false
-
-  if (tab === 'Portfolio') {
-  showCompetances.value = false
-  showAbout.value = false
-  emit('update:modelValue', 'Portfolio')
-  router.push('/portfolio')
-  return
+// ── SCRUM-139 : Connexion API ──────────────────────────
+onMounted(async () => {
+  try {
+    const id = props.userId ?? localStorage.getItem('userId') ?? 1
+    const data = await profileService.getProfile(id)
+    profile.value = { ...profile.value, ...data }
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loading.value = false
   }
+})
 
-  if (tab === 'Compétances' || tab === 'À propos' || tab === 'Partager') {
-    return
-  }
+// ── Computed ───────────────────────────────────────────
+const initials = computed(() => {
+  if (!profile.value.name) return '?'
+  return profile.value.name
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase() ?? '')
+    .join('')
+})
 
-  if (props.modelValue === tab) {
-    emit('update:modelValue', 'Portfolio')
-  } else {
-    emit('update:modelValue', tab)
-  }
-}
+const accentColor = computed(() => profile.value.bannerColor ?? '#1a3c5e')
 
-function avatarColorClass(name: string) {
-  const colors = ['avatar-blue', 'avatar-orange', 'avatar-indigo', 'avatar-green', 'avatar-deep-blue', 'avatar-brown', 'avatar-purple', 'avatar-slate']
-  const sum = name.split('').reduce((total, char) => total + char.charCodeAt(0), 0)
-  return colors[sum % colors.length]
-}
+// SCRUM-137 : style dynamique de la bannière
+const bannerStyle = computed(() => ({
+  background: `linear-gradient(135deg, ${accentColor.value} 0%, #2e6da4 100%)`
+}))
 
-function getInitials(name: string) {
-  return name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+// ── Méthodes ───────────────────────────────────────────
+function onAvatarError(e) {
+  // Si l'image avatar ne charge pas → supprime src pour afficher les initiales
+  e.target.style.display = 'none'
+  profile.value.avatar = null
 }
 </script>
 
 <style scoped>
+/* ══ SCRUM-137 : BANNER ══════════════════════════════ */
 .profile-header {
-  background: white;
-  border-radius: 8px;
-  margin-top: 35px;
-  margin-bottom: 10px;
-  overflow: hidden;
-}
-
-.cover-section {
-  position: relative;
-  margin-bottom: 50px;  /* Garde les coins arrondis propres du header */
-  
-}
-
-.cover-img {
   width: 100%;
-  height: 180px;
-  background-color: #f1f5f9; /* Un fond un poil plus soutenu pour faire ressortir les éléments */
-  
-  /* On superpose la grille de points par-dessus deux halos lumineux colorés bien visibles */
-  background-image: 
-    radial-gradient(#a3a3a3 1.2px, transparent 1.2px),                               /* Points plus sombres et nets */
-    radial-gradient(#a3a3a3 1.2px, transparent 1.2px),                               /* Points alignement B */
-    radial-gradient(circle at 85% 30%, rgba(3, 155, 229, 0.25) 0%, transparent 60%),  /* Éclat Bleu PheraCore soutenu */
-    radial-gradient(circle at 15% 85%, rgba(94, 53, 177, 0.18) 0%, transparent 55%); /* Éclat Violet soutenu gauche */
-  
-  /* Ajustement des tailles */
-  background-size: 20px 20px, 20px 20px, 100% 100%, 100% 100%;
-  background-position: 0 0, 10px 10px, 0 0, 0 0;
-  
-  position: relative;
+  background: #f5f7fa;
+  border-radius: 16px;
   overflow: hidden;
-  border-bottom: 1px solid #cbd5e1;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-.avatar-wrap {
+.banner {
+  position: relative;
+  height: 160px;
+  width: 100%;
+}
+
+.banner-overlay {
   position: absolute;
-  bottom: -48px;
-  left: 24px;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* ══ SCRUM-135 : COVER SECTION ═══════════════════════ */
+.cover {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 0 32px 28px;
+  margin-top: -56px;
+  position: relative;
+}
+
+/* ══ SCRUM-136 : AVATAR ══════════════════════════════ */
+.avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .avatar {
-  width: 96px;
-  height: 96px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  border: 4px solid white;
-  background: var(--avatar-bg, #039be5);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-head);
-  font-size: 1.5rem;
-  font-weight: 700;
-  overflow: hidden;
-}
-
-.avatar img,
-.recos-avatar img,
-.reco-avatar img {
-  width: 100%;
-  height: 100%;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   object-fit: cover;
+  display: block;
+  background: #e0e7ef;
 }
 
-.profile-info {
-  padding: 0 24px;
-}
-
-.name-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-h1 {
-  font-family: var(--font-head);
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-
-.score {
-  color: var(--error);
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 2px 10px;
-  border-radius: 20px;
-  font-family: var(--font-head);
-}
-
-.title,
-.school,
-.location {
-  color: var(--text-dark);
-  font-size: .82rem;
-  margin-bottom: 3px;
-}
-
-.contact {
-  border: 0;
-  background: transparent;
-  color: var(--purple);
-  cursor: pointer;
-  font: inherit;
-  padding: 0;
-}
-
-.contact:hover,
-.recos-summary:hover .recos-count {
-  text-decoration: underline;
-}
-
-.recos-summary {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  margin: 0 0 12px;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.recos-count {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  font-size: .9rem;
-  font-weight: 700;
-  color: var(--purple);
-  line-height: 1;
-}
-
-.recos-avatars {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-}
-
-.recos-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--avatar-bg, #039be5);
-  border: 2px solid #ffffff;
-  color: #ffffff;
-  font-family: var(--font-head);
-  font-size: .58rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  margin-left: -6px;
-  line-height: 1;
-}
-
-.recos-avatar:first-child {
-  margin-left: 0;
-}
-
-.tabs {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 10px;
-  padding-bottom: 8px;
-  overflow-x: auto;
-}
-
-.tab {
-  min-width: 132px;
-  height: 40px;
-  padding: 0 26px;
-  background: #ffffff;
-  border: 2px solid #8d8d8d;
-  color: #666666;
-  font-family: var(--font-head);
-  font-size: .9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: var(--ease);
-  white-space: nowrap;
+.avatar-initials {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.tab.portfolio {
-  background: var(--purple);
-  border-color: var(--purple);
-  color: #ffffff;
-  border-radius: 100px 180px 0 100px;
-}
-
-.tab.recommendation,
-.tab.competances,
-.tab.about,
-.tab.share,
-.tab.connect {
-  border-radius: 180px 100px 100px 0;
-}
-
-.tab.recommendation { min-width: 180px; }
-.tab.competances { min-width: 170px; }
-.tab.about, .tab.share { min-width: 150px; }
-.tab.connect { min-width: 160px; }
-
-.tab:hover:not(.portfolio) {
-  border-color: var(--purple);
-  color: var(--purple);
-}
-
-.contact-section,
-.about-section,
-.competances-dropdown,
-.share-dropdown {
-  border-top: 1px solid #f0f0f0;
-  padding: 14px 0 18px;
-}
-
-.contact-section h3,
-.about-section h3,
-.competances-section h3,
-.share-card-internal h3 {
-  font-size: .85rem;
+  font-size: 32px;
   font-weight: 700;
-  margin-bottom: 14px;
-  font-family: var(--font-head);
-  color: var(--text-dark);
-}
-
-.contact-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: .82rem;
-  color: var(--text-muted);
-}
-
-.contact-details a {
-  color: var(--purple);
-}
-
-.bio {
-  color: var(--text-dark);
-  margin-bottom: 8px;
-}
-
-.bio.muted {
-  color: var(--text-muted);
-}
-
-/* Grille des compétences */
-.competances-dropdown {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-}
-
-.skills-flex-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.skill-tag {
-  background: #eeecff;
-  color: var(--purple);
-  font-size: .78rem;
-  font-weight: 600;
-  padding: 5px 14px;
-  border-radius: 20px;
-  white-space: nowrap;
+  color: #fff;
+  letter-spacing: 2px;
   user-select: none;
 }
 
-.skill-tag.soft {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.skill-tag.clickable {
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.skill-tag.clickable:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-/* --- DESIGN PREMIUM ZONE DE PARTAGE --- */
-.share-card-internal {
-  background: white;
-}
-
-.share-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.link-box {
+.verified-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  background: #2e7d32;
+  border-radius: 50%;
+  border: 2px solid #fff;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 6px 10px;
-  margin-bottom: 20px;
+  justify-content: center;
 }
 
-.link-box span {
+/* ══ SCRUM-138 : STUDENT INFORMATION ════════════════ */
+.student-info {
   flex: 1;
   min-width: 0;
-  font-size: .85rem;
-  color: var(--text-dark);
+  padding-top: 60px;
+}
+
+.student-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.copy-btn {
-  min-height: 34px;
-  padding: 0 16px;
-  border-radius: 50px 50px 0 50px;
-  background: var(--purple);
-  color: white;
-  font-family: var(--font-head);
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-}
-
-.share-actions {
+.student-field {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 6px;
   flex-wrap: wrap;
 }
 
-.share-card-btn {
-  flex: 1;
-  min-width: 110px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px 12px;
-  border-radius: 12px;
-  background: #ffffff;
-  border: 1px solid #eef2f6;
-  text-decoration: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-.share-card-btn span {
-  font-family: var(--font-head);
-  font-size: 0.85rem;
+.field-badge {
+  background: #e8f0fe;
+  color: #1a3c5e;
+  padding: 2px 10px;
+  border-radius: 20px;
   font-weight: 600;
-  color: #4b5563;
-  transition: color 0.2s ease;
+  font-size: 13px;
 }
 
-.icon-wrapper {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+.separator { color: #bbb; }
+
+.student-school {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  color: white;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  gap: 6px;
+  font-size: 13px;
+  color: #777;
+  margin: 0 0 10px;
 }
 
-/* Gradients et Effets par marque */
-.share-card-btn.gmail .icon-wrapper {
-  background: linear-gradient(135deg, #ff5252, #e53935);
-  box-shadow: 0 4px 10px rgba(229, 57, 53, 0.2);
-}
-.share-card-btn.gmail:hover { border-color: #ff5252; background: #fff8f8; }
+.student-school svg { flex-shrink: 0; color: #888; }
 
-.share-card-btn.linkedin .icon-wrapper {
-  background: linear-gradient(135deg, #0077b5, #00598a);
-  box-shadow: 0 4px 10px rgba(0, 119, 181, 0.2);
-}
-.share-card-btn.linkedin:hover { border-color: #0077b5; background: #f4f9fc; }
-
-.share-card-btn.whatsapp .icon-wrapper {
-  background: linear-gradient(135deg, #25d366, #1ebd59);
-  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
-}
-.share-card-btn.whatsapp:hover { border-color: #25d366; background: #f5fcf7; }
-
-.share-card-btn.x-twitter .icon-wrapper {
-  background: linear-gradient(135deg, #2d3748, #0f1419);
-  box-shadow: 0 4px 10px rgba(15, 20, 25, 0.2);
-}
-.share-card-btn.x-twitter:hover { border-color: #0f1419; background: #f7f9fa; }
-
-.share-card-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-}
-.share-card-btn:hover .icon-wrapper { transform: scale(1.08); }
-.share-card-btn:hover span { color: #111827; }
-
-/* Modales et Backdrops */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: rgba(17, 24, 39, .4);
+.meta-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(2px);
-}
-
-.skill-detail-modal {
-  width: min(440px, 92vw);
-  background: white;
-  border-radius: 12px;
-  padding: 22px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  animation: scaleUp 0.2s ease-out;
-}
-
-@keyframes scaleUp {
-  from { transform: scale(0.96); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.modal-skill-badge {
-  font-size: .95rem;
-  font-weight: 700;
-  padding: 6px 16px;
-  border-radius: 30px;
-  font-family: var(--font-head);
-}
-
-.modal-skill-badge.tech { background: #eeecff; color: var(--purple); }
-.modal-skill-badge.soft { background: #f0fdf4; color: #16a34a; }
-
-.close-modal-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #f3f4f6;
-  font-size: 1.3rem;
-  color: var(--text-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-}
-
-.close-modal-btn:hover { background: #e5e7eb; }
-
-.modal-level-section {
-  display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 10px;
 }
 
-.level-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.modal-progress-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.progress-line-only {
-  flex: 1;
-  height: 4px;
-  background: transparent;
-  position: relative;
-}
-
-.line-fill { height: 100%; border-radius: 4px; }
-.line-fill.tech { background: var(--purple); }
-.line-fill.soft { background: #16a34a; }
-
-.percentage-text {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--text-dark);
-  font-family: var(--font-head);
-  min-width: 45px;
-  text-align: right;
-}
-
-.modal-separator {
-  border: 0;
-  border-top: 1px solid #f1f5f9;
-  margin: 16px 0;
-}
-
-.modal-details-section h4 {
-  font-family: var(--font-head);
-  font-size: 0.85rem;
-  color: var(--text-dark);
-  margin-bottom: 6px;
-  font-weight: 700;
-}
-
-.skill-description {
-  font-size: 0.88rem;
-  color: #4b5563;
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-
-.skill-meta-info {
-  background: #f8fafc;
-  border-radius: 6px;
-  padding: 10px 12px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: var(--text-dark);
-}
-
-.recos-section {
-  display: flex;
-  gap: 12px;
-  padding: 16px 0 20px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 8px;
-}
-
-.reco-card {
-  flex: 1;
-  background: white;
-  border-radius: 8px;
-  padding: 14px;
-  min-height: 70px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
-}
-
-.reco-label {
-  font-size: .78rem;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.reco-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: .82rem;
-  color: var(--text-dark);
-}
-
-.reco-item.muted { color: var(--text-muted); }
-
-.reco-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--avatar-bg, #039be5);
-  color: #ffffff;
-  font-family: var(--font-head);
-  font-size: .58rem;
-  font-weight: 700;
+.meta-chip {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-  line-height: 1;
+  gap: 5px;
+  background: #f0f4f8;
+  border: 1px solid #dce3ed;
+  color: #444;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
 }
 
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ccc;
-  flex-shrink: 0;
+.meta-chip svg { color: #888; flex-shrink: 0; }
+
+.student-bio {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 12px;
+  line-height: 1.6;
+  max-width: 560px;
 }
 
-.avatar-blue { --avatar-bg: #039be5; }
-.avatar-orange { --avatar-bg: #f57c00; }
-.avatar-indigo { --avatar-bg: #5e6ad2; }
-.avatar-green { --avatar-bg: #43a047; }
-.avatar-deep-blue { --avatar-bg: #0277bd; }
-.avatar-brown { --avatar-bg: #8d6e63; }
-.avatar-purple { --avatar-bg: #5e35b1; }
-.avatar-slate { --avatar-bg: #5c6bc0; }
+/* Liens sociaux */
+.social-links { display: flex; gap: 10px; flex-wrap: wrap; }
 
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.social-btn:hover { opacity: 0.82; }
+.social-btn.github   { background: #24292f; color: #fff; }
+.social-btn.linkedin { background: #0a66c2; color: #fff; }
+
+/* ══ SQUELETTE CHARGEMENT ════════════════════════════ */
+.skeleton {
+  background: linear-gradient(90deg, #e0e7ef 25%, #f0f4f8 50%, #e0e7ef 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.skeleton-name { height: 26px; width: 55%; }
+.skeleton-sub  { height: 14px; width: 70%; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Erreur API */
+.api-error {
+  padding: 10px 32px 16px;
+  font-size: 13px;
+  color: #c62828;
+}
+
+/* ══ SCRUM-140 : RESPONSIVE ══════════════════════════ */
+
+/* Tablette (≤ 768px) */
 @media (max-width: 768px) {
-  .competances-dropdown {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-}
+  .banner { height: 120px; }
 
-@media (max-width: 480px) {
-  .share-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+  .cover {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 20px 22px;
+    margin-top: -40px;
     gap: 12px;
   }
+
+  .avatar { width: 80px; height: 80px; }
+  .avatar-initials { font-size: 26px; }
+
+  .student-info { padding-top: 0; }
+  .student-name { font-size: 18px; white-space: normal; }
+
+  .meta-row { gap: 6px; }
+  .meta-chip { font-size: 11px; }
+}
+
+/* Mobile (≤ 480px) */
+@media (max-width: 480px) {
+  .banner { height: 90px; }
+
+  .cover { padding: 0 16px 18px; margin-top: -36px; }
+
+  .avatar { width: 68px; height: 68px; border-width: 3px; }
+  .avatar-initials { font-size: 20px; }
+
+  .student-name { font-size: 16px; }
+  .field-badge  { font-size: 11px; }
+
+  .social-btn { font-size: 11px; padding: 5px 10px; }
 }
 </style>
