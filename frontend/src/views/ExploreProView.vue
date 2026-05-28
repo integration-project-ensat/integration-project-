@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from "vue";
-import { Bookmark } from "lucide-vue-next";
+import { Bookmark } from "../lib/icons";
 import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
 import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
 import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
@@ -131,7 +131,7 @@ const filteredProfiles = computed(() => {
                   :class="{ saved: isSaved(profileId(profile)) }"
                   :aria-label="
                     isSaved(profileId(profile))
-                      ? 'Retirer le profil sauvegardé'
+                      ? 'Retirer le profil sauvegardÃ©'
                       : 'Sauvegarder le profil'
                   "
                   @click="toggleSavedProfile(profile)"
@@ -145,8 +145,8 @@ const filteredProfiles = computed(() => {
                 >
                   {{
                     isSaved(profileId(profile))
-                      ? "Profil sauvegardé"
-                      : "Profil retiré"
+                      ? "Profil sauvegardÃ©"
+                      : "Profil retirÃ©"
                   }}
                 </span>
 
@@ -391,4 +391,5 @@ const filteredProfiles = computed(() => {
   box-shadow: 0 10px 24px rgba(17, 24, 39, 0.2);
 }
 </style>
+
 

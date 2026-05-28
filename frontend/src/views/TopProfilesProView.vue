@@ -1,7 +1,7 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { SlidersHorizontal } from "lucide-vue-next";
+import { SlidersHorizontal } from "../lib/icons";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
@@ -67,7 +67,7 @@ const fallbackBadges = (field: string) => {
 
         <div class="stats-grid">
           <article class="stat-card">
-            <span>Total profils sauvegardés</span>
+            <span>Total profils sauvegardÃ©s</span>
             <strong>{{ totalSaved }}</strong>
           </article>
           <article class="stat-card">
@@ -87,8 +87,8 @@ const fallbackBadges = (field: string) => {
         <div class="profiles-table-card">
           <div class="table-title">
             <div>
-              <h2>Profils sauvegardés</h2>
-              <span>{{ filteredProfiles.length }} profils affichés</span>
+              <h2>Profils sauvegardÃ©s</h2>
+              <span>{{ filteredProfiles.length }} profils affichÃ©s</span>
             </div>
 
             <button
@@ -104,7 +104,7 @@ const fallbackBadges = (field: string) => {
 
           <div v-if="showFilters" class="filters-panel">
             <label>
-              Rechercher école / faculté
+              Rechercher Ã©cole / facultÃ©
               <input
                 v-model="universitySearch"
                 type="search"
@@ -112,7 +112,7 @@ const fallbackBadges = (field: string) => {
               />
             </label>
             <label>
-              Filière
+              FiliÃ¨re
               <input
                 v-model="fieldSearch"
                 type="search"
@@ -139,8 +139,8 @@ const fallbackBadges = (field: string) => {
               <thead>
                 <tr>
                   <th>Nom</th>
-                  <th>École / Faculté</th>
-                  <th>Filière</th>
+                  <th>Ã‰cole / FacultÃ©</th>
+                  <th>FiliÃ¨re</th>
                   <th>Ville</th>
                   <th>Score</th>
                   <th>Recommandations</th>
@@ -201,7 +201,7 @@ const fallbackBadges = (field: string) => {
           </div>
 
           <p v-else class="empty-state">
-            Aucun profil sauvegardé pour le moment.
+            Aucun profil sauvegardÃ© pour le moment.
           </p>
         </div>
       </section>
@@ -442,3 +442,4 @@ th {
   }
 }
 </style>
+
