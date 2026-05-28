@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProfValidationRequests } from "../store/profValidationRequests";
 
@@ -13,6 +14,14 @@ const { findStudentRequests } = useProfValidationRequests();
 const studentId = computed(() => String(route.params.id ?? ""));
 const studentRequests = computed(() => findStudentRequests(studentId.value));
 const student = computed(() => studentRequests.value[0]);
+
+const profileBadges = computed(() => {
+  const title = studentRequests.value.map((request) => request.title).join(" ").toLowerCase();
+  if (title.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (title.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (title.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
+  return ["🌐 Web Developer"];
+});
 </script>
 
 <template>
@@ -31,6 +40,7 @@ const student = computed(() => studentRequests.value[0]);
           <div>
             <p class="profile-kicker">Profil étudiant</p>
             <h1>{{ student.studentName }}</h1>
+            <SkillBadges :badges="profileBadges" compact />
             <p>Demandes liées aux validations professeur.</p>
           </div>
         </div>

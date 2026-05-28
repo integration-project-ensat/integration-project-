@@ -1,6 +1,6 @@
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
-
+const passport = require('./src/config/passport');
 const path = require('path')
 const express = require('express')
 
@@ -37,7 +37,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 // Sécurité & CORS
 app.use(securityHeaders)
 app.use(corsMiddleware)
-
+app.use(passport.initialize());
 // Body parser
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
@@ -79,7 +79,12 @@ app.use('/api/badges', badgeRoutes);
 app.use('/api', portfolioRoutes)
 app.use('/api', lettreRoutes)
 
-// 404 not found handler
+app.use('/api/projets', projetRoutes)
+app.use('/api/stages', stageRoutes)
+app.use('/api/activites', activiteRoutes)
+app.use('/api/attestations', attestationRoutes)
+
+// 404
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -88,8 +93,7 @@ app.use((req, res) => {
   })
 })
 
-// Erreurs globales
+// error middleware LAST
 app.use(errorMiddleware)
-
 
 module.exports = app

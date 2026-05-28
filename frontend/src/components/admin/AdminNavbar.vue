@@ -46,6 +46,7 @@ defineEmits(['toggleSidebar', 'toggleTheme'])
   left: 0;
   right: 0;
   z-index: 200;
+  box-shadow: 0 1px 0 #e8eaf0, 0 2px 8px rgba(0,0,0,0.06);
 }
  
 .left {

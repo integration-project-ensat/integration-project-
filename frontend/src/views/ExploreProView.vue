@@ -15,6 +15,7 @@ import {
   type ProfilExplore
 } from '../services/profilApi'
 
+<<<<<<< HEAD
 // ─── State ────────────────────────────────────
 const searchQuery    = ref('')
 const sidebarOpen    = ref(true)
@@ -24,6 +25,55 @@ const profiles       = ref<ProfilExplore[]>([])
 const savedIds       = ref<Set<string>>(new Set())
 const savedFeedbackId = ref<string | null>(null)
 const pagination     = ref({ total: 0, page: 1, limit: 10, pages: 1 })
+=======
+interface Profile {
+  id: number;
+  name: string;
+  role: string;
+  school: string;
+  city: string;
+  score: number;
+  recommendations: number;
+  badges?: string[];
+  recos?: Array<{ name: string; role: string }>;
+}
+
+const searchQuery = ref("");
+const sidebarOpen = ref(true);
+const savedFeedbackId = ref<string | null>(null);
+const { isSaved, saveProfile } = useProSavedProfiles();
+
+const profiles = ref<Profile[]>([
+  {
+    id: 1,
+    name: "Nom Prenom",
+    role: "Ex Developer Operation & Support",
+    school: "Ex Dassault  Universite de Bretagne Occidentale",
+    city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
+    score: 90,
+    recommendations: 500,
+    badges: ["🌊 DevOps", "🌐 Web Developer", "🔐 Security Aware"],
+    recos: [
+      { name: "Nom Prof", role: "Ex Ecole Nationale des Sciences Appliques" },
+      {
+        name: "Nom Professionelle",
+        role: "Ex Ecole Nationale des Sciences Appliques",
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: "Nom Prenom",
+    role: "Ex Developer Operation & Support",
+    school: "Ex Dassault  Universite de Bretagne Occidentale",
+    city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
+    score: 75,
+    recommendations: 500,
+    badges: ["🌐 Web Developer", "🧠 AI / Data", "🏆 Hackathon Participant"],
+    recos: [],
+  },
+]);
+>>>>>>> c6bc05489cb3c5addd301459ec1ee473be200fec
 
 const filters = ref({
   filiere:         '',
@@ -129,8 +179,45 @@ const adapterProfil = (p: ProfilExplore) => ({
 })
 
 const handleUpdateFilters = (next: typeof filters.value) => {
-  filters.value = next
-}
+  filters.value = next;
+};
+
+const profileId = (profile: Profile) => `explore-pro-${profile.id}`;
+
+const toggleSavedProfile = (profile: Profile) => {
+  const id = profileId(profile);
+  const saved = saveProfile({
+    id,
+    name: profile.name,
+    school: profile.school,
+    field: profile.role,
+    city: profile.city,
+    score: profile.score,
+    recommendations: profile.recommendations,
+    badges: profile.badges,
+    hasPortfolio: true,
+    profilePath: `/profile/student/${id}`,
+    portfolioPath: `/projects/${id}`,
+  });
+
+  savedFeedbackId.value = id;
+  window.setTimeout(() => {
+    if (savedFeedbackId.value === id) savedFeedbackId.value = null;
+  }, 1200);
+};
+
+const filteredProfiles = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return profiles.value;
+  return profiles.value.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.role.toLowerCase().includes(q) ||
+      p.school.toLowerCase().includes(q) ||
+      p.city.toLowerCase().includes(q),
+  );
+});
+
 </script>
 
 <template>

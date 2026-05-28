@@ -596,11 +596,12 @@ const exportCSV = () => {
 .main-content.sidebar-open { left: 185px; }
 
 .page-content {
-  padding: 28px 30px;
+  padding: 28px 8px 30px 43px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   min-height: 100%;
+  background: #dfe2ea;
 }
 
 /* ══ Page header ══════════════════════════════════════ */

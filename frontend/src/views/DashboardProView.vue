@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-vue-next";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProConnections } from "../store/proConnections";
 import { useProSavedProfiles } from "../store/proSavedProfiles";
@@ -24,6 +25,7 @@ interface Intern {
   city: string;
   score: number;
   startDate: string;
+  badges: string[];
   status: "Actif" | "Terminé";
   profilePath: string;
   portfolioPath: string;
@@ -45,6 +47,7 @@ const interns = ref<Intern[]>([
     city: "Tanger",
     score: 85,
     startDate: "12/05/2026",
+    badges: ["🌊 DevOps", "🔐 Security Aware"],
     status: "Actif",
     profilePath: "/profile/student/yassine-el-amrani",
     portfolioPath: "/projects/stage-devops",
@@ -58,6 +61,7 @@ const interns = ref<Intern[]>([
     city: "Tanger",
     score: 95,
     startDate: "02/04/2026",
+    badges: ["🧠 AI / Data", "🌐 Web Developer"],
     status: "Actif",
     profilePath: "/profile/student/sara-alaoui",
     portfolioPath: "/projects/cloud-dashboard",
@@ -71,6 +75,7 @@ const interns = ref<Intern[]>([
     city: "Fès",
     score: 80,
     startDate: "15/02/2026",
+    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
     status: "Terminé",
     profilePath: "/profile/student/nora-tazi",
     portfolioPath: "/projects/mobile-ensa",
@@ -223,7 +228,10 @@ const submitStage = () => {
                       @click="openPath(intern.profilePath)"
                     >
                       <span>{{ intern.initials }}</span>
-                      {{ intern.name }}
+                      <div>
+                        <strong>{{ intern.name }}</strong>
+                        <SkillBadges :badges="intern.badges" compact />
+                      </div>
                     </button>
                   </td>
                   <td>{{ intern.school }}</td>
@@ -279,6 +287,7 @@ const submitStage = () => {
               <span>{{ profile.name.slice(0, 2).toUpperCase() }}</span>
               <div>
                 <strong>{{ profile.name }}</strong>
+                <SkillBadges :badges="profile.badges" compact />
                 <p>{{ profile.score }}+ · {{ profile.recommendations }} recos</p>
                 <small>{{
                   profile.hasPortfolio ? "Portfolio disponible" : "Sans portfolio"

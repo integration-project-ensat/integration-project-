@@ -1,7 +1,8 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import {
   type RecommendationRequest,
@@ -19,6 +20,8 @@ const writingRequest = ref<RecommendationRequest | null>(null);
 const letterDraft = ref("");
 const { recommendations, updateRecommendationStatus } =
   useProfRecommendationRequests();
+const acceptedStatus = "Acceptée" as RecommendationStatus;
+const refusedStatus = "Refusée" as RecommendationStatus;
 
 const tabs: RecommendationTab[] = [
   "Tout",
@@ -34,18 +37,18 @@ const filteredRequests = computed(() => {
     );
   }
   if (activeTab.value === "Acceptées") {
-    return recommendations.value.filter((request) => request.status === "Acceptée");
+    return recommendations.value.filter((request) => request.status === acceptedStatus);
   }
   if (activeTab.value === "Refusées") {
-    return recommendations.value.filter((request) => request.status === "Refusée");
+    return recommendations.value.filter((request) => request.status === refusedStatus);
   }
   return recommendations.value.filter((request) => request.status === "En attente");
 });
 
 const statusClass = (status: RecommendationStatus) => ({
   "is-pending": status === "En attente",
-  "is-valid": status === "Acceptée",
-  "is-refused": status === "Refusée",
+  "is-valid": status === acceptedStatus,
+  "is-refused": status === refusedStatus,
 });
 
 const openStudentProfile = (request: RecommendationRequest) => {
@@ -74,7 +77,7 @@ const sendLetter = () => {
   if (writingRequest.value) {
     updateRecommendationStatus(
       writingRequest.value.id,
-      "Acceptée",
+      acceptedStatus,
       letterDraft.value.trim(),
     );
   }
@@ -82,7 +85,15 @@ const sendLetter = () => {
 };
 
 const refuseRequest = (request: RecommendationRequest) => {
-  updateRecommendationStatus(request.id, "Refusée");
+  updateRecommendationStatus(request.id, refusedStatus);
+};
+
+const studentBadges = (request: RecommendationRequest) => {
+  const text = `${request.profileInfo} ${request.title}`.toLowerCase();
+  if (text.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (text.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (text.includes("cyber")) return ["🔐 Security Aware", "🏆 Hackathon Participant"];
+  return ["🌐 Web Developer"];
 };
 </script>
 
@@ -146,6 +157,7 @@ const refuseRequest = (request: RecommendationRequest) => {
                   >
                     {{ request.studentName }}
                   </button>
+                  <SkillBadges :badges="studentBadges(request)" compact />
                   <p class="profile-info">{{ request.profileInfo }}</p>
                 </div>
                 <span class="status-badge" :class="statusClass(request.status)">
@@ -166,6 +178,7 @@ const refuseRequest = (request: RecommendationRequest) => {
                   Voir détails
                 </button>
                 <button
+                  v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn primary"
                   @click.stop="openWriteModal(request)"
@@ -173,6 +186,7 @@ const refuseRequest = (request: RecommendationRequest) => {
                   Accepter et écrire
                 </button>
                 <button
+                  v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn danger"
                   @click.stop="refuseRequest(request)"
@@ -243,6 +257,7 @@ const refuseRequest = (request: RecommendationRequest) => {
             Fermer
           </button>
           <button
+            v-if="selectedRequest.status === 'En attente'"
             type="button"
             class="action-btn primary"
             @click="openWriteModal(selectedRequest)"
@@ -250,6 +265,7 @@ const refuseRequest = (request: RecommendationRequest) => {
             Accepter et écrire
           </button>
           <button
+            v-if="selectedRequest.status === 'En attente'"
             type="button"
             class="action-btn danger"
             @click="refuseRequest(selectedRequest); closeDetailsModal()"
@@ -723,3 +739,6 @@ const refuseRequest = (request: RecommendationRequest) => {
   }
 }
 </style>
+
+
+

@@ -78,6 +78,7 @@ const initials = (name) =>
   background: #fff;
   border: 1px solid #e8eaf0;
   border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   padding: 24px;
 }
  

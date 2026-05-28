@@ -1,4 +1,4 @@
-import { computed, ref } from "vue";
+﻿import { computed, ref } from "vue";
 
 export type RecommendationStatus = "En attente" | "Acceptée" | "Refusée";
 
@@ -159,3 +159,4 @@ export const useProfRecommendationRequests = () => ({
   groupedRecommendations,
   updateRecommendationStatus,
 });
+

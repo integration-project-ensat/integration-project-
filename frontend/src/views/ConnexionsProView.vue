@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
+import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import {
   type ProConnectionStatus,
@@ -35,6 +36,14 @@ const visibleRequests = computed(() => {
 
 const setStatus = (id: string, status: ProConnectionStatus) => {
   updateRequest(id, status);
+};
+
+const connectionBadges = (field: string) => {
+  const normalized = field.toLowerCase();
+  if (normalized.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
+  if (normalized.includes("data")) return ["🧠 AI / Data"];
+  if (normalized.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  return ["🌐 Web Developer"];
 };
 </script>
 
@@ -87,6 +96,7 @@ const setStatus = (id: string, status: ProConnectionStatus) => {
                 {{ request.name }}
               </button>
               <p>{{ request.school }} · {{ request.field }}</p>
+              <SkillBadges :badges="connectionBadges(request.field)" compact />
               <span>{{ request.message }}</span>
               <small>{{ request.time }}</small>
 
