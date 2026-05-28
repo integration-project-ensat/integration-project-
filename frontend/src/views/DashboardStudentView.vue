@@ -1,11 +1,11 @@
 <template>
-  <main class="student-dashboard-page" />
+  <DashboardView />
 </template>
 
+<script setup lang="ts">
+import DashboardView from './DashboardView.vue'
+</script>
+
 <style scoped>
-.student-dashboard-page {
-  min-height: 100vh;
-  width: 100vw;
-  background: white;
-}
+/* Styles will be inherited from DashboardView */
 </style>

@@ -28,6 +28,7 @@ import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
 import DashboardView from '../views/DashboardView.vue';
+import DashboardRouterView from '../views/DashboardRouterView.vue';
 import LettersView from '../views/LettersView.vue';
 import ProjectsView from '../views/ProjectsView.vue';
 import SettingsView from '../views/SettingsView.vue';
@@ -39,7 +40,7 @@ import ActivitesView from "../views/ActivitesView.vue";
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory("/"),
   routes: [
     { path: "/", redirect: "/login" },
@@ -49,15 +50,20 @@ export default createRouter({
     { path: "/reset-password", name: "reset", component: ResetPasswordView },
     { path: "/verify-code", name: "verify-code", component: VerifyCodeView },
     { path: "/explore", name: "explore", component: ExploreView },
-    { path: '/admin',component: AdminDashboardView },
-    { path: '/admin/profils', component : AdminProfilesView },
-    { path: '/admin/portfolios', component: AdminPortfoliosView },
-    { path:  '/admin/activites', component: AdminActivitiesView },
-    { path: "/admin/projets" , component:AdminProjetsView },
-    { path: '/admin/certifications', component: AdminCertificationsView },
+    { path: '/admin', component: AdminDashboardView, meta: { requiresAuth: true, requiresRole: 'admin' } },
+    { path: '/admin/profils', component: AdminProfilesView, meta: { requiresAuth: true, requiresRole: 'admin' } },
+    { path: '/admin/portfolios', component: AdminPortfoliosView, meta: { requiresAuth: true, requiresRole: 'admin' } },
+    { path: '/admin/activites', component: AdminActivitiesView, meta: { requiresAuth: true, requiresRole: 'admin' } },
+    { path: "/admin/projets" , component: AdminProjetsView, meta: { requiresAuth: true, requiresRole: 'admin' } },
+    { path: '/admin/certifications', component: AdminCertificationsView, meta: { requiresAuth: true, requiresRole: 'admin' } },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
     { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
-    { path: "/dashboard", redirect: "/pro/dashboard" },
+    {
+      path: "/dashboard",
+      name: "dashboard",
+      component: DashboardRouterView,
+      meta: { requiresAuth: true }
+    },
     {
       path: "/pro/dashboard",
       name: "pro-dashboard",
@@ -68,7 +74,7 @@ export default createRouter({
       name: "student-dashboard",
       component: DashboardStudentView,
     },
-    { path: "/feed", redirect: "/student/feed" },
+    { path: "/feed", name: "feed", component: FeedView },
     { path: "/student/feed", name: "student-feed", component: FeedView },
     { path: "/prof/feed", name: "prof-feed", component: FeedView },
     { path: "/pro/feed", name: "pro-feed", component: FeedView },
@@ -92,7 +98,7 @@ export default createRouter({
       name: "pro-top-profiles",
       component: TopProfilesProView,
     },
-    { path: "/top-profiles", redirect: "/pro/top-profiles" },
+    { path: "/top-profiles", name: "top-profiles" },
     {
       path: "/projects/:id",
       name: "feed-project-details",
@@ -123,9 +129,8 @@ export default createRouter({
       name: "prof-student-profile",
       component: ProfStudentProfileView,
     },
-    { path: "/validations", redirect: "/prof/validations" },
+    { path: "/validations", name: "validations" },
     { path: '/profile', name: 'profile', component: StudentProfileView },
-    { path: "/dashboard", name: "dashboard", component: DashboardView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
     { path: "/projets", name: "projets", component: Placeholder },
@@ -141,3 +146,42 @@ export default createRouter({
     { path: "/activites", name: "activites", component: ActivitesView },
   ],
 });
+
+router.beforeEach((to) => {
+  const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
+
+  // Redirection vers login si pas authentifié
+  if (to.meta.requiresAuth && !token) {
+    return '/login'
+  }
+
+  // Redirection si rôle insuffisant
+  if (to.meta.requiresRole && to.meta.requiresRole !== role) {
+    if (role === 'student') return '/student/dashboard'
+    if (role === 'teacher') return '/prof/dashboard'
+    if (role === 'professional') return '/pro/dashboard'
+    if (role === 'admin') return '/admin'
+    return '/login'
+  }
+
+  // Redirections intelligentes pour les routes génériques vers rôle spécifique
+  if (to.path === '/feed') {
+    if (role === 'teacher') return '/prof/feed'
+    if (role === 'professional') return '/pro/feed'
+    if (role === 'student') return '/student/feed'
+    return '/login'
+  }
+
+  if (to.path === '/top-profiles') {
+    if (role === 'professional') return '/pro/top-profiles'
+    return '/student/dashboard'
+  }
+
+  if (to.path === '/validations') {
+    if (role === 'teacher') return '/prof/validations'
+    return '/student/dashboard'
+  }
+})
+
+export default router

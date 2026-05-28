@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../../prisma/client');
 const { hasPermission } = require('../config/roles');
+const { estRévoqué } = require('../services/tokenBlacklist.service');
 
 const authentifier = async (req, res, next) => {
   try {

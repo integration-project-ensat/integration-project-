@@ -69,8 +69,8 @@ async function seedAdministrateurs(hashAdmin) {
 
     await prisma.profil.upsert({
       where: { id_utilisateur: utilisateur.id_utilisateur },
-      update: { pays: 'Maroc', visibilite: 'PRIVE' },
-      create: { id_utilisateur: utilisateur.id_utilisateur, pays: 'Maroc', visibilite: 'PRIVE' },
+      update: { adresse: 'Maroc', visibilite: 'PRIVE' },
+      create: { id_utilisateur: utilisateur.id_utilisateur, adresse: 'Maroc', visibilite: 'PRIVE' },
     });
 
     await prisma.administrateur.upsert({
@@ -163,14 +163,14 @@ async function seedProfesseurs(hashProfesseur) {
       where: { id_utilisateur: utilisateur.id_utilisateur },
       update: {
         telephone: prof.telephone,
-        pays: 'Maroc',
+        adresse: 'Maroc',
         email_professionnel: prof.email,
         visibilite: 'PUBLIC',
       },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
         telephone: prof.telephone,
-        pays: 'Maroc',
+        adresse: 'Maroc',
         email_professionnel: prof.email,
         visibilite: 'PUBLIC',
       },
@@ -269,7 +269,7 @@ async function seedEtudiants(hashEtudiant) {
       where: { id_utilisateur: utilisateur.id_utilisateur },
       update: {
         telephone: etudiant.telephone,
-        pays: 'Maroc',
+        adresse: 'Maroc',
         linkedin_url: etudiant.linkedin_url,
         bio: `Profil de ${etudiant.prenom} ${etudiant.nom}, etudiant en ${etudiant.filiere}.`,
         visibilite: 'PUBLIC',
@@ -277,7 +277,7 @@ async function seedEtudiants(hashEtudiant) {
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
         telephone: etudiant.telephone,
-        pays: 'Maroc',
+        adresse: 'Maroc',
         linkedin_url: etudiant.linkedin_url,
         bio: `Profil de ${etudiant.prenom} ${etudiant.nom}, etudiant en ${etudiant.filiere}.`,
         visibilite: 'PUBLIC',
@@ -361,10 +361,10 @@ async function seedProfessionnels(hashProfessionnel) {
 
     await prisma.profil.upsert({
       where: { id_utilisateur: utilisateur.id_utilisateur },
-      update: { pays: 'Maroc', email_professionnel: pro.email, visibilite: 'PUBLIC' },
+      update: { adresse: 'Maroc', email_professionnel: pro.email, visibilite: 'PUBLIC' },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
-        pays: 'Maroc',
+        adresse: 'Maroc',
         email_professionnel: pro.email,
         visibilite: 'PUBLIC',
       },

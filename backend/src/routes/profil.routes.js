@@ -1,4 +1,3 @@
-// src/routes/profil.router.js
 const express = require('express');
 const router  = express.Router();
 const { param } = require('express-validator');
@@ -6,7 +5,7 @@ const { param } = require('express-validator');
 const profilController = require('../controllers/profil.controller');
 const { ProfilValidator } = require('../validators/profil.validator');
 const validate        = require('../middlewares/validate');
-const { authentifier } = require('../middlewares/auth.middleware');
+const { authentifier, autoriserRoles } = require('../middlewares/auth.middleware');
 const isOwnerProfil   = require('../middlewares/isOwnerProfil');
 
 router.use(authentifier);
@@ -19,11 +18,21 @@ const validerId = [
     .toInt()
 ];
 
-// ─── Routes /me (ownership implicite via JWT) ─
-// GET  /profil/me — récupérer son propre profil complet
+// ─── Explorer (tous les rôles authentifiés) ───
+// GET /profil?search=&filiere=&ville=&competences=&score=&page=&limit=
+router.get('/', profilController.explorerProfils);
+
+// ─── Sauvegardes — AVANT /:id ─────────────────
+// GET    /profil/saved
+router.get(
+  '/saved',
+  autoriserRoles('PROFESSIONNEL'),
+  profilController.getMesSauvegardes
+);
+
+// ─── Routes /me ───────────────────────────────
 router.get('/me', profilController.getMonProfil);
 
-// PUT  /profil/me — mettre à jour son propre profil
 router.put(
   '/me',
   validate(ProfilValidator.mettreAJour),
@@ -31,7 +40,23 @@ router.put(
 );
 
 // ─── Routes /:id ──────────────────────────────
-// PUT /profil/:id — admin ou propriétaire (upsert)
+// POST   /profil/:id/save
+router.post(
+  '/:id/save',
+  validate(validerId),
+  autoriserRoles('PROFESSIONNEL'),
+  profilController.sauvegarderProfil
+);
+
+// DELETE /profil/:id/save
+router.delete(
+  '/:id/save',
+  validate(validerId),
+  autoriserRoles('PROFESSIONNEL'),
+  profilController.supprimerSauvegarde
+);
+
+// PUT /profil/:id
 router.put(
   '/:id',
   validate(validerId),
@@ -40,8 +65,7 @@ router.put(
   profilController.updateProfilParId
 );
 
-// GET /profil/:id — voir le profil d'un autre utilisateur
-// (déclaré en dernier pour ne pas capturer /me)
+// GET /profil/:id
 router.get(
   '/:id',
   validate(validerId),

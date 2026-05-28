@@ -10,165 +10,179 @@
       />
 
       <main class="content" :class="{ shifted: sidebarOpen }">
-        <section class="dashboard-head">
-          <div>
-            <h1>Dashboard</h1>
-            <p>Vue globale des statistiques, profils et opportunités.</p>
-          </div>
+        <!-- État de chargement -->
+        <div v-if="isLoading" class="loading-state">
+          <p>Chargement de votre dashboard...</p>
+        </div>
 
-          <div class="role-tabs">
-            <button
-              type="button"
-              class="role-tab"
-              :class="{ active: userRole === 'student' }"
-              @click="userRole = 'student'"
-            >
-              Étudiant
-            </button>
-            <button
-              type="button"
-              class="role-tab"
-              :class="{ active: userRole === 'teacher' }"
-              @click="userRole = 'teacher'"
-            >
-              Professeur
-            </button>
-            <button
-              type="button"
-              class="role-tab"
-              :class="{ active: userRole === 'professional' }"
-              @click="userRole = 'professional'"
-            >
-              Professionnel
-            </button>
-          </div>
-        </section>
+        <!-- État d'erreur -->
+        <div v-else-if="error" class="error-state">
+          <p>⚠️ {{ error }}</p>
+        </div>
 
-        <section class="stats-grid">
-          <div
-            v-for="stat in stats"
-            :key="stat.label"
-            class="stat-card"
-            :style="{ '--accent': stat.color }"
-          >
-            <p>{{ stat.label }}</p>
-            <strong>{{ stat.value }}</strong>
-          </div>
-        </section>
+        <!-- Contenu principal -->
+        <template v-else>
+          <section class="dashboard-head">
+            <div>
+              <h1>Dashboard</h1>
+              <p>Vue globale des statistiques, profils et opportunités.</p>
+            </div>
 
-        <section class="filters-card">
-          <div
-            v-for="filter in filterConfigs"
-            :key="filter.key"
-            class="filter-field"
-          >
-            <label>{{ filter.label }}</label>
-            <div class="custom-select" :class="{ open: openFilter === filter.key }">
+            <div class="role-tabs">
               <button
                 type="button"
-                class="select-trigger"
-                @click="toggleFilter(filter.key)"
+                class="role-tab"
+                :class="{ active: userRole === 'student' }"
+                @click="userRole = 'student'"
               >
-                <span>{{ filters[filter.key] }}</span>
-                <span class="chevron">
-                  <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </span>
+                Étudiant
               </button>
-              <div v-if="openFilter === filter.key" class="select-menu">
-                <button
-                  v-for="option in filter.options"
-                  :key="option"
-                  type="button"
-                  class="select-option"
-                  :class="{ selected: filters[filter.key] === option }"
-                  @click="selectFilter(filter.key, option)"
-                >
-                  {{ option }}
-                </button>
-              </div>
+              <button
+                type="button"
+                class="role-tab"
+                :class="{ active: userRole === 'teacher' }"
+                @click="userRole = 'teacher'"
+              >
+                Professeur
+              </button>
+              <button
+                type="button"
+                class="role-tab"
+                :class="{ active: userRole === 'professional' }"
+                @click="userRole = 'professional'"
+              >
+                Professionnel
+              </button>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="dashboard-grid">
-          <article class="panel progress-panel">
-            <h2>Progression du profil</h2>
-            <div class="progress-row">
-              <span>Portfolio</span>
-              <strong>{{ profileProgress }}%</strong>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" :style="{ width: profileProgress + '%' }"></div>
-            </div>
-            <ul>
-              <li>Informations personnelles complétées</li>
-              <li>GitHub connecté</li>
-              <li>Ajouter un CV</li>
-            </ul>
-          </article>
-
-          <article class="panel">
-            <h2>Activité récente</h2>
-            <div class="activity-list">
-              <p v-for="(activity, index) in activities" :key="activity">
-                <span :class="`dot-${index}`"></span>
-                {{ activity }}
-              </p>
-            </div>
-          </article>
-
-          <article class="panel">
-            <h2>Opportunités</h2>
-            <div class="opportunity">
-              <strong>
-                <span class="opp-badge green">3 stages</span>
-                compatibles
-              </strong>
-              <p>Basés sur vos compétences et votre filière.</p>
-            </div>
-            <div class="opportunity">
-              <strong>
-                <span class="opp-badge coral">5 professionnels</span>
-                à connecter
-              </strong>
-              <p>Profils proches de votre domaine.</p>
-            </div>
-          </article>
-        </section>
-
-        <section class="results-card">
-          <div class="results-head">
-            <h2>Résultats filtrés</h2>
-            <span>{{ filteredProfiles.length }} profils</span>
-          </div>
-          <div class="profile-grid">
-            <article
-              v-for="profile in filteredProfiles"
-              :key="profile.name"
-              class="profile-card"
+          <section class="stats-grid">
+            <div
+              v-for="stat in stats"
+              :key="stat.label"
+              class="stat-card"
+              :style="{ '--accent': stat.color }"
             >
-              <div class="avatar" :class="avatarColorClass(profile.name)">
-                {{ getInitials(profile.name) }}
+              <p>{{ stat.label }}</p>
+              <strong>{{ stat.value }}</strong>
+            </div>
+          </section>
+
+          <section class="filters-card">
+            <div
+              v-for="filter in filterConfigs"
+              :key="filter.key"
+              class="filter-field"
+            >
+              <label>{{ filter.label }}</label>
+              <div class="custom-select" :class="{ open: openFilter === filter.key }">
+                <button
+                  type="button"
+                  class="select-trigger"
+                  @click="toggleFilter(filter.key)"
+                >
+                  <span>{{ filters[filter.key] }}</span>
+                  <span class="chevron">
+                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                </button>
+                <div v-if="openFilter === filter.key" class="select-menu">
+                  <button
+                    v-for="option in filter.options"
+                    :key="option"
+                    type="button"
+                    class="select-option"
+                    :class="{ selected: filters[filter.key] === option }"
+                    @click="selectFilter(filter.key, option)"
+                  >
+                    {{ option }}
+                  </button>
+                </div>
               </div>
-              <div>
-                <h3>{{ profile.name }}</h3>
-                <p>{{ profile.role }} • {{ profile.city }}</p>
-                <p>{{ profile.level }} • {{ profile.skill }}</p>
+            </div>
+          </section>
+
+          <section class="dashboard-grid">
+            <article class="panel progress-panel">
+              <h2>Progression du profil</h2>
+              <div class="progress-row">
+                <span>Portfolio</span>
+                <strong>{{ profileProgress }}%</strong>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" :style="{ width: profileProgress + '%' }"></div>
+              </div>
+              <ul>
+                <li>Informations personnelles complétées</li>
+                <li>GitHub connecté</li>
+                <li>Ajouter un CV</li>
+              </ul>
+            </article>
+
+            <article class="panel">
+              <h2>Activité récente</h2>
+              <div class="activity-list">
+                <p v-for="(activity, index) in activities" :key="activity">
+                  <span :class="`dot-${index}`"></span>
+                  {{ activity }}
+                </p>
               </div>
             </article>
-          </div>
-        </section>
+
+            <article class="panel">
+              <h2>Opportunités</h2>
+              <div class="opportunity">
+                <strong>
+                  <span class="opp-badge green">3 stages</span>
+                  compatibles
+                </strong>
+                <p>Basés sur vos compétences et votre filière.</p>
+              </div>
+              <div class="opportunity">
+                <strong>
+                  <span class="opp-badge coral">5 professionnels</span>
+                  à connecter
+                </strong>
+                <p>Profils proches de votre domaine.</p>
+              </div>
+            </article>
+          </section>
+
+          <section class="results-card">
+            <div class="results-head">
+              <h2>Résultats filtrés</h2>
+              <span>{{ filteredProfiles.length }} profils</span>
+            </div>
+            <div class="profile-grid">
+              <article
+                v-for="profile in filteredProfiles"
+                :key="profile.name"
+                class="profile-card"
+              >
+                <div class="avatar" :class="avatarColorClass(profile.name)">
+                  {{ getInitials(profile.name) }}
+                </div>
+                <div>
+                  <h3>{{ profile.name }}</h3>
+                  <p>{{ profile.role }} • {{ profile.city }}</p>
+                  <p>{{ profile.level }} • {{ profile.skill }}</p>
+                </div>
+              </article>
+            </div>
+          </section>
+        </template>
       </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, onMounted } from "vue";
 import TopBar from "../components/TopBar.vue";
 import SideBar from "../components/exploreStudent/Sidebar.vue";
+import studentApi from "@/services/studentApi";
 
 type UserRole = "student" | "teacher" | "professional";
 type FilterKey = "category" | "degree" | "certification" | "city" | "gender";
@@ -176,14 +190,16 @@ type FilterKey = "category" | "degree" | "certification" | "city" | "gender";
 const sidebarOpen = ref(true);
 const userRole = ref<UserRole>("student");
 const openFilter = ref<FilterKey | null>(null);
+const isLoading = ref(true);
+const error = ref<string | null>(null);
 
-const currentUser = {
-  name: "Nom Prenom",
-  email: "Exemple.exemple@univ.etu.ac.ma",
+const currentUser = ref({
+  name: "Chargement...",
+  email: "",
   avatar: "",
-};
+});
 
-const profileProgress = 75;
+const profileProgress = ref(75);
 
 const filters = reactive<Record<FilterKey, string>>({
   category: "Tous",
@@ -201,14 +217,14 @@ const filterConfigs: Array<{ key: FilterKey; label: string; options: string[] }>
   { key: "gender",        label: "Sexe",          options: ["Tous", "Femme", "Homme"] },
 ];
 
-const studentStats = [
-  { label: "Score profil",    value: "90+",   color: "#5b4fcf" },
-  { label: "Recommandations", value: "500+",  color: "#0f9e74" },
-  { label: "Projets",         value: "8",     color: "#d85a30" },
-  { label: "Stages postulés", value: "12",    color: "#ba7517" },
-  { label: "Certifications",  value: "4",     color: "#185fa5" },
-  { label: "Vues du profil",  value: "1 240", color: "#d4537e" },
-];
+const studentStats = ref([
+  { label: "Score profil",    value: "0",    color: "#5b4fcf" },
+  { label: "Recommandations", value: "0",   color: "#0f9e74" },
+  { label: "Projets",         value: "0",    color: "#d85a30" },
+  { label: "Stages postulés", value: "0",    color: "#ba7517" },
+  { label: "Certifications",  value: "0",   color: "#185fa5" },
+  { label: "Vues du profil",  value: "0", color: "#d4537e" },
+]);
 
 const teacherStats = [
   { label: "Étudiants suivis",        value: "34",   color: "#5b4fcf" },
@@ -231,14 +247,14 @@ const professionalStats = [
 const stats = computed(() => {
   if (userRole.value === "teacher") return teacherStats;
   if (userRole.value === "professional") return professionalStats;
-  return studentStats;
+  return studentStats.value;
 });
 
-const activities = [
+const activities = ref([
   "Nouvelle recommandation reçue",
   "Projet ajouté au portfolio",
   "Certification ajoutée",
-];
+]);
 
 // Ajout de la propriété 'gender' sur chaque profil pour correspondre au filtre
 const profiles = [
@@ -260,6 +276,54 @@ const filteredProfiles = computed(() =>
     return matchCategory && matchDegree && matchCertification && matchCity && matchGender;
   })
 );
+
+// Charge les données du dashboard depuis l'API
+const loadDashboard = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+
+    // Charger le dashboard étudiant
+    const dashboardResponse = await studentApi.getStudentDashboard();
+    
+    if (dashboardResponse.data.success) {
+      const data = dashboardResponse.data.data;
+      
+      // Mettre à jour l'utilisateur courant
+      currentUser.value = {
+        name: data.profile.nom,
+        email: data.profile.email,
+        avatar: data.profile.photo || "",
+      };
+      
+      // Mettre à jour la progression du profil
+      profileProgress.value = data.profileProgress || 75;
+      
+      // Mettre à jour les statistiques
+      studentStats.value = [
+        { label: "Score profil",    value: String(data.stats.scoreProfile),    color: "#5b4fcf" },
+        { label: "Recommandations", value: String(data.stats.recommandations), color: "#0f9e74" },
+        { label: "Projets",         value: String(data.stats.projets),         color: "#d85a30" },
+        { label: "Stages postulés", value: String(data.stats.stagesPostules),  color: "#ba7517" },
+        { label: "Certifications",  value: String(data.stats.certifications),  color: "#185fa5" },
+        { label: "Vues du profil",  value: String(data.stats.vuesProfile),     color: "#d4537e" },
+      ];
+      
+      // Mettre à jour l'activité récente
+      activities.value = data.activities.map((a: any) => a.action).slice(0, 3);
+    }
+  } catch (err: any) {
+    console.error("Erreur lors du chargement du dashboard:", err);
+    error.value = err.response?.data?.message || "Erreur lors du chargement des données";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  // Charger les données au montage du composant
+  loadDashboard();
+});
 
 function toggleFilter(key: FilterKey) {
   openFilter.value = openFilter.value === key ? null : key;
@@ -749,5 +813,35 @@ function avatarColorClass(name: string) {
   .stats-grid,
   .filters-card,
   .profile-grid    { grid-template-columns: 1fr; }
+}
+
+/* ── States (Loading & Error) ──────────────────────────────────────────── */
+.loading-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+  text-align: center;
+}
+
+.loading-state p {
+  font-size: 1.1rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.error-state {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+.error-state p {
+  font-size: 1rem;
+  color: #d32f2f;
+  font-weight: 500;
 }
 </style>

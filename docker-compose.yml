@@ -10,8 +10,6 @@ services:
     expose:
       - "80"
 
-=======
-      dockerfile: Dockerfile.dev
     depends_on:
       - backend
  

@@ -4,7 +4,7 @@ const { ROLES } = require('../config/roles');
 const { recalculerScore } = require('./score.service');
 
 // ─────────────────────────────────────────────
-// SCRUM-55 : buildProfileInclude(role)
+// buildProfileInclude(role)
 // ─────────────────────────────────────────────
 const buildProfileInclude = (role) => {
   switch (role) {
@@ -79,21 +79,19 @@ class ProfilService {
     const donnees = await prisma.utilisateur.findUnique({
       where: { id_utilisateur: BigInt(utilisateur.id_utilisateur) },
       select: {
-        id_utilisateur: true,
-        nom: true,
-        prenom: true,
-        email: true,
-        role: true,
-        date_creation: true,
+        id_utilisateur:     true,
+        nom:                true,
+        prenom:             true,
+        email:              true,
+        role:               true,
+        date_creation:      true,
         derniere_connexion: true,
-        profil: true,
+        profil:             true,
         ...buildProfileInclude(utilisateur.role)
       }
     });
 
     if (!donnees) return null;
-
-    // score_completude vient de score_credibilite déjà inclus dans buildProfileInclude
     return donnees;
   }
 
@@ -102,11 +100,11 @@ class ProfilService {
       where: { id_utilisateur: BigInt(idCible) },
       select: {
         id_utilisateur: true,
-        nom: true,
-        prenom: true,
-        email: true,
-        role: true,
-        profil: true
+        nom:            true,
+        prenom:         true,
+        email:          true,
+        role:           true,
+        profil:         true
       }
     });
 
@@ -124,7 +122,7 @@ class ProfilService {
     }
 
     const avecRole = await prisma.utilisateur.findUnique({
-      where: { id_utilisateur: BigInt(idCible) },
+      where:  { id_utilisateur: BigInt(idCible) },
       select: { ...buildProfileInclude(donnees.role) }
     });
 
@@ -134,7 +132,7 @@ class ProfilService {
   // ─── ÉCRITURE ─────────────────────────────
 
   async mettreAJourProfil(idUtilisateur, data) {
- const champsCommuns = {
+    const champsCommuns = {
       ...(data.photo_profil        !== undefined && { photo_profil:        data.photo_profil }),
       ...(data.telephone           !== undefined && { telephone:           data.telephone }),
       ...(data.adresse             !== undefined && { adresse:             data.adresse }),
@@ -142,13 +140,13 @@ class ProfilService {
       ...(data.bio                 !== undefined && { bio:                 data.bio }),
       ...(data.linkedin_url        !== undefined && { linkedin_url:        data.linkedin_url }),
       ...(data.visibilite          !== undefined && { visibilite:          data.visibilite })
-    }; 
-//si le profil n'existe pas (migration, bug inscription, etc.)
+    };
+
     const profil = await prisma.profil.upsert({
-      where: { id_utilisateur: BigInt(idUtilisateur) },
+      where:  { id_utilisateur: BigInt(idUtilisateur) },
       update: champsCommuns,
-    create: {
-        id_utilisateur: BigInt(idUtilisateur),
+      create: {
+        id_utilisateur:      BigInt(idUtilisateur),
         photo_profil:        data.photo_profil        ?? null,
         telephone:           data.telephone           ?? null,
         adresse:             data.adresse             ?? null,
@@ -160,15 +158,12 @@ class ProfilService {
     });
 
     await recalculerScore(idUtilisateur);
-
     return profil;
   }
 
-  // ─── ADMIN : modifier le profil d'un utilisateur ──
-
   async updateProfilParId(idCible, data) {
     const utilisateur = await prisma.utilisateur.findUnique({
-      where: { id_utilisateur: BigInt(idCible) },
+      where:  { id_utilisateur: BigInt(idCible) },
       select: { id_utilisateur: true }
     });
 
@@ -179,7 +174,7 @@ class ProfilService {
     }
 
     const profil = await prisma.profil.upsert({
-      where: { id_utilisateur: BigInt(idCible) },
+      where:  { id_utilisateur: BigInt(idCible) },
       update: {
         ...(data.photo_profil        !== undefined && { photo_profil:        data.photo_profil }),
         ...(data.telephone           !== undefined && { telephone:           data.telephone }),
@@ -202,8 +197,233 @@ class ProfilService {
     });
 
     await recalculerScore(idCible);
-
     return profil;
+  }
+
+  // ─── EXPLORER ─────────────────────────────
+
+  async explorerProfils(filtres) {
+    const {
+      search,
+      filiere,
+      ville,
+      competences,
+      score,
+      recommandations,
+      page  = 1,
+      limit = 10
+    } = filtres;
+
+    const pageNum  = Math.max(1, parseInt(page));
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+    const skip     = (pageNum - 1) * limitNum;
+
+    const where = {
+      role:      'ETUDIANT',
+      est_actif: true,
+      profil:    { visibilite: { not: 'PRIVE' } }
+    };
+
+    if (search) {
+      where.OR = [
+        { nom:    { contains: search, mode: 'insensitive' } },
+        { prenom: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    if (filiere || competences || score || recommandations) {
+      where.etudiant = {};
+
+      if (filiere) {
+        where.etudiant.filiere = { contains: filiere, mode: 'insensitive' };
+      }
+
+      if (competences) {
+        const liste = Array.isArray(competences) ? competences : [competences];
+        where.etudiant.competences = {
+          some: {
+            competence: { nom: { in: liste, mode: 'insensitive' } }
+          }
+        };
+      }
+
+      if (score) {
+        where.etudiant.score_credibilite = {
+          score_total: { gte: parseFloat(score) }
+        };
+      }
+
+      if (recommandations) {
+        where.etudiant.recommandations_recues = {
+          some: { statut: 'VALIDE' }
+        };
+      }
+    }
+
+    if (ville) {
+      where.profil = {
+        ...where.profil,
+        adresse: { contains: ville, mode: 'insensitive' }
+      };
+    }
+
+    const [total, profils] = await Promise.all([
+      prisma.utilisateur.count({ where }),
+      prisma.utilisateur.findMany({
+        where,
+        skip,
+        take: limitNum,
+        select: {
+          id_utilisateur: true,
+          nom:            true,
+          prenom:         true,
+          profil: {
+            select: {
+              photo_profil: true,
+              bio:          true,
+              adresse:      true,
+              linkedin_url: true,
+              visibilite:   true
+            }
+          },
+          etudiant: {
+            select: {
+              filiere:             true,
+              annee_universitaire: true,
+              score_credibilite: {
+                select: { score_total: true, niveau: true }
+              },
+              competences: {
+                select: {
+                  competence:      { select: { nom: true, categorie: true } },
+                  niveau_maitrise: true
+                },
+                take: 5
+              },
+              recommandations_recues: {
+                where:  { statut: 'VALIDE' },
+                select: { id_recommandation: true }
+              },
+              diplomes: {
+                select:  { titre_diplome: true, etablissement: true, annee_fin: true },
+                orderBy: { annee_fin: 'desc' },
+                take: 1
+              },
+              badges: {
+                select: { badge: { select: { nom: true, icone_url: true } } },
+                take: 3
+              }
+            }
+          }
+        },
+        orderBy: [
+          { etudiant: { score_credibilite: { score_total: 'desc' } } },
+          { date_creation: 'desc' }
+        ]
+      })
+    ]);
+
+    const data = profils.map(p => ({
+      ...p,
+      id_utilisateur:     p.id_utilisateur.toString(),
+      nb_recommandations: p.etudiant?.recommandations_recues?.length ?? 0,
+      etudiant: p.etudiant ? {
+        ...p.etudiant,
+        recommandations_recues: undefined
+      } : null
+    }));
+
+    return {
+      data,
+      pagination: {
+        total,
+        page:  pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum)
+      }
+    };
+  }
+
+  // ─── SAUVEGARDES ──────────────────────────
+
+  async sauvegarderProfil(idSauvegardeur, idEtudiant) {
+    const cible = await prisma.utilisateur.findUnique({
+      where:  { id_utilisateur: BigInt(idEtudiant) },
+      select: { role: true, est_actif: true }
+    });
+
+    if (!cible || cible.role !== 'ETUDIANT' || !cible.est_actif) {
+      const err = new Error('Étudiant introuvable');
+      err.status = 404;
+      throw err;
+    }
+
+    const saved = await prisma.profilSauvegarde.upsert({
+      where: {
+        id_sauvegardeur_id_etudiant: {
+          id_sauvegardeur: BigInt(idSauvegardeur),
+          id_etudiant:     BigInt(idEtudiant)
+        }
+      },
+      update: {},
+      create: {
+        id_sauvegardeur: BigInt(idSauvegardeur),
+        id_etudiant:     BigInt(idEtudiant)
+      }
+    });
+
+    return { ...saved, id: saved.id.toString() };
+  }
+
+  async supprimerSauvegarde(idSauvegardeur, idEtudiant) {
+    await prisma.profilSauvegarde.deleteMany({
+      where: {
+        id_sauvegardeur: BigInt(idSauvegardeur),
+        id_etudiant:     BigInt(idEtudiant)
+      }
+    });
+  }
+
+  async getMesSauvegardes(idSauvegardeur) {
+    const sauvegardes = await prisma.profilSauvegarde.findMany({
+      where:   { id_sauvegardeur: BigInt(idSauvegardeur) },
+      orderBy: { date_sauvegarde: 'desc' },
+      select: {
+        id:              true,
+        date_sauvegarde: true,
+        etudiant: {
+          select: {
+            id_utilisateur: true,
+            nom:            true,
+            prenom:         true,
+            profil: {
+              select: { photo_profil: true, bio: true, adresse: true }
+            },
+            etudiant: {
+              select: {
+                filiere: true,
+                score_credibilite: {
+                  select: { score_total: true, niveau: true }
+                },
+                badges: {
+                  select: { badge: { select: { nom: true, icone_url: true } } },
+                  take: 3
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return sauvegardes.map(s => ({
+      ...s,
+      id: s.id.toString(),
+      etudiant: {
+        ...s.etudiant,
+        id_utilisateur: s.etudiant.id_utilisateur.toString()
+      }
+    }));
   }
 }
 

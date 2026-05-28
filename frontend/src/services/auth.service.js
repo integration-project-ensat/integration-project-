@@ -6,6 +6,13 @@ const ROLE_MAP = {
   Professional: 'PROFESSIONNEL'
 }
 
+const BACKEND_TO_FRONT_ROLE = {
+  ADMINISTRATEUR: 'admin',
+  ETUDIANT: 'student',
+  PROFESSEUR: 'teacher',
+  PROFESSIONNEL: 'professional'
+}
+
 const ROLE_FIELDS_MAP = {
   ETUDIANT: {
     numero_etudiant: 'apogee',
@@ -23,16 +30,27 @@ const ROLE_FIELDS_MAP = {
     secteur: 'specialty'
   }
 }
+
 export default {
   async login(email, password) {
-    const { data } = await api.post('/auth/seconnecter', { email, mot_de_passe:password})
-    localStorage.setItem('token', data.token)
+    const { data } = await api.post('/auth/seconnecter', { email, mot_de_passe: password })
+
+    const token = data.data?.token
+    const user  = data.data?.user
+    const role  = BACKEND_TO_FRONT_ROLE[user?.role]
+
+    if (!role) {
+      throw new Error(`Rôle inconnu : ${user?.role}`)
+    }
+
+    localStorage.setItem('token', token)
+    localStorage.setItem('role', role)
     return data
   },
 
   async signup(payload) {
     const backendRole = ROLE_MAP[payload.role]
-    
+
     const backendPayload = {
       nom: payload.lastName,
       prenom: payload.firstName,
@@ -52,7 +70,14 @@ export default {
     }
 
     const { data } = await api.post('/auth/sinscrire', backendPayload)
-    localStorage.setItem('token', data.token)
+    const role = BACKEND_TO_FRONT_ROLE[data.data?.user?.role]
+
+    if (!role) {
+      throw new Error(`Rôle inconnu : ${data.data?.user?.role}`)
+    }
+
+    localStorage.setItem('token', data.data?.token)
+    localStorage.setItem('role', role)
     return data
   },
 
@@ -74,5 +99,6 @@ export default {
 
   logout() {
     localStorage.removeItem('token')
+    localStorage.removeItem('role')
   }
 }

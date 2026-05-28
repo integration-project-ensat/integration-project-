@@ -1,6 +1,5 @@
 generator client {
   provider   = "prisma-client-js"
-  engineType = "binary"
   
 }
 
@@ -256,7 +255,8 @@ model Utilisateur {
   journal_connexions JournalConnexion[]
   connexions_envoyees Connexion[] @relation("DemandeurConnexion")
   connexions_recues   Connexion[] @relation("DestinataireConnexion")
-  
+  profils_sauvegardes   ProfilSauvegarde[] @relation("ProfilsSauvegardes")
+sauvegarde_par_autres ProfilSauvegarde[] @relation("ProfilsSauvegardesParAutres")
   @@map("utilisateurs")
 }
 
@@ -772,4 +772,16 @@ model Connexion {
 
   @@unique([demandeur_id, destinataire_id])
   @@map("connexions")
+}
+model ProfilSauvegarde {
+  id              BigInt   @id @default(autoincrement())
+  id_sauvegardeur BigInt
+  id_etudiant     BigInt
+  date_sauvegarde DateTime @default(now())
+
+  sauvegardeur Utilisateur @relation("ProfilsSauvegardes", fields: [id_sauvegardeur], references: [id_utilisateur], onDelete: Cascade)
+  etudiant     Utilisateur @relation("ProfilsSauvegardesParAutres", fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
+
+  @@unique([id_sauvegardeur, id_etudiant])
+  @@map("profils_sauvegardes")
 }

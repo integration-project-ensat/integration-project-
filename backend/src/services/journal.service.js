@@ -71,7 +71,7 @@ async function logConnexion({
         action: type,
         utilisateur_id: utilisateur?.id_utilisateur ?? null,
         email,
-        com_complet,
+        nom_complet,
         role: utilisateur?.role ?? null,
         raison,
         adresse_ip: ip,

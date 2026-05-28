@@ -60,8 +60,13 @@ async function submit() {
   if (!email.value || !password.value) { error.value = 'Champs requis'; return }
   loading.value = true
   try {
-    await authService.login(email.value, password.value)
-    router.push('/dashboard')
+    const data = await authService.login(email.value, password.value)
+    const role = localStorage.getItem('role')
+    if (role === 'admin') {
+      router.push('/admin')
+    } else {
+      router.push('/dashboard')
+    }
   } catch (e: any) {
     const errors = e.response?.data?.errors
     if (errors && errors.length > 0) {
