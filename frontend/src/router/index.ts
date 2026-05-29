@@ -6,6 +6,7 @@ import SignupView from "../views/SignupView.vue";
 import ForgetPasswordView from "@/views/ForgetPasswordView.vue";
 import ResetPasswordView from "../views/ResetPasswordView.vue";
 import VerifyCodeView from "../views/VerifyCodeView.vue";
+import WelcomeView from "../views/WelcomeView.vue";
 import StudentProfileView from '../views/StudentProfileView.vue';
 import ExploreView from "../views/ExploreView.vue";
 import ExploreProfView from "../views/ExploreProfView.vue";
@@ -25,7 +26,7 @@ const Placeholder = { template: '<div style="padding:2rem">Page en construction<
 export default createRouter({
   history: createWebHistory("/"),
   routes: [
-    { path: "/", redirect: "/login" },
+    { path: "/", name: "welcome", component: WelcomeView },
     { path: "/login", name: "login", component: LoginView },
     { path: "/signup", name: "signup", component: SignupView },
     { path: "/forgot", name: "forgot", component: ForgetPasswordView },
@@ -38,12 +39,6 @@ export default createRouter({
     { path: "/dashboard", name: "dashboard", component: DashboardView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
-    { path: "/projets", name: "projets", component: Placeholder },
-    { path: "/stages", name: "stages", component: Placeholder },
-    { path: "/certifications", name: "certifications", component: Placeholder },
-    { path: "/activites", name: "activites", component: Placeholder },
-    { path: "/portfolio", name: "portfolio", component: Placeholder },
-    { path: "/settings", name: "settings", component: Placeholder },
     { path: '/projets', name: 'projets', component: ProjectsView },
     { path: '/settings', name: 'settings', component: SettingsView },
     { path: "/stages", name: "stages", component: StagesView },

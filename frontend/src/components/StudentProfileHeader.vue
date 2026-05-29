@@ -413,43 +413,88 @@ function getInitials(name: string) {
 <style scoped>
 .profile-header {
   background: white;
-  border-radius: 8px;
+  border-radius: 14px;
   margin-top: 35px;
   margin-bottom: 10px;
   overflow: hidden;
+  box-shadow: 0 14px 38px rgba(15, 23, 42, .08);
 }
 
 .cover-section {
   position: relative;
-  margin-bottom: 50px;  /* Garde les coins arrondis propres du header */
-  
+  margin-bottom: 56px;
+  isolation: isolate;
 }
 
 .cover-img {
   width: 100%;
-  height: 180px;
-  background-color: #f1f5f9; /* Un fond un poil plus soutenu pour faire ressortir les éléments */
-  
-  /* On superpose la grille de points par-dessus deux halos lumineux colorés bien visibles */
-  background-image: 
-    radial-gradient(#a3a3a3 1.2px, transparent 1.2px),                               /* Points plus sombres et nets */
-    radial-gradient(#a3a3a3 1.2px, transparent 1.2px),                               /* Points alignement B */
-    radial-gradient(circle at 85% 30%, rgba(3, 155, 229, 0.25) 0%, transparent 60%),  /* Éclat Bleu PheraCore soutenu */
-    radial-gradient(circle at 15% 85%, rgba(94, 53, 177, 0.18) 0%, transparent 55%); /* Éclat Violet soutenu gauche */
-  
-  /* Ajustement des tailles */
-  background-size: 20px 20px, 20px 20px, 100% 100%, 100% 100%;
-  background-position: 0 0, 10px 10px, 0 0, 0 0;
-  
+  height: 190px;
+  background-color: #eef5ff;
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, .9) 0%, rgba(255, 255, 255, .14) 38%, rgba(255, 255, 255, 0) 72%),
+    radial-gradient(circle at 86% 18%, rgba(3, 155, 229, .34) 0%, rgba(3, 155, 229, .11) 36%, transparent 62%),
+    radial-gradient(circle at 18% 78%, rgba(94, 53, 177, .2) 0%, rgba(94, 53, 177, .08) 42%, transparent 66%),
+    radial-gradient(#9ca3af .85px, transparent .85px),
+    radial-gradient(#cbd5e1 .85px, transparent .85px),
+    linear-gradient(120deg, #f8fbff 0%, #eaf4ff 46%, #f6f2ff 100%);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 22px 22px, 22px 22px, 100% 100%;
+  background-position: 0 0, 0 0, 0 0, 0 0, 11px 11px, 0 0;
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid rgba(148, 163, 184, .26);
+  border-radius: 0 0 34px 34px / 0 0 18px 18px;
+  clip-path: ellipse(116% 100% at 50% 0%);
+}
+
+.cover-img::before,
+.cover-img::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+}
+
+.cover-img::before {
+  width: 290px;
+  height: 88px;
+  right: -42px;
+  top: 34px;
+  background: linear-gradient(90deg, rgba(3, 155, 229, .2), rgba(94, 53, 177, .12));
+  transform: rotate(-13deg);
+}
+
+.cover-img::after {
+  width: 230px;
+  height: 70px;
+  left: -64px;
+  bottom: 18px;
+  background: linear-gradient(90deg, rgba(94, 53, 177, .14), rgba(3, 155, 229, .14));
+  transform: rotate(16deg);
+}
+
+.cover-section::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 64px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 78%);
 }
 
 .avatar-wrap {
   position: absolute;
-  bottom: -48px;
+  z-index: 2;
+  bottom: -50px;
   left: 24px;
+  padding: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .8);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .avatar {
@@ -466,6 +511,7 @@ function getInitials(name: string) {
   font-size: 1.5rem;
   font-weight: 700;
   overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
 }
 
 .avatar img,
@@ -1031,6 +1077,43 @@ h1 {
 .avatar-slate { --avatar-bg: #5c6bc0; }
 
 @media (max-width: 768px) {
+  .profile-header {
+    border-radius: 12px;
+  }
+
+  .cover-section {
+    margin-bottom: 50px;
+  }
+
+  .cover-img {
+    height: 158px;
+    clip-path: ellipse(130% 100% at 50% 0%);
+  }
+
+  .cover-img::before {
+    width: 210px;
+    height: 68px;
+    right: -76px;
+    top: 28px;
+  }
+
+  .cover-img::after {
+    width: 180px;
+    height: 58px;
+    left: -86px;
+    bottom: 20px;
+  }
+
+  .avatar-wrap {
+    left: 18px;
+    bottom: -46px;
+  }
+
+  .avatar {
+    width: 88px;
+    height: 88px;
+  }
+
   .competances-dropdown {
     grid-template-columns: 1fr;
     gap: 20px;
