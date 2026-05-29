@@ -2,7 +2,7 @@
   <div class="page">
     <div class="header">
       <div class="logo">
-         <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="32"/>
+        <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="32"/>
         <span>heraCore</span>
       </div>
       <button class="theme-btn">
@@ -13,21 +13,32 @@
     </div>
 
     <div class="card">
-       <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" class="card-logo" width="48" height="48" />
+      <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" class="card-logo" width="48" height="48" />
 
-      <h1>Reinitialiser votre passe</h1>
-      <p class="subtitle">Reinitislaisez votre mot de passe si vous l'avez oublie</p>
+      <h1>Réinitialiser votre mot de passe</h1>
+      <p class="subtitle">Choisissez un nouveau mot de passe pour votre compte</p>
 
-      <form @submit.prevent="submit">
-        <input v-model="form.email"           type="email"    placeholder="Adresse e-mail" />
-        <input v-model="form.password"        type="password" placeholder="Mot de passe" />
-        <input v-model="form.confirmPassword" type="password" placeholder="Comfirmer le mot de passe" />
+      <div v-if="tokenInvalid" class="token-error">
+        <p class="err">{{ tokenInvalid }}</p>
+        <RouterLink to="/forgot" class="back">← Demander un nouveau lien</RouterLink>
+      </div>
+
+      <form v-else @submit.prevent="submit">
+        <input
+          :value="email"
+          type="email"
+          placeholder="Adresse e-mail"
+          disabled
+          class="disabled-input"
+        />
+        <input v-model="form.password"        type="password" placeholder="Nouveau mot de passe" />
+        <input v-model="form.confirmPassword" type="password" placeholder="Confirmer le mot de passe" />
 
         <p v-if="error"   class="err">{{ error }}</p>
         <p v-if="success" class="success">{{ success }}</p>
 
-        <button type="submit" class="btn" :disabled="loading">
-          <span v-if="!loading">Envoyer</span>
+        <button type="submit" class="btn" :disabled="loading || tokenLoading">
+          <span v-if="!loading">Réinitialiser</span>
           <span v-else class="spin" />
         </button>
       </form>
@@ -36,36 +47,78 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive, ref, onMounted } from 'vue'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
+import authService from '@/services/auth.service.js'
+import api from '@/services/api.js'
 
-const router  = useRouter()
-const error   = ref('')
-const success = ref('')
-const loading = ref(false)
+type ApiError = {
+  response?: {
+    data?: {
+      errors?: Array<{ message?: string }>
+      message?: string
+    }
+  }
+}
+
+const getApiErrorMessage = (e: unknown, fallback: string) => {
+  const data = (e as ApiError).response?.data
+  return data?.errors?.[0]?.message || data?.message || fallback
+}
+
+const router      = useRouter()
+const route       = useRoute()
+const token       = route.query.token as string || ''
+
+const email       = ref('')
+const tokenInvalid = ref('')
+const tokenLoading = ref(true)
+const error       = ref('')
+const success     = ref('')
+const loading     = ref(false)
 
 const form = reactive({
-  email: '',
   password: '',
   confirmPassword: ''
+})
+
+// Vérifie le token au montage et récupère l'email
+onMounted(async () => {
+  if (!token) {
+    tokenInvalid.value = 'Token manquant. Veuillez redemander un lien.'
+    tokenLoading.value = false
+    return
+  }
+  try {
+    const { data } = await api.get(`/auth/verifier-token-reset?token=${token}`)
+    email.value = data.data.email
+  } catch {
+    tokenInvalid.value = 'Token invalide ou expiré. Veuillez redemander un lien.'
+  } finally {
+    tokenLoading.value = false
+  }
 })
 
 async function submit() {
   error.value = ''
   success.value = ''
-  if (!form.email || !form.password || !form.confirmPassword) {
+  if (!form.password || !form.confirmPassword) {
     error.value = 'Veuillez remplir tous les champs'; return
   }
   if (form.password !== form.confirmPassword) {
-    error.value = 'Le mot de passe ne correspond pas.'; return
+    error.value = 'Les mots de passe ne correspondent pas.'; return
   }
   loading.value = true
   try {
-    // await authService.resetPassword(form)
-    success.value = 'Mot de passe réinitialisé !'
+    await authService.resetPassword({
+      token,
+      newPassword: form.password,
+      confirmPassword: form.confirmPassword
+    })
+    success.value = 'Mot de passe réinitialisé avec succès !'
     setTimeout(() => router.push('/login'), 2000)
-  } catch {
-    error.value = 'Une erreur est survenue.'
+  } catch(e) {
+    error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
   } finally {
     loading.value = false
   }
@@ -100,9 +153,7 @@ async function submit() {
   color: var(--purple);
 }
 
-.logo img{
-    height: 50px;
-}
+.logo img { height: 50px; }
 
 .theme-btn {
   background: transparent;
@@ -161,8 +212,26 @@ input {
 input::placeholder { color: var(--text-gray); }
 input:focus { border-color: var(--purple); outline: none; }
 
+.disabled-input {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .err     { font-size: .78rem; color: var(--error); padding-left: 6px; }
-.success { font-size: .78rem; color: #22c55e;      padding-left: 6px; }
+.success { font-size: .78rem; color: #22c55e; padding-left: 6px; }
+
+.token-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.back {
+  font-size: .82rem;
+  color: var(--purple);
+  font-weight: 600;
+}
 
 .btn {
   width: 100%;

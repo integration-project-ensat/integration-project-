@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Bell, ChevronDown, Search } from "lucide-vue-next";
+import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
 import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
 import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
@@ -14,11 +14,11 @@ interface Profile {
   city: string;
   score: number;
   recommendations: number;
+  badges?: string[];
   recos?: Array<{ name: string; role: string }>;
 }
 
 const searchQuery = ref("");
-
 const profiles = ref<Profile[]>([
   {
     id: 1,
@@ -28,6 +28,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 90,
     recommendations: 500,
+    badges: ["🌊 DevOps", "🌐 Web Developer", "🔐 Security Aware"],
     recos: [
       { name: "Nom Prof", role: "Ex Ecole Nationale des Sciences Appliques" },
       {
@@ -44,6 +45,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 85,
     recommendations: 500,
+    badges: ["🌐 Web Developer", "🧠 AI / Data", "🏆 Hackathon Participant"],
     recos: [],
   },
 ]);
@@ -74,10 +76,6 @@ const filteredProfiles = computed(() => {
   );
 });
 
-const handleNotification = () => {
-  alert("Notifications clicked!");
-};
-
 const sidebarOpen = ref(true);
 </script>
 
@@ -91,30 +89,7 @@ const sidebarOpen = ref(true);
       <main class="explore-middle">
         <div class="explore-middle-inner">
           <div class="explore-panel">
-            <section class="explore-header">
-              <h1 class="explore-title">Explore</h1>
-
-              <div class="explore-actions">
-                <div class="explore-search">
-                  <input v-model="searchQuery" type="text" />
-                  <Search class="explore-search-icon" />
-                </div>
-
-                <button
-                  type="button"
-                  class="explore-notif"
-                  @click="handleNotification"
-                >
-                  <span class="explore-notif-dot" />
-                  <Bell class="h-4 w-4" />
-                </button>
-
-                <button type="button" class="explore-profile">
-                  <span class="explore-flag">FR</span>
-                  <ChevronDown class="h-4 w-4" />
-                </button>
-              </div>
-            </section>
+            <ExploreHeader v-model="searchQuery" user-type="student" />
 
             <div class="explore-feed">
               <ProfileCard
@@ -148,9 +123,10 @@ const sidebarOpen = ref(true);
 .explore-shell {
   height: calc(100vh - 50px);
   display: grid;
-  grid-template-columns: 1fr 290px;
-  gap: 24px;
-  padding: 18px 20px;
+  grid-template-columns: minmax(730px, 1fr) 270px;
+  justify-content: start;
+  gap: 16px;
+  padding: 14px;
   overflow: hidden;
 }
 
@@ -159,29 +135,28 @@ const sidebarOpen = ref(true);
   top: 0;
   height: 100%;
   overflow-y: auto;
-  padding-bottom: 8px;
 }
 
 .explore-right {
-  padding: 18px 20px 18px 0;
+  padding: 0;
 }
 
 .explore-shellShift {
-  padding-left: 240px;
+  padding-left: 238px;
 }
 
 .explore-middle {
   height: 100%;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 18px 0 18px;
+  padding: 14px 0;
 }
 
 .explore-middle-inner {
-  margin: 0 auto;
+  margin: 0;
   width: 100%;
-  max-width: 900px;
-  padding: 0 20px;
+  max-width: none;
+  padding: 0;
 }
 
 .explore-panel {

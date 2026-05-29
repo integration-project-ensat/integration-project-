@@ -1,10 +1,12 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from "vue";
-import { Bell, ChevronDown, Search } from "lucide-vue-next";
+import { Bookmark } from "../lib/icons";
+import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
 import FilterPanel from "../components/exploreStudent/FilterPanel.vue";
 import ProfileCard from "../components/exploreStudent/ProfileCard.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
+import { useProSavedProfiles } from "../store/proSavedProfiles";
 
 interface Profile {
   id: number;
@@ -14,11 +16,14 @@ interface Profile {
   city: string;
   score: number;
   recommendations: number;
+  badges?: string[];
   recos?: Array<{ name: string; role: string }>;
 }
 
 const searchQuery = ref("");
 const sidebarOpen = ref(true);
+const savedFeedbackId = ref<string | null>(null);
+const { isSaved, saveProfile } = useProSavedProfiles();
 
 const profiles = ref<Profile[]>([
   {
@@ -29,6 +34,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 90,
     recommendations: 500,
+    badges: ["🌊 DevOps", "🌐 Web Developer", "🔐 Security Aware"],
     recos: [
       { name: "Nom Prof", role: "Ex Ecole Nationale des Sciences Appliques" },
       {
@@ -45,6 +51,7 @@ const profiles = ref<Profile[]>([
     city: "Ex Tanger, Tanger-Tetouan-Hussima, Maroc",
     score: 75,
     recommendations: 500,
+    badges: ["🌐 Web Developer", "🧠 AI / Data", "🏆 Hackathon Participant"],
     recos: [],
   },
 ]);
@@ -63,6 +70,30 @@ const handleUpdateFilters = (next: typeof filters.value) => {
   filters.value = next;
 };
 
+const profileId = (profile: Profile) => `explore-pro-${profile.id}`;
+
+const toggleSavedProfile = (profile: Profile) => {
+  const id = profileId(profile);
+  const saved = saveProfile({
+    id,
+    name: profile.name,
+    school: profile.school,
+    field: profile.role,
+    city: profile.city,
+    score: profile.score,
+    recommendations: profile.recommendations,
+    badges: profile.badges,
+    hasPortfolio: true,
+    profilePath: `/profile/student/${id}`,
+    portfolioPath: `/projects/${id}`,
+  });
+
+  savedFeedbackId.value = id;
+  window.setTimeout(() => {
+    if (savedFeedbackId.value === id) savedFeedbackId.value = null;
+  }, 1200);
+};
+
 const filteredProfiles = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return profiles.value;
@@ -75,9 +106,6 @@ const filteredProfiles = computed(() => {
   );
 });
 
-const handleNotification = () => {
-  alert("Notifications clicked!");
-};
 </script>
 
 <template>
@@ -89,38 +117,44 @@ const handleNotification = () => {
       <main class="explore-middle">
         <div class="explore-middle-inner">
           <div class="explore-panel">
-            <section class="explore-header">
-              <h1 class="explore-title">Explore</h1>
-
-              <div class="explore-actions">
-                <div class="explore-search">
-                  <input v-model="searchQuery" type="text" />
-                  <Search class="explore-search-icon" />
-                </div>
-
-                <button
-                  type="button"
-                  class="explore-notif"
-                  @click="handleNotification"
-                >
-                  <span class="explore-notif-dot" />
-                  <Bell class="h-4 w-4" />
-                </button>
-
-                <button type="button" class="explore-profile">
-                  <span class="explore-flag">FR</span>
-                  <ChevronDown class="h-4 w-4" />
-                </button>
-              </div>
-            </section>
+            <ExploreHeader v-model="searchQuery" user-type="professionnel" />
 
             <div class="explore-feed">
-              <ProfileCard
+              <div
                 v-for="profile in filteredProfiles"
                 :key="profile.id"
-                :profile="profile"
-                :default-expanded="profile.id === 1"
-              />
+                class="profile-save-wrap"
+              >
+                <button
+                  type="button"
+                  class="save-profile-btn"
+                  :class="{ saved: isSaved(profileId(profile)) }"
+                  :aria-label="
+                    isSaved(profileId(profile))
+                      ? 'Retirer le profil sauvegardÃ©'
+                      : 'Sauvegarder le profil'
+                  "
+                  @click="toggleSavedProfile(profile)"
+                >
+                  <Bookmark class="save-icon" />
+                </button>
+
+                <span
+                  v-if="savedFeedbackId === profileId(profile)"
+                  class="save-feedback"
+                >
+                  {{
+                    isSaved(profileId(profile))
+                      ? "Profil sauvegardÃ©"
+                      : "Profil retirÃ©"
+                  }}
+                </span>
+
+                <ProfileCard
+                  :profile="profile"
+                  :default-expanded="profile.id === 1"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -146,9 +180,10 @@ const handleNotification = () => {
 .explore-shell {
   height: calc(100vh - 50px);
   display: grid;
-  grid-template-columns: 1fr 290px;
-  gap: 24px;
-  padding: 18px 20px;
+  grid-template-columns: minmax(730px, 1fr) 270px;
+  justify-content: start;
+  gap: 16px;
+  padding: 14px;
   overflow: hidden;
 }
 
@@ -157,25 +192,25 @@ const handleNotification = () => {
   top: 0;
   height: 100%;
   overflow-y: auto;
-  padding-bottom: 8px;
+  padding: 0;
 }
 
 .explore-shellShift {
-  padding-left: 240px;
+  padding-left: 238px;
 }
 
 .explore-middle {
   height: 100%;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 18px 0 18px;
+  padding: 14px 0;
 }
 
 .explore-middle-inner {
-  margin: 0 auto;
+  margin: 0;
   width: 100%;
-  max-width: 900px;
-  padding: 0 20px;
+  max-width: none;
+  padding: 0;
 }
 
 .explore-panel {
@@ -309,5 +344,52 @@ const handleNotification = () => {
   padding: 16px 18px 18px;
   background: #ffffff;
 }
+
+.profile-save-wrap {
+  position: relative;
+}
+
+.save-profile-btn {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: white;
+  color: var(--text-gray);
+  border: 1px solid var(--input-bg);
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-profile-btn.saved {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: white;
+}
+
+.save-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.save-feedback {
+  position: absolute;
+  right: 62px;
+  top: 22px;
+  z-index: 6;
+  border-radius: var(--radius-pill);
+  background: var(--text-dark);
+  color: white;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.2);
+}
 </style>
+
 

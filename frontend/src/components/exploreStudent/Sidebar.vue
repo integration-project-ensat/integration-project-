@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <aside class="sidebar" :class="{ open: isOpen }">
     <RouterLink to="/profile" class="sidebar-user">
       <div class="avatar-sm">
@@ -153,6 +153,7 @@ const navItems = [
     icon: icons.letter,
     activeIcon: icons.letterFill,
   },
+
 ];
 </script>
 

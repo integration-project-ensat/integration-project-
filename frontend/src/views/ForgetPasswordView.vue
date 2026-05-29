@@ -37,8 +37,22 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import authService from '@/services/auth.service.js'
+
+type ApiError = {
+  response?: {
+    data?: {
+      errors?: Array<{ message?: string }>
+      message?: string
+    }
+  }
+}
+
+const getApiErrorMessage = (e: unknown, fallback: string) => {
+  const data = (e as ApiError).response?.data
+  return data?.errors?.[0]?.message || data?.message || fallback
+}
 
 const email   = ref('')
 const error   = ref('')
@@ -55,12 +69,12 @@ async function submit() {
   }
   loading.value = true
   try {
-    // await authService.forgotPassword(email.value)
+    await authService.forgotPassword(email.value)
     success.value = 'Lien envoyé ! Vérifiez votre boîte mail.'
 
-    router.push({ path: '/verify-code', query: { email: email.value } })
-  } catch {
-    error.value = 'Nous ne trouvons pas votre e-mail.'
+    router.push({ path: '/reset-password', query: { email: email.value } })
+ } catch(e) {
+    error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
   } finally {
     loading.value = false
   }
