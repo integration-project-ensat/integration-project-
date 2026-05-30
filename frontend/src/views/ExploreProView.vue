@@ -131,7 +131,7 @@ const filteredProfiles = computed(() => {
                   :class="{ saved: isSaved(profileId(profile)) }"
                   :aria-label="
                     isSaved(profileId(profile))
-                      ? 'Retirer le profil sauvegardÃ©'
+                      ? 'Retirer le profil sauvegardé'
                       : 'Sauvegarder le profil'
                   "
                   @click="toggleSavedProfile(profile)"
@@ -145,8 +145,8 @@ const filteredProfiles = computed(() => {
                 >
                   {{
                     isSaved(profileId(profile))
-                      ? "Profil sauvegardÃ©"
-                      : "Profil retirÃ©"
+                      ? "Profil sauvegardé"
+                      : "Profil retiré"
                   }}
                 </span>
 

@@ -214,16 +214,20 @@ function formatDate(d: string) {
 
 .shell {
   height: calc(100vh - 50px);
-  padding: 20px;
+  padding: 14px;
   overflow-y: auto;
   transition: var(--ease);
 }
 
-.shellShift { padding-left: 238px; }
+.shellShift {
+  padding-left: 234px;
+  padding-right: 14px;
+}
 
 .content-panel {
-  max-width: 820px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   background: #fff;
   border-radius: var(--radius-card);
   box-shadow: 0 4px 24px rgba(17,24,39,0.08);

@@ -22,9 +22,16 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-secret}
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
+      - AI_SERVICE_URL=http://ai-service:8000
     depends_on:
       - postgres
       - keycloak
+      - ai-service
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8000:8000"
 
   postgres:
     image: postgres:15-alpine

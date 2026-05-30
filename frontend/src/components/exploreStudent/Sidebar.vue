@@ -70,6 +70,9 @@ const icons = {
   explore: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
   exploreFill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.8 3a7.8 7.8 0 1 0 0 15.6 7.8 7.8 0 0 0 0-15.6Z"/><path d="M16.5 16.5a1.2 1.2 0 0 1 1.7 0l3.1 3.1a1.2 1.2 0 1 1-1.7 1.7l-3.1-3.1a1.2 1.2 0 0 1 0-1.7Z"/></svg>`,
 
+  ai: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v3"/><path d="M12 19v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/><circle cx="12" cy="12" r="4"/><path d="M10.5 12.5l1 1 2-3"/></svg>`,
+  aiFill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5a1 1 0 0 1 1 1V5a1 1 0 1 1-2 0V2.5a1 1 0 0 1 1-1Zm0 16.5a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm2.7-7.3-3 3a1 1 0 0 1-1.4 0l-1.2-1.2a1 1 0 0 1 1.4-1.4l.5.5 2.3-2.3a1 1 0 1 1 1.4 1.4ZM4.2 3.5a1 1 0 0 1 1.4 0l1.7 1.7a1 1 0 1 1-1.4 1.4L4.2 4.9a1 1 0 0 1 0-1.4Zm15.6 15.6a1 1 0 0 1-1.4 1.4l-1.7-1.7a1 1 0 1 1 1.4-1.4l1.7 1.7ZM1.5 12a1 1 0 0 1 1-1H5a1 1 0 1 1 0 2H2.5a1 1 0 0 1-1-1Zm16.5 0a1 1 0 0 1 1-1h2.5a1 1 0 1 1 0 2H19a1 1 0 0 1-1-1Z"/></svg>`,
+
   feed: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/></svg>`,
   feedFill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="5" width="16" height="2" rx="1"/><rect x="4" y="11" width="16" height="2" rx="1"/><rect x="4" y="17" width="10" height="2" rx="1"/></svg>`,
 
@@ -125,6 +128,12 @@ const navItems = [
     label: "Fil d’actualité",
     icon: icons.feed,
     activeIcon: icons.feedFill,
+  },
+  {
+    path: "/student/ai-recommendation",
+    label: "Recommandation IA",
+    icon: icons.ai,
+    activeIcon: icons.aiFill,
   },
   {
     path: "/projets",

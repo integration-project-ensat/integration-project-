@@ -30,6 +30,7 @@ import ActivitesView from "../views/ActivitesView.vue";
 import DashboardProfView from "../views/DashboardProfView.vue";
 import DashboardProView from "../views/DashboardProView.vue";
 import DashboardStudentView from "../views/DashboardStudentView.vue";
+import StudentAIRecommendationView from "../views/StudentAIRecommendationView.vue";
 import ConnexionsProView from "../views/ConnexionsProView.vue";
 import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
 import FeedView from "../views/FeedView.vue";
@@ -81,6 +82,11 @@ export default createRouter({
       path: "/student/dashboard",
       name: "student-dashboard",
       component: DashboardStudentView,
+    },
+    {
+      path: "/student/ai-recommendation",
+      name: "student-ai-recommendation",
+      component: StudentAIRecommendationView,
     },
     { path: "/feed", redirect: "/student/feed" },
     { path: "/student/feed", name: "student-feed", component: FeedView },
