@@ -2,7 +2,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: dockerfile.dev
     ports:
       - "5173:5173"
     volumes:
@@ -32,9 +32,22 @@ services:
       - DB_NAME=portfolio_db
       - DB_USER=postgres
       - DB_PASSWORD=secret
+      - AI_SERVICE_URL=http://ai-service:8000
+      - GOOGLE_CLIENT_ID=local-dev-client
+      - GOOGLE_CLIENT_SECRET=local-dev-secret
+      - GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
     depends_on:
       - postgres
+      - ai-service
     command: sh -c "npm install && npx prisma generate && npx prisma migrate deploy && npx nodemon server.js"
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-service:/app
+    command: sh -c "python train_model.py && uvicorn app:app --host 0.0.0.0 --port 8000 --reload"
 
   postgres:
     image: postgres:15

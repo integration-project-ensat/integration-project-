@@ -34,6 +34,7 @@ const connexionRoutes = require('./src/routes/connexion.routes')
 const feedRoutes = require('./src/routes/feed.routes')
 const portfolioAnalyzerRoutes =
   require('./src/routes/portfolioAnalyzer.routes');
+const aiRoutes = require('./src/routes/ai.routes')
 
 // Routes à venir (décommenter au fur et à mesure)
 // const projetRoutes = require('./src/routes/projet.routes')
@@ -97,6 +98,8 @@ app.use('/api/competences', competenceRoutes)
 app.use('/api/profil/photo',  photoRoutes)
 app.use('/api/profil/banner', bannerRoutes)
 app.use('/api/profil', diplomeLimiter, profileRoutes)
+app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
+app.use('/api/ai', aiRoutes)
 app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
 app.use('/api/projets', projetRoutes)
 app.use('/api/stages', stageRoutes)
