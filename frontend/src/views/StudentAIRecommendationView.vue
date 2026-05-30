@@ -19,6 +19,10 @@ type Career =
 
 interface RecommendationResult {
   predictedCareer: string;
+  targetCareer?: string;
+  correctedCareer?: string;
+  analysisMode?: "custom" | "trained";
+  matchedDomains?: string[];
   matchScore: number;
   missingSkills: string[];
   recommendedProjects: string[];
@@ -33,6 +37,7 @@ const loading = ref(false);
 const error = ref("");
 const result = ref<RecommendationResult | null>(null);
 const profileSource = ref<any>(null);
+const customCareerInput = ref("");
 
 const careers: Career[] = [
   "Web Developer",
@@ -66,13 +71,15 @@ const scoreStyle = computed(() => ({
   width: `${result.value?.matchScore ?? 0}%`,
 }));
 
+const selectedCareer = computed(() => customCareerInput.value.trim() || targetCareer.value);
+
 async function analyzeProfile() {
   loading.value = true;
   error.value = "";
 
   try {
     const response = await getCareerRecommendation({
-      targetCareer: targetCareer.value,
+      targetCareer: selectedCareer.value,
       skills: mockStudentProfile.skills,
       projects: mockStudentProfile.projects,
       technologies: mockStudentProfile.technologies,
@@ -143,6 +150,16 @@ async function analyzeProfile() {
             </div>
           </div>
 
+          <label class="career-field">
+            <span>Ou écrivez le métier que vous visez</span>
+            <input
+              v-model="customCareerInput"
+              type="text"
+              placeholder="Exemple : Machine Learning Engineer, QA Engineer..."
+            />
+            <small>Si vous écrivez un métier ici, il remplace le choix sélectionné.</small>
+          </label>
+
           <button class="primary-btn" :disabled="loading" @click="analyzeProfile">
             <span v-if="loading" class="loader" />
             {{ loading ? "Analyse en cours..." : "Analyser mon profil" }}
@@ -158,7 +175,17 @@ async function analyzeProfile() {
                 <p class="eyebrow">Score de compatibilité</p>
                 <h2>{{ result.matchScore }}%</h2>
               </div>
-              <span class="prediction">Prédit : {{ result.predictedCareer }}</span>
+              <span class="prediction">
+                Métier analysé : {{ result.correctedCareer || result.targetCareer || selectedCareer }}
+              </span>
+            </div>
+
+            <div
+              v-if="result.analysisMode === 'custom' && result.matchedDomains?.length"
+              class="detected-domains"
+            >
+              Domaines détectés :
+              <span v-for="domain in result.matchedDomains" :key="domain">{{ domain }}</span>
             </div>
 
             <div class="score-track">
@@ -344,6 +371,41 @@ h1 {
   margin: 18px 0;
 }
 
+.career-field {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.career-field span {
+  color: var(--navy);
+  font-family: var(--font-head);
+  font-weight: 800;
+}
+
+.career-field input {
+  width: 100%;
+  border: 1px solid #d7dce5;
+  border-radius: 16px;
+  background: white;
+  color: var(--navy);
+  padding: 14px 16px;
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+  transition: var(--ease);
+}
+
+.career-field input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+}
+
+.career-field small {
+  color: var(--text-gray);
+  font-weight: 700;
+}
+
 .chips span {
   background: white;
   color: var(--purple);
@@ -390,6 +452,24 @@ h1 {
 .result-header h2 {
   color: var(--purple);
   font-size: 3.4rem;
+}
+
+.detected-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  color: var(--text-gray);
+  font-weight: 800;
+  margin-top: 16px;
+}
+
+.detected-domains span {
+  background: #eeecff;
+  color: var(--purple);
+  border-radius: var(--radius-pill);
+  padding: 6px 10px;
+  font-family: var(--font-head);
 }
 
 .score-track {

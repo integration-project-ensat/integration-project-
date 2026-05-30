@@ -21,8 +21,8 @@ function ensureArray(value) {
 }
 
 function validatePayload(payload) {
-  if (!payload.targetCareer || !allowedCareers.includes(payload.targetCareer)) {
-    return `targetCareer must be one of: ${allowedCareers.join(', ')}`
+  if (!payload.targetCareer || !String(payload.targetCareer).trim()) {
+    return `targetCareer is required. Examples: ${allowedCareers.join(', ')}`
   }
   return null
 }
