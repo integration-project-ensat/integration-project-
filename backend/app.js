@@ -7,6 +7,9 @@ const express = require('express')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
+const portfolioAIRoutes =
+require("./src/routes/portfolioAI.routes");
+
 const { apiLimiter, authLimiter, passwordLimiter,profilLimiter,diplomeLimiter } = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
@@ -16,6 +19,9 @@ const competenceRoutes = require('./src/routes/competence.routes')
 const profileRoutes = require('./src/routes/profil.routes')
 const diplomeRoutes = require('./src/routes/diplome.routes')
 const photoRoutes = require('./src/routes/photo.routes')
+
+const portfolioAnalyzerRoutes =
+  require('./src/routes/portfolioAnalyzer.routes');
 
 // Routes à venir (décommenter au fur et à mesure)
 // const projetRoutes = require('./src/routes/projet.routes')
@@ -41,6 +47,11 @@ app.use(passport.initialize());
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
 
+app.use(
+  "/api/ai",
+  portfolioAIRoutes
+);
+
 // Rate limiting
 app.use('/api', apiLimiter)
 app.use('/api/auth/seconnecter', authLimiter)
@@ -50,6 +61,10 @@ app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
 
+app.use(
+  '/api/portfolio-analyzer',
+  portfolioAnalyzerRoutes
+);
 // Health check
 app.get('/', (req, res) => {
   res.status(200).json({

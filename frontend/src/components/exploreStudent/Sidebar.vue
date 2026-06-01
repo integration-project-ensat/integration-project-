@@ -98,6 +98,19 @@ letterFill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
   <path fill="#ffffff" d="M8 13h8v1.7H8z"/>
   <path fill="#ffffff" d="M8 17h6v1.7H8z"/>
 </svg>`,
+ai: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 2a3 3 0 0 0-3 3v1H8a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h1v1a3 3 0 0 0 6 0v-1h1a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-1V5a3 3 0 0 0-3-3z"/>
+<circle cx="10" cy="11" r="1"/>
+<circle cx="14" cy="11" r="1"/>
+<path d="M9 15c1 .8 5 .8 6 0"/>
+</svg>`,
+
+aiFill: `<svg width="18" height="18"
+viewBox="0 0 24 24" fill="currentColor">
+<path d="M12 2a3 3 0 0 0-3 3v1H8a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h1v1a3 3 0 0 0 6 0v-1h1a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-1V5a3 3 0 0 0-3-3z"/>
+</svg>`,
   settings: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
   settingsFill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a2 2 0 0 1 2 2v.35a8.4 8.4 0 0 1 1.45.6l.25-.25a2 2 0 0 1 2.82 0l.78.78a2 2 0 0 1 0 2.82l-.25.25c.24.46.44.95.6 1.45H20a2 2 0 0 1 2 2v1.1a2 2 0 0 1-2 2h-.35a8.4 8.4 0 0 1-.6 1.45l.25.25a2 2 0 0 1 0 2.82l-.78.78a2 2 0 0 1-2.82 0l-.25-.25a8.4 8.4 0 0 1-1.45.6V20a2 2 0 0 1-2 2h-1.1a2 2 0 0 1-2-2v-.35a8.4 8.4 0 0 1-1.45-.6l-.25.25a2 2 0 0 1-2.82 0l-.78-.78a2 2 0 0 1 0-2.82l.25-.25a8.4 8.4 0 0 1-.6-1.45H4a2 2 0 0 1-2-2v-1.1a2 2 0 0 1 2-2h.35c.16-.5.36-.99.6-1.45L4.7 7.2a2 2 0 0 1 0-2.82l.78-.78a2 2 0 0 1 2.82 0l.25.25c.46-.24.95-.44 1.45-.6V4a2 2 0 0 1 2-2h1.1ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>`,
 
@@ -147,6 +160,12 @@ const navItems = [
     icon: icons.portfolio,
     activeIcon: icons.portfolioFill,
   },
+  {
+  path: "/ai-analyzer",
+  label: "AI Portfolio",
+  icon: icons.portfolio,
+  activeIcon: icons.aiFill,
+},
   {
     path: "/lettres",
     label: "Lettres de Recos",
