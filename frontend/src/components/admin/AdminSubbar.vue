@@ -27,7 +27,7 @@
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        <span class="notif-dot"></span>
+        <span v-if="unreadCount > 0" class="notif-dot"></span>
       </button>
  
       <!-- Avatar -->
@@ -44,6 +44,7 @@
  
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { notificationService } from '@/services/notification.service'
  
 const props = defineProps({
   title:       { type: String, default: '' },
@@ -63,8 +64,22 @@ const localSearch = computed({
 const initials = computed(() =>
   props.userName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 )
+
+const unreadCount = ref(0)
+
+const loadUnreadNotifications = async () => {
+  try {
+    unreadCount.value = await notificationService.getUnreadCount()
+  } catch (error) {
+    unreadCount.value = 0
+  }
+}
+
+onMounted(() => {
+  loadUnreadNotifications()
+})
 </script>
- 
+
 <style scoped>
 .subbar {
   position: fixed;

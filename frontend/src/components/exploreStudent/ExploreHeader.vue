@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { Bell, ChevronDown, Search } from "../../lib/icons";
+import { notificationService } from "@/services/notification.service";
 
 type UserType = "student" | "professeur" | "professionnel";
 type NotificationCategory =
@@ -51,16 +52,22 @@ const selectedLanguage = ref("FR");
 const selectedNotificationFilter = ref<NotificationCategory>("Tout");
 const selectedNotificationId = ref<number | null>(null);
 const isHeaderHidden = ref(false);
+const backendNotifications = ref<NotificationItem[]>([]);
+const backendNotificationsLoaded = ref(false);
+const hasApiError = ref(false);
 let lastScrollTop = 0;
 let isScrollTicking = false;
 
 const languages = ["FR", "EN", "AR"];
-const notificationFilters: NotificationCategory[] =
-  props.userType === "professeur"
-    ? ["Tout", "Connexions", "Stages", "Projets", "Attestations", "Recommandations"]
-    : props.userType === "professionnel"
-      ? ["Tout", "Connexions", "Commentaires"]
-    : ["Tout", "Connexions", "Commentaires", "Recommandations", "Projets"];
+const notificationFilters: NotificationCategory[] = [
+  "Tout",
+  "Connexions",
+  "Commentaires",
+  "Recommandations",
+  "Projets",
+  "Stages",
+  "Attestations"
+];
 
 const notificationsByUser: Record<UserType, NotificationItem[]> = {
   student: [
@@ -337,17 +344,74 @@ const searchQuery = computed({
   set: (value: string) => emit("update:modelValue", value),
 });
 
-const notifications = computed(() => notificationsByUser[props.userType] ?? []);
-const filteredNotifications = computed(() => {
-  if (selectedNotificationFilter.value === "Tout") return notifications.value;
+const apiNotificationCategory = (type?: string | null): Exclude<NotificationCategory, "Tout"> => {
+  if (!type) return "Commentaires";
+  if (type.includes("PROJET")) return "Projets";
+  if (type.includes("ATTESTATION")) return "Attestations";
+  if (type.includes("STAGE")) return "Stages";
+  if (type.includes("CONNEXION")) return "Connexions";
+  if (type.includes("RECOMMANDATION")) return "Recommandations";
+  if (type.includes("COMMENTAIRE")) return "Commentaires";
+  return "Commentaires";
+};
 
-  return notifications.value.filter(
-    (notification) =>
-      notification.category === selectedNotificationFilter.value,
+const formatTimeAgo = (value: string | Date | null) => {
+  if (!value) return "Il y a quelque temps";
+  const date = new Date(value);
+  const now = Date.now();
+  const diff = Math.max(0, now - date.getTime());
+
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "Il y a quelques secondes";
+  if (minutes < 60) return `Il y a ${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Il y a ${hours} h`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `Il y a ${days} j`;
+  return `Il y a ${Math.ceil(days / 7)} sem`;
+};
+
+const resolveTargetPath = () => {
+  const path = router.currentRoute.value.fullPath || "/";
+  return path;
+};
+
+const mapNotification = (notificationRaw: any): NotificationItem => {
+  const category = apiNotificationCategory(notificationRaw.type);
+
+  return {
+    id: Number(notificationRaw.id_notification ?? notificationRaw.id ?? 0),
+    category,
+    person: "Système",
+    action: notificationRaw.message || "Nouvelle notification",
+    relatedTitle: notificationRaw.cibleType ? notificationRaw.cibleType : "",
+    time: formatTimeAgo(notificationRaw.date_reception),
+    initials: category.charAt(0).toUpperCase(),
+    profilePath: resolveTargetPath(),
+    targetPath: resolveTargetPath(),
+    unread: notificationRaw.lu === false || notificationRaw.lu === 0,
+  };
+};
+
+const activeNotifications = computed<NotificationItem[]>(() => {
+  if (backendNotificationsLoaded.value && !hasApiError.value) {
+    return backendNotifications.value;
+  }
+  return notificationsByUser[props.userType] ?? [];
+});
+
+const filteredNotifications = computed(() => {
+  if (selectedNotificationFilter.value === "Tout") return activeNotifications.value;
+
+  return activeNotifications.value.filter(
+    (notification) => notification.category === selectedNotificationFilter.value,
   );
 });
+
 const hasUnreadNotifications = computed(() =>
-  notifications.value.some((notification) => notification.unread),
+  activeNotifications.value.some((notification) => notification.unread),
 );
 
 const toggleNotifications = () => {
@@ -367,11 +431,23 @@ const selectLanguage = (language: string) => {
   isLanguageOpen.value = false;
 };
 
-const navigateAfterSelection = (
+const markNotificationAsRead = async (notification: NotificationItem) => {
+  if (!notification.unread || !backendNotificationsLoaded.value) return;
+
+  try {
+    await notificationService.markAsRead(notification.id);
+    notification.unread = false;
+  } catch (error) {
+    // keep local state if API fails
+  }
+};
+
+const navigateAfterSelection = async (
   notification: NotificationItem,
   path: string,
 ) => {
   selectedNotificationId.value = notification.id;
+  await markNotificationAsRead(notification);
   window.setTimeout(() => {
     isNotificationOpen.value = false;
     router.push(path);
@@ -384,6 +460,17 @@ const navigateToNotificationTarget = (notification: NotificationItem) => {
 
 const navigateToProfile = (notification: NotificationItem) => {
   navigateAfterSelection(notification, notification.profilePath);
+};
+
+const loadNotifications = async () => {
+  try {
+    const notificationData = await notificationService.getNotifications();
+    backendNotifications.value = notificationData.map(mapNotification);
+  } catch (error) {
+    hasApiError.value = true;
+  } finally {
+    backendNotificationsLoaded.value = true;
+  }
 };
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -401,7 +488,6 @@ const handleClickOutside = (event: MouseEvent) => {
 const updateHeaderVisibility = (scrollTop: number) => {
   const scrollDelta = scrollTop - lastScrollTop;
 
-  // Always show header immediately when scrolling up, even a little
   if (
     scrollTop <= 16 ||
     scrollDelta < 0 ||
@@ -440,10 +526,7 @@ onMounted(() => {
     passive: true,
     capture: true,
   });
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleClickOutside);
+  loadNotifications();
   document.removeEventListener("scroll", handleExploreScroll, true);
 });
 </script>

@@ -90,10 +90,7 @@ app.use('/api/recommandations', recommendationRoutes)
 app.use('/api/posts', postRoutes)
 app.use('/api/profiles', profilePublicRoutes)
 app.use('/api', exploreRoutes)
-app.use('/api/projets', projetRoutes)
-app.use('/api/stages', stageRoutes)
-app.use('/api/activites', activiteRoutes)
-app.use('/api/attestations', attestationRoutes)
+
 
 // 404
 app.use((req, res) => {

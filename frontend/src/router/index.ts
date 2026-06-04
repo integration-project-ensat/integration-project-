@@ -52,6 +52,7 @@ const router = createRouter({
     { path: '/admin/activites', component: AdminActivitiesView, meta: { requiresAuth: true, requiresRole: 'admin' } },
     { path: '/admin/projets', component: AdminProjetsView, meta: { requiresAuth: true, requiresRole: 'admin' } },
     { path: '/admin/certifications', component: AdminCertificationsView, meta: { requiresAuth: true, requiresRole: 'admin' } },
+    { path: '/admin/parametres', component: Placeholder, meta: { requiresAuth: true, requiresRole: 'admin' } },
     { path: "/oauth-success", name: "oauth-success", component: OAuthSuccessView },
     { path: "/complete-profile", name: "complete-profile", component: CompleteProfileView },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
@@ -140,7 +141,7 @@ const router = createRouter({
     {
       path: "/profile/student/:id",
       name: "prof-student-profile",
-      component: ProfStudentProfileView,
+      component: StudentProfileView,
     },
     { path: "/validations", redirect: "/prof/validations" },
     { path: "/stages", name: "stages", component: StagesView },

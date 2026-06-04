@@ -182,7 +182,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Download, RefreshCw, Search } from 'lucide-vue-next'
 import { Users, Briefcase, CheckCircle, Clock } from 'lucide-vue-next'
 
@@ -361,6 +361,12 @@ const loadDashboard = async () => {
 
 onMounted(() => {
   loadDashboard().catch(() => {})
+  // reload when other admin pages emit an update
+  window.addEventListener('admin-dashboard-refresh', loadDashboard)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('admin-dashboard-refresh', loadDashboard)
 })
 </script>
 

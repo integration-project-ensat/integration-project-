@@ -55,8 +55,7 @@ import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
 
 function startGoogleLogin() {
-  window.location.href =
-    `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/google`
+  window.location.href = '/api/auth/google'
 }
 
 const router   = useRouter()

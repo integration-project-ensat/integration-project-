@@ -343,6 +343,8 @@ const confirmValidate = async () => {
   try {
     await api.patch(`/attestations/${id}/statut`, { statut: 'VALIDE' })
     await loadCertifications()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
     closeModal()
   } finally {
     loadingAction.value = false
@@ -361,6 +363,8 @@ const confirmRefuse = async () => {
       motif_refus: modal.value.reason,
     })
     await loadCertifications()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
     closeModal()
   } finally {
     loadingAction.value = false

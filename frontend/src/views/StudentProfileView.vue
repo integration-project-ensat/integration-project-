@@ -294,7 +294,7 @@ const profileUrl = computed(() => {
   return `${window.location.origin}/profile`
 })
 
-const profileStudentId = computed(() => Number(route.query.id || route.query.etudiant || profile.value.id))
+const profileStudentId = computed(() => Number(route.params.id || profile.value.id))
 
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
 const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${profile.value.name}`))
@@ -327,8 +327,9 @@ async function loadPosts() {
 
 async function loadProfile() {
   try {
-    const { data } = await profileService.getProfile(profileStudentId.value)
-    const backendProfile = data.data
+    const backendResp = await profileService.getProfile(profileStudentId.value)
+    const backendProfile = backendResp?.data ?? backendResp
+
     profile.value = {
       ...profile.value,
       id: backendProfile.id,
@@ -344,6 +345,7 @@ async function loadProfile() {
       website: backendProfile.website,
       linkedin: backendProfile.linkedin
     }
+
     posts.value = backendProfile.posts || posts.value
     recommendations.value = backendProfile.recommendations || recommendations.value
   } catch (error) {
@@ -501,7 +503,7 @@ function fullName(user: any) {
 
 function resolveBackendAsset(path: string) {
   if (!path || /^https?:\/\//.test(path)) return path
-  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
   const backendBase = apiBase.replace(/\/api\/?$/, '')
   return `${backendBase}${path}`
 }
