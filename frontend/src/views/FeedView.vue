@@ -8,6 +8,7 @@ import ExploreHeader from "../components/exploreStudent/ExploreHeader.vue";
 import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
+import PostFormModal from "../components/PostFormModal.vue";
 import { useProSavedProfiles } from "../store/proSavedProfiles";
 
 type FeedRole = "student" | "prof" | "pro";
@@ -44,6 +45,8 @@ interface FeedPost {
   score: number;
   comments: FeedComment[];
   isPopular?: boolean;
+  imagePreview?: string | null;
+  collaborators?: string[];
 }
 
 const route = useRoute();
@@ -52,6 +55,13 @@ const sidebarOpen = ref(true);
 const activeFilter = ref<FeedFilter>("Tous");
 const searchQuery = ref("");
 const openCommentPostId = ref<string | null>(null);
+
+// ID de l'utilisateur connecté (pour afficher edit/delete sur ses propres posts)
+const myStudentId = ref("khadija-bennani");
+
+// Post form modal
+const showPostModal  = ref(false);
+const editingPost    = ref<FeedPost | null>(null);
 const commentDrafts = reactive<Record<string, string>>({});
 const replyDrafts = reactive<Record<string, string>>({});
 const repostedPosts = reactive<Record<string, boolean>>({});
@@ -296,6 +306,50 @@ const addReply = (comment: FeedComment) => {
   openReplyCommentId.value = null;
 };
 
+// ── Gestion des posts (CRUD) ──
+
+function openNewPost() {
+  editingPost.value = null;
+  showPostModal.value = true;
+}
+
+function openEditPost(post: FeedPost) {
+  editingPost.value = post;
+  showPostModal.value = true;
+}
+
+function deletePost(id: string) {
+  if (!confirm("Supprimer ce post définitivement ?")) return;
+  posts.value = posts.value.filter((p) => p.id !== id);
+}
+
+function handleSavePost(data: Record<string, any>) {
+  if (editingPost.value) {
+    const idx = posts.value.findIndex((p) => p.id === editingPost.value!.id);
+    if (idx !== -1) {
+      posts.value[idx] = { ...posts.value[idx], ...data };
+    }
+  } else {
+    posts.value.unshift({
+      id: `post-${Date.now()}`,
+      studentId:           myStudentId.value,
+      studentName:         "Khadija Bennani",
+      initials:            "KB",
+      school:              "ENSA Tanger · GINF",
+      time:                "À l'instant",
+      badges:              [],
+      repostCount:         0,
+      recommendationCount: 0,
+      likeCount:           0,
+      score:               80,
+      comments:            [],
+      ...data,
+    });
+  }
+  showPostModal.value = false;
+  editingPost.value = null;
+}
+
 </script>
 
 <template>
@@ -308,6 +362,16 @@ const addReply = (comment: FeedComment) => {
     <main class="feed-shell" :class="{ 'feed-shellShift': sidebarOpen }">
       <section class="feed-column">
         <ExploreHeader v-model="searchQuery" :user-type="headerUserType" title="Fil d’actualité" />
+
+        <!-- Bouton nouveau post -->
+        <div class="new-post-bar">
+          <button class="btn-new-post" @click="openNewPost">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouveau post
+          </button>
+        </div>
 
         <div class="feed-filters">
           <button
@@ -348,6 +412,23 @@ const addReply = (comment: FeedComment) => {
                   <span>*</span>{{ post.score }}+
                 </span>
                 <div class="post-profile-actions">
+                  <!-- Boutons edit / delete visibles seulement sur les posts de l'utilisateur connecté -->
+                  <template v-if="post.studentId === myStudentId">
+                    <button type="button" class="post-owner-btn" @click="openEditPost(post)" title="Modifier">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button type="button" class="post-owner-btn delete" @click="deletePost(post.id)" title="Supprimer">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14H6L5 6"/>
+                        <path d="M10 11v6"/><path d="M14 11v6"/>
+                        <path d="M9 6V4h6v2"/>
+                      </svg>
+                    </button>
+                  </template>
                   <button
                     type="button"
                     class="connect-button"
@@ -393,9 +474,25 @@ const addReply = (comment: FeedComment) => {
             </span>
           </div>
 
-          <button type="button" class="project-preview" @click="openProject(post.id)">
+          <!-- Image du projet (si uploadée) ou placeholder cliquable -->
+          <button v-if="post.imagePreview" type="button" class="project-preview has-image" @click="openProject(post.id)">
+            <img :src="post.imagePreview" :alt="post.projectTitle" class="post-image" />
+          </button>
+          <button v-else type="button" class="project-preview" @click="openProject(post.id)">
             <span>{{ post.projectTitle }}</span>
           </button>
+
+          <!-- Collaborateurs (si post en collaboration) -->
+          <div v-if="post.collaborators && post.collaborators.length" class="collab-row">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+              <path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <span>Collaboration :</span>
+            <span v-for="(name, i) in post.collaborators" :key="i" class="collab-tag">{{ name }}</span>
+          </div>
 
           <div class="link-row">
             <a v-if="post.github" href="#" @click.prevent>{{ post.github }}</a>
@@ -523,6 +620,14 @@ const addReply = (comment: FeedComment) => {
       </section>
     </main>
   </div>
+
+  <!-- Modal de création / édition de post -->
+  <PostFormModal
+    :visible="showPostModal"
+    :post="editingPost"
+    @save="handleSavePost"
+    @close="showPostModal = false"
+  />
 </template>
 
 <style scoped>
@@ -1173,6 +1278,84 @@ const addReply = (comment: FeedComment) => {
   color: white;
   padding: 8px 14px;
   font-weight: 800;
+}
+
+/* ── Nouveau post bar ── */
+.new-post-bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-new-post {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--purple);
+  color: white;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 9px 20px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--font-head);
+  transition: var(--ease);
+}
+.btn-new-post:hover { background: var(--navy-mid); }
+
+/* ── Boutons owner (edit / delete) sur les posts ── */
+.post-owner-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid var(--input-bg);
+  color: var(--text-gray);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--ease);
+  flex-shrink: 0;
+}
+.post-owner-btn:hover { background: rgba(79,70,229,0.1); color: var(--purple); border-color: var(--purple); }
+.post-owner-btn.delete:hover { background: rgba(223,30,33,0.08); color: var(--error); border-color: var(--error); }
+
+/* ── Image du post ── */
+.project-preview.has-image {
+  height: auto;
+  padding: 0;
+  overflow: hidden;
+  background: none;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: var(--radius-card);
+  display: block;
+}
+
+/* ── Collaborateurs ── */
+.collab-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-gray);
+  font-weight: 700;
+}
+
+.collab-tag {
+  background: rgba(79,70,229,0.1);
+  color: var(--purple);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
 }
 
 @media (max-width: 900px) {
