@@ -179,6 +179,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/store/auth.js'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
 import StudentProfileHeader from '../components/StudentProfileHeader.vue'
@@ -209,8 +210,9 @@ type ProfilePost = {
 }
 
 const route = useRoute()
+const auth = useAuthStore()
 const sidebarOpen = ref(false)
-const userRole = ref<'student' | 'teacher' | 'professional'>('teacher')
+const userRole = computed<'student' | 'teacher' | 'professional'>(() => auth.role ?? 'student')
 const activeTab = ref('Portfolio')
 const showRecosModal = ref(false)
 const recommendationMessage = ref('')
@@ -268,7 +270,7 @@ const connectionSent = ref(false)
 async function sendConnectionRequest() {
   try {
     await connexionService.createConnexion({
-      id_destinataire: profileStudentId.value,
+      id_destinataire: profileId.value,
       message: `Demande de connexion vers ${profile.value.name}`
     })
     connectionSent.value = true
@@ -290,11 +292,13 @@ const posts = ref<ProfilePost[]>([
 
 const copied = ref(false)
 
-const profileUrl = computed(() => {
-  return `${window.location.origin}/profile`
-})
+const profileUrl = computed(() => `${window.location.origin}${route.path}`)
 
-const profileStudentId = computed(() => Number(route.params.id || profile.value.id))
+const profileStudentId = computed<number | undefined>(() => {
+   const id = Number(route.params.id)
+  return !isNaN(id) && id > 0 ? id : undefined })
+
+const profileId = computed(() => profileStudentId.value || profile.value.id)
 
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
 const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${profile.value.name}`))
@@ -356,7 +360,7 @@ async function loadProfile() {
 async function loadRecommendations() {
   try {
     const { data } = await recommendationService.getRecommendations({
-      id_etudiant_cible: profileStudentId.value,
+      id_etudiant_cible: profileId.value,
       statut: 'VALIDE'
     })
     const backendRecommendations = data.data || []
@@ -380,7 +384,7 @@ async function sendRecommendation() {
 
   try {
     const { data } = await recommendationService.createRecommendation({
-      id_etudiant_cible: profileStudentId.value,
+      id_etudiant_cible: profileId.value,
       message,
       role_auteur: 'PROFESSEUR'
     })
@@ -398,7 +402,7 @@ async function sendRecommendation() {
     role: 'teacher',
     avatar: currentUser.avatar,
     message: recommendationMessage.value.trim(),
-    date: 'Aujourd’hui'
+    date: "Aujourd’hui"
   })
 
   recommendationMessage.value = ''
@@ -493,7 +497,7 @@ function mapBackendRecommendation(recommendation: any): Recommendation {
     role,
     avatar: '',
     message: recommendation.message || '',
-    date: 'Aujourdâ€™hui'
+    date: "Aujourd'hui"
   }
 }
 
@@ -508,10 +512,10 @@ function resolveBackendAsset(path: string) {
   return `${backendBase}${path}`
 }
 
-onMounted(() => {
-  loadProfile()
-  loadPosts()
-  loadRecommendations()
+onMounted(async () => {
+  await loadProfile()
+  await loadPosts()
+  await loadRecommendations()
 })
 </script>
 

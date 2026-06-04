@@ -43,6 +43,10 @@ export default {
       throw new Error(`Rôle inconnu : ${user?.role}`)
     }
 
+    if (user) {
+      user.role = role
+    }
+
     localStorage.setItem('token', token)
     localStorage.setItem('role', role)
     return data

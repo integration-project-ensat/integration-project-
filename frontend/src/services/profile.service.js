@@ -24,9 +24,11 @@ const MOCK_PROFILE = {
 
 export const profileService = {
   async getProfile(userId) {
+  const id = (userId == null || isNaN(Number(userId))) ? null : userId
+  const url = id != null ? `/profil/${id}` : '/profil/me'
     try {
-      const { data } = await api.get(`/profil/${userId}`)
-      return data
+      const { data } = await api.get(url)
+      return data.data
     } catch {
       // Backend indisponible / route absente → on retourne les données mock
       return MOCK_PROFILE
@@ -35,7 +37,7 @@ export const profileService = {
 
   async updateProfile(userId, payload) {
     const { data } = await api.put(`/profil/${userId}`, payload)
-    return data
+    return data.data
   },
 
   async uploadAvatar(userId, file) {

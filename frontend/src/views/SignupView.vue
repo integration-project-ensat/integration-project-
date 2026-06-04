@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'

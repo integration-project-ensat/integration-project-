@@ -32,6 +32,7 @@ import ValidationProfView from "../views/ValidationProfView.vue";
 import StagesView from "../views/StagesView.vue";
 import CertificationsView from "../views/CertificationsView.vue";
 import ActivitesView from "../views/ActivitesView.vue";
+import SettingsView from "../views/SettingsView.vue";
 
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
@@ -100,6 +101,18 @@ const router = createRouter({
       component: ConnexionsProView,
     },
     {
+      path: "/profile",
+      name: "profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: SettingsView,
+      meta: { requiresAuth: true }
+    },
+    {
       path: "/pro/top-profiles",
       name: "pro-top-profiles",
       component: TopProfilesProView,
@@ -142,6 +155,7 @@ const router = createRouter({
       path: "/profile/student/:id",
       name: "prof-student-profile",
       component: StudentProfileView,
+      props: true,
     },
     { path: "/validations", redirect: "/prof/validations" },
     { path: "/stages", name: "stages", component: StagesView },

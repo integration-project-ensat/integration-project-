@@ -53,12 +53,14 @@ import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
+import { useAuthStore } from '@/store/auth.js'
 
 function startGoogleLogin() {
   window.location.href = '/api/auth/google'
 }
 
 const router   = useRouter()
+const auth     = useAuthStore()
 const email    = ref('')
 const password = ref('')
 const error    = ref('')
@@ -70,6 +72,7 @@ async function submit() {
   loading.value = true
   try {
     const data = await authService.login(email.value, password.value)
+    auth.login(data.data.user, data.data.token, data.data.user ? data.data.user.role : localStorage.getItem('role'))
     const role = localStorage.getItem('role')
     if (role === 'admin') {
       router.push('/admin')

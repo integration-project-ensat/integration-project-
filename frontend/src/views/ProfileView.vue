@@ -11,7 +11,7 @@ import StudentProfileHeader from '@/components/StudentProfileHeader.vue'
 import { useAuthStore } from '@/store/auth.js'
 
 const auth   = useAuthStore()
-const userId = computed(() => auth.user?.id ?? null)
+const userId = computed(() => auth.user?.id ?? auth.user?.id_utilisateur ?? null)
 </script>
 
 <style scoped>
