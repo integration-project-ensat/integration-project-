@@ -127,6 +127,10 @@ const adapterProfil = (p: ProfilExplore) => ({
   recos:           []
 })
 
+// ─── Helpers ──────────────────────────────────
+const profileId = (profile: ProfilExplore) => profile.id_utilisateur
+const isSaved = (id: string) => savedIds.value.has(id)
+
 const handleUpdateFilters = (next: typeof filters.value) => {
   filters.value = next;
 };

@@ -1,12 +1,12 @@
 <template>
   <aside class="sidebar" :class="{ open: isOpen }">
-    <RouterLink to="/profile" class="sidebar-user">
+    <RouterLink :to="profileLink" class="sidebar-user">
       <div class="avatar-sm">
         <span>{{ initials }}</span>
       </div>
       <div class="user-info">
-        <p class="user-name">Nom Prenom</p>
-        <p class="user-email">Exemple.exemple@exemple.pro</p>
+        <p class="user-name">{{ currentUser.name }}</p>
+        <p class="user-email">{{ currentUser.email }}</p>
       </div>
     </RouterLink>
 
@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink, useRoute } from "vue-router";
+import { useAuthStore } from '@/store/auth.js'
 
 withDefaults(
   defineProps<{
@@ -48,7 +49,23 @@ withDefaults(
 );
 
 const route = useRoute();
-const initials = computed(() => "NP");
+const auth = useAuthStore()
+const currentUser = computed(() => ({
+  name: auth.user?.name || 'Nom Prenom',
+  email: auth.user?.email || 'Exemple.exemple@exemple.pro',
+  avatar: auth.user?.avatar || ''
+}))
+
+const initials = computed(() => {
+  const name = currentUser.value.name || 'Nom Prenom'
+  return name
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+})
+
+const profileLink = computed(() => '/profile')
 
 const icons = {
   dashboard: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,

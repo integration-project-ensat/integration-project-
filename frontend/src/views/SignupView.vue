@@ -97,14 +97,17 @@
 </template>
 
 <script setup lang="ts">
+<<<<<<< HEAD
 import { computed, reactive, ref } from 'vue'
+=======
+import { computed, reactive, ref } from 'vue'
+>>>>>>> a2e2c0189620109333427603eec2c4948e3d3ade
 import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
 
 function startGoogleLogin() {
-  window.location.href =
-    `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/google`
+  window.location.href = '/api/auth/google'
 }
 
 type ApiError = {

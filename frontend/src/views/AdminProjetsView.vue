@@ -349,6 +349,8 @@ const confirmValidate = async () => {
   try {
     await api.patch(`/projets/${id}/statut`, { statut: 'VALIDE' })
     await loadProjets()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
     closeModal()
   } finally {
     loadingAction.value = false
@@ -364,6 +366,8 @@ const confirmRefuse = async () => {
   try {
     await api.patch(`/projets/${id}/statut`, { statut: 'REFUSE', motif_refus: modal.value.reason })
     await loadProjets()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
     closeModal()
   } finally {
     loadingAction.value = false

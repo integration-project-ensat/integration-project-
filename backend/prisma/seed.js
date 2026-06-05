@@ -418,6 +418,7 @@ async function seedTechnologies() {
     { nom: 'TypeScript', categorie: 'Frontend' },
     { nom: 'Spring Boot', categorie: 'Backend' },
     { nom: 'Prisma', categorie: 'Database' },
+    { nom: 'Firebase', categorie: 'Backend' },
     { nom: 'Git', categorie: 'Tools' },
     { nom: 'Linux', categorie: 'DevOps' },
   ];
@@ -512,6 +513,51 @@ async function seedProjets(etudiants, professeurs, technologies) {
       profIdx: 1,
       techs: ['Linux', 'Docker'],
     },
+    {
+      titre: 'Projet6 - Application mobile hybride',
+      description: 'Application mobile multiplateforme pour suivi de formation.',
+      type: 'INTEGRATION',
+      statut: 'VALIDE',
+      etudiantIdx: 0,
+      profIdx: 2,
+      techs: ['React', 'TypeScript', 'Firebase'],
+    },
+    {
+      titre: 'Projet7 - Plateforme e-commerce',
+      description: 'Site e-commerce avec panier et paiement simulé.',
+      type: 'MODULE',
+      statut: 'VALIDE',
+      etudiantIdx: 1,
+      profIdx: 0,
+      techs: ['React', 'Node.js', 'Docker'],
+    },
+    {
+      titre: 'Projet8 - Système de recommendation',
+      description: 'Moteur de recommandation pour contenus utilisateurs.',
+      type: 'PERSONNEL',
+      statut: 'EN_ATTENTE',
+      etudiantIdx: 2,
+      profIdx: 1,
+      techs: ['Python', 'Docker', 'PostgreSQL'],
+    },
+    {
+      titre: 'Projet9 - Application de gestion de conférences',
+      description: 'Outil collaboratif pour gérer programmes et participants.',
+      type: 'INTEGRATION',
+      statut: 'VALIDE',
+      etudiantIdx: 3,
+      profIdx: 2,
+      techs: ['React', 'Prisma', 'PostgreSQL'],
+    },
+    {
+      titre: 'Projet10 - Dashboard securite',
+      description: 'Tableau de bord de surveillance et alertes securite.',
+      type: 'HACKATHON',
+      statut: 'REFUSE',
+      etudiantIdx: 4,
+      profIdx: 0,
+      techs: ['Python', 'Docker', 'Linux'],
+    },
   ];
 
   const result = [];
@@ -591,6 +637,33 @@ async function seedStages(etudiants, professeurs) {
       etudiantIdx: 2,
       profIdx: 2,
       technologies: 'Docker, Linux',
+    },
+    {
+      entreprise: 'Agence Digitale D',
+      poste: 'Consultant Cloud',
+      duree_semaines: 10,
+      statut: 'VALIDE',
+      etudiantIdx: 3,
+      profIdx: 1,
+      technologies: 'Docker, AWS',
+    },
+    {
+      entreprise: 'Institut E',
+      poste: 'Assistant Data Scientist',
+      duree_semaines: 8,
+      statut: 'REFUSE',
+      etudiantIdx: 4,
+      profIdx: 2,
+      technologies: 'Python, SQL',
+    },
+    {
+      entreprise: 'Collectif F',
+      poste: 'Developpeur Backend',
+      duree_semaines: 9,
+      statut: 'EN_ATTENTE',
+      etudiantIdx: 0,
+      profIdx: 0,
+      technologies: 'Node.js, Prisma',
     },
   ];
 
@@ -929,6 +1002,33 @@ async function seedLettresRecommandation(etudiants, professeurs) {
       visibilite: 'TELECHARGEABLE',
       contenu: null,
     },
+    {
+      etudiantIdx: 2,
+      profIdx: 2,
+      motif: 'STAGE',
+      date_souhaitee: toDate('2026-05-15'),
+      statut: 'REDIGEE',
+      visibilite: 'PUBLIC',
+      contenu: 'Etudiant rigoureux et motive, parfaitement adapte aux missions de stage en data science.',
+    },
+    {
+      etudiantIdx: 3,
+      profIdx: 0,
+      motif: 'INTERNATIONAL',
+      date_souhaitee: toDate('2026-08-01'),
+      statut: 'EN_ATTENTE',
+      visibilite: 'TELECHARGEABLE',
+      contenu: null,
+    },
+    {
+      etudiantIdx: 4,
+      profIdx: 1,
+      motif: 'EMPLOI',
+      date_souhaitee: toDate('2026-09-01'),
+      statut: 'REDIGEE',
+      visibilite: 'PRIVE',
+      contenu: 'Yassine a fait preuve d’un excellent esprit d’equipe et d’un vrai sens du detail.',
+    },
   ];
 
   for (const lettre of lettres) {
@@ -958,12 +1058,24 @@ async function seedLettresRecommandation(etudiants, professeurs) {
 
 async function seedPostes(etudiants) {
   const result = [];
+  const postsData = [
+    'Je viens de publier mon portfolio et je suis fier du travail accompli.',
+    'Aujourd’hui, j’ai termine la phase de design UI/UX de mon projet.',
+    'Mon projet de fin d’annee avance bien et la demo est presque prete.',
+    'Merci a mon professeur pour son soutien sur ma nouvelle application web.',
+    'J’ai participe a un hackathon sur la cybersécurite ce weekend.',
+    'Je suis en periode de stage chez Entreprise Alpha, c’est une super experience.',
+    'Je cherche un mentor pour un projet de data science.',
+    'J’ai obtenu une certification en Docker et je partage mes retours.',
+    'Mon groupe a finalise la presentation de notre application mobile.',
+    'Je travaille sur des exemples de projets GitHub pour enrichir mon portfolio.',
+  ];
 
-  for (let i = 0; i < etudiants.length; i += 1) {
-    const contenu = `Poste${i + 1} : je viens de terminer mon projet ${i + 1} avec succes.`;
+  for (let i = 0; i < postsData.length; i += 1) {
+    const etudiant = etudiants[i % etudiants.length];
     const data = {
-      id_auteur: etudiants[i].id_utilisateur,
-      contenu,
+      id_auteur: etudiant.id_utilisateur,
+      contenu: postsData[i],
       visibilite: 'PUBLIC',
     };
 
@@ -1009,6 +1121,18 @@ async function seedCommentairesReactionsRecommandations(postes, portfolios, etud
       id_poste: postes[0].id_poste,
       contenu: 'Bravo pour ce travail.',
     },
+    {
+      id_auteur: pros[1].id_utilisateur,
+      id_portfolio: portfolios[1].id_portfolio,
+      id_poste: null,
+      contenu: 'Une belle demonstration de maturite professionnelle.',
+    },
+    {
+      id_auteur: professeurs[1].id_utilisateur,
+      id_portfolio: null,
+      id_poste: postes[1].id_poste,
+      contenu: 'Continue comme ca, le projet est prometteur.',
+    },
   ];
 
   for (const commentaire of commentaires) {
@@ -1041,6 +1165,22 @@ async function seedCommentairesReactionsRecommandations(postes, portfolios, etud
       role_auteur: 'PROFESSEUR',
       statut: 'EN_ATTENTE',
       portfolioIdx: 1,
+    },
+    {
+      id_auteur: pros[1].id_utilisateur,
+      id_etudiant_cible: etudiants[2].id_utilisateur,
+      message: 'Excellent esprit d’innovation et collaboration.',
+      role_auteur: 'PROFESSIONNEL',
+      statut: 'VALIDE',
+      portfolioIdx: 2,
+    },
+    {
+      id_auteur: professeurs[1].id_utilisateur,
+      id_etudiant_cible: etudiants[3].id_utilisateur,
+      message: 'Un profil serieux et une belle capacite de communication.',
+      role_auteur: 'PROFESSEUR',
+      statut: 'VALIDE',
+      portfolioIdx: 3,
     },
   ];
 
@@ -1175,8 +1315,11 @@ async function seedGithub(etudiant) {
 async function seedElementsValidables(projets, stages, activites, admin) {
   const elements = [
     { type: 'PROJET', reference_id: projets[0].id_projet, statut: 'VALIDE' },
+    { type: 'PROJET', reference_id: projets[1].id_projet, statut: 'EN_ATTENTE' },
     { type: 'STAGE', reference_id: stages[0].id_stage, statut: 'VALIDE' },
+    { type: 'STAGE', reference_id: stages[1].id_stage, statut: 'EN_ATTENTE' },
     { type: 'ACTIVITE', reference_id: activites[0].id_activite, statut: 'VALIDE' },
+    { type: 'ACTIVITE', reference_id: activites[1].id_activite, statut: 'EN_ATTENTE' },
   ];
 
   for (const element of elements) {
@@ -1188,30 +1331,36 @@ async function seedElementsValidables(projets, stages, activites, admin) {
         validateur_id: admin.id_utilisateur,
         date_soumission: toDate('2026-01-10'),
         date_validation: element.statut === 'VALIDE' ? toDate('2026-01-12') : null,
-        motif_refus: null,
+        motif_refus: element.statut === 'REFUSE' ? 'Document incomplet' : null,
       },
       'id_element'
     );
 
-    if (saved.type === 'ACTIVITE') {
+    if (['ACTIVITE', 'PROJET', 'STAGE'].includes(saved.type)) {
+      const attestationType = saved.type === 'ACTIVITE'
+        ? 'Activite parascolaire'
+        : saved.type === 'PROJET'
+          ? 'Projet academique'
+          : 'Stage professionnel';
+
       await prisma.attestation.upsert({
         where: { id_element: saved.id_element },
         update: {
-          titre: 'Attestation de participation',
-          type: 'Activite parascolaire',
+          titre: `Attestation de ${attestationType.toLowerCase()}`,
+          type: attestationType,
           date: toDate('2026-01-12'),
           organisme: 'Plateforme Portfolio',
           date_retention: toDate('2031-01-12'),
-          description: 'Attestation generee depuis un element validable.',
+          description: `Attestation generee pour l’element validable de type ${saved.type}.`,
         },
         create: {
           id_element: saved.id_element,
-          titre: 'Attestation de participation',
-          type: 'Activite parascolaire',
+          titre: `Attestation de ${attestationType.toLowerCase()}`,
+          type: attestationType,
           date: toDate('2026-01-12'),
           organisme: 'Plateforme Portfolio',
           date_retention: toDate('2031-01-12'),
-          description: 'Attestation generee depuis un element validable.',
+          description: `Attestation generee pour l’element validable de type ${saved.type}.`,
         },
       });
     }

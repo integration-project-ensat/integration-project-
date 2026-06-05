@@ -479,6 +479,8 @@ const confirmValidate = async () => {
   try {
     await api.patch(`/activites/${id}/valider`, { statut: 'ATTESTEE_INSTITUTION' })
     await loadActivities()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
     closeModal()
   } catch (e) {
     // garde silencieux
@@ -496,6 +498,8 @@ const confirmRefuse = async () => {
   try {
     await api.patch(`/activites/${id}/valider`, { statut: 'DECLAREE' })
     await loadActivities()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
     closeModal()
   } catch (e) {
     // garde silencieux

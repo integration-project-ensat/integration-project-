@@ -38,8 +38,15 @@ import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
+<<<<<<< HEAD
 
 import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
+=======
+import StagesView from "../views/StagesView.vue";
+import CertificationsView from "../views/CertificationsView.vue";
+import ActivitesView from "../views/ActivitesView.vue";
+import SettingsView from "../views/SettingsView.vue";
+>>>>>>> a2e2c0189620109333427603eec2c4948e3d3ade
 
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
@@ -63,6 +70,7 @@ const router = createRouter({
     { path: '/admin/activites', component: AdminActivitiesView, meta: { requiresAuth: true, requiresRole: 'admin' } },
     { path: '/admin/projets', component: AdminProjetsView, meta: { requiresAuth: true, requiresRole: 'admin' } },
     { path: '/admin/certifications', component: AdminCertificationsView, meta: { requiresAuth: true, requiresRole: 'admin' } },
+    { path: '/admin/parametres', component: Placeholder, meta: { requiresAuth: true, requiresRole: 'admin' } },
     { path: "/oauth-success", name: "oauth-success", component: OAuthSuccessView },
     { path: "/complete-profile", name: "complete-profile", component: CompleteProfileView },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
@@ -120,6 +128,18 @@ const router = createRouter({
       component: ConnexionsProView,
     },
     {
+      path: "/profile",
+      name: "profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: SettingsView,
+      meta: { requiresAuth: true }
+    },
+    {
       path: "/pro/top-profiles",
       name: "pro-top-profiles",
       component: TopProfilesProView,
@@ -161,7 +181,8 @@ const router = createRouter({
     {
       path: "/profile/student/:id",
       name: "prof-student-profile",
-      component: ProfStudentProfileView,
+      component: StudentProfileView,
+      props: true,
     },
     { path: "/validations", redirect: "/prof/validations" },
     { path: "/stages", name: "stages", component: StagesView },
