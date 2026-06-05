@@ -10,6 +10,11 @@ const postValidator = require('../validators/post.validator')
 router.use(authentifier)
 
 router.get('/', postController.getAll)
+router.post(
+  '/:id/comments',
+  validate(postValidator.commentRules),
+  postController.addComment,
+)
 router.get('/:id', validate(postValidator.idParamRules), postController.getOne)
 
 router.post(

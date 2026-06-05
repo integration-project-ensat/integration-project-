@@ -30,6 +30,16 @@ const postController = {
     }
   },
 
+  async addComment(req, res) {
+    try {
+      const post = await postService.addComment(req.params.id, req.utilisateur.id_utilisateur, req.body.contenu)
+      if (!post) return res.status(404).json(ApiResponse.notFound('Post'))
+      return res.status(201).json(ApiResponse.created(post, 'Commentaire ajoute'))
+    } catch (e) {
+      return res.status(500).json(ApiResponse.serverError())
+    }
+  },
+
   async update(req, res) {
     try {
       const post = await postService.update(req.params.id, req.body, req.file, req.utilisateur)
