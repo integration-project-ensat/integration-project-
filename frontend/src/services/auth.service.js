@@ -101,7 +101,11 @@ export default {
   },
 
   async resetPassword(payload) {
-    return api.post('/reinitialiser-mot-de-passe', payload)
+    return api.post('/auth/reinitialiser-mot-de-passe', {
+      token: payload.token,
+      nouveau_mot_de_passe: payload.newPassword,
+      confirmation_mot_de_passe: payload.confirmPassword
+    })
   },
 
   logout() {

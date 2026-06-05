@@ -1,18 +1,15 @@
 version: '3.8'
 services:
   frontend:
-    build: 
+    build:
       context: ./frontend
 
-      dockerfile: Dockerfile
-
-    # ports:
-    #   - "8080:80"
+      dockerfile: dockerfile
     expose:
       - "80"
     depends_on:
       - backend
- 
+
   backend:
     build: ./backend
     ports:
@@ -29,7 +26,7 @@ services:
     depends_on:
       - postgres
       - keycloak
- 
+
   postgres:
     image: postgres:15-alpine
     environment:
@@ -39,8 +36,8 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"  
- 
+      - "5432:5432"
+
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     ports:
@@ -49,6 +46,7 @@ services:
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
     command: start-dev
+
   nginx:
     image: nginx:alpine
     ports:
@@ -60,6 +58,6 @@ services:
     depends_on:
       - frontend
       - backend
- 
+
 volumes:
   postgres-data:

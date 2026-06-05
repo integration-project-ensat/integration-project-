@@ -68,6 +68,18 @@ router.get(
   adminController.getEtudiantDetail
 );
 
+router.get('/portfolios', adminController.getPortfolios)
+
+router.get(
+  '/portfolios/:id',
+  adminController.getPortfolioDetail
+)
+
+router.delete(
+  '/portfolios/:id',
+  adminController.deletePortfolio
+)
+
 // ==================== LISTES POUR FILTRES ====================
 
 // GET /api/admin/etablissements  — alimente le <select> Établissement

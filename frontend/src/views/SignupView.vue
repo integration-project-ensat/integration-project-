@@ -97,7 +97,11 @@
 </template>
 
 <script setup lang="ts">
+<<<<<<< HEAD
 import { computed, reactive, ref } from 'vue'
+=======
+import { computed, reactive, ref } from 'vue'
+>>>>>>> a2e2c0189620109333427603eec2c4948e3d3ade
 import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
@@ -385,7 +389,18 @@ input:focus {
   justify-content: center;
 }
 
-.switch { text-align: center; font-size: .79rem; color: var(--text-muted); }
-.switch a { color: var(--purple); font-weight: 600; }
+
 .switch a:hover { text-decoration: underline; }
+
+
+.switch {
+  text-align: center;
+  font-size: .79rem;
+  color: var(--text-muted);
+}
+
+.switch a {
+  color: var(--purple);
+  font-weight: 600;
+}
 </style>
