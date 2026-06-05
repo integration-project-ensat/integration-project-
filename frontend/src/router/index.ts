@@ -38,6 +38,7 @@ import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
+import ProfileEditView from "../views/ProfileEditView.vue";
 
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
@@ -63,6 +64,7 @@ export default createRouter({
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
     { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
     { path: '/profile', name: 'profile', component: StudentProfileView },
+    { path: '/profile/edit', name: 'profile-edit', component: ProfileEditView },
     { path: "/dashboard", name: "dashboard", component: DashboardView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
