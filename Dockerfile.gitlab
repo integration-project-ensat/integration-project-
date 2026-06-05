@@ -1,0 +1,24 @@
+FROM gitlab/gitlab-ce:latest
+
+# Patch rack-oauth2 pour utiliser HTTP par défaut
+RUN sed -i "s/_endpoint_.scheme ||= self.scheme || 'https'/_endpoint_.scheme ||= self.scheme || 'http'/g" \
+    /opt/gitlab/embedded/lib/ruby/gems/3.3.0/gems/rack-oauth2-2.2.1/lib/rack/oauth2/client.rb
+
+# Patch swd pour utiliser URI::HTTP au lieu de URI::HTTPS
+RUN sed -i 's/@@url_builder ||= URI::HTTPS/@@url_builder ||= URI::HTTP/g' \
+    /opt/gitlab/embedded/lib/ruby/gems/3.3.0/gems/swd-2.0.3/lib/swd.rb
+
+# Patch omniauth_openid_connect pour désactiver la vérification de l'issuer
+RUN sed -i 's/^\([[:space:]]*\)verify_id_token!(/\1# verify_id_token!(/' \
+    /opt/gitlab/embedded/lib/ruby/gems/3.3.0/gems/omniauth_openid_connect-0.8.0/lib/omniauth/strategies/openid_connect.rb
+
+# Patch pour remplacer localhost par 172.18.0.1 dans les appels internes
+RUN printf '%s\n' \
+    'require "resolv"' \
+    'class << Resolv' \
+    '  alias_method :orig_getaddress, :getaddress' \
+    '  def getaddress(name)' \
+    '    name == "localhost" ? "172.18.0.1" : orig_getaddress(name)' \
+    '  end' \
+    'end' \
+    > /opt/gitlab/embedded/service/gitlab-rails/config/initializers/localhost_patch.rb

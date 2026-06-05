@@ -85,7 +85,6 @@ services:
       - KC_DB_USERNAME=${DB_USER:-postgres}
       - KC_DB_PASSWORD=${DB_PASSWORD:-secret}
       - KC_HTTP_RELATIVE_PATH=/auth
-      - KC_PROXY=edge
     command: start-dev
     depends_on:
       postgres:
@@ -117,8 +116,8 @@ services:
       - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${GRAFANA_OAUTH_SECRET:-grafana-secret}
       - GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile
       - GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost:8081/auth/realms/portfolio-realm/protocol/openid-connect/auth
-      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak:8080/auth/realms/portfolio-realm/protocol/openid-connect/token
-      - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak:8080/auth/realms/portfolio-realm/protocol/openid-connect/userinfo
+      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://localhost:8081/auth/realms/portfolio-realm/protocol/openid-connect/token
+      - GF_AUTH_GENERIC_OAUTH_API_URL=http://localhost:8081/auth/realms/portfolio-realm/protocol/openid-connect/userinfo
       - GF_AUTH_GENERIC_OAUTH_REDIRECT_URI=http://localhost:3001/login/generic_oauth
       - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(roles[*], 'chef-equipe') && 'Admin' || contains(roles[*], 'adjoint') && 'Admin' || contains(roles[*], 'devops') && 'Editor' || contains(roles[*], 'qa') && 'Editor' || 'Viewer'
     volumes:
@@ -151,22 +150,22 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
+
   gitlab:
-    image: gitlab/gitlab-ce:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.gitlab
     container_name: portfolio_gitlab
     restart: unless-stopped
     ports:
       - "9080:9080"
       - "9443:443"
       - "2222:22"
-    environment:
-      GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://localhost:9080'
-        gitlab_rails['gitlab_shell_ssh_port'] = 2222
     volumes:
       - gitlab_config:/etc/gitlab
       - gitlab_logs:/var/log/gitlab
       - gitlab_data:/var/opt/gitlab
+      - ./gitlab.rb:/etc/gitlab/gitlab.rb
     shm_size: '256m'
 
 volumes:
