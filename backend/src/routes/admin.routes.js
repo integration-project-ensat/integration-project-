@@ -70,15 +70,15 @@ router.get(
 
 router.get('/portfolios', adminController.getPortfolios)
 
-router.get(
-  '/portfolios/:id',
-  adminController.getPortfolioDetail
-)
+// router.get(
+//   '/portfolios/:id',
+//   adminController.getPortfolioDetail
+// )
 
-router.delete(
-  '/portfolios/:id',
-  adminController.deletePortfolio
-)
+// router.delete(
+//   '/portfolios/:id',
+//   adminController.deletePortfolio
+// )
 
 // ==================== LISTES POUR FILTRES ====================
 

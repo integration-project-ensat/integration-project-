@@ -560,6 +560,97 @@ const getVilles = asyncHandler(async (req, res) => {
     data: profils.map((p) => p.adresse).filter(Boolean),
   });
 });
+// GET /api/admin/portfolios
+const getPortfolios = asyncHandler(async (req, res) => {
+
+  const portfolios = await prisma.portfolio.findMany({
+    include: {
+      etudiant: {
+        include: {
+          utilisateur: {
+            select: {
+              id_utilisateur: true,
+              nom: true,
+              prenom: true,
+              email: true
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      date_modification: 'desc'
+    }
+  })
+
+  res.json({
+    success: true,
+    data: portfolios
+  })
+})
+
+// GET /api/admin/portfolios/:id
+const getPortfolioDetail = asyncHandler(async (req, res) => {
+
+  const portfolio = await prisma.portfolio.findUnique({
+    where: {
+      id_portfolio: BigInt(req.params.id)
+    },
+    include: {
+      etudiant: {
+        include: {
+          utilisateur: {
+            include: {
+              profil: true
+            }
+          }
+        }
+      },
+      commentaires: true,
+      recommandations: true,
+      modele: true
+    }
+  })
+
+  if (!portfolio) {
+    return res.status(404).json({
+      success: false,
+      message: 'Portfolio introuvable'
+    })
+  }
+
+  res.json({
+    success: true,
+    data: portfolio
+  })
+})
+// DELETE /api/admin/portfolios/:id
+const deletePortfolio = asyncHandler(async (req, res) => {
+
+  const portfolio = await prisma.portfolio.findUnique({
+    where: {
+      id_portfolio: BigInt(req.params.id)
+    }
+  })
+
+  if (!portfolio) {
+    return res.status(404).json({
+      success: false,
+      message: 'Portfolio introuvable'
+    })
+  }
+
+  await prisma.portfolio.delete({
+    where: {
+      id_portfolio: BigInt(req.params.id)
+    }
+  })
+
+  res.json({
+    success: true,
+    message: 'Portfolio supprimé avec succès'
+  })
+})
 
 module.exports = {
   getDashboard,
