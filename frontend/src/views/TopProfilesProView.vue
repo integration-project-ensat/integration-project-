@@ -67,7 +67,7 @@ const fallbackBadges = (field: string) => {
 
         <div class="stats-grid">
           <article class="stat-card">
-            <span>Total profils sauvegardÃ©s</span>
+            <span>Total profils sauvegardés</span>
             <strong>{{ totalSaved }}</strong>
           </article>
           <article class="stat-card">
@@ -87,8 +87,8 @@ const fallbackBadges = (field: string) => {
         <div class="profiles-table-card">
           <div class="table-title">
             <div>
-              <h2>Profils sauvegardÃ©s</h2>
-              <span>{{ filteredProfiles.length }} profils affichÃ©s</span>
+              <h2>Profils sauvegardés</h2>
+              <span>{{ filteredProfiles.length }} profils affichés</span>
             </div>
 
             <button
@@ -104,7 +104,7 @@ const fallbackBadges = (field: string) => {
 
           <div v-if="showFilters" class="filters-panel">
             <label>
-              Rechercher Ã©cole / facultÃ©
+              Rechercher école / faculté
               <input
                 v-model="universitySearch"
                 type="search"
@@ -112,7 +112,7 @@ const fallbackBadges = (field: string) => {
               />
             </label>
             <label>
-              FiliÃ¨re
+              Filière
               <input
                 v-model="fieldSearch"
                 type="search"
@@ -139,8 +139,8 @@ const fallbackBadges = (field: string) => {
               <thead>
                 <tr>
                   <th>Nom</th>
-                  <th>Ã‰cole / FacultÃ©</th>
-                  <th>FiliÃ¨re</th>
+                  <th>École / Faculté</th>
+                  <th>Filière</th>
                   <th>Ville</th>
                   <th>Score</th>
                   <th>Recommandations</th>
@@ -201,7 +201,7 @@ const fallbackBadges = (field: string) => {
           </div>
 
           <p v-else class="empty-state">
-            Aucun profil sauvegardÃ© pour le moment.
+            Aucun profil sauvegardé pour le moment.
           </p>
         </div>
       </section>
