@@ -9,6 +9,18 @@ export default {
     return api.get('/admin/etudiants', { params })
   },
 
+getProfessionnels() {
+  return api.get('/admin/professionnels')
+},
+
+validateProfessionnel(id) {
+  return api.patch(`/admin/professionnels/${id}/valider`)
+},
+
+rejectProfessionnel(id) {
+  return api.patch(`/admin/professionnels/${id}/refuser`)
+},
+
   exportAdminStudentsCSV(params) {
     return api.get('/admin/etudiants/export-csv', { params })
   },
@@ -24,5 +36,16 @@ export default {
   getAdminVilles() {
     return api.get('/admin/villes')
   },
+
+  getAdminPortfolios() {
+  return api.get('/admin/portfolios')
+},
+getAdmins() {
+  return api.get('/admin/admins')
+},
+
+deleteAdmin(id) {
+  return api.delete(`/admin/admins/${id}`)
+}
 }
 

@@ -258,6 +258,129 @@
             </tbody>
           </table>
 
+          <!-- Section Professionnels -->
+<div class="table-card" style="margin-top: 20px;">
+  <div class="table-header">
+    <div class="table-title-block">
+      <h2 class="table-title">Liste des Professionnels</h2>
+      <span class="count-badge">{{ professionnels.length }} profils trouvés</span>
+    </div>
+  </div>
+
+  <table class="profiles-table">
+    <thead>
+      <tr>
+        <th>Professionnel</th>
+        <th>Entreprise</th>
+        <th>Poste</th>
+        <th>Statut</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-if="professionnels.length === 0">
+        <td colspan="5" class="empty-row">Aucun professionnel trouvé.</td>
+      </tr>
+      <tr
+        v-for="pro in professionnels"
+        :key="pro.id_utilisateur"
+        class="profile-row"
+      >
+        <!-- Professionnel -->
+        <td>
+          <div class="student-cell">
+            <div class="student-avatar" style="background: #bfdbfe;">
+              <span>{{ initials(pro.utilisateur.prenom + ' ' + pro.utilisateur.nom) }}</span>
+            </div>
+            <div>
+              <p class="student-name">{{ pro.utilisateur.prenom }} {{ pro.utilisateur.nom }}</p>
+              <p class="student-email">{{ pro.utilisateur.email }}</p>
+            </div>
+          </div>
+        </td>
+
+        <!-- Entreprise -->
+        <td>
+          <div class="school-cell">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            </svg>
+            {{ pro.entreprise }}
+          </div>
+        </td>
+
+        <!-- Poste -->
+        <td>
+          <div class="school-cell">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            {{ pro.poste }}
+          </div>
+        </td>
+
+        <!-- Statut -->
+        <td>
+          <span
+            class="status-badge"
+            :class="{
+              verified:   pro.statut_validation === 'VALIDE',
+              pending:    pro.statut_validation === 'EN_ATTENTE',
+              unverified: pro.statut_validation === 'REFUSE'
+            }"
+          >
+            <svg v-if="pro.statut_validation === 'valide'" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <svg v-else-if="pro.statut_validation === 'en_attente'" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <svg v-else width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            {{
+              pro.statut_validation === 'VALIDE'? 'Validé' :
+              pro.statut_validation === 'EN_ATTENTE'? 'En attente': 'Refusé'
+            }}
+          </span>
+        </td>
+
+        <!-- Actions -->
+        <td>
+          <div class="row-actions">
+            <button
+              class="btn-primary"
+              style="padding: 6px 12px; font-size: 12px;"
+              :disabled="pro.statut_validation === 'valide'"
+              @click="validateProfessionnel(pro)"
+            >
+              Valider
+            </button>
+            <button
+              class="btn-outline"
+              style="padding: 6px 12px; font-size: 12px; color: #ef4444; border-color: #fecaca;"
+              :disabled="pro.statut_validation === 'refuse'"
+              @click="rejectProfessionnel(pro)"
+            >
+              Refuser
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
           <!-- Pagination -->
           <div class="pagination">
             <span class="pagination-info">
@@ -361,7 +484,12 @@
                   <td><span class="niveau-badge" :class="a.niveau">{{ niveauLabel[a.niveau] }}</span></td>
                   <td class="date-cell">{{ a.createdAt }}</td>
                   <td>
-                    <button class="btn-del" @click="removeAdmin(a.id)" title="Supprimer">
+                    <button
+  v-if="a.niveau_acces !== 'SUPER_ADMIN'"
+  class="btn-del"
+  @click="removeAdmin(a)"
+  title="Supprimer"
+>
                       <Trash2 :size="14" />
                     </button>
                   </td>
@@ -390,6 +518,7 @@ import { Eye, EyeOff, UserPlus, CheckCircle, Trash2 } from 'lucide-vue-next'
 import AdminNavbar  from '../components/admin/AdminNavbar.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import AdminSubbar  from '../components/admin/AdminSubbar.vue'
+import api from '@/services/api'
 
 /* ── Layout state ──────────────────────── */
 const search      = ref('')
@@ -400,7 +529,7 @@ const filters = ref({
   search:   '',
   city:     '',
   school:   '',
-  minScore: 60,
+  minScore: 0,
 })
 
 const cities  = ['Casablanca', 'Agadir', 'Rabat', 'Ifrane', 'Fès', 'Marrakech']
@@ -432,6 +561,8 @@ const apiLoadingProfiles = ref(false)
 
 onMounted(async () => {
   // charger listes villes/établissements + étudiants
+
+
   try {
     apiLoadingProfiles.value = true
 
@@ -457,6 +588,10 @@ onMounted(async () => {
   } finally {
     apiLoadingProfiles.value = false
   }
+
+  await loadProfessionnels()
+
+
 })
 
 
@@ -530,11 +665,100 @@ const deleteProfile = (p) => {
 }
 const viewPortfolio = (p) => { console.log('portfolio', p) }
 
-const bulkVerify = () => {
-  profiles.value.forEach(p => {
-    if (selected.value.includes(p.id)) p.status = 'verified'
-  })
-  selected.value = []
+const bulkVerify = async () => {
+
+  if (selected.value.length === 0) {
+    alert('Sélectionnez au moins un étudiant')
+    return
+  }
+
+  try {
+
+    const { data } = await api.post(
+      '/admin/etudiants/verification-groupee',
+      {
+        ids: selected.value
+      }
+    )
+
+    alert(data.message)
+
+    const etudiantsResp = await api.get(
+      '/admin/etudiants',
+      {
+        params: {
+          page: 1,
+          limit: 1000
+        }
+      }
+    )
+
+    profiles.value = etudiantsResp.data.data.map(
+      (u, i) => mapEtudiantForUI(u, i)
+    )
+
+    selected.value = []
+
+  } catch (error) {
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la vérification'
+    )
+
+  }
+}
+
+const professionnels = ref([])
+const loadProfessionnels = async () => {
+  try {
+
+    const { data } = await api.get('/admin/professionnels')
+
+    professionnels.value = data.data
+
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const validateProfessionnel = async (pro) => {
+
+  try {
+
+    await api.patch(
+  `/admin/professionnels/${pro.id_utilisateur}/valider`
+)
+
+    await loadProfessionnels()
+
+  } catch (error) {
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la validation'
+    )
+
+  }
+}
+
+const rejectProfessionnel = async (pro) => {
+
+  try {
+
+    await api.patch(
+  `/admin/professionnels/${pro.id_utilisateur}/refuser`
+)
+    await loadProfessionnels()
+
+  } catch (error) {
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors du refus'
+    )
+
+  }
 }
 
 /* ── Admin creation ─────────────────────── */
@@ -544,29 +768,80 @@ const niveauLabel  = { standard: 'Standard', moderateur: 'Modérateur', super_ad
 const newAdmin = ref({ nom: '', prenom: '', email: '', password: '', niveau: 'standard' })
 const showPwd      = ref(false)
 const adminCreated = ref(false)
-const adminList    = ref([
-  { id: 1, nom: 'Bennani', prenom: 'Karim',  email: 'k.bennani@admin.ma', niveau: 'super_admin', createdAt: '01 Jan 2024', color: '#c7d2fe' },
-  { id: 2, nom: 'Chraibi', prenom: 'Leila',  email: 'l.chraibi@admin.ma', niveau: 'moderateur',  createdAt: '15 Mar 2024', color: '#d1fae5' },
-])
+const adminList = ref([])
 
-const createAdmin = () => {
-  const a = {
-    id:        Date.now(),
-    nom:       newAdmin.value.nom,
-    prenom:    newAdmin.value.prenom,
-    email:     newAdmin.value.email,
-    niveau:    newAdmin.value.niveau,
-    createdAt: new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }),
-    color:     avatarColors[adminList.value.length % avatarColors.length],
-  }
-  adminList.value.push(a)
-  newAdmin.value = { nom: '', prenom: '', email: '', password: '', niveau: 'standard' }
-  adminCreated.value = true
-  setTimeout(() => { adminCreated.value = false }, 3000)
+const loadAdmins = async () => {
+  const { data } = await api.get('/admin/admins')
+  adminList.value = data.data
 }
 
-const removeAdmin = (id) => {
-  adminList.value = adminList.value.filter(a => a.id !== id)
+onMounted(loadAdmins)
+
+const createAdmin = async () => {
+  try {
+
+    await api.post('/auth/admin/creer', {
+  nom: newAdmin.value.nom,
+  prenom: newAdmin.value.prenom,
+  email: newAdmin.value.email,
+
+  mot_de_passe: newAdmin.value.password,
+  confirmation_mot_de_passe: newAdmin.value.password,
+
+  role: 'ADMINISTRATEUR',
+
+  niveau_acces: newAdmin.value.niveau.toUpperCase()
+})
+    await loadAdmins()
+
+    newAdmin.value = {
+      nom: '',
+      prenom: '',
+      email: '',
+      password: '',
+      niveau: 'standard'
+    }
+
+    adminCreated.value = true
+
+    setTimeout(() => {
+      adminCreated.value = false
+    }, 3000)
+
+  } catch (error) {
+    console.error(error)
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la création'
+    )
+  }
+}
+
+const removeAdmin = async (admin) => {
+
+if (
+  !confirm(
+    `Supprimer l'administrateur ${admin.prenom} ${admin.nom} ?`
+  )
+) {
+  return
+}
+
+  try {
+
+    await api.delete(`/admin/admins/${admin.id_utilisateur}`)
+
+    await loadAdmins()
+
+  } catch (error) {
+    console.error(error)
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la suppression'
+    )
+  }
 }
 
 const exportCSV = () => {

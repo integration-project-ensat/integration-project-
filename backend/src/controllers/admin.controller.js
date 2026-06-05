@@ -544,6 +544,84 @@ const getEtablissements = asyncHandler(async (req, res) => {
     data: etablissements.map((e) => e.etablissement).filter(Boolean),
   });
 });
+const getProfessionnels = asyncHandler(async (req, res) => {
+
+  const professionnels = await prisma.professionnel.findMany({
+    include: {
+      utilisateur: {
+        select: {
+          id_utilisateur: true,
+          nom: true,
+          prenom: true,
+          email: true,
+          date_creation: true
+        }
+      }
+    }
+  })
+
+  res.json({
+    success: true,
+    data: professionnels
+  })
+})
+
+const validateProfessionnel = asyncHandler(async (req, res) => {
+
+  const id = BigInt(req.params.id)
+
+  await prisma.professionnel.update({
+    where: {
+      id_utilisateur: id
+    },
+    data: {
+      est_valide: true,
+      statut_validation: 'VALIDE',
+      date_validation: new Date()
+    }
+  })
+  await prisma.utilisateur.update({
+    where: {
+      id_utilisateur: id
+    },
+    data: {
+      est_actif: true
+    }
+  })
+  res.json({
+    success: true,
+    message: 'Professionnel validé'
+  })
+})
+
+const rejectProfessionnel = asyncHandler(async (req, res) => {
+
+  const id = BigInt(req.params.id)
+
+  await prisma.professionnel.update({
+    where: {
+      id_utilisateur: id
+    },
+    data: {
+      est_valide: false,
+      statut_validation: 'REFUSE'
+    }
+  })
+
+  await prisma.utilisateur.update({
+  where: {
+    id_utilisateur: id
+  },
+  data: {
+    est_actif: false
+  }
+})
+
+  res.json({
+    success: true,
+    message: 'Professionnel refusé'
+  })
+})
 
 // GET /api/admin/villes
 // Retourne la liste distincte des villes (depuis profil.adresse)
@@ -652,6 +730,87 @@ const deletePortfolio = asyncHandler(async (req, res) => {
   })
 })
 
+// GET /api/admin/admins
+const getAdmins = asyncHandler(async (req, res) => {
+
+  const admins = await prisma.utilisateur.findMany({
+    where: {
+      role: 'ADMINISTRATEUR'
+    },
+    select: {
+      id_utilisateur: true,
+      nom: true,
+      prenom: true,
+      email: true,
+      date_creation: true
+    },
+    orderBy: {
+      date_creation: 'desc'
+    }
+  })
+
+  res.json({
+    success: true,
+    data: admins
+  })
+})
+
+
+// DELETE /api/admin/admins/:id
+const deleteAdmin = asyncHandler(async (req, res) => {
+
+  const id = BigInt(req.params.id)
+
+  const admin = await prisma.utilisateur.findUnique({
+    where: {
+      id_utilisateur: id
+    },
+    include: {
+      administrateur: true
+    }
+  })
+
+  if (!admin) {
+    return res.status(404).json({
+      success: false,
+      message: 'Administrateur introuvable'
+    })
+  }
+
+  // Interdire suppression de son propre compte
+  if (
+    String(admin.id_utilisateur) ===
+    String(req.utilisateur.id_utilisateur)
+  ) {
+    return res.status(403).json({
+      success: false,
+      message: 'Vous ne pouvez pas supprimer votre propre compte'
+    })
+  }
+
+  // Interdire suppression d'un SUPER_ADMIN
+  if (
+    admin?.administrateur?.niveau_acces === 'SUPER_ADMIN'
+  ) {
+    return res.status(403).json({
+      success: false,
+      message: 'Impossible de supprimer un Super Admin'
+    })
+  }
+
+  await prisma.utilisateur.delete({
+    where: {
+      id_utilisateur: id
+    }
+  })
+
+  res.json({
+    success: true,
+    message: 'Administrateur supprimé'
+  })
+
+})
+
 module.exports = {
   getDashboard,
   getEtudiants,
@@ -663,4 +822,9 @@ module.exports = {
   getPortfolios,
   getPortfolioDetail,
   deletePortfolio,
+  getAdmins,
+  deleteAdmin,
+  getProfessionnels,
+  validateProfessionnel,
+  rejectProfessionnel
 };

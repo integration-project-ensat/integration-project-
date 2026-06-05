@@ -85,7 +85,32 @@ router.get('/portfolios', adminController.getPortfolios)
 // GET /api/admin/etablissements  — alimente le <select> Établissement
 router.get('/etablissements', adminController.getEtablissements);
 
+router.get(
+  '/professionnels',
+  adminController.getProfessionnels
+)
+
+router.patch(
+  '/professionnels/:id/valider',
+  adminController.validateProfessionnel
+)
+
+router.patch(
+  '/professionnels/:id/refuser',
+  adminController.rejectProfessionnel
+)
+
 // GET /api/admin/villes           — alimente le <select> Ville
 router.get('/villes', adminController.getVilles);
+
+router.get('/admins', adminController.getAdmins)
+
+router.delete(
+  '/admins/:id',
+  validate([
+    param('id').isInt({ min: 1 }).withMessage('ID invalide').toInt()
+  ]),
+  adminController.deleteAdmin
+)
 
 module.exports = router;

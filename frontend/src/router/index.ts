@@ -38,16 +38,12 @@ import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
-<<<<<<< HEAD
 
 import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
-=======
-import StagesView from "../views/StagesView.vue";
-import CertificationsView from "../views/CertificationsView.vue";
-import ActivitesView from "../views/ActivitesView.vue";
-import SettingsView from "../views/SettingsView.vue";
->>>>>>> a2e2c0189620109333427603eec2c4948e3d3ade
-
+//import StagesView from "../views/StagesView.vue";
+//import CertificationsView from "../views/CertificationsView.vue";
+//import ActivitesView from "../views/ActivitesView.vue";
+//import SettingsView from "../views/SettingsView.vue";
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
 
