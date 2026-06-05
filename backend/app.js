@@ -7,6 +7,9 @@ const express = require('express')
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
+const portfolioAIRoutes =
+require("./src/routes/portfolioAI.routes");
+
 const { apiLimiter, authLimiter, passwordLimiter,profilLimiter,diplomeLimiter } = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
@@ -28,13 +31,22 @@ const postRoutes = require('./src/routes/post.routes')
 const exploreRoutes = require('./src/routes/explore.routes')
 const profilePublicRoutes = require('./src/routes/profilePublic.routes')
 const connexionRoutes = require('./src/routes/connexion.routes')
+const portfolioAnalyzerRoutes =
+  require('./src/routes/portfolioAnalyzer.routes');
+
+// Routes à venir (décommenter au fur et à mesure)
+// const projetRoutes = require('./src/routes/projet.routes')
+// const stageRoutes = require('./src/routes/stage.routes')
+// const activiteRoutes = require('./src/routes/activite.routes')
+// const attestationRoutes = require('./src/routes/attestation.routes')
+
+const app = express()
 const projetRoutes = require('./src/routes/projet.routes')
 const stageRoutes = require('./src/routes/stage.routes')
 const activiteRoutes = require('./src/routes/activite.routes')
 const attestationRoutes = require('./src/routes/attestation.routes')
 const notificationRoutes = require('./src/routes/notification.routes');
 const badgeRoutes = require('./src/routes/badge.routes');
-const app = express()
 
 
 // Fichiers statiques
@@ -48,6 +60,11 @@ app.use(passport.initialize());
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
 
+app.use(
+  "/api/ai",
+  portfolioAIRoutes
+);
+
 // Rate limiting
 app.use('/api', apiLimiter)
 app.use('/api/auth/seconnecter', authLimiter)
@@ -57,6 +74,10 @@ app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
 
+app.use(
+  '/api/portfolio-analyzer',
+  portfolioAnalyzerRoutes
+);
 // Health check
 app.get('/', (req, res) => {
   res.status(200).json({
@@ -90,10 +111,6 @@ app.use('/api/recommandations', recommendationRoutes)
 app.use('/api/posts', postRoutes)
 app.use('/api/profiles', profilePublicRoutes)
 app.use('/api', exploreRoutes)
-app.use('/api/projets', projetRoutes)
-app.use('/api/stages', stageRoutes)
-app.use('/api/activites', activiteRoutes)
-app.use('/api/attestations', attestationRoutes)
 
 // 404
 app.use((req, res) => {

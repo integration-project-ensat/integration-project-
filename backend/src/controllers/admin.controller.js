@@ -569,4 +569,7 @@ module.exports = {
   verificationGroupee,
   getEtablissements,
   getVilles,
+  getPortfolios,
+  getPortfolioDetail,
+  deletePortfolio,
 };

@@ -6,6 +6,7 @@ import SignupView from "../views/SignupView.vue";
 import ForgetPasswordView from "@/views/ForgetPasswordView.vue";
 import ResetPasswordView from "../views/ResetPasswordView.vue";
 import VerifyCodeView from "../views/VerifyCodeView.vue";
+import WelcomeView from "../views/WelcomeView.vue";
 import StudentProfileView from '../views/StudentProfileView.vue';
 import ExploreView from "../views/ExploreView.vue";
 import AdminDashboardView from "../views/AdminDashboardView.vue";
@@ -18,6 +19,14 @@ import OAuthSuccessView from "../views/OAuthSuccessView.vue";
 import CompleteProfileView from "../views/CompleteProfileView.vue";
 import ExploreProfView from "../views/ExploreProfView.vue";
 import ExploreProView from "../views/ExploreProView.vue";
+import DashboardView from '../views/DashboardView.vue';
+import LettersView from '../views/LettersView.vue';
+import ProjectsView from '../views/ProjectsView.vue';
+import SettingsView from '../views/SettingsView.vue';
+import StudentPortfolioView from "../views/StudentPortfolioView.vue";
+import StagesView from "../views/StagesView.vue";
+import CertificationsView from "../views/CertificationsView.vue";
+import ActivitesView from "../views/ActivitesView.vue";
 import DashboardProfView from "../views/DashboardProfView.vue";
 import DashboardProView from "../views/DashboardProView.vue";
 import DashboardStudentView from "../views/DashboardStudentView.vue";
@@ -29,17 +38,19 @@ import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
-import StagesView from "../views/StagesView.vue";
-import CertificationsView from "../views/CertificationsView.vue";
-import ActivitesView from "../views/ActivitesView.vue";
+
+import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
 
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
 
+// Vues placeholder pour les pages pas encore développées
+
+
 const router = createRouter({
   history: createWebHistory("/"),
   routes: [
-    { path: "/", redirect: "/login" },
+    { path: "/", name: "welcome", component: WelcomeView },
     { path: "/login", name: "login", component: LoginView },
     { path: "/signup", name: "signup", component: SignupView },
     { path: "/forgot", name: "forgot", component: ForgetPasswordView },
@@ -69,6 +80,16 @@ const router = createRouter({
       },
       meta: { requiresAuth: true }
     },
+    { path: '/profile', name: 'profile', component: StudentProfileView },
+    { path: "/dashboard", name: "dashboard", component: DashboardView },
+    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
+    { path: "/lettres", name: "letters", component: LettersView },
+    { path: '/projets', name: 'projets', component: ProjectsView },
+    { path: '/settings', name: 'settings', component: SettingsView },
+    { path: "/stages", name: "stages", component: StagesView },
+    { path: "/certifications", name: "certifications", component: CertificationsView },
+    { path: "/activites", name: "activites", component: ActivitesView },
+    { path: "/dashboard", redirect: "/pro/dashboard" },
     {
       path: "/pro/dashboard",
       name: "pro-dashboard",
@@ -146,6 +167,7 @@ const router = createRouter({
     { path: "/stages", name: "stages", component: StagesView },
     { path: "/certifications", name: "certifications", component: CertificationsView },
     { path: "/activites", name: "activites", component: ActivitesView },
+    { path: "/ai-analyzer", name: "ai-analyzer", component: AIPortfolioAnalyzerView },
 
   ],
 });
@@ -188,3 +210,4 @@ router.beforeEach((to) => {
 })
 
 export default router
+
