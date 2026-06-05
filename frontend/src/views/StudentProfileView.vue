@@ -14,6 +14,7 @@
           :profile="profile"
           :recent-recommendations="recommendations"
           v-model="activeTab"
+          :is-owner="true"
           @open-recos="showRecosModal = true"
         />
 
