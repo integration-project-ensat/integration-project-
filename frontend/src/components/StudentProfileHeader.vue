@@ -576,9 +576,4 @@ function onAvatarError(e) {
 
   .social-btn { font-size: 11px; padding: 5px 10px; }
 }
-<<<<<<< HEAD
-
 </style>
-=======
-</style>
->>>>>>> a2e2c0189620109333427603eec2c4948e3d3ade
