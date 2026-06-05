@@ -7,6 +7,8 @@ const _formatName = (utilisateur) => {
   return `${utilisateur.prenom || ''} ${utilisateur.nom || ''}`.trim()
 }
 
+const _formatStudentName = (etudiant) => _formatName(etudiant?.utilisateur)
+
 const _toInitials = (nomComplet) => {
   return nomComplet
     .split(' ')
@@ -33,9 +35,13 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         etudiant: {
           select: {
             id_utilisateur: true,
-            prenom: true,
-            nom: true,
             filiere: true,
+            utilisateur: {
+              select: {
+                prenom: true,
+                nom: true,
+              }
+            }
           }
         }
       }
@@ -46,9 +52,13 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         etudiant: {
           select: {
             id_utilisateur: true,
-            prenom: true,
-            nom: true,
             filiere: true,
+            utilisateur: {
+              select: {
+                prenom: true,
+                nom: true,
+              }
+            }
           }
         }
       }
@@ -59,9 +69,13 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         etudiant: {
           select: {
             id_utilisateur: true,
-            prenom: true,
-            nom: true,
             filiere: true,
+            utilisateur: {
+              select: {
+                prenom: true,
+                nom: true,
+              }
+            }
           }
         }
       }
@@ -72,8 +86,8 @@ const getProfDashboard = asyncHandler(async (req, res) => {
     ...projets.map((projet) => ({
       id: projet.id_projet.toString(),
       studentId: projet.etudiant?.id_utilisateur?.toString() ?? 'unknown',
-      studentName: _formatName(projet.etudiant),
-      initials: _toInitials(_formatName(projet.etudiant)),
+      studentName: _formatStudentName(projet.etudiant),
+      initials: _toInitials(_formatStudentName(projet.etudiant)),
       type: 'Projet',
       title: projet.titre || 'Projet',
       description: projet.description || 'Validation du projet',
@@ -83,8 +97,8 @@ const getProfDashboard = asyncHandler(async (req, res) => {
     ...stages.map((stage) => ({
       id: stage.id_stage.toString(),
       studentId: stage.etudiant?.id_utilisateur?.toString() ?? 'unknown',
-      studentName: _formatName(stage.etudiant),
-      initials: _toInitials(_formatName(stage.etudiant)),
+      studentName: _formatStudentName(stage.etudiant),
+      initials: _toInitials(_formatStudentName(stage.etudiant)),
       type: 'Stage',
       title: stage.entreprise || 'Stage',
       description: stage.missions || 'Validation du stage',
@@ -96,8 +110,8 @@ const getProfDashboard = asyncHandler(async (req, res) => {
   const recommendationRequests = lettres.map((lettre) => ({
     id: lettre.id_lettre.toString(),
     studentId: lettre.etudiant?.id_utilisateur?.toString() ?? 'unknown',
-    studentName: _formatName(lettre.etudiant),
-    initials: _toInitials(_formatName(lettre.etudiant)),
+    studentName: _formatStudentName(lettre.etudiant),
+    initials: _toInitials(_formatStudentName(lettre.etudiant)),
     profileInfo: lettre.etudiant?.filiere || 'Étudiant',
     title: lettre.motif ? `Lettre ${lettre.motif.toLowerCase()}` : 'Lettre de recommandation',
     message: lettre.contenu || 'Demande de lettre de recommandation',

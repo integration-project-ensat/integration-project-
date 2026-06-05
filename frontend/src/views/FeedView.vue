@@ -212,8 +212,8 @@ const openProject = (projectId: string) => {
   router.push(`/projects/${projectId}`);
 };
 
-const toggleSavedPostProfile = (post: FeedPost) => {
-  const saved = saveProfile({
+const toggleSavedPostProfile = async (post: FeedPost) => {
+  await saveProfile({
     id: post.studentId,
     name: post.studentName,
     school: post.school.split("·")[0]?.trim() || post.school,

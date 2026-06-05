@@ -33,7 +33,7 @@ const ROLE_FIELDS_MAP = {
 
 export default {
   async login(email, password) {
-    const { data } = await api.post('/auth/seconnecter', { email, mot_de_passe: password })
+    const { data } = await api.post('/auth/seconnecter', { email: email.trim().toLowerCase(), mot_de_passe: password })
 
     const token = data.data?.token
     const user  = data.data?.user

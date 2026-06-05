@@ -52,6 +52,12 @@ export interface PaginationMeta {
   pages: number
 }
 
+export interface ProfilSauvegarde {
+  id: string
+  date_sauvegarde: string
+  etudiant: ProfilExplore
+}
+
 // ─── Appels API ───────────────────────────────
 
 export const explorerProfils = async (
@@ -69,7 +75,7 @@ export const supprimerSauvegarde = async (id: string): Promise<void> => {
   await api.delete(`/profil/${id}/save`)
 }
 
-export const getMesSauvegardes = async (): Promise<ProfilExplore[]> => {
+export const getMesSauvegardes = async (): Promise<ProfilSauvegarde[]> => {
   const res = await api.get('/profil/saved')
   return res.data.data
 }
