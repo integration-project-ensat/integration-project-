@@ -108,8 +108,13 @@ export default {
     })
   },
 
-  logout() {
-    localStorage.removeItem('token')
-    localStorage.removeItem('role')
+  async logout() {
+    try {
+      await api.post('/auth/deconnecter')
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('user')
+    }
   }
 }

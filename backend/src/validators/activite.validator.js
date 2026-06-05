@@ -18,7 +18,7 @@ const activiteValidator = {
 
   changerStatutRules: [
     param('id').isInt({ min: 1 }).withMessage('ID invalide'),
-    body('statut').isIn(['DECLAREE','ATTESTEE_INSTITUTION']).withMessage('Statut invalide'),
+    body('statut').isIn(['DECLAREE','ATTESTEE_INSTITUTION','REFUSEE']).withMessage('Statut invalide'),
   ],
 
   idParamRules: [

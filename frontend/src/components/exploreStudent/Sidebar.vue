@@ -28,17 +28,18 @@
         <span class="nav-icon" v-html="icons.settings" />
         <span>Parametres</span>
       </RouterLink>
-      <RouterLink to="/login" class="nav-item logout">
+      <button class="nav-item logout" type="button" @click="logout">
         <span class="nav-icon" v-html="icons.logout" />
         <span>Deconnexion</span>
-      </RouterLink>
+      </button>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
+import authService from "@/services/auth.service.js";
 
 withDefaults(
   defineProps<{
@@ -48,6 +49,7 @@ withDefaults(
 );
 
 const route = useRoute();
+const router = useRouter();
 
 const initials = computed(() => "NP");
 
@@ -126,6 +128,11 @@ const navItems = [
   { path: "/ai-analyzer", label: "AI Portfolio", icon: icons.ai },
   { path: "/lettres", label: "Lettres de Recos", icon: icons.letter },
 ];
+
+async function logout() {
+  await authService.logout();
+  router.push("/login");
+}
 </script>
 
 <style scoped>
@@ -214,6 +221,10 @@ const navItems = [
   text-decoration: none;
   transition: 0.2s ease;
   cursor: pointer;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: left;
 }
 
 .nav-item:hover {
