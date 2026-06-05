@@ -261,10 +261,83 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$PGADMIN_CLIENT_ID/pr
 echo "  Mappers pgadmin ajoutés ✓"
 
 # ----------------------------------------------------------
-# 7. Créer le client sonarqube (SAML)
+# 7. Créer le client gitlab (OIDC)
 # ----------------------------------------------------------
 echo ""
-echo "[7/8] Création du client 'sonarqube' (SAML)..."
+echo "[7/9] Création du client 'gitlab' (OIDC)..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clientId": "gitlab",
+    "name": "GitLab",
+    "enabled": true,
+    "protocol": "openid-connect",
+    "publicClient": false,
+    "clientAuthenticatorType": "client-secret",
+    "secret": "hJrGe88aqHUaAZNb0nPHPCGLzAQSHqjD",
+    "redirectUris": ["http://localhost:9080/users/auth/openid_connect/callback"],
+    "webOrigins": ["http://localhost:9080"],
+    "standardFlowEnabled": true,
+    "directAccessGrantsEnabled": true,
+    "attributes": {
+      "oidc.token.endpoint.auth.method": "query"
+    }
+  }' > /dev/null
+
+echo "  Client 'gitlab' créé ✓"
+
+GITLAB_CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=gitlab" \
+  -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+echo "  Ajout du mapper 'preferred_username' pour gitlab..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$GITLAB_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "preferred_username",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-property-mapper",
+    "consentRequired": false,
+    "config": {
+      "userinfo.token.claim": "true",
+      "user.attribute": "username",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "preferred_username",
+      "jsonType.label": "String"
+    }
+  }' > /dev/null
+
+echo "  Ajout du mapper 'email' pour gitlab..."
+
+curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$GITLAB_CLIENT_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "email",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-property-mapper",
+    "consentRequired": false,
+    "config": {
+      "userinfo.token.claim": "true",
+      "user.attribute": "email",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "email",
+      "jsonType.label": "String"
+    }
+  }' > /dev/null
+
+echo "  Mappers gitlab ajoutés ✓"
+
+# ----------------------------------------------------------
+# 8. Créer le client sonarqube (SAML)
+# ----------------------------------------------------------
+echo ""
+echo "[8/9] Création du client 'sonarqube' (SAML)..."
 
 curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
   -H "Authorization: Bearer $TOKEN" \
@@ -368,10 +441,10 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients/$SONAR_CLIENT_ID/prot
 echo "  Mappers SAML sonarqube ajoutés ✓"
 
 # ----------------------------------------------------------
-# 8. Vérification finale
+# 9. Vérification finale
 # ----------------------------------------------------------
 echo ""
-echo "[8/8] Vérification..."
+echo "[9/9] Vérification..."
 
 REALM_CHECK=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM" \
   -H "Authorization: Bearer $TOKEN" | grep -o '"realm":"[^"]*' | cut -d'"' -f4)
@@ -468,9 +541,10 @@ echo ""
 echo " Realm    : portfolio-realm"
 echo " Rôles    : chef-equipe, adjoint, developpeur, devops, qa, securite"
 echo " Users    : 10 utilisateurs créés"
-echo " Clients  : grafana  (OIDC - secret: grafana-secret)"
-echo "          : pgadmin  (OIDC - secret: pgadmin-secret)"
-echo "          : sonarqube (SAML)"
+echo " Clients  : grafana    (OIDC - secret: grafana-secret)"
+echo "          : pgadmin    (OIDC - secret: pgadmin-secret)"
+echo "          : gitlab     (OIDC - secret: hJrGe88aqHUaAZNb0nPHPCGLzAQSHqjD)"
+echo "          : sonarqube  (SAML)"
 echo " Password : PheraCore2025! (pour tous les utilisateurs)"
 echo ""
 echo " Hardening activé :"
@@ -481,6 +555,7 @@ echo "   - Session max  : 8h"
 echo "   - Enregistrement public : désactivé"
 echo ""
 echo " Accès Keycloak  : http://localhost:8081/auth"
+echo " Accès GitLab    : http://localhost:9080"
 echo " Accès Grafana   : http://localhost:3001"
 echo " Accès PGAdmin   : http://localhost:5050"
 echo " Accès SonarQube : http://localhost:9000"
