@@ -17,6 +17,10 @@ const corsMiddleware = require('./src/middlewares/cors.middleware')
 
 const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
+const {
+  metricsMiddleware,
+  monitoringRoutes
+} = require('./src/routes/monitoring.routes')
 
 const authRoutes = require('./src/routes/auth.routes')
 // const competenceRoutes = require('./src/routes/competence.routes')
@@ -25,6 +29,7 @@ const app = express()
 //securite(headers, CORS, rate )
 app.use(securityHeaders)
 app.use(corsMiddleware)
+app.use(metricsMiddleware)
 
 //body parser
 app.use(express.json({limit:'10Kb'}))
@@ -47,6 +52,7 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString()
   })
 })
+app.use('/', monitoringRoutes)
 
 
 // Auth routes
