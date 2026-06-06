@@ -1,0 +1,65 @@
+groups:
+  - name: project-monitoring
+    rules:
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Backend is down
+          description: Prometheus cannot scrape the backend /metrics endpoint.
+
+      - alert: PostgreSQLExporterDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: PostgreSQL exporter is down
+          description: Prometheus cannot scrape postgres-exporter.
+
+      - alert: NginxExporterDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Nginx exporter is down
+          description: Prometheus cannot scrape nginx-exporter.
+
+      - alert: ContainerDown
+        expr: time() - container_last_seen{name!=""} > 60
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Container disappeared
+          description: A Docker container has not been seen by cAdvisor for more than 60 seconds.
+
+      - alert: HighHostCpuUsage
+        expr: 1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High host CPU usage
+          description: Host CPU usage is above 80% for 5 minutes.
+
+      - alert: HighHostMemoryUsage
+        expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High host memory usage
+          description: Host memory usage is above 85% for 5 minutes.
+
+      - alert: BackendHttp5xxErrors
+        expr: sum(rate(http_requests_total{job="backend",status_code=~"5.."}[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend HTTP 5xx errors
+          description: Backend is returning HTTP 5xx responses.
