@@ -1,8 +1,18 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEYCLOAK_URL="http://localhost:8081"
 ADMIN_USER="admin"
 ADMIN_PASSWORD="admin"
 REALM="portfolio-realm"
+
+if [[ -f "$SCRIPT_DIR/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$SCRIPT_DIR/.env"
+  set +a
+fi
+
+SONAR_PASSWORD="${SONAR_PASSWORD:-PheraCore2025!}"
 
 echo "=================================================="
 echo " PheraCore - Configuration Keycloak"
@@ -464,7 +474,7 @@ echo "[+] Configuration SAML dans SonarQube..."
 
 SONAR_URL="http://localhost:9000"
 SONAR_ADMIN="admin"
-SONAR_PASSWORD="PheraCore2025!"
+SONAR_PASSWORD="${SONAR_PASSWORD:-PheraCore2025!}"
 
 # Récupérer le certificat du realm Keycloak
 SONAR_CERT=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/keys" \
