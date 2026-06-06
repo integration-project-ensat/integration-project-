@@ -22,19 +22,21 @@ scrape_configs:
           expressions:
             output: log
             stream: stream
-            attrs:
-      - json:
-          expressions:
+            time: time
             tag: attrs.tag
-          source: attrs
       - regex:
-          expression: (?P<container_name>(?:[^|]*))\|(?P<image_name>(?:[^|]*))
+          expression: (?P<container_name>[^|]+)\|(?P<image_name>[^|]+)
           source: tag
+      - regex:
+          expression: '^.*[-_](?P<service>[^-_]+)[-_][0-9]+$'
+          source: container_name
       - timestamp:
           format: RFC3339Nano
           source: time
       - labels:
           stream:
           container: container_name
+          service:
+          image: image_name
       - output:
           source: output
