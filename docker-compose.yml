@@ -39,6 +39,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-portfolio_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
  
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -119,9 +124,11 @@ services:
     ports:
       - "9187:9187"
     environment:
-      - DATA_SOURCE_NAME=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-secret}@${DB_HOST:-postgres}:5432/${DB_NAME:-portfolio_db}?sslmode=disable"
+      - DATA_SOURCE_NAME=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-secret}@postgres:5432/${DB_NAME:-portfolio_db}?sslmode=disable
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
 
 
 
