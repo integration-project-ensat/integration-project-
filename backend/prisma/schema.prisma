@@ -102,6 +102,7 @@ enum TypeActivite {
 enum StatutActivite {
   DECLAREE
   ATTESTEE_INSTITUTION
+  REFUSEE
 }
 
 enum MotifLettre {

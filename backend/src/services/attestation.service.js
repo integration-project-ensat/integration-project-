@@ -4,14 +4,12 @@ const notificationService = require('./notification.service')
 const attestationService = {
   async findAll(filters = {}) {
     const where = {}
-    if (filters.etudiantId) where.id_etudiant = BigInt(filters.etudiantId)
     if (filters.statut) where.element = { statut: filters.statut }
     if (filters.validateurId) where.element = { ...where.element, validateur_id: toBigInt(filters.validateurId) }
 
     return prisma.attestation.findMany({
       where,
       include: {
-        etudiant: { include: { utilisateur: { select: { id_utilisateur: true, nom: true, prenom: true, email: true, role: true } } } },
         element: {
           include: {
             validateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } }
@@ -26,7 +24,6 @@ const attestationService = {
     return prisma.attestation.findUnique({
       where: { id_attestation: BigInt(id) },
       include: {
-        etudiant: { include: { utilisateur: { select: { id_utilisateur: true, nom: true, prenom: true, email: true, role: true } } } },
         element: {
           include: {
             validateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } }
@@ -49,13 +46,11 @@ const attestationService = {
     const attestation = await prisma.attestation.create({
       data: {
         id_element: element.id_element,
-        id_etudiant: BigInt(utilisateurId),
         titre: data.titre,
         type: data.type,
         date: data.date ? new Date(data.date) : null,
         organisme: data.organisme,
-        description: data.description,
-        fichier: fichierUrl
+        description: data.description
       }
     })
 
@@ -103,21 +98,13 @@ const attestationService = {
         ? `Votre attestation \"${attestation.titre || 'attestation'}\" a été validée.`
         : `Votre attestation \"${attestation.titre || 'attestation'}\" a été refusée.${motif_refus ? ' Motif: ' + motif_refus : ''}`
 
-      const utilisateurId = attestation.id_etudiant
-      if (utilisateurId) {
-        await notificationService.creerNotification({
-          utilisateurId,
-          type: statut === 'VALIDE' ? 'VALIDATION_ATTESTATION' : 'REFUS_ATTESTATION',
-          message,
-          cibleId: attestation.id_attestation,
-          cibleType: 'ATTESTATION'
-        })
-      }
+      // Le modele Attestation actuel ne stocke pas l'etudiant proprietaire.
+      // La notification sera branchee quand cette relation sera ajoutee au schema.
     } catch (e) {
       // Ignore notification failure
     }
 
-    return attestation
+    return this.findById(id)
   },
 
   async getHistorique(id) {

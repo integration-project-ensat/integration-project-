@@ -311,7 +311,7 @@ const loadActivities = async () => {
   loading.value = true
   try {
     // Le contrôleur supporte le query param: statut
-    const { data } = await api.get('/activites', { params: { statut: 'DECLAREE' } })
+    const { data } = await api.get('/activites')
     const list = data?.data ?? data?.data?.data ?? []
     items.value = Array.isArray(list) ? list.map(mapActivityForUI) : []
   } catch (e) {
@@ -496,7 +496,7 @@ const confirmRefuse = async () => {
 
   loadingAction.value = true
   try {
-    await api.patch(`/activites/${id}/valider`, { statut: 'DECLAREE' })
+    await api.patch(`/activites/${id}/valider`, { statut: 'REFUSEE' })
     await loadActivities()
     // notify dashboard to refresh counts
     try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}

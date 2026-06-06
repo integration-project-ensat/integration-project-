@@ -33,7 +33,7 @@ const ROLE_FIELDS_MAP = {
 
 export default {
   async login(email, password) {
-    const { data } = await api.post('/auth/seconnecter', { email, mot_de_passe: password })
+    const { data } = await api.post('/auth/seconnecter', { email: email.trim().toLowerCase(), mot_de_passe: password })
 
     const token = data.data?.token
     const user  = data.data?.user
@@ -108,9 +108,13 @@ export default {
       confirmation_mot_de_passe: payload.confirmPassword
     })
   },
-
-  logout() {
-    localStorage.removeItem('token')
-    localStorage.removeItem('role')
+  async logout() {
+    try {
+      await api.post('/auth/deconnecter')
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('user')
+    }
   }
 }

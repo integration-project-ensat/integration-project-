@@ -254,6 +254,7 @@ const sidebarOpen = ref(true)
 const search      = ref('')
 const page        = ref(1)
 const perPage     = 5
+const statusLabel = { pending: 'En attente', validated: 'ValidÃ©', refused: 'RefusÃ©' }
 
 /* ═══ DONNÉES — chargées depuis le backend ═══ */
 const items = ref([])
@@ -262,7 +263,7 @@ const items = ref([])
 const mapAttestationForUI = (a) => {
   // Backend: attestationController renvoie un objet attestation.
   // On normalise vers les champs que la vue utilise.
-  const statut = a?.statut ?? a?.status
+  const statut = a?.element?.statut ?? a?.statut ?? a?.status
 
   const status =
     typeof statut === 'string'
@@ -280,7 +281,9 @@ const mapAttestationForUI = (a) => {
   return {
     ...a,
     id: a?.id_attestation ?? a?.id,
-    studentName: a?.etudiant?.utilisateur?.nom_complet ?? a?.etudiant?.utilisateur ? `${a.etudiant.utilisateur.prenom} ${a.etudiant.utilisateur.nom}` : (a?.studentName ?? ''),
+    studentName: a?.etudiant?.utilisateur
+      ? `${a.etudiant.utilisateur.prenom} ${a.etudiant.utilisateur.nom}`
+      : (a?.studentName ?? 'Etudiant non lie'),
     studentEmail: a?.etudiant?.utilisateur?.email ?? a?.studentEmail ?? '',
     studentSchool: a?.etudiant?.etablissement ?? a?.studentSchool ?? '',
     title: a?.titre ?? a?.title ?? '',
@@ -297,8 +300,8 @@ const mapAttestationForUI = (a) => {
     photos: a?.photos ?? a?.preuves ?? [],
     links: a?.links ?? [],
     document: a?.document ?? null,
-    validateurId: a?.validateurId ?? a?.validateur?.id,
-    motif_refus: a?.motif_refus ?? a?.motifRefus,
+    validateurId: a?.validateurId ?? a?.element?.validateur_id ?? a?.element?.validateur?.id_utilisateur,
+    motif_refus: a?.motif_refus ?? a?.element?.motif_refus ?? a?.motifRefus,
   }
 }
 

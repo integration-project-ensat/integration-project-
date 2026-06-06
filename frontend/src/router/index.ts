@@ -19,7 +19,6 @@ import OAuthSuccessView from "../views/OAuthSuccessView.vue";
 import CompleteProfileView from "../views/CompleteProfileView.vue";
 import ExploreProfView from "../views/ExploreProfView.vue";
 import ExploreProView from "../views/ExploreProView.vue";
-import DashboardView from '../views/DashboardView.vue';
 import LettersView from '../views/LettersView.vue';
 import ProjectsView from '../views/ProjectsView.vue';
 import SettingsView from '../views/SettingsView.vue';
@@ -34,16 +33,17 @@ import ConnexionsProView from "../views/ConnexionsProView.vue";
 import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
 import FeedView from "../views/FeedView.vue";
 import EtudiantsProfView from "../views/EtudiantsProfView.vue";
-import ProfStudentProfileView from "../views/ProfStudentProfileView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
 
 import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
+
 //import StagesView from "../views/StagesView.vue";
 //import CertificationsView from "../views/CertificationsView.vue";
 //import ActivitesView from "../views/ActivitesView.vue";
 //import SettingsView from "../views/SettingsView.vue";
+
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
 
@@ -84,25 +84,26 @@ const router = createRouter({
       },
       meta: { requiresAuth: true }
     },
-    { path: '/profile', name: 'profile', component: StudentProfileView },
-    { path: "/dashboard", name: "dashboard", component: DashboardView },
-    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
-    { path: "/lettres", name: "letters", component: LettersView },
-    { path: '/projets', name: 'projets', component: ProjectsView },
-    { path: '/settings', name: 'settings', component: SettingsView },
-    { path: "/stages", name: "stages", component: StagesView },
-    { path: "/certifications", name: "certifications", component: CertificationsView },
-    { path: "/activites", name: "activites", component: ActivitesView },
-    { path: "/dashboard", redirect: "/pro/dashboard" },
+    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView, meta: { requiresAuth: true } },
+    { path: "/lettres", name: "letters", component: LettersView, meta: { requiresAuth: true } },
+    { path: '/projets', name: 'projets', component: ProjectsView, meta: { requiresAuth: true } },
+    { path: "/stages", name: "stages", component: StagesView, meta: { requiresAuth: true } },
+    { path: "/certifications", name: "certifications", component: CertificationsView, meta: { requiresAuth: true } },
+    { path: "/activites", name: "activites", component: ActivitesView, meta: { requiresAuth: true } },
+    { path: "/github", component: Placeholder, meta: { requiresAuth: true } },
+    { path: "/recos", component: Placeholder, meta: { requiresAuth: true } },
+    { path: "/commentaires", component: Placeholder, meta: { requiresAuth: true } },
     {
       path: "/pro/dashboard",
       name: "pro-dashboard",
       component: DashboardProView,
+      meta: { requiresAuth: true, requiresRole: 'professional' }
     },
     {
       path: "/student/dashboard",
       name: "student-dashboard",
       component: DashboardStudentView,
+      meta: { requiresAuth: true, requiresRole: 'student' }
     },
     { path: "/feed", name: "feed", component: FeedView },
     { path: "/student/feed", name: "student-feed", component: FeedView },
@@ -158,6 +159,7 @@ const router = createRouter({
       path: "/prof/dashboard",
       name: "prof-dashboard",
       component: DashboardProfView,
+      meta: { requiresAuth: true, requiresRole: 'teacher' }
     },
     {
       path: "/prof/validations",
@@ -181,9 +183,6 @@ const router = createRouter({
       props: true,
     },
     { path: "/validations", redirect: "/prof/validations" },
-    { path: "/stages", name: "stages", component: StagesView },
-    { path: "/certifications", name: "certifications", component: CertificationsView },
-    { path: "/activites", name: "activites", component: ActivitesView },
     { path: "/ai-analyzer", name: "ai-analyzer", component: AIPortfolioAnalyzerView },
 
   ],

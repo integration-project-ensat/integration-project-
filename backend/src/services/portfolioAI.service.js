@@ -1,13 +1,28 @@
 const Groq = require("groq-sdk");
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
-});
+let groq = null;
+
+function getGroqClient() {
+  if (!process.env.GROQ_API_KEY) {
+    const error = new Error("GROQ_API_KEY manquante");
+    error.statusCode = 503;
+    throw error;
+  }
+
+  if (!groq) {
+    groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY
+    });
+  }
+
+  return groq;
+}
 
 async function askAI(prompt) {
+  const client = getGroqClient();
 
   const completion =
-    await groq.chat.completions.create({
+    await client.chat.completions.create({
       messages: [
         {
           role: "user",

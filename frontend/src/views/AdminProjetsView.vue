@@ -280,7 +280,9 @@ const mapProjetForUI = (p) => {
   return {
     ...p,
     id: p.id_projet ?? p.id,
-    studentName: p.studentName ?? p.etudiant?.utilisateur ? [p.etudiant.utilisateur.prenom, p.etudiant.utilisateur.nom].filter(Boolean).join(' ') : (p.etudiant?.nom_etudiant || ''),
+    studentName: p.studentName ?? (p.etudiant?.utilisateur
+      ? [p.etudiant.utilisateur.prenom, p.etudiant.utilisateur.nom].filter(Boolean).join(' ')
+      : (p.etudiant?.nom_etudiant || '')),
     studentEmail: p.studentEmail ?? p.etudiant?.utilisateur?.email,
     studentSchool: p.studentSchool ?? p.etudiant?.etablissement,
 
@@ -309,7 +311,7 @@ const mapProjetForUI = (p) => {
 const loadProjets = async () => {
   loading.value = true
   try {
-    const { data } = await api.get('/projets', { params: { statut: 'EN_ATTENTE' } })
+    const { data } = await api.get('/projets')
     const list = data?.data ?? data?.data?.data ?? []
     items.value = Array.isArray(list) ? list.map(mapProjetForUI) : []
   } catch (e) {

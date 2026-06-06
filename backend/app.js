@@ -31,6 +31,7 @@ const postRoutes = require('./src/routes/post.routes')
 const exploreRoutes = require('./src/routes/explore.routes')
 const profilePublicRoutes = require('./src/routes/profilePublic.routes')
 const connexionRoutes = require('./src/routes/connexion.routes')
+const feedRoutes = require('./src/routes/feed.routes')
 const portfolioAnalyzerRoutes =
   require('./src/routes/portfolioAnalyzer.routes');
 
@@ -102,6 +103,7 @@ app.use('/api/stages', stageRoutes)
 app.use('/api/activites', activiteRoutes)
 app.use('/api/attestations', attestationRoutes)
 app.use('/api/connexions', connexionRoutes);
+app.use('/api/feed', feedRoutes)
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api', portfolioRoutes)

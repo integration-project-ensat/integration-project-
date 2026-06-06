@@ -947,6 +947,115 @@ const deleteAdmin = asyncHandler(async (req, res) => {
 
 })
 
+// ==================== PORTFOLIOS ====================
+
+const getPortfolios = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPaginationParams(req);
+
+  const [items, total] = await Promise.all([
+    prisma.portfolio.findMany({
+      skip,
+      take: limit,
+      orderBy: { date_modification: 'desc' },
+      include: {
+        etudiant: {
+          include: {
+            utilisateur: {
+              select: {
+                id_utilisateur: true,
+                nom: true,
+                prenom: true,
+                email: true,
+                profil: { select: { photo_profil: true } },
+              },
+            },
+          },
+        },
+        modele: true,
+      },
+    }),
+    prisma.portfolio.count(),
+  ]);
+
+  const data = items.map((portfolio) => ({
+    id_portfolio: portfolio.id_portfolio,
+    titre: portfolio.titre,
+    objectif_pro: portfolio.objectif_pro,
+    theme: portfolio.theme,
+    est_public: portfolio.est_public,
+    url_public: portfolio.url_public,
+    date_modification: portfolio.date_modification,
+    modele: portfolio.modele,
+    etudiant: portfolio.etudiant?.utilisateur
+      ? {
+          id_utilisateur: portfolio.etudiant.utilisateur.id_utilisateur,
+          nom_complet: `${portfolio.etudiant.utilisateur.prenom} ${portfolio.etudiant.utilisateur.nom}`,
+          email: portfolio.etudiant.utilisateur.email,
+          photo: portfolio.etudiant.utilisateur.profil?.photo_profil ?? null,
+        }
+      : null,
+  }));
+
+  res.json({
+    success: true,
+    ...buildPaginatedResult(data, page, limit, total),
+  });
+});
+
+const getPortfolioDetail = asyncHandler(async (req, res) => {
+  const id = BigInt(req.params.id);
+
+  const portfolio = await prisma.portfolio.findUnique({
+    where: { id_portfolio: id },
+    include: {
+      etudiant: {
+        include: {
+          utilisateur: {
+            select: {
+              id_utilisateur: true,
+              nom: true,
+              prenom: true,
+              email: true,
+              profil: true,
+            },
+          },
+          score_credibilite: true,
+          badges: { include: { badge: true } },
+          projets: true,
+          stages: true,
+          diplomes: true,
+          competences: { include: { competence: true } },
+        },
+      },
+      modele: true,
+      commentaires: true,
+      recommandations: { include: { recommandation: true } },
+    },
+  });
+
+  if (!portfolio) {
+    return res.status(404).json({ success: false, message: 'Portfolio introuvable' });
+  }
+
+  res.json({ success: true, data: portfolio });
+});
+
+const deletePortfolio = asyncHandler(async (req, res) => {
+  const id = BigInt(req.params.id);
+
+  const portfolio = await prisma.portfolio.findUnique({
+    where: { id_portfolio: id },
+    select: { id_portfolio: true },
+  });
+
+  if (!portfolio) {
+    return res.status(404).json({ success: false, message: 'Portfolio introuvable' });
+  }
+
+  await prisma.portfolio.delete({ where: { id_portfolio: id } });
+  res.json({ success: true, message: 'Portfolio supprimé' });
+});
+
 module.exports = {
   getDashboard,
   getEtudiants,
@@ -958,6 +1067,7 @@ module.exports = {
   getPortfolios,
   getPortfolioDetail,
   deletePortfolio,
+<<<<<<< HEAD
   getAdmins,
   deleteAdmin,
   getProfessionnels,
@@ -967,4 +1077,6 @@ module.exports = {
   deleteEtudiant,
   deleteProfesseur,
   deleteProfessionnel
+=======
+>>>>>>> 7b1603fc30f38d0b1d28f8808c3f893db192f638
 };

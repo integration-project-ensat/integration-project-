@@ -76,15 +76,23 @@ const activiteService = {
     })
   },
 
-  async valider(id, validateurId, statut) {
+  async valider(id, validateur, statut) {
     const activite = await prisma.activiteParascolaire.findUnique({ where: { id_activite: BigInt(id) } })
     if (!activite) return null
+    const validateurId = validateur?.id_utilisateur ?? validateur
+    const isProfesseur = validateur?.role === 'PROFESSEUR'
+    const statutElement =
+      statut === 'ATTESTEE_INSTITUTION'
+        ? 'VALIDE'
+        : statut === 'REFUSEE'
+          ? 'REFUSE'
+          : 'EN_ATTENTE'
     // Mettre à jour la table activite
     const updated = await prisma.activiteParascolaire.update({
       where: { id_activite: BigInt(id) },
       data: {
         statut,
-        id_validateur: BigInt(validateurId)
+        ...(isProfesseur && { id_validateur: BigInt(validateurId) })
       }
     })
 
@@ -94,11 +102,11 @@ const activiteService = {
       if (existing) {
         await prisma.elementValidable.update({
           where: { id_element: existing.id_element },
-          data: { statut, validateur_id: toBigInt(validateurId), date_validation: new Date() }
+          data: { statut: statutElement, validateur_id: toBigInt(validateurId), date_validation: new Date() }
         })
       } else {
         await prisma.elementValidable.create({
-          data: { type: 'ACTIVITE', reference_id: activite.id_activite, statut, validateur_id: toBigInt(validateurId), date_soumission: activite.date || new Date(), date_validation: new Date() }
+          data: { type: 'ACTIVITE', reference_id: activite.id_activite, statut: statutElement, validateur_id: toBigInt(validateurId), date_soumission: new Date(), date_validation: new Date() }
         })
       }
 

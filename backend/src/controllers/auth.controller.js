@@ -259,9 +259,10 @@ const renvoyerCode=asyncHandler(async(req,res)=>{
 
 const login = asyncHandler(async (req, res) => {
   const { email, mot_de_passe } = req.body;
+  const normalizedEmail = email.trim().toLowerCase();
 
   const user = await prisma.utilisateur.findUnique({
-    where: { email },
+    where: { email: normalizedEmail },
     include: {
       etudiant: true,
       professeur: true,
@@ -276,7 +277,7 @@ const login = asyncHandler(async (req, res) => {
       type: TypeEvenement.LOGIN_ECHOUE,
       req,
       utilisateur: null,
-      emailTente: email,
+      emailTente: normalizedEmail,
       raison: RaisonEchec.EMAIL_INEXISTANT,
     });
     return res.status(401).json({
@@ -289,7 +290,7 @@ if (!user.email_verifie) {
       type: TypeEvenement.LOGIN_ECHOUE,
       req,
       utilisateur: user,
-      emailTente: email,
+      emailTente: normalizedEmail,
       raison: RaisonEchec.EMAIL_NON_VERIFIE,
     });
   return res.status(403).json({ message: 'Veuillez vérifier votre email.' });
@@ -300,7 +301,7 @@ if (!user.est_actif) {
       type: TypeEvenement.LOGIN_ECHOUE,
       req,
       utilisateur: user,
-      emailTente: email,
+      emailTente: normalizedEmail,
       raison: RaisonEchec.COMPTE_INACTIF,
     });
   return res.status(403).json({ message: 'En attente de validation administrative.' });
@@ -321,7 +322,7 @@ if (user.auth_provider === 'GOOGLE') {
       req,
       utilisateur: user,
       raison: RaisonEchec.MOT_DE_PASSE_INCORRECT,
-      emailTente: email,
+      emailTente: normalizedEmail,
     });
     return res.status(401).json({
       success: false,
@@ -340,7 +341,7 @@ if (user.auth_provider === 'GOOGLE') {
     type: TypeEvenement.LOGIN_REUSSI,
     req,
     utilisateur: user,
-    emailTente: email,
+    emailTente: normalizedEmail,
   });
   res.json({
     success: true,

@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Bookmark } from "../lib/icons";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
@@ -9,12 +9,21 @@ import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProSavedProfiles } from "../store/proSavedProfiles";
+import {
+  addFeedComment,
+  getFeed,
+  likeFeedPost,
+  removeFeedRepost,
+  repostFeedPost,
+  sendConnectionRequest,
+  unlikeFeedPost,
+} from "../services/feedApi";
 
 type FeedRole = "student" | "prof" | "pro";
 type FeedFilter = "Tous" | "Projets" | "Reposts" | "Populaires" | "Récents";
 
 interface FeedComment {
-  id: number;
+  id: string;
   authorId: string;
   authorName: string;
   initials: string;
@@ -57,10 +66,12 @@ const replyDrafts = reactive<Record<string, string>>({});
 const repostedPosts = reactive<Record<string, boolean>>({});
 const connectedPosts = reactive<Record<string, boolean>>({});
 const likedPosts = reactive<Record<string, boolean>>({});
-const likedComments = reactive<Record<number, boolean>>({});
-const openReplyCommentId = ref<number | null>(null);
+const likedComments = reactive<Record<string, boolean>>({});
+const openReplyCommentId = ref<string | null>(null);
 const savedFeedbackId = ref<string | null>(null);
 const { isSaved, saveProfile } = useProSavedProfiles();
+const isLoading = ref(false);
+const error = ref<string | null>(null);
 
 const filters: FeedFilter[] = ["Tous", "Projets", "Reposts", "Populaires", "Récents"];
 
@@ -76,110 +87,33 @@ const headerUserType = computed<"student" | "professeur" | "professionnel">(() =
   return "student";
 });
 
-const posts = ref<FeedPost[]>([
-  {
-    id: "portfolio-web",
-    studentId: "khadija-bennani",
-    studentName: "Khadija Bennani",
-    initials: "KB",
-    school: "ENSA Tanger · GINF",
-    time: "Il y a 12 min",
-    projectTitle: "Portfolio Web",
-    description:
-      "Application portfolio moderne avec recommandations, projets, authentification et dashboard de suivi.",
-    badges: ["🌐 Web Developer", "🔐 Security Aware", "🏆 Hackathon Participant"],
-    technologies: ["Vue.js", "Node.js", "Docker", "PostgreSQL"],
-    github: "github.com/khadija/portfolio-web",
-    demo: "portfolio-demo.local",
-    repostedBy: "Nom Prof",
-    repostCount: 12,
-    recommendationCount: 48,
-    likeCount: 95,
-    score: 90,
-    isPopular: true,
-    comments: [
-      {
-        id: 1,
-        authorId: "sara-alaoui",
-        authorName: "Sara Alaoui",
-        initials: "SA",
-        text: "Très propre, surtout la partie dashboard.",
-        time: "Il y a 4 min",
-        likeCount: 4,
-        replies: [],
-      },
-    ],
-  },
-  {
-    id: "stage-devops",
-    studentId: "yassine-el-amrani",
-    studentName: "Yassine El Amrani",
-    initials: "YE",
-    school: "ENSA Tanger · DevOps",
-    time: "Il y a 1 h",
-    projectTitle: "Pipeline CI/CD pour microservices",
-    description:
-      "Mise en place d'un pipeline CI/CD avec tests automatisés, Docker Compose et monitoring Prometheus.",
-    badges: ["🌊 DevOps", "🔐 Security Aware"],
-    technologies: ["Docker", "CI/CD", "GitLab", "Prometheus"],
-    github: "github.com/yassine/devops-pipeline",
-    repostCount: 5,
-    recommendationCount: 31,
-    likeCount: 44,
-    score: 85,
-    comments: [
-      {
-        id: 1,
-        authorId: "amine-lahlou",
-        authorName: "Amine Lahlou",
-        initials: "AL",
-        text: "Le choix Prometheus/Grafana est très pertinent.",
-        time: "Il y a 25 min",
-        likeCount: 2,
-        replies: [],
-      },
-    ],
-  },
-  {
-    id: "cloud-dashboard",
-    studentId: "sara-alaoui",
-    studentName: "Sara Alaoui",
-    initials: "SA",
-    school: "ENSA Tanger · Cloud",
-    time: "Hier",
-    projectTitle: "Cloud Cost Dashboard",
-    description:
-      "Dashboard pour suivre les coûts cloud, détecter les anomalies et proposer des optimisations.",
-    badges: ["🧠 AI / Data", "🌐 Web Developer"],
-    technologies: ["AWS", "Vue.js", "Python", "Figma"],
-    demo: "cloud-cost-demo.local",
-    repostedBy: "Nom Professionnel",
-    repostCount: 18,
-    recommendationCount: 76,
-    likeCount: 130,
-    score: 95,
-    isPopular: true,
-    comments: [],
-  },
-  {
-    id: "mobile-ensa",
-    studentId: "nora-tazi",
-    studentName: "Nora Tazi",
-    initials: "NT",
-    school: "ENSA Tanger · Mobile",
-    time: "Il y a 2 j",
-    projectTitle: "Application Mobile ENSA",
-    description:
-      "Application mobile pour les annonces, événements, clubs et demandes administratives des étudiants.",
-    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
-    technologies: ["Flutter", "Firebase", "Figma"],
-    repostCount: 3,
-    recommendationCount: 19,
-    likeCount: 27,
-    score: 80,
-    comments: [],
-  },
-]);
+const posts = ref<FeedPost[]>([]);
+
+const loadFeed = async () => {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const feed = await getFeed({ search: searchQuery.value || undefined });
+    posts.value = Array.isArray(feed?.data) ? feed.data : [];
+
+    Object.keys(likedPosts).forEach((key) => delete likedPosts[key]);
+    Object.keys(repostedPosts).forEach((key) => delete repostedPosts[key]);
+    Object.keys(connectedPosts).forEach((key) => delete connectedPosts[key]);
+
+    posts.value.forEach((post: any) => {
+      likedPosts[post.id] = Boolean(post.likedByMe);
+      repostedPosts[post.id] = Boolean(post.repostedByMe);
+      connectedPosts[post.id] = ["EN_ATTENTE", "ACCEPTEE"].includes(post.connectionStatus);
+    });
+  } catch {
+    error.value = "Erreur lors du chargement du feed";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(loadFeed);
 
 const visiblePosts = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
@@ -212,8 +146,8 @@ const openProject = (projectId: string) => {
   router.push(`/projects/${projectId}`);
 };
 
-const toggleSavedPostProfile = (post: FeedPost) => {
-  const saved = saveProfile({
+const toggleSavedPostProfile = async (post: FeedPost) => {
+  await saveProfile({
     id: post.studentId,
     name: post.studentName,
     school: post.school.split("·")[0]?.trim() || post.school,
@@ -237,18 +171,47 @@ const toggleComments = (postId: string) => {
   openCommentPostId.value = openCommentPostId.value === postId ? null : postId;
 };
 
-const toggleRepost = (post: FeedPost) => {
-  repostedPosts[post.id] = !repostedPosts[post.id];
-  post.repostCount += repostedPosts[post.id] ? 1 : -1;
+const toggleRepost = async (post: FeedPost) => {
+  try {
+    if (repostedPosts[post.id]) {
+      await removeFeedRepost(post.id);
+      repostedPosts[post.id] = false;
+      post.repostCount = Math.max(0, post.repostCount - 1);
+    } else {
+      await repostFeedPost(post.id);
+      repostedPosts[post.id] = true;
+      post.repostCount += 1;
+    }
+  } catch {
+    error.value = "Erreur lors du repost";
+  }
 };
 
-const toggleConnect = (postId: string) => {
-  connectedPosts[postId] = !connectedPosts[postId];
+const toggleConnect = async (post: FeedPost) => {
+  if (connectedPosts[post.id]) return;
+
+  try {
+    await sendConnectionRequest(post.studentId);
+    connectedPosts[post.id] = true;
+  } catch {
+    error.value = "Erreur lors de la demande de connexion";
+  }
 };
 
-const togglePostLike = (post: FeedPost) => {
-  likedPosts[post.id] = !likedPosts[post.id];
-  post.likeCount += likedPosts[post.id] ? 1 : -1;
+const togglePostLike = async (post: FeedPost) => {
+  try {
+    if (likedPosts[post.id]) {
+      await unlikeFeedPost(post.id);
+      likedPosts[post.id] = false;
+      post.likeCount = Math.max(0, post.likeCount - 1);
+    } else {
+      await likeFeedPost(post.id);
+      likedPosts[post.id] = true;
+      post.likeCount += 1;
+    }
+  } catch {
+    error.value = "Erreur lors du like";
+  }
 };
 
 const toggleCommentLike = (comment: FeedComment) => {
@@ -256,26 +219,23 @@ const toggleCommentLike = (comment: FeedComment) => {
   comment.likeCount += likedComments[comment.id] ? 1 : -1;
 };
 
-const toggleReply = (commentId: number) => {
+const toggleReply = (commentId: string) => {
   openReplyCommentId.value =
     openReplyCommentId.value === commentId ? null : commentId;
 };
 
-const addComment = (post: FeedPost) => {
+const addComment = async (post: FeedPost) => {
   const text = commentDrafts[post.id]?.trim();
   if (!text) return;
 
-  post.comments.push({
-    id: Date.now(),
-    authorId: "current-user",
-    authorName: "Vous",
-    initials: "VO",
-    text,
-    time: "À l'instant",
-    likeCount: 0,
-    replies: [],
-  });
-  commentDrafts[post.id] = "";
+  try {
+    await addFeedComment(post.id, text);
+    commentDrafts[post.id] = "";
+    await loadFeed();
+    openCommentPostId.value = post.id;
+  } catch {
+    error.value = "Erreur lors de l'ajout du commentaire";
+  }
 };
 
 const addReply = (comment: FeedComment) => {
@@ -283,7 +243,7 @@ const addReply = (comment: FeedComment) => {
   if (!text) return;
 
   comment.replies.push({
-    id: Date.now(),
+    id: String(Date.now()),
     authorId: "current-user",
     authorName: "Vous",
     initials: "VO",
@@ -322,6 +282,10 @@ const addReply = (comment: FeedComment) => {
           </button>
         </div>
 
+        <div v-if="isLoading" class="feed-state">Chargement...</div>
+        <div v-else-if="error" class="feed-state feed-state-error">{{ error }}</div>
+
+        <template v-else>
         <article v-for="post in visiblePosts" :key="post.id" class="feed-card">
           <div v-if="post.repostedBy" class="repost-line">
             {{ post.repostedBy }} a reposté ce projet
@@ -352,7 +316,7 @@ const addReply = (comment: FeedComment) => {
                     type="button"
                     class="connect-button"
                     :class="{ active: connectedPosts[post.id] }"
-                    @click="toggleConnect(post.id)"
+                    @click="toggleConnect(post)"
                   >
                     {{
                       connectedPosts[post.id] ? "Demande envoyée" : "Connecter"
@@ -520,6 +484,7 @@ const addReply = (comment: FeedComment) => {
             </div>
           </div>
         </article>
+        </template>
       </section>
     </main>
   </div>
@@ -848,6 +813,19 @@ const addReply = (comment: FeedComment) => {
   border-radius: var(--radius-card);
   padding: 14px;
   box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+}
+
+.feed-state {
+  background: white;
+  border-radius: var(--radius-card);
+  color: var(--text-gray);
+  font-weight: 800;
+  padding: 28px;
+  text-align: center;
+}
+
+.feed-state-error {
+  color: var(--error);
 }
 
 .feed-filter,

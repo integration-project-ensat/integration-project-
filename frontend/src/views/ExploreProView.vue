@@ -32,6 +32,50 @@ const filters = ref({
   recommandations: false
 })
 
+const savedProfilesStorageKey = "proSavedProfiles"
+
+const readLocalSavedProfiles = () => {
+  try {
+    const raw = localStorage.getItem(savedProfilesStorageKey)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+const writeLocalSavedProfiles = (items: any[]) => {
+  localStorage.setItem(savedProfilesStorageKey, JSON.stringify(items))
+}
+
+const toSavedProfile = (profile: ProfilExplore) => ({
+  id: String(profile.id_utilisateur),
+  name: `${profile.prenom ?? ""} ${profile.nom ?? ""}`.trim() || "Profil",
+  school: profile.etudiant?.diplomes?.[0]?.etablissement ?? profile.etudiant?.filiere ?? "Etudiant",
+  field: profile.etudiant?.filiere ?? "",
+  city: profile.profil?.adresse ?? "",
+  score: Number(profile.etudiant?.score_credibilite?.score_total ?? 0),
+  recommendations: profile.nb_recommandations ?? 0,
+  badges: (profile.etudiant?.badges ?? [])
+    .map((item: any) => item.badge?.nom ?? item.nom)
+    .filter(Boolean),
+  hasPortfolio: Boolean(profile.etudiant?.score_credibilite),
+  savedAt: new Date().toLocaleDateString("fr-FR"),
+  profilePath: `/profile/student/${profile.id_utilisateur}`,
+  portfolioPath: `/profile/student/${profile.id_utilisateur}`,
+})
+
+const addLocalSavedProfile = (profile: ProfilExplore) => {
+  const savedProfile = toSavedProfile(profile)
+  const items = readLocalSavedProfiles().filter((item: any) => item.id !== savedProfile.id)
+  writeLocalSavedProfiles([savedProfile, ...items])
+}
+
+const removeLocalSavedProfile = (id: string) => {
+  writeLocalSavedProfiles(readLocalSavedProfiles().filter((item: any) => item.id !== id))
+}
+
 // ─── Charger les profils ──────────────────────
 const chargerProfils = async () => {
   loading.value = true
@@ -58,11 +102,16 @@ const chargerProfils = async () => {
 
 // ─── Charger les sauvegardes existantes ───────
 const chargerSauvegardes = async () => {
+  const localIds = readLocalSavedProfiles().map((item: any) => String(item.id))
+
   try {
     const saved = await getMesSauvegardes()
-    savedIds.value = new Set(saved.map(s => s.id_utilisateur))
+    const remoteIds = saved
+      .map((s: any) => String(s.etudiant?.id_utilisateur ?? ""))
+      .filter(Boolean)
+    savedIds.value = new Set([...localIds, ...remoteIds])
   } catch {
-    // silencieux
+    savedIds.value = new Set(localIds)
   }
 }
 
@@ -92,13 +141,13 @@ const toggleSavedProfile = async (profile: ProfilExplore) => {
   try {
     if (savedIds.value.has(id)) {
       await supprimerSauvegarde(id)
-      savedIds.value.delete(id)
+      removeLocalSavedProfile(id)
     } else {
       await sauvegarderProfil(id)
-      savedIds.value.add(id)
+      addLocalSavedProfile(profile)
     }
     // forcer la réactivité
-    savedIds.value = new Set(savedIds.value)
+    await chargerSauvegardes()
 
     savedFeedbackId.value = id
     window.setTimeout(() => {

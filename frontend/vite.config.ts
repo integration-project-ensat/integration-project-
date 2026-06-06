@@ -1,8 +1,12 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const backendTarget = process.env.VITE_BACKEND_URL || env.VITE_BACKEND_URL || 'http://127.0.0.1:3000'
+
+  return {
   base: '/',
   plugins: [vue()],
   resolve: {
@@ -16,13 +20,13 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://backend:3000',
+        target: backendTarget,
         changeOrigin: true,
         secure: false,
         rewrite: path => path.replace(/^\/api/, '/api')
       },
       '/uploads': {
-        target: 'http://127.0.0.1:3000',
+        target: backendTarget,
         changeOrigin: true,
         secure: false,
         rewrite: path => path.replace(/^\/uploads/, '/uploads')
@@ -42,5 +46,6 @@ export default defineConfig({
       'src/tests/integration/**/*.spec.{js,ts}'
     ],
     exclude: ['src/tests/e2e/**']
+  }
   }
 })
