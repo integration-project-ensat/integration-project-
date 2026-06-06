@@ -63,7 +63,8 @@ export interface ProfilSauvegarde {
 export const explorerProfils = async (
   filtres: ExploreFilters
 ): Promise<{ data: ProfilExplore[]; pagination: PaginationMeta }> => {
-  const res = await api.get('/profil', { params: filtres })
+  const endpoint = localStorage.getItem('token') ? '/profil' : '/profil/public'
+  const res = await api.get(endpoint, { params: filtres })
   return res.data
 }
 

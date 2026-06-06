@@ -49,6 +49,7 @@ const activiteRoutes = require('./src/routes/activite.routes')
 const attestationRoutes = require('./src/routes/attestation.routes')
 const notificationRoutes = require('./src/routes/notification.routes');
 const badgeRoutes = require('./src/routes/badge.routes');
+const profStudentRoutes = require('./src/routes/profStudent.routes');
 
 
 // Fichiers statiques
@@ -91,7 +92,6 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes)
-app.use('/api', dashboardRoutes)
 app.use('/api/admin',        adminRoutes)  
 app.use('/api/student',      studentRoutes)
 app.use('/api/competences', competenceRoutes)
@@ -109,6 +109,7 @@ app.use('/api/connexions', connexionRoutes);
 app.use('/api/feed', feedRoutes)
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/badges', badgeRoutes);
+app.use('/api/prof', profStudentRoutes);
 app.use('/api', portfolioRoutes)
 app.use('/api', lettreRoutes)
 app.use('/api/commentaires', commentaireRoutes)
@@ -116,6 +117,7 @@ app.use('/api/recommandations', recommendationRoutes)
 app.use('/api/posts', postRoutes)
 app.use('/api/profiles', profilePublicRoutes)
 app.use('/api', exploreRoutes)
+app.use('/api', dashboardRoutes)
 
 // 404
 app.use((req, res) => {

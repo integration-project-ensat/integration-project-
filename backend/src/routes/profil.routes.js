@@ -8,6 +8,8 @@ const validate        = require('../middlewares/validate');
 const { authentifier, autoriserRoles } = require('../middlewares/auth.middleware');
 const isOwnerProfil   = require('../middlewares/isOwnerProfil');
 
+router.get('/public', profilController.explorerProfils);
+
 router.use(authentifier);
 
 // ─── Validation ID réutilisable ───────────────

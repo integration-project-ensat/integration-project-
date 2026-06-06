@@ -18,6 +18,7 @@ export interface ValidationRequest {
   description: string;
   date: string;
   status: ValidationStatus;
+  attachments?: string[];
 }
 
 export interface RecommendationRequest {
@@ -65,16 +66,14 @@ const recommendationStatCards = [
   { label: "Total lettres", key: "total" },
   { label: "En attente", key: "pending" },
   { label: "Acceptées", key: "accepted" },
-  { label: "Refusées", key: "refused" },
 ] as const;
 
 const recommendationSections: Array<{
-  key: "pending" | "accepted" | "refused";
+  key: "pending" | "accepted";
   title: RecommendationStatus;
 }> = [
   { key: "pending", title: "En attente" },
   { key: "accepted", title: "Acceptée" },
-  { key: "refused", title: "Refusée" },
 ];
 
 const groupedRequests = computed(() => ({
@@ -84,16 +83,18 @@ const groupedRequests = computed(() => ({
 }));
 
 const groupedRecommendations = computed(() => ({
-  pending: recommendations.value.filter((request) => request.status === "En attente"),
-  accepted: recommendations.value.filter((request) => request.status === "Acceptée"),
-  refused: recommendations.value.filter((request) => request.status === "Refusée"),
+  pending: recommendations.value.filter(
+    (request) => request.status === "En attente",
+  ),
+  accepted: recommendations.value.filter(
+    (request) => request.status === "Acceptée",
+  ),
 }));
 
 const recommendationStats = computed(() => ({
   total: recommendations.value.length,
   pending: groupedRecommendations.value.pending.length,
   accepted: groupedRecommendations.value.accepted.length,
-  refused: groupedRecommendations.value.refused.length,
 }));
 
 const statusClass = (status: ValidationStatus) => ({
@@ -101,6 +102,20 @@ const statusClass = (status: ValidationStatus) => ({
   "is-valid": status === "Validé",
   "is-refused": status === "Refusé",
 });
+
+const normalizeValidationStatus = (status: string): ValidationStatus => {
+  if (status === "Validé" || status === "ValidÃ©") return "Validé";
+  if (status === "Refusé" || status === "RefusÃ©") return "Refusé";
+  return "En attente";
+};
+
+const normalizeRecommendationStatus = (
+  status: string,
+): RecommendationStatus => {
+  if (status === "Acceptée" || status === "AcceptÃ©e") return "Acceptée";
+  if (status === "Refusée" || status === "RefusÃ©e") return "Refusée";
+  return "En attente";
+};
 
 const recommendationStatusClass = (status: RecommendationStatus) => ({
   "is-pending": status === "En attente",
@@ -124,10 +139,10 @@ const closeRecommendationDetails = () => {
   selectedRecommendation.value = null;
 };
 
-const updateSelectedStatus = (status: ValidationStatus) => {
+const updateSelectedStatus = async (status: ValidationStatus) => {
   if (!selectedRequest.value) return;
-  const request = requests.value.find((item) => item.id === selectedRequest.value?.id);
-  if (request) request.status = status;
+  await profApi.updateValidationStatus(selectedRequest.value, status);
+  await loadDashboard();
   closeDetailsModal();
 };
 
@@ -142,27 +157,33 @@ const closeWriteRecommendationModal = () => {
   letterDraft.value = "";
 };
 
-const sendRecommendationLetter = () => {
-  if (writingRecommendation.value) {
-    const request = recommendations.value.find((item) => item.id === writingRecommendation.value?.id);
-    if (request) {
-      request.status = "Acceptée";
-      request.writtenLetter = letterDraft.value.trim();
-    }
-  }
+const sendRecommendationLetter = async () => {
+  if (!writingRecommendation.value) return;
+  await profApi.updateRecommendationStatus(
+    writingRecommendation.value.id,
+    "Acceptée",
+    {
+      contenu: letterDraft.value.trim(),
+    },
+  );
   closeWriteRecommendationModal();
+  await loadDashboard();
 };
 
-const refuseSelectedRecommendation = () => {
-  if (selectedRecommendation.value) {
-    const request = recommendations.value.find((item) => item.id === selectedRecommendation.value?.id);
-    if (request) request.status = "Refusée";
-  }
+const refuseSelectedRecommendation = async () => {
+  if (!selectedRecommendation.value) return;
+  await profApi.updateRecommendationStatus(
+    selectedRecommendation.value.id,
+    "Refusée",
+  );
   closeRecommendationDetails();
+  await loadDashboard();
 };
 
-const openStudentProfile = (request: ValidationRequest | RecommendationRequest) => {
-  router.push(`/profile/student/${request.studentId}`);
+const openStudentProfile = (
+  request: ValidationRequest | RecommendationRequest,
+) => {
+  router.push(`/profile/student/${request.studentId}?from=prof`);
 };
 
 const loadDashboard = async () => {
@@ -174,14 +195,25 @@ const loadDashboard = async () => {
     if (response.data?.success) {
       const data = response.data.data;
       stats.value = data.stats ?? stats.value;
-      requests.value = Array.isArray(data.validationRequests) ? data.validationRequests : [];
-      recommendations.value = Array.isArray(data.recommendationRequests) ? data.recommendationRequests : [];
+      requests.value = Array.isArray(data.validationRequests)
+        ? data.validationRequests.map((request) => ({
+            ...request,
+            status: normalizeValidationStatus(request.status),
+          }))
+        : [];
+      recommendations.value = Array.isArray(data.recommendationRequests)
+        ? data.recommendationRequests.map((request) => ({
+            ...request,
+            status: normalizeRecommendationStatus(request.status),
+          }))
+        : [];
     } else {
-      error.value = response.data?.message || "Impossible de charger le dashboard";
+      error.value =
+        response.data?.message || "Impossible de charger le dashboard";
     }
   } catch (err: any) {
-    console.error(err);
-    error.value = err?.response?.data?.message || "Erreur lors du chargement du dashboard";
+    error.value =
+      err?.response?.data?.message || "Erreur lors du chargement du dashboard";
   } finally {
     isLoading.value = false;
   }
@@ -398,7 +430,7 @@ onMounted(() => {
           <span>Liens / fichiers joints</span>
           <div class="attachment-list">
             <a
-              v-for="attachment in selectedRequest.attachments"
+              v-for="attachment in selectedRequest.attachments || []"
               :key="attachment"
               href="#"
               @click.prevent
@@ -409,7 +441,11 @@ onMounted(() => {
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="action-btn muted" @click="closeDetailsModal">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeDetailsModal"
+          >
             Fermer
           </button>
           <button
@@ -481,7 +517,10 @@ onMounted(() => {
           <p>{{ selectedRecommendation.message }}</p>
         </div>
 
-        <div v-if="selectedRecommendation.writtenLetter" class="details-section">
+        <div
+          v-if="selectedRecommendation.writtenLetter"
+          class="details-section"
+        >
           <span>Lettre écrite</span>
           <p>{{ selectedRecommendation.writtenLetter }}</p>
         </div>
@@ -506,7 +545,7 @@ onMounted(() => {
             class="action-btn danger"
             @click="refuseSelectedRecommendation"
           >
-            Refuser
+            Retirer
           </button>
         </div>
       </section>
@@ -714,20 +753,6 @@ onMounted(() => {
   padding: 14px;
 }
 
-.request-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.request-list::-webkit-scrollbar-track {
-  background: rgba(2, 6, 23, 0.04);
-  border-radius: 9999px;
-}
-
-.request-list::-webkit-scrollbar-thumb {
-  background: rgba(2, 6, 23, 0.18);
-  border-radius: 9999px;
-}
-
 .request-row {
   display: grid;
   grid-template-columns: 42px 1fr auto;
@@ -736,12 +761,6 @@ onMounted(() => {
   border-radius: 16px;
   padding: 12px;
   cursor: pointer;
-  transition: var(--ease);
-}
-
-.request-row:hover {
-  background: #f7f7ff;
-  transform: translateY(-1px);
 }
 
 .student-avatar {
@@ -909,11 +928,6 @@ onMounted(() => {
   outline: none;
 }
 
-.letter-field textarea:focus {
-  border-color: var(--purple);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
-}
-
 .attachment-list,
 .modal-actions {
   display: flex;
@@ -940,7 +954,6 @@ onMounted(() => {
   padding: 0 16px;
   font-size: 13px;
   font-weight: 800;
-  transition: var(--ease);
 }
 
 .action-btn.primary {
@@ -957,25 +970,4 @@ onMounted(() => {
   background: var(--input-bg);
   color: var(--text-dark);
 }
-
-@media (max-width: 1100px) {
-  .stats-grid,
-  .status-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 760px) {
-  .dashboard-shell,
-  .dashboard-shellShift {
-    padding: 16px;
-  }
-
-  .stats-grid,
-  .status-grid,
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>
-

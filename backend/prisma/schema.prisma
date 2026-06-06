@@ -302,6 +302,7 @@ model Etudiant {
   github_integration      GithubIntegration?
   score_credibilite       ScoreCredibilite?
   badges                  ProfilBadge[]
+  professeurs_associes    ProfesseurEtudiant[]
  
 
   @@map("etudiants")
@@ -320,8 +321,22 @@ model Professeur {
   projets_encadres Projet[]
   stages_encadres  Stage[]
   lettres_redigees LettreRecommandation[]
+  etudiants_associes ProfesseurEtudiant[]
 
   @@map("professeurs")
+}
+
+model ProfesseurEtudiant {
+  id_professeur BigInt
+  id_etudiant   BigInt
+  source        String?  @db.VarChar(20)
+  date_ajout    DateTime @default(now())
+
+  professeur Professeur @relation(fields: [id_professeur], references: [id_utilisateur], onDelete: Cascade)
+  etudiant   Etudiant   @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
+
+  @@id([id_professeur, id_etudiant])
+  @@map("professeur_etudiants")
 }
 
 model Administrateur {

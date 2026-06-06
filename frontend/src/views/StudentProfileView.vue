@@ -17,6 +17,32 @@
           @open-recos="showRecosModal = true"
         />
 
+        <section v-if="userRole === 'teacher'" class="teacher-actions">
+          <div class="teacher-actions__content">
+            <div>
+              <h3>Ajouter cet étudiant</h3>
+              <p>Attachez ce profil à votre liste d'étudiants suivis.</p>
+            </div>
+
+            <button
+              type="button"
+              class="attach-btn"
+              :disabled="attachingStudent || studentAttached"
+              @click="attachCurrentStudent"
+            >
+              {{
+                attachingStudent
+                  ? 'Ajout...'
+                  : studentAttached
+                    ? 'Déjà ajouté'
+                    : 'Ajouter à mes étudiants'
+              }}
+            </button>
+          </div>
+
+          <p v-if="attachMessage" class="teacher-actions__message">{{ attachMessage }}</p>
+        </section>
+
         <div v-if="activeTab === 'Portfolio'">
           <PostCard
             v-for="(post, i) in posts"
@@ -177,16 +203,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth.js'
 import TopBar from '../components/TopBar.vue'
-import SideBar from '../components/exploreStudent/Sidebar.vue'
+import SideBar from '../components/SideBar.vue'
 import StudentProfileHeader from '../components/StudentProfileHeader.vue'
 import PostCard from '../components/PostCard.vue'
 import { commentaireService } from '../services/commentaire.service'
 import { connexionService } from '../services/connexion.service'
 import { postService } from '../services/post.service'
+import profApi from '../services/profApi'
 import { profileService } from '../services/profile.service'
 import { recommendationService } from '../services/recommendation.service'
 
@@ -212,16 +239,52 @@ type ProfilePost = {
 const route = useRoute()
 const auth = useAuthStore()
 const sidebarOpen = ref(false)
-const userRole = computed<'student' | 'teacher' | 'professional'>(() => auth.role ?? 'student')
-const activeTab = ref('Portfolio')
+const roleFromRoute = computed<'student' | 'teacher' | 'professional' | null>(() => {
+  const from = typeof route.query.from === 'string' ? route.query.from : ''
+  if (from === 'prof') return 'teacher'
+  if (from === 'pro') return 'professional'
+  if (from === 'student') return 'student'
+  return null
+})
+const userRole = computed<'student' | 'teacher' | 'professional'>(() => roleFromRoute.value ?? auth.role ?? 'student')
+const allowedTabs = new Set(['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager'])
+const getRouteTab = () => {
+  const tab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'
+  return allowedTabs.has(tab) ? tab : 'Portfolio'
+}
+const activeTab = ref(getRouteTab())
 const showRecosModal = ref(false)
 const recommendationMessage = ref('')
+const attachingStudent = ref(false)
+const studentAttached = ref(false)
+const attachMessage = ref('')
 
-const currentUser = {
-  name: 'Nom Professeur',
-  email: 'professeur@univ.ac.ma',
-  avatar: ''
-}
+const currentUser = computed(() => {
+  const rawUser = localStorage.getItem('user')
+
+  if (!rawUser) {
+    return {
+      name: userRole.value === 'teacher' ? 'Nom Professeur' : userRole.value === 'professional' ? 'Nom Professionnel' : 'Nom Prenom',
+      email: userRole.value === 'teacher' ? 'professeur@univ.ac.ma' : userRole.value === 'professional' ? 'professionnel@entreprise.ma' : 'exemple@univ.etu.ac.ma',
+      avatar: ''
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(rawUser)
+    return {
+      name: [parsed?.prenom, parsed?.nom].filter(Boolean).join(' ') || parsed?.name || 'Nom Prenom',
+      email: parsed?.email || 'exemple@univ.etu.ac.ma',
+      avatar: parsed?.avatar || ''
+    }
+  } catch {
+    return {
+      name: 'Nom Prenom',
+      email: 'exemple@univ.etu.ac.ma',
+      avatar: ''
+    }
+  }
+})
 
 const profile = ref({
   id: 1,
@@ -370,6 +433,39 @@ async function loadRecommendations() {
   }
 }
 
+async function loadAttachedStatus() {
+  if (userRole.value !== 'teacher' || !profileId.value) return
+
+  try {
+    const { data } = await profApi.getAttachedStudentStatus(profileId.value)
+    studentAttached.value = Boolean(data?.data?.attached)
+  } catch (error) {
+    console.warn('Chargement statut étudiant lié impossible', error)
+  }
+}
+
+async function attachCurrentStudent() {
+  if (!profileId.value || studentAttached.value) return
+
+  attachingStudent.value = true
+  attachMessage.value = ''
+
+  try {
+    const { data } = await profApi.attachStudent({
+      id_etudiant: profileId.value,
+    })
+    studentAttached.value = true
+    attachMessage.value = data?.created
+      ? 'Étudiant ajouté à votre liste.'
+      : 'Cet étudiant est déjà dans votre liste.'
+  } catch (error: any) {
+    attachMessage.value =
+      error?.response?.data?.message || "Impossible d'ajouter cet étudiant."
+  } finally {
+    attachingStudent.value = false
+  }
+}
+
 async function copyProfileLink() {
   await navigator.clipboard.writeText(profileUrl.value)
   copied.value = true
@@ -398,9 +494,9 @@ async function sendRecommendation() {
 
   recommendations.value.unshift({
     id: Date.now(),
-    author: currentUser.name,
+    author: currentUser.value.name,
     role: 'teacher',
-    avatar: currentUser.avatar,
+    avatar: currentUser.value.avatar,
     message: recommendationMessage.value.trim(),
     date: "Aujourd’hui"
   })
@@ -516,6 +612,18 @@ onMounted(async () => {
   await loadProfile()
   await loadPosts()
   await loadRecommendations()
+  await loadAttachedStatus()
+})
+
+watch(
+  () => route.query.tab,
+  () => {
+    activeTab.value = getRouteTab()
+  }
+)
+
+watch(profileId, () => {
+  loadAttachedStatus()
 })
 </script>
 
@@ -543,6 +651,50 @@ onMounted(async () => {
 
 .content.shifted {
   padding-left: 230px;
+}
+
+.teacher-actions {
+  margin-top: 14px;
+  background: white;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+.teacher-actions__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.teacher-actions h3 {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.teacher-actions p,
+.teacher-actions__message {
+  font-size: .85rem;
+  color: var(--text-muted);
+}
+
+.attach-btn {
+  min-height: 42px;
+  padding: 0 22px;
+  border-radius: 100px 100px 100px 100px;
+  background: var(--purple);
+  color: white;
+  font-family: var(--font-head);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.attach-btn:disabled {
+  opacity: .65;
+  cursor: not-allowed;
 }
 
 .recommend-tab {
@@ -789,6 +941,44 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   margin-top: 18px;
+}
+
+.skills-tab,
+.about-tab {
+  margin-top: 18px;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+.info-card h3 {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.info-card p {
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-pill {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 700;
 }
 
 .share-card {

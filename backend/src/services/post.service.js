@@ -1,10 +1,51 @@
 const { prisma, toBigInt } = require('../models/prisma')
 
 const includePost = {
-  auteur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } },
+  auteur: {
+    select: {
+      id_utilisateur: true,
+      nom: true,
+      prenom: true,
+      role: true,
+      profil: {
+        select: {
+          photo_profil: true,
+          adresse: true,
+          bio: true,
+        },
+      },
+      etudiant: {
+        select: {
+          filiere: true,
+          badges: { include: { badge: true } },
+          competences: {
+            include: {
+              competence: {
+                select: { nom: true },
+              },
+            },
+          },
+          score_credibilite: {
+            select: { score_total: true },
+          },
+          recommandations_recues: {
+            where: { statut: 'VALIDE' },
+            select: { id_recommandation: true },
+          },
+        },
+      },
+    },
+  },
   collaborateurs: {
     include: {
-      utilisateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } },
+      utilisateur: {
+        select: {
+          id_utilisateur: true,
+          nom: true,
+          prenom: true,
+          role: true,
+        },
+      },
     },
   },
   commentaires: {
@@ -14,6 +55,12 @@ const includePost = {
   },
   reactions: {
     include: { auteur: { select: { id_utilisateur: true, nom: true, prenom: true } } },
+  },
+  reposts: {
+    include: {
+      auteur: { select: { id_utilisateur: true, nom: true, prenom: true } },
+    },
+    orderBy: { date: 'desc' },
   },
   _count: { select: { reposts: true } },
 }
@@ -55,10 +102,27 @@ const enrichWithReactionCounts = async (post) => {
 }
 
 const postService = {
-  async findAll(filters = {}) {
+  async findAll(utilisateur, filters = {}) {
     const where = {}
     if (filters.id_auteur) where.id_auteur = BigInt(filters.id_auteur)
     if (filters.visibilite) where.visibilite = filters.visibilite
+
+    if (utilisateur?.role !== 'ADMINISTRATEUR') {
+      const visibilityConditions = [
+        { visibilite: 'PUBLIC' },
+        { id_auteur: BigInt(utilisateur.id_utilisateur) },
+      ]
+
+      if (utilisateur?.role === 'PROFESSEUR') {
+        visibilityConditions.push({ visibilite: 'ENSEIGNANTS' })
+      }
+
+      where.AND = [
+        {
+          OR: visibilityConditions,
+        },
+      ]
+    }
 
     const posts = await prisma.poste.findMany({
       where,
@@ -69,11 +133,24 @@ const postService = {
     return Promise.all(posts.map(enrichWithReactionCounts))
   },
 
-  async findById(id) {
+  async findById(id, utilisateur) {
     const post = await prisma.poste.findUnique({
       where: { id_poste: BigInt(id) },
       include: includePost,
     })
+    if (!post) return null
+
+    if (utilisateur?.role !== 'ADMINISTRATEUR') {
+      const isOwner = post.id_auteur === BigInt(utilisateur.id_utilisateur)
+      const canSeeTeacherOnly =
+        post.visibilite === 'ENSEIGNANTS' && utilisateur?.role === 'PROFESSEUR'
+      const canSeePublic = post.visibilite === 'PUBLIC'
+
+      if (!isOwner && !canSeeTeacherOnly && !canSeePublic) {
+        return null
+      }
+    }
+
     return enrichWithReactionCounts(post)
   },
 
@@ -180,7 +257,7 @@ const postService = {
       },
     })
 
-    return this.findById(id)
+    return this.findById(id, { id_utilisateur: auteurId, role: null })
   },
 
   async supprimerReaction(id, auteurId) {
@@ -194,7 +271,7 @@ const postService = {
       },
     })
 
-    return this.findById(id)
+    return this.findById(id, { id_utilisateur: auteurId, role: null })
   },
 
   async repost(id, auteurId) {
@@ -215,7 +292,7 @@ const postService = {
       },
     })
 
-    return this.findById(id)
+    return this.findById(id, { id_utilisateur: auteurId, role: null })
   },
 
   async supprimerRepost(id, auteurId) {
@@ -229,7 +306,7 @@ const postService = {
       },
     })
 
-    return this.findById(id)
+    return this.findById(id, { id_utilisateur: auteurId, role: null })
   },
 }
 

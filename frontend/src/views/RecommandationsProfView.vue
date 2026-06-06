@@ -1,16 +1,16 @@
-﻿<script setup lang="ts">
-import { computed, ref } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
-import {
-  type RecommendationRequest,
-  type RecommendationStatus,
-  useProfRecommendationRequests,
-} from "../store/profRecommendationRequests";
+import profApi from "@/services/profApi";
+import type {
+  RecommendationRequest,
+  RecommendationStatus,
+} from "./DashboardProfView.vue";
 
-type RecommendationTab = "Tout" | "En attente" | "Acceptées" | "Refusées";
+type RecommendationTab = "Tout" | "En attente" | "Acceptées";
 
 const router = useRouter();
 const sidebarOpen = ref(true);
@@ -18,32 +18,34 @@ const activeTab = ref<RecommendationTab>("Tout");
 const selectedRequest = ref<RecommendationRequest | null>(null);
 const writingRequest = ref<RecommendationRequest | null>(null);
 const letterDraft = ref("");
-const { recommendations, updateRecommendationStatus } =
-  useProfRecommendationRequests();
+const recommendations = ref<RecommendationRequest[]>([]);
 const acceptedStatus = "Acceptée" as RecommendationStatus;
 const refusedStatus = "Refusée" as RecommendationStatus;
 
-const tabs: RecommendationTab[] = [
-  "Tout",
-  "En attente",
-  "Acceptées",
-  "Refusées",
-];
+const tabs: RecommendationTab[] = ["Tout", "En attente", "Acceptées"];
 
 const filteredRequests = computed(() => {
   if (activeTab.value === "Tout") {
-    return recommendations.value.filter(
-      (request) => request.status === "En attente",
-    );
+    return recommendations.value;
   }
   if (activeTab.value === "Acceptées") {
-    return recommendations.value.filter((request) => request.status === acceptedStatus);
+    return recommendations.value.filter(
+      (request) => request.status === acceptedStatus,
+    );
   }
-  if (activeTab.value === "Refusées") {
-    return recommendations.value.filter((request) => request.status === refusedStatus);
-  }
-  return recommendations.value.filter((request) => request.status === "En attente");
+
+  return recommendations.value.filter(
+    (request) => request.status === "En attente",
+  );
 });
+
+const normalizeRecommendationStatus = (
+  status: string,
+): RecommendationStatus => {
+  if (status === "Acceptée" || status === "AcceptÃ©e") return "Acceptée";
+  if (status === "Refusée" || status === "RefusÃ©e") return "Refusée";
+  return "En attente";
+};
 
 const statusClass = (status: RecommendationStatus) => ({
   "is-pending": status === "En attente",
@@ -51,8 +53,20 @@ const statusClass = (status: RecommendationStatus) => ({
   "is-refused": status === refusedStatus,
 });
 
+const loadRecommendations = async () => {
+  const response = await profApi.getProfDashboard();
+  recommendations.value = Array.isArray(
+    response.data?.data?.recommendationRequests,
+  )
+    ? response.data.data.recommendationRequests.map((request) => ({
+        ...request,
+        status: normalizeRecommendationStatus(request.status),
+      }))
+    : [];
+};
+
 const openStudentProfile = (request: RecommendationRequest) => {
-  router.push(`/profile/student/${request.studentId}`);
+  router.push(`/profile/student/${request.studentId}?from=prof`);
 };
 
 const openDetailsModal = (request: RecommendationRequest) => {
@@ -73,28 +87,39 @@ const closeWriteModal = () => {
   letterDraft.value = "";
 };
 
-const sendLetter = () => {
-  if (writingRequest.value) {
-    updateRecommendationStatus(
-      writingRequest.value.id,
-      acceptedStatus,
-      letterDraft.value.trim(),
-    );
-  }
+const sendLetter = async () => {
+  if (!writingRequest.value) return;
+
+  await profApi.updateRecommendationStatus(
+    writingRequest.value.id,
+    acceptedStatus,
+    {
+      contenu: letterDraft.value.trim(),
+    },
+  );
   closeWriteModal();
+  closeDetailsModal();
+  await loadRecommendations();
 };
 
-const refuseRequest = (request: RecommendationRequest) => {
-  updateRecommendationStatus(request.id, refusedStatus);
+const refuseRequest = async (request: RecommendationRequest) => {
+  await profApi.updateRecommendationStatus(request.id, refusedStatus);
+  closeDetailsModal();
+  await loadRecommendations();
 };
 
 const studentBadges = (request: RecommendationRequest) => {
   const text = `${request.profileInfo} ${request.title}`.toLowerCase();
   if (text.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
   if (text.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (text.includes("cyber")) return ["🔐 Security Aware", "🏆 Hackathon Participant"];
+  if (text.includes("cyber"))
+    return ["🔐 Security Aware", "🏆 Hackathon Participant"];
   return ["🌐 Web Developer"];
 };
+
+onMounted(() => {
+  loadRecommendations();
+});
 </script>
 
 <template>
@@ -191,7 +216,7 @@ const studentBadges = (request: RecommendationRequest) => {
                   class="action-btn danger"
                   @click.stop="refuseRequest(request)"
                 >
-                  Refuser
+                  Retirer
                 </button>
               </div>
             </div>
@@ -253,7 +278,11 @@ const studentBadges = (request: RecommendationRequest) => {
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="action-btn muted" @click="closeDetailsModal">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeDetailsModal"
+          >
             Fermer
           </button>
           <button
@@ -268,9 +297,9 @@ const studentBadges = (request: RecommendationRequest) => {
             v-if="selectedRequest.status === 'En attente'"
             type="button"
             class="action-btn danger"
-            @click="refuseRequest(selectedRequest); closeDetailsModal()"
+            @click="refuseRequest(selectedRequest)"
           >
-            Refuser
+            Retirer
           </button>
         </div>
       </section>
@@ -304,11 +333,15 @@ const studentBadges = (request: RecommendationRequest) => {
             v-model="letterDraft"
             rows="8"
             placeholder="Écrivez la lettre de recommandation ici..."
-          />
+          ></textarea>
         </label>
 
         <div class="modal-actions">
-          <button type="button" class="action-btn muted" @click="closeWriteModal">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeWriteModal"
+          >
             Annuler
           </button>
           <button type="button" class="action-btn primary" @click="sendLetter">
@@ -409,22 +442,12 @@ const studentBadges = (request: RecommendationRequest) => {
   padding: 0 22px;
   font-weight: 800;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.recommendation-tab:hover {
-  border-color: rgb(100 116 139);
-  color: rgb(15 23 42);
 }
 
 .recommendation-tab.active {
   border: 2px solid #5b4dff;
   background: #f1f1f5;
   color: #111827;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
 .recommendation-list {
@@ -434,20 +457,6 @@ const studentBadges = (request: RecommendationRequest) => {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 22px 30px 30px;
-}
-
-.recommendation-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.recommendation-list::-webkit-scrollbar-track {
-  background: rgba(2, 6, 23, 0.04);
-  border-radius: 9999px;
-}
-
-.recommendation-list::-webkit-scrollbar-thumb {
-  background: rgba(2, 6, 23, 0.18);
-  border-radius: 9999px;
 }
 
 .recommendation-card {
@@ -460,12 +469,6 @@ const studentBadges = (request: RecommendationRequest) => {
   padding: 18px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
   cursor: pointer;
-  transition: var(--ease);
-}
-
-.recommendation-card:hover {
-  background: #f7f7ff;
-  transform: translateY(-2px);
 }
 
 .student-avatar {
@@ -480,12 +483,6 @@ const studentBadges = (request: RecommendationRequest) => {
   justify-content: center;
   font-family: var(--font-head);
   font-weight: 800;
-}
-
-.student-avatar:hover,
-.student-name-btn:hover,
-.modal-student-link:hover {
-  color: var(--purple);
 }
 
 .recommendation-cardTop {
@@ -571,38 +568,24 @@ const studentBadges = (request: RecommendationRequest) => {
   font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 600;
-  transition: var(--ease);
 }
 
 .action-btn.primary {
   background: var(--purple);
   border: 0;
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .action-btn.danger {
   background: transparent;
   border: 1px solid rgb(148 163 184);
   color: #dc2626;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .action-btn.muted {
   background: transparent;
   border: 1px solid rgb(148 163 184);
   color: rgb(71 85 105);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.action-btn:hover {
-  border-color: rgb(100 116 139);
-  color: rgb(15 23 42);
-}
-
-.action-btn.primary:hover {
-  color: #ffffff;
-  filter: brightness(0.95);
 }
 
 .modal-backdrop {
@@ -674,13 +657,6 @@ const studentBadges = (request: RecommendationRequest) => {
   padding: 12px 14px;
 }
 
-.details-grid span,
-.details-section span,
-.letter-field span {
-  display: block;
-  margin-bottom: 6px;
-}
-
 .details-grid strong,
 .details-section h3 {
   color: var(--text-dark);
@@ -712,33 +688,4 @@ const studentBadges = (request: RecommendationRequest) => {
   resize: vertical;
   outline: none;
 }
-
-.letter-field textarea:focus {
-  border-color: var(--purple);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
-}
-
-@media (max-width: 860px) {
-  .recommendation-shell,
-  .recommendation-shellShift {
-    padding: 16px;
-  }
-
-  .recommendation-header,
-  .recommendation-cardTop {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .recommendation-card {
-    grid-template-columns: 1fr;
-  }
-
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>
-
-
-

@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node prisma/seed.js",
+    "seed:sample-connexions": "node scripts/seedSampleConnections.js",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate"
   },

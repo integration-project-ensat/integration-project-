@@ -6,6 +6,7 @@ import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProSavedProfiles } from "../store/proSavedProfiles";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 const router = useRouter();
 const sidebarOpen = ref(true);
@@ -43,14 +44,13 @@ const openPath = (path: string) => {
   router.push(path);
 };
 
-const fallbackBadges = (field: string) => {
-  const normalized = field.toLowerCase();
-  if (normalized.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (normalized.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (normalized.includes("data")) return ["🧠 AI / Data"];
-  if (normalized.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
-  return ["🌐 Web Developer"];
-};
+const fallbackBadges = (profile: { badges?: string[]; field: string; school: string }) =>
+  profile.badges?.length
+    ? profile.badges
+    : resolveProfileBadges({
+        field: profile.field,
+        school: profile.school,
+      });
 </script>
 
 <template>
@@ -160,7 +160,7 @@ const fallbackBadges = (field: string) => {
                       <div>
                         <strong>{{ profile.name }}</strong>
                         <SkillBadges
-                          :badges="profile.badges ?? fallbackBadges(profile.field)"
+                          :badges="fallbackBadges(profile)"
                           compact
                         />
                       </div>

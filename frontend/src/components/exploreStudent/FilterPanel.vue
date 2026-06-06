@@ -184,44 +184,55 @@ const toggleOption = (key: SectionKey, option: string | number) => {
   }
 
   if (key === "year") {
-    emit("update:filters", { ...f, year: Number(option) });
+    const nextValue = f.year === Number(option) ? "" : Number(option);
+    emit("update:filters", { ...f, year: nextValue });
     return;
   }
 
   if (key === "school") {
-    emit("update:filters", { ...f, school: String(option) });
+    const nextValue = f.school === String(option) ? "" : String(option);
+    emit("update:filters", { ...f, school: nextValue });
     return;
   }
 
   if (key === "field") {
-    // field may be named 'field' or 'filiere' in parent
+    const currentValue = f.field ?? f.filiere ?? "";
+    const nextValue = currentValue === String(option) ? "" : String(option);
+
     if (f.filiere !== undefined) {
-      emit("update:filters", { ...f, filiere: String(option) });
+      emit("update:filters", { ...f, filiere: nextValue });
     } else {
-      emit("update:filters", { ...f, field: String(option) });
+      emit("update:filters", { ...f, field: nextValue });
     }
     return;
   }
 
   if (key === "city") {
+    const currentValue = f.city ?? f.ville ?? "";
+    const nextValue = currentValue === String(option) ? "" : String(option);
+
     if (f.ville !== undefined) {
-      emit("update:filters", { ...f, ville: String(option) });
+      emit("update:filters", { ...f, ville: nextValue });
     } else {
-      emit("update:filters", { ...f, city: String(option) });
+      emit("update:filters", { ...f, city: nextValue });
     }
     return;
   }
 
   if (key === "score") {
-    emit("update:filters", { ...f, score: String(option) });
+    const currentValue = String(f.score ?? "");
+    const nextValue = currentValue === String(option) ? undefined : String(option);
+    emit("update:filters", { ...f, score: nextValue });
     return;
   }
 
-  // recommendations / recommandations
+  const currentValue = f.recommendations ?? f.recommandations ?? "";
+  const nextValue = currentValue === String(option) ? "" : String(option);
+
   if (f.recommandations !== undefined) {
-    emit("update:filters", { ...f, recommandations: String(option) });
+    emit("update:filters", { ...f, recommandations: nextValue });
   } else {
-    emit("update:filters", { ...f, recommendations: String(option) });
+    emit("update:filters", { ...f, recommendations: nextValue });
   }
 };
 

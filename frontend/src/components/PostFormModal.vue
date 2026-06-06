@@ -18,6 +18,7 @@ const form = reactive({
   github: '',
   demo: '',
   imagePreview: null as string | null,
+  imageFile: null as File | null,
   isCollaboration: false,
   collaborators: [] as string[],
   collaboratorInput: '',
@@ -32,13 +33,14 @@ watch(() => props.visible, (val) => {
     form.github            = props.post.github ?? ''
     form.demo              = props.post.demo ?? ''
     form.imagePreview      = props.post.imagePreview ?? null
+    form.imageFile         = null
     form.isCollaboration   = (props.post.collaborators?.length ?? 0) > 0
     form.collaborators     = [...(props.post.collaborators ?? [])]
     form.collaboratorInput = ''
   } else {
     Object.assign(form, {
       projectTitle: '', description: '', technologies: '', github: '', demo: '',
-      imagePreview: null, isCollaboration: false, collaborators: [], collaboratorInput: '',
+      imagePreview: null, imageFile: null, isCollaboration: false, collaborators: [], collaboratorInput: '',
     })
   }
 })
@@ -46,6 +48,7 @@ watch(() => props.visible, (val) => {
 function onImageChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  form.imageFile = file
   const reader = new FileReader()
   reader.onload = ev => { form.imagePreview = ev.target?.result as string }
   reader.readAsDataURL(file)
@@ -71,6 +74,7 @@ function save() {
     github:        form.github.trim() || undefined,
     demo:          form.demo.trim() || undefined,
     imagePreview:  form.imagePreview,
+    imageFile:     form.imageFile,
     collaborators: form.isCollaboration ? [...form.collaborators] : [],
   })
 }

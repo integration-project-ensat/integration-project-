@@ -1,33 +1,39 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
-import {
-  type ValidationRequest,
-  type ValidationStatus,
-  useProfValidationRequests,
-} from "../store/profValidationRequests";
+import profApi from "@/services/profApi";
+import type {
+  ValidationRequest,
+  ValidationStatus,
+} from "./DashboardProfView.vue";
 
-type ValidationTab = "Tout" | "Projets" | "Stages" | "Attestations";
+type ValidationTab = "Tout" | "Projet" | "Stage" | "Attestations";
 
 const router = useRouter();
-const { requests, updateRequestStatus } = useProfValidationRequests();
+const requests = ref<ValidationRequest[]>([]);
 const sidebarOpen = ref(true);
 const activeTab = ref<ValidationTab>("Tout");
 const selectedRequest = ref<ValidationRequest | null>(null);
 
-const tabs: ValidationTab[] = ["Tout", "Projets", "Stages", "Attestations"];
+const tabs: ValidationTab[] = ["Tout", "Projet", "Stage", "Attestations"];
 
 const filteredRequests = computed(() => {
-  const activeRequests = requests.value.filter(
-    (request) => request.status === "En attente",
-  );
+  const activeRequests =
+    activeTab.value === "Tout"
+      ? requests.value
+      : requests.value.filter((request) => request.type === activeTab.value);
 
-  if (activeTab.value === "Tout") return activeRequests;
-  return activeRequests.filter((request) => request.type === activeTab.value);
+  return activeRequests;
 });
+
+const normalizeValidationStatus = (status: string): ValidationStatus => {
+  if (status === "Validé" || status === "ValidÃ©") return "Validé";
+  if (status === "Refusé" || status === "RefusÃ©") return "Refusé";
+  return "En attente";
+};
 
 const statusClass = (status: ValidationStatus) => ({
   "is-pending": status === "En attente",
@@ -35,8 +41,24 @@ const statusClass = (status: ValidationStatus) => ({
   "is-refused": status === "Refusé",
 });
 
-const updateStatus = (requestId: number, status: ValidationStatus) => {
-  updateRequestStatus(requestId, status);
+const loadRequests = async () => {
+  const response = await profApi.getProfDashboard();
+  requests.value = Array.isArray(response.data?.data?.validationRequests)
+    ? response.data.data.validationRequests.map(
+        (request: ValidationRequest) => ({
+          ...request,
+          status: normalizeValidationStatus(request.status),
+        }),
+      )
+    : [];
+};
+
+const updateStatus = async (
+  request: ValidationRequest,
+  status: ValidationStatus,
+) => {
+  await profApi.updateValidationStatus(request, status);
+  await loadRequests();
 };
 
 const openDetailsModal = (request: ValidationRequest) => {
@@ -47,22 +69,29 @@ const closeDetailsModal = () => {
   selectedRequest.value = null;
 };
 
-const updateSelectedStatus = (status: ValidationStatus) => {
-  if (selectedRequest.value) updateStatus(selectedRequest.value.id, status);
+const updateSelectedStatus = async (status: ValidationStatus) => {
+  if (selectedRequest.value) {
+    await updateStatus(selectedRequest.value, status);
+  }
   closeDetailsModal();
 };
 
 const openStudentProfile = (request: ValidationRequest) => {
-  router.push(`/profile/student/${request.studentId}`);
+  router.push(`/profile/student/${request.studentId}?from=prof`);
 };
 
 const studentBadges = (request: ValidationRequest) => {
   const title = request.title.toLowerCase();
   if (title.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
   if (title.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (title.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
+  if (title.includes("mobile"))
+    return ["🌐 Web Developer", "🏆 Hackathon Participant"];
   return ["🌐 Web Developer"];
 };
+
+onMounted(() => {
+  loadRequests();
+});
 </script>
 
 <template>
@@ -139,16 +168,18 @@ const studentBadges = (request: ValidationRequest) => {
 
               <div class="validation-actions">
                 <button
+                  v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn primary"
-                  @click.stop="updateStatus(request.id, 'Validé')"
+                  @click.stop="updateStatus(request, 'Validé')"
                 >
                   Valider
                 </button>
                 <button
+                  v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn danger"
-                  @click.stop="updateStatus(request.id, 'Refusé')"
+                  @click.stop="updateStatus(request, 'Refusé')"
                 >
                   Refuser
                 </button>
@@ -217,7 +248,7 @@ const studentBadges = (request: ValidationRequest) => {
           <span>Liens / fichiers joints</span>
           <div class="attachment-list">
             <a
-              v-for="attachment in selectedRequest.attachments"
+              v-for="attachment in selectedRequest.attachments || []"
               :key="attachment"
               href="#"
               @click.prevent
@@ -228,7 +259,11 @@ const studentBadges = (request: ValidationRequest) => {
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="action-btn muted" @click="closeDetailsModal">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeDetailsModal"
+          >
             Fermer
           </button>
           <button
@@ -340,26 +375,12 @@ const studentBadges = (request: ValidationRequest) => {
   padding: 0 22px;
   font-weight: 800;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.validation-tab:hover {
-  border-color: rgb(100 116 139);
-  color: rgb(15 23 42);
 }
 
 .validation-tab.active {
   border: 2px solid #5b4dff;
   background: #f1f1f5;
   color: #111827;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-}
-
-.validation-tab.active:hover {
-  background: #e9e9ef;
 }
 
 .validation-list {
@@ -369,20 +390,6 @@ const studentBadges = (request: ValidationRequest) => {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 22px 30px 30px;
-}
-
-.validation-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.validation-list::-webkit-scrollbar-track {
-  background: rgba(2, 6, 23, 0.04);
-  border-radius: 9999px;
-}
-
-.validation-list::-webkit-scrollbar-thumb {
-  background: rgba(2, 6, 23, 0.18);
-  border-radius: 9999px;
 }
 
 .validation-card {
@@ -395,12 +402,6 @@ const studentBadges = (request: ValidationRequest) => {
   padding: 18px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
   cursor: pointer;
-  transition: var(--ease);
-}
-
-.validation-card:hover {
-  background: #f7f7ff;
-  transform: translateY(-2px);
 }
 
 .student-avatar {
@@ -415,12 +416,6 @@ const studentBadges = (request: ValidationRequest) => {
   justify-content: center;
   font-family: var(--font-head);
   font-weight: 800;
-}
-
-.student-avatar:hover,
-.student-name-btn:hover,
-.modal-student-link:hover {
-  color: var(--purple);
 }
 
 .validation-content {
@@ -506,39 +501,24 @@ const studentBadges = (request: ValidationRequest) => {
   font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 600;
-  transition: var(--ease);
 }
 
-.action-btn.primary,
-.action-btn.letter {
+.action-btn.primary {
   background: var(--purple);
   border: 0;
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .action-btn.danger {
   background: transparent;
   border: 1px solid rgb(148 163 184);
   color: #dc2626;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .action-btn.muted {
   background: transparent;
   border: 1px solid rgb(148 163 184);
   color: rgb(71 85 105);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.action-btn:hover {
-  border-color: rgb(100 116 139);
-  color: rgb(15 23 42);
-}
-
-.action-btn.primary:hover {
-  color: #ffffff;
-  filter: brightness(0.95);
 }
 
 .modal-backdrop {
@@ -574,13 +554,6 @@ const studentBadges = (request: ValidationRequest) => {
   font-weight: 800;
 }
 
-.modal-header h2 {
-  color: var(--text-dark);
-  font-family: var(--font-head);
-  font-size: 24px;
-  font-weight: 800;
-}
-
 .modal-student-link {
   background: transparent;
   color: var(--text-dark);
@@ -598,33 +571,6 @@ const studentBadges = (request: ValidationRequest) => {
   color: var(--text-dark);
   font-size: 22px;
   line-height: 1;
-}
-
-.modal-field {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: var(--text-dark);
-  font-weight: 800;
-}
-
-.modal-field input,
-.modal-field textarea {
-  width: 100%;
-  border-radius: 16px;
-  background: #f8fafc;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  color: var(--text-dark);
-  padding: 12px 14px;
-  font: inherit;
-  resize: vertical;
-}
-
-.modal-field textarea:focus,
-.modal-field input:focus {
-  border-color: var(--purple);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
-  outline: none;
 }
 
 .details-grid {
@@ -683,26 +629,5 @@ const studentBadges = (request: ValidationRequest) => {
   padding: 7px 12px;
   font-size: 12px;
   font-weight: 800;
-}
-
-@media (max-width: 860px) {
-  .validation-shell,
-  .validation-shellShift {
-    padding: 16px;
-  }
-
-  .validation-header,
-  .validation-cardTop {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .validation-card {
-    grid-template-columns: 1fr;
-  }
-
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

@@ -1,32 +1,30 @@
-const prisma = require('../../prisma/client')
-const asyncHandler = require('../middlewares/asyncHandler')
-const profilService = require('../services/profil.service')
+const prisma = require("../../prisma/client");
+const asyncHandler = require("../middlewares/asyncHandler");
+const profilService = require("../services/profil.service");
 
-const _formatName = (utilisateur) => {
-  if (!utilisateur) return 'Utilisateur'
-  return `${utilisateur.prenom || ''} ${utilisateur.nom || ''}`.trim()
-}
+const formatName = (utilisateur) => {
+  if (!utilisateur) return "Utilisateur";
+  return `${utilisateur.prenom || ""} ${utilisateur.nom || ""}`.trim();
+};
 
-const _formatStudentName = (etudiant) => _formatName(etudiant?.utilisateur)
-
-const _toInitials = (nomComplet) => {
+const toInitials = (nomComplet) => {
   return nomComplet
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .map((part) => part[0])
-    .join('')
+    .join("")
     .slice(0, 2)
-    .toUpperCase()
-}
+    .toUpperCase();
+};
 
-const _mapStatut = (statut) => {
-  if (statut === 'VALIDE') return 'Validé'
-  if (statut === 'REFUSE') return 'Refusé'
-  return 'En attente'
-}
+const mapValidationStatus = (statut) => {
+  if (statut === "VALIDE") return "Validé";
+  if (statut === "REFUSE") return "Refusé";
+  return "En attente";
+};
 
 const getProfDashboard = asyncHandler(async (req, res) => {
-  const userId = BigInt(req.utilisateur.id_utilisateur)
+  const userId = BigInt(req.utilisateur.id_utilisateur);
 
   const [projets, stages, lettres] = await Promise.all([
     prisma.projet.findMany({
@@ -40,11 +38,11 @@ const getProfDashboard = asyncHandler(async (req, res) => {
               select: {
                 prenom: true,
                 nom: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     }),
     prisma.stage.findMany({
       where: { id_encadrant: userId },
@@ -57,11 +55,11 @@ const getProfDashboard = asyncHandler(async (req, res) => {
               select: {
                 prenom: true,
                 nom: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     }),
     prisma.lettreRecommandation.findMany({
       where: { id_professeur: userId },
@@ -74,123 +72,173 @@ const getProfDashboard = asyncHandler(async (req, res) => {
               select: {
                 prenom: true,
                 nom: true,
-              }
-            }
-          }
-        }
-      }
-    })
-  ])
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const lettreIds = lettres.map((lettre) => lettre.id_lettre);
+  const lettreValidations = lettreIds.length
+    ? await prisma.elementValidable.findMany({
+        where: {
+          type: "RECOMMANDATION",
+          reference_id: { in: lettreIds },
+        },
+        select: {
+          reference_id: true,
+          statut: true,
+        },
+      })
+    : [];
+
+  const lettreValidationMap = new Map(
+    lettreValidations.map((item) => [
+      item.reference_id.toString(),
+      item.statut,
+    ]),
+  );
 
   const validationRequests = [
     ...projets.map((projet) => ({
       id: projet.id_projet.toString(),
-      studentId: projet.etudiant?.id_utilisateur?.toString() ?? 'unknown',
-      studentName: _formatStudentName(projet.etudiant),
-      initials: _toInitials(_formatStudentName(projet.etudiant)),
-      type: 'Projet',
-      title: projet.titre || 'Projet',
-      description: projet.description || 'Validation du projet',
-      date: projet.date_debut ? projet.date_debut.toISOString() : new Date().toISOString(),
-      status: _mapStatut(projet.statut),
+      studentId: projet.etudiant?.id_utilisateur?.toString() ?? "unknown",
+      studentName: formatName(projet.etudiant?.utilisateur),
+      initials: toInitials(formatName(projet.etudiant?.utilisateur)),
+      type: "Projet",
+      title: projet.titre || "Projet",
+      description: projet.description || "Validation du projet",
+      date: projet.date_debut
+        ? projet.date_debut.toISOString()
+        : new Date().toISOString(),
+      status: mapValidationStatus(projet.statut),
+      attachments: [],
     })),
     ...stages.map((stage) => ({
       id: stage.id_stage.toString(),
-      studentId: stage.etudiant?.id_utilisateur?.toString() ?? 'unknown',
-      studentName: _formatStudentName(stage.etudiant),
-      initials: _toInitials(_formatStudentName(stage.etudiant)),
-      type: 'Stage',
-      title: stage.entreprise || 'Stage',
-      description: stage.missions || 'Validation du stage',
-      date: stage.date_debut ? stage.date_debut.toISOString() : new Date().toISOString(),
-      status: _mapStatut(stage.statut),
+      studentId: stage.etudiant?.id_utilisateur?.toString() ?? "unknown",
+      studentName: formatName(stage.etudiant?.utilisateur),
+      initials: toInitials(formatName(stage.etudiant?.utilisateur)),
+      type: "Stage",
+      title: stage.entreprise || "Stage",
+      description: stage.missions || "Validation du stage",
+      date: stage.date_debut
+        ? stage.date_debut.toISOString()
+        : new Date().toISOString(),
+      status: mapValidationStatus(stage.statut),
+      attachments: [],
     })),
-  ]
+  ];
 
-  const recommendationRequests = lettres.map((lettre) => ({
-    id: lettre.id_lettre.toString(),
-    studentId: lettre.etudiant?.id_utilisateur?.toString() ?? 'unknown',
-    studentName: _formatStudentName(lettre.etudiant),
-    initials: _toInitials(_formatStudentName(lettre.etudiant)),
-    profileInfo: lettre.etudiant?.filiere || 'Étudiant',
-    title: lettre.motif ? `Lettre ${lettre.motif.toLowerCase()}` : 'Lettre de recommandation',
-    message: lettre.contenu || 'Demande de lettre de recommandation',
-    date: lettre.date_souhaitee ? lettre.date_souhaitee.toISOString() : new Date().toISOString(),
-    status: lettre.statut === 'REDIGEE' ? 'Acceptée' : lettre.statut === 'EN_ATTENTE' ? 'En attente' : 'Refusée',
-    writtenLetter: lettre.contenu || null,
-  }))
+  const recommendationRequests = lettres
+    .map((lettre) => {
+      const validationStatut = lettreValidationMap.get(
+        lettre.id_lettre.toString(),
+      );
+      const status =
+        validationStatut === "REFUSE"
+          ? "Refusée"
+          : lettre.statut === "REDIGEE" || validationStatut === "VALIDE"
+            ? "Acceptée"
+            : "En attente";
+
+      return {
+        id: lettre.id_lettre.toString(),
+        studentId: lettre.etudiant?.id_utilisateur?.toString() ?? "unknown",
+        studentName: formatName(lettre.etudiant?.utilisateur),
+        initials: toInitials(formatName(lettre.etudiant?.utilisateur)),
+        profileInfo: lettre.etudiant?.filiere || "Étudiant",
+        title: lettre.motif
+          ? `Lettre ${lettre.motif.toLowerCase()}`
+          : "Lettre de recommandation",
+        message: lettre.contenu || "Demande de lettre de recommandation",
+        date: lettre.date_souhaitee
+          ? lettre.date_souhaitee.toISOString()
+          : new Date().toISOString(),
+        status,
+        writtenLetter: lettre.contenu || null,
+      };
+    })
+    .filter((item) => item.status !== "Refusée");
 
   const stats = {
     total: validationRequests.length,
-    pending: validationRequests.filter((item) => item.status === 'En attente').length,
-    validated: validationRequests.filter((item) => item.status === 'Validé').length,
-    refused: validationRequests.filter((item) => item.status === 'Refusé').length,
-  }
+    pending: validationRequests.filter((item) => item.status === "En attente")
+      .length,
+    validated: validationRequests.filter((item) => item.status === "Validé")
+      .length,
+    refused: validationRequests.filter((item) => item.status === "Refusé")
+      .length,
+  };
 
   const recommendationStats = {
     total: recommendationRequests.length,
-    pending: recommendationRequests.filter((item) => item.status === 'En attente').length,
-    accepted: recommendationRequests.filter((item) => item.status === 'Acceptée').length,
-    refused: recommendationRequests.filter((item) => item.status === 'Refusée').length,
-  }
+    pending: recommendationRequests.filter(
+      (item) => item.status === "En attente",
+    ).length,
+    accepted: recommendationRequests.filter(
+      (item) => item.status === "Acceptée",
+    ).length,
+    refused: 0,
+  };
 
   return res.json({
     success: true,
     data: {
       profile: {
-        name: _formatName(req.utilisateur),
+        name: formatName(req.utilisateur),
       },
       stats,
       validationRequests,
       recommendationRequests,
       recommendationStats,
-    }
-  })
-})
+    },
+  });
+});
 
 const getProDashboard = asyncHandler(async (req, res) => {
-  const userId = BigInt(req.utilisateur.id_utilisateur)
+  const userId = BigInt(req.utilisateur.id_utilisateur);
 
-  const [savedProfiles, pendingConnections, acceptedConnections, refusedConnections, publishedOffers, currentUser] = await Promise.all([
+  const [
+    savedProfiles,
+    pendingConnections,
+    acceptedConnections,
+    refusedConnections,
+    publishedOffers,
+    currentUser,
+  ] = await Promise.all([
     profilService.getMesSauvegardes(userId),
     prisma.connexion.count({
       where: {
         destinataire_id: userId,
-        statut: 'EN_ATTENTE'
-      }
+        statut: "EN_ATTENTE",
+      },
     }),
     prisma.connexion.count({
       where: {
-        statut: 'ACCEPTEE',
-        OR: [
-          { demandeur_id: userId },
-          { destinataire_id: userId }
-        ]
-      }
+        statut: "ACCEPTEE",
+        OR: [{ demandeur_id: userId }, { destinataire_id: userId }],
+      },
     }),
     prisma.connexion.count({
       where: {
-        statut: 'REFUSEE',
-        OR: [
-          { demandeur_id: userId },
-          { destinataire_id: userId }
-        ]
-      }
+        statut: "REFUSEE",
+        OR: [{ demandeur_id: userId }, { destinataire_id: userId }],
+      },
     }),
     prisma.poste.count({ where: { id_auteur: userId } }),
     prisma.utilisateur.findUnique({
       where: { id_utilisateur: userId },
-      select: { prenom: true, nom: true }
-    })
-  ])
+      select: { prenom: true, nom: true },
+    }),
+  ]);
 
   const acceptedConnectionsList = await prisma.connexion.findMany({
     where: {
-      statut: 'ACCEPTEE',
-      OR: [
-        { demandeur_id: userId },
-        { destinataire_id: userId }
-      ]
+      statut: "ACCEPTEE",
+      OR: [{ demandeur_id: userId }, { destinataire_id: userId }],
     },
     include: {
       demandeur: {
@@ -203,10 +251,10 @@ const getProDashboard = asyncHandler(async (req, res) => {
           etudiant: {
             select: {
               filiere: true,
-              score_credibilite: { select: { score_total: true } }
-            }
-          }
-        }
+              score_credibilite: { select: { score_total: true } },
+            },
+          },
+        },
       },
       destinataire: {
         select: {
@@ -218,79 +266,88 @@ const getProDashboard = asyncHandler(async (req, res) => {
           etudiant: {
             select: {
               filiere: true,
-              score_credibilite: { select: { score_total: true } }
-            }
-          }
-        }
-      }
+              score_credibilite: { select: { score_total: true } },
+            },
+          },
+        },
+      },
     },
-    orderBy: { date_reponse: 'desc' }
-  })
+    orderBy: { date_reponse: "desc" },
+  });
 
   const interns = acceptedConnectionsList
     .map((connexion) => {
-      const otherUser = connexion.demandeur.role === 'ETUDIANT' ? connexion.demandeur : connexion.destinataire.role === 'ETUDIANT' ? connexion.destinataire : null
-      if (!otherUser) return null
-      const fullName = _formatName(otherUser)
+      const otherUser =
+        connexion.demandeur.role === "ETUDIANT"
+          ? connexion.demandeur
+          : connexion.destinataire.role === "ETUDIANT"
+            ? connexion.destinataire
+            : null;
+      if (!otherUser) return null;
+      const fullName = formatName(otherUser);
       return {
         id: otherUser.id_utilisateur.toString(),
-        initials: _toInitials(fullName),
+        initials: toInitials(fullName),
         name: fullName,
-        school: otherUser.etudiant?.filiere || 'Étudiant',
-        field: otherUser.etudiant?.filiere || '—',
-        city: otherUser.profil?.adresse || '—',
+        school: otherUser.etudiant?.filiere || "Ã‰tudiant",
+        field: otherUser.etudiant?.filiere || "â€”",
+        city: otherUser.profil?.adresse || "â€”",
         score: Number(otherUser.etudiant?.score_credibilite?.score_total ?? 0),
-        startDate: connexion.date_reponse ? connexion.date_reponse.toISOString().split('T')[0] : connexion.date_demande.toISOString().split('T')[0],
+        startDate: connexion.date_reponse
+          ? connexion.date_reponse.toISOString().split("T")[0]
+          : connexion.date_demande.toISOString().split("T")[0],
         badges: [],
-        status: 'Actif',
-        profilePath: `/profile/student/${otherUser.id_utilisateur}`,
-        portfolioPath: `/profile/student/${otherUser.id_utilisateur}`
-      }
+        status: "Actif",
+        profilePath: `/profile/student/${otherUser.id_utilisateur}?from=pro`,
+        portfolioPath: `/portfolio/${otherUser.id_utilisateur}?from=pro`,
+      };
     })
-    .filter(Boolean)
+    .filter(Boolean);
 
   const savedProfilesData = savedProfiles.map((saved) => {
-    const etudiant = saved.etudiant
-    const fullName = _formatName(etudiant)
+    const etudiant = saved.etudiant;
+    const fullName = formatName(etudiant);
     return {
       id: saved.id,
       name: fullName,
-      school: etudiant.etudiant?.filiere || 'Étudiant',
-      field: etudiant.etudiant?.filiere || '—',
-      city: etudiant.profil?.adresse || '—',
+      school: etudiant.etudiant?.filiere || "Ã‰tudiant",
+      field: etudiant.etudiant?.filiere || "â€”",
+      city: etudiant.profil?.adresse || "â€”",
       score: Number(etudiant.etudiant?.score_credibilite?.score_total ?? 0),
       recommendations: 0,
-      badges: (etudiant.etudiant?.badges || []).map((item) => item.badge?.nom).filter(Boolean),
+      badges: (etudiant.etudiant?.badges || [])
+        .map((item) => item.badge?.nom)
+        .filter(Boolean),
       hasPortfolio: Boolean(etudiant.etudiant?.score_credibilite),
-      profilePath: `/profile/student/${etudiant.id_utilisateur}`,
-      portfolioPath: `/profile/student/${etudiant.id_utilisateur}`
-    }
-  })
+      profilePath: `/profile/student/${etudiant.id_utilisateur}?from=pro`,
+      portfolioPath: `/portfolio/${etudiant.id_utilisateur}?from=pro`,
+    };
+  });
 
   return res.json({
     success: true,
     data: {
       profile: {
-        name: _formatName(currentUser)
+        name: formatName(currentUser),
       },
       stats: {
         totalInterns: interns.length,
         activeInterns: interns.length,
         savedProfiles: savedProfilesData.length,
-        publishedOffers: publishedOffers
+        publishedOffers: publishedOffers,
       },
       connections: {
         pending: pendingConnections,
         accepted: acceptedConnections,
-        refused: refusedConnections
+        refused: refusedConnections,
       },
       interns,
-      savedProfiles: savedProfilesData
-    }
-  })
-})
+      savedProfiles: savedProfilesData,
+    },
+  });
+});
 
 module.exports = {
   getProfDashboard,
-  getProDashboard
-}
+  getProDashboard,
+};

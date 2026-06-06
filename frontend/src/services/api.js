@@ -17,11 +17,7 @@ api.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      const isLoginPage = window.location.pathname === '/login'
-      if (!isLoginPage) {
-        localStorage.removeItem('token')
-        window.location.href = '/login'
-      }
+      localStorage.removeItem('token')
     }
     return Promise.reject(err)
   }

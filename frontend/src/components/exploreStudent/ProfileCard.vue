@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from 'vue-router'
 
@@ -7,7 +7,7 @@ import SkillBadges from "./SkillBadges.vue";
 
 
 interface Profile {
-  id: number;
+  id: number | string;
   name: string;
   role: string;
   school: string;
@@ -15,7 +15,9 @@ interface Profile {
   score: number;
   recommendations: number;
   badges?: string[];
-  recos?: Array<{ name: string; role: string }>;
+  recos?: Array<{ name: string; role: string; comment?: string }>;
+  profilePath?: string;
+  portfolioPath?: string;
 }
 
 const props = defineProps<{ profile: Profile; defaultExpanded?: boolean }>();
@@ -23,15 +25,15 @@ const router = useRouter()
 const showDetails = ref(Boolean(props.defaultExpanded));
 
 const handlePortfolio = () => {
-  router.push(`/projects/${props.profile.id}`)
+  router.push(props.profile.portfolioPath ?? `/portfolio/${props.profile.id}`)
 };
 
 const handleViewProfile = () => {
-  router.push(`/profile/student/${props.profile.id}`)
+  router.push(props.profile.profilePath ?? `/profile/student/${props.profile.id}`)
 };
 
 const handleContact = () => {
-  alert("Contact info clicked!");
+  handleViewProfile();
 };
 
 const toggleDetails = () => {
@@ -54,11 +56,11 @@ const toggleDetails = () => {
         </div>
 
         <p class="pc-role">{{ profile.role }}</p>
-        <SkillBadges :badges="profile.badges" />
+        <SkillBadges :badges="profile.badges" compact />
         <p class="pc-school">{{ profile.school }}</p>
         <p class="pc-city">
           {{ profile.city }}
-          <span class="pc-dot">?</span>
+          <span class="pc-dot">&bull;</span>
           <a href="#" class="pc-contact" @click.prevent="handleContact"
             >Contact info</a
           >
@@ -103,7 +105,9 @@ const toggleDetails = () => {
           <div class="pc-recoBody">
             <p class="pc-recoName">{{ reco.name }}</p>
             <p class="pc-recoRole">{{ reco.role }}</p>
-            <p class="pc-recoComment">Ex commentaire de recommandation.</p>
+            <p class="pc-recoComment">
+              {{ reco.comment || "Ex commentaire de recommandation." }}
+            </p>
           </div>
         </div>
       </div>
@@ -115,25 +119,25 @@ const toggleDetails = () => {
 
 <style scoped>
 .pc-card {
-  border: 1px solid rgb(226 232 240);
-  border-radius: 18px;
+  border: 1px solid rgba(222, 226, 238, 0.95);
+  border-radius: 22px;
   background: #ffffff;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 16px 38px rgba(20, 27, 52, 0.08);
   overflow: hidden;
 }
 
 .pc-top {
-  background: #eef0f6;
-  padding: 22px 22px 18px;
+  background: linear-gradient(180deg, #f2f4fb 0%, #eef1f8 100%);
+  padding: 20px 18px 16px;
   display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 18px;
+  grid-template-columns: 102px 1fr;
+  gap: 14px;
   align-items: start;
 }
 
 .pc-avatar {
-  height: 120px;
-  width: 120px;
+  height: 100px;
+  width: 100px;
   border-radius: 9999px;
   background-color: #e5e7eb;
   background-image:
@@ -141,9 +145,10 @@ const toggleDetails = () => {
     linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.55) 75%),
     linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.55) 75%);
-  background-size: 18px 18px;
+  background-size: 16px 16px;
   background-position: 0 0, 0 9px, 9px -9px, -9px 0px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  margin-top: 2px;
 }
 
 .pc-info {
@@ -158,85 +163,85 @@ const toggleDetails = () => {
 }
 
 .pc-name {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 17px;
+  line-height: 1.2;
+  font-weight: 900;
   color: rgb(2 6 23);
   letter-spacing: -0.01em;
 }
 
 .pc-score {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 900;
-  color: rgb(239 68 68);
+  color: #ff6b6b;
 }
 
 .pc-scoreStar {
-  position: relative;
-  top: -3px;
   margin-right: 2px;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .pc-role,
 .pc-school,
 .pc-city {
-  margin-top: 2px;
-  font-size: 13px;
-  color: rgb(71 85 105);
-  font-weight: 600;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #65748b;
+  font-weight: 700;
 }
 
 .pc-school {
-  color: rgb(100 116 139);
+  color: #7d8aa1;
 }
 
 .pc-city {
-  color: rgb(100 116 139);
+  color: #7d8aa1;
 }
 
 .pc-dot {
-  margin: 0 6px;
-  color: rgb(148 163 184);
+  margin: 0 8px;
+  color: #8190aa;
 }
 
 .pc-contact {
-  color: #4f46e5;
-  font-weight: 800;
+  color: #5f57f6;
+  font-weight: 900;
   text-decoration: none;
 }
 
 .pc-contact:hover {
-  color: #4338ca;
+  color: #4b43e8;
 }
 
 .pc-recos {
-  margin-top: 8px;
-  font-size: 12px;
+  margin-top: 10px;
+  font-size: 11px;
   font-weight: 900;
-  color: #4f46e5;
+  color: #564ff2;
 }
 
 .pc-actions {
-  margin-top: 12px;
+  margin-top: 10px;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .pc-btn {
-  height: 32px;
-  padding: 0 18px;
+  min-height: 34px;
+  padding: 0 16px;
   border-radius: 100px 180px 0px 100px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 800;
   font-family: var(--font-body);
 }
 
 .pc-btnPrimary {
-  background: var(--purple);
+  background: linear-gradient(135deg, #5f57f6 0%, #4f46e5 100%);
   color: #ffffff;
   border-radius: 100px 180px 0px 100px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(95, 87, 246, 0.24);
 }
 
 .pc-btnPrimary:hover {
@@ -244,10 +249,10 @@ const toggleDetails = () => {
 }
 
 .pc-btnOutline {
-  background: transparent;
-  color: rgb(71 85 105);
-  border: 1px solid rgb(148 163 184);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.78);
+  color: #607089;
+  border: 1px solid rgba(145, 156, 182, 0.55);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
 
 .pc-btnOutline:hover {
@@ -257,15 +262,16 @@ const toggleDetails = () => {
 
 .pc-detailsToggle {
   width: 100%;
-  padding: 14px 22px;
+  padding: 10px 22px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: rgb(71 85 105);
-  font-weight: 800;
+  color: #55657d;
+  font-weight: 900;
   font-size: 12px;
-  background: transparent;
+  background: #ffffff;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .pc-chevron {
@@ -280,21 +286,22 @@ const toggleDetails = () => {
 }
 
 .pc-details {
-  padding: 0 22px 18px;
+  padding: 0 18px 16px;
+  background: #ffffff;
 }
 
 .pc-recosList {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .pc-recoCard {
   background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
-  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  padding: 12px 14px;
   display: grid;
   grid-template-columns: 32px 1fr;
   gap: 12px;
@@ -318,14 +325,14 @@ const toggleDetails = () => {
   margin-top: 1px;
   font-size: 11px;
   font-weight: 800;
-  color: rgb(100 116 139);
+  color: #7d8aa1;
 }
 
 .pc-recoComment {
   margin-top: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: rgb(100 116 139);
+  color: #8693a8;
 }
 
 .pc-empty {
@@ -334,6 +341,18 @@ const toggleDetails = () => {
   color: rgb(100 116 139);
   font-weight: 700;
 }
+
+@media (max-width: 720px) {
+  .pc-top {
+    grid-template-columns: 1fr;
+  }
+
+  .pc-avatar {
+    height: 84px;
+    width: 84px;
+  }
+}
 </style>
+
 
 

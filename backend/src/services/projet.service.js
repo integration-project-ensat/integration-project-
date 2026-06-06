@@ -158,10 +158,24 @@ const projetService = {
       }
     })
 
-    return prisma.projet.update({
+    const updatedProjet = await prisma.projet.update({
       where: { id_projet: BigInt(id) },
       data: { statut: 'EN_ATTENTE' }
     })
+
+    if (projet.id_professeur) {
+      try {
+        await notificationService.creerNotification({
+          utilisateurId: projet.id_professeur,
+          type: 'SOUMISSION_PROJET',
+          message: `Un étudiant vous a soumis le projet "${projet.titre || 'Projet'}" pour validation.`,
+          cibleId: projet.id_projet,
+          cibleType: 'PROJET',
+        })
+      } catch (e) {}
+    }
+
+    return updatedProjet
   },
 
   async getHistorique(id) {

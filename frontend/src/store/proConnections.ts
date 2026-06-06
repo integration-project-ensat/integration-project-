@@ -24,7 +24,7 @@ const connectionRequests = ref<ProConnectionRequest[]>([
     message: "Je souhaite échanger sur une opportunité de stage DevOps.",
     time: "Il y a 8 min",
     status: "pending",
-    profilePath: "/profile/student/khadija-bennani",
+    profilePath: "/profile/student/7?from=pro",
   },
   {
     id: "amine-lahlou",
@@ -35,7 +35,7 @@ const connectionRequests = ref<ProConnectionRequest[]>([
     message: "Votre entreprise m'intéresse pour un projet PFE.",
     time: "Il y a 42 min",
     status: "pending",
-    profilePath: "/profile/student/amine-lahlou",
+    profilePath: "/profile/student/8?from=pro",
   },
   {
     id: "mehdi-berrada",
@@ -46,7 +46,7 @@ const connectionRequests = ref<ProConnectionRequest[]>([
     message: "Je cherche un mentor professionnel en cybersécurité.",
     time: "Hier",
     status: "accepted",
-    profilePath: "/profile/student/mehdi-berrada",
+    profilePath: "/profile/student/9?from=pro",
   },
 ]);
 

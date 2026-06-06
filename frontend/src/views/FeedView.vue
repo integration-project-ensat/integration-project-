@@ -9,22 +9,16 @@ import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import PostFormModal from "../components/PostFormModal.vue";
+import { connexionService } from "../services/connexion.service";
+import { feedService } from "../services/feed.service";
 import { useProSavedProfiles } from "../store/proSavedProfiles";
-import {
-  addFeedComment,
-  getFeed,
-  likeFeedPost,
-  removeFeedRepost,
-  repostFeedPost,
-  sendConnectionRequest,
-  unlikeFeedPost,
-} from "../services/feedApi";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 type FeedRole = "student" | "prof" | "pro";
 type FeedFilter = "Tous" | "Projets" | "Reposts" | "Populaires" | "Récents";
 
 interface FeedComment {
-  id: string;
+  id: number;
   authorId: string;
   authorName: string;
   initials: string;
@@ -56,6 +50,8 @@ interface FeedPost {
   isPopular?: boolean;
   imagePreview?: string | null;
   collaborators?: string[];
+  viewerHasLiked?: boolean;
+  viewerHasReposted?: boolean;
 }
 
 const route = useRoute();
@@ -64,9 +60,32 @@ const sidebarOpen = ref(true);
 const activeFilter = ref<FeedFilter>("Tous");
 const searchQuery = ref("");
 const openCommentPostId = ref<string | null>(null);
+const loading = ref(false);
+const error = ref<string | null>(null);
 
-// ID de l'utilisateur connecté (pour afficher edit/delete sur ses propres posts)
-const myStudentId = ref("khadija-bennani");
+const getCurrentUser = () => {
+  const rawUser = localStorage.getItem("user");
+  if (!rawUser) return null;
+
+  try {
+    return JSON.parse(rawUser);
+  } catch {
+    return null;
+  }
+};
+
+const getCurrentUserId = () => {
+  const user = getCurrentUser();
+  const id = user?.id ?? user?.id_utilisateur;
+  return id == null ? "" : String(id);
+};
+
+const getCurrentUserName = () => {
+  const user = getCurrentUser();
+  return user?.name || [user?.prenom, user?.nom].filter(Boolean).join(" ").trim() || "Vous";
+};
+
+const myStudentId = ref(getCurrentUserId());
 
 // Post form modal
 const showPostModal  = ref(false);
@@ -76,12 +95,10 @@ const replyDrafts = reactive<Record<string, string>>({});
 const repostedPosts = reactive<Record<string, boolean>>({});
 const connectedPosts = reactive<Record<string, boolean>>({});
 const likedPosts = reactive<Record<string, boolean>>({});
-const likedComments = reactive<Record<string, boolean>>({});
-const openReplyCommentId = ref<string | null>(null);
+const likedComments = reactive<Record<number, boolean>>({});
+const openReplyCommentId = ref<number | null>(null);
 const savedFeedbackId = ref<string | null>(null);
 const { isSaved, saveProfile } = useProSavedProfiles();
-const isLoading = ref(false);
-const error = ref<string | null>(null);
 
 const filters: FeedFilter[] = ["Tous", "Projets", "Reposts", "Populaires", "Récents"];
 
@@ -99,31 +116,158 @@ const headerUserType = computed<"student" | "professeur" | "professionnel">(() =
 
 const posts = ref<FeedPost[]>([]);
 
-const loadFeed = async () => {
-  isLoading.value = true;
-  error.value = null;
+const toInitials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
+const formatRelativeDate = (dateValue?: string | null) => {
+  if (!dateValue) return "Recemment";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "Recemment";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
+
+  if (diffMinutes < 60) return `Il y a ${diffMinutes} min`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `Il y a ${diffHours} h`;
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays === 1) return "Hier";
+  if (diffDays < 7) return `Il y a ${diffDays} j`;
+  return date.toLocaleDateString("fr-FR");
+};
+
+const parseStructuredContent = (content: string) => {
   try {
-    const feed = await getFeed({ search: searchQuery.value || undefined });
-    posts.value = Array.isArray(feed?.data) ? feed.data : [];
-
-    Object.keys(likedPosts).forEach((key) => delete likedPosts[key]);
-    Object.keys(repostedPosts).forEach((key) => delete repostedPosts[key]);
-    Object.keys(connectedPosts).forEach((key) => delete connectedPosts[key]);
-
-    posts.value.forEach((post: any) => {
-      likedPosts[post.id] = Boolean(post.likedByMe);
-      repostedPosts[post.id] = Boolean(post.repostedByMe);
-      connectedPosts[post.id] = ["EN_ATTENTE", "ACCEPTEE"].includes(post.connectionStatus);
-    });
+    const parsed = JSON.parse(content);
+    return typeof parsed === "object" && parsed ? parsed : null;
   } catch {
-    error.value = "Erreur lors du chargement du feed";
-  } finally {
-    isLoading.value = false;
+    return null;
   }
 };
 
-onMounted(loadFeed);
+const buildBadges = (post: any) =>
+  resolveProfileBadges({
+    badges: post.auteur?.etudiant?.badges,
+    competences: post.auteur?.etudiant?.competences,
+    filiere: post.auteur?.etudiant?.filiere,
+    bio: post.auteur?.profil?.bio,
+  });
+
+const mapComment = (comment: any): FeedComment => {
+  const authorName =
+    [comment.auteur?.prenom, comment.auteur?.nom].filter(Boolean).join(" ").trim() ||
+    "Utilisateur";
+
+  return {
+    id: Number(comment.id_commentaire),
+    authorId: String(comment.auteur?.id_utilisateur ?? ""),
+    authorName,
+    initials: toInitials(authorName),
+    text: comment.contenu,
+    time: formatRelativeDate(comment.date),
+    likeCount: 0,
+    replies: [],
+  };
+};
+
+const mapPost = (post: any): FeedPost => {
+  const structured = parseStructuredContent(post.contenu);
+  const studentName =
+    [post.auteur?.prenom, post.auteur?.nom].filter(Boolean).join(" ").trim() ||
+    "Etudiant";
+  const school = [post.auteur?.profil?.adresse, post.auteur?.etudiant?.filiere || post.auteur?.role]
+    .filter(Boolean)
+    .join(" · ");
+  const technologies = Array.isArray(structured?.technologies)
+    ? structured.technologies.filter(Boolean)
+    : [];
+  const likeCount = Object.values(post.compteurs_reactions || {}).reduce(
+    (sum: number, count: any) => sum + Number(count || 0),
+    0,
+  );
+  const recommendationCount = post.auteur?.etudiant?.recommandations_recues?.length ?? 0;
+  const score = Number(post.auteur?.etudiant?.score_credibilite?.score_total ?? 0);
+
+  return {
+    id: String(post.id_poste),
+    studentId: String(post.auteur?.id_utilisateur ?? ""),
+    studentName,
+    initials: toInitials(studentName),
+    school: school || "Maroc",
+    time: formatRelativeDate(post.date_creation),
+    projectTitle:
+      structured?.projectTitle ||
+      post.contenu.split("\n")[0]?.slice(0, 70) ||
+      "Publication",
+    description: structured?.description || post.contenu,
+    badges: buildBadges(post),
+    technologies,
+    github: structured?.github,
+    demo: structured?.demo,
+    repostedBy: post.reposts?.[0]?.auteur
+      ? [post.reposts[0].auteur.prenom, post.reposts[0].auteur.nom].filter(Boolean).join(" ")
+      : undefined,
+    repostCount: Number(post.compteur_reposts ?? 0),
+    recommendationCount,
+    likeCount,
+    score,
+    comments: Array.isArray(post.commentaires) ? post.commentaires.map(mapComment) : [],
+    isPopular: score >= 85 || recommendationCount >= 10 || likeCount >= 15,
+    imagePreview: post.image_url || null,
+    collaborators:
+      structured?.collaboratorsNames ||
+      post.collaborateurs?.map((item: any) =>
+        [item.utilisateur?.prenom, item.utilisateur?.nom].filter(Boolean).join(" ").trim(),
+      ) ||
+      [],
+    viewerHasLiked: Array.isArray(post.reactions)
+      ? post.reactions.some(
+          (reaction: any) => String(reaction.auteur?.id_utilisateur ?? "") === myStudentId.value,
+        )
+      : false,
+    viewerHasReposted: Array.isArray(post.reposts)
+      ? post.reposts.some(
+          (repost: any) => String(repost.auteur?.id_utilisateur ?? "") === myStudentId.value,
+        )
+      : false,
+  };
+};
+
+const syncInteractionState = (items: FeedPost[]) => {
+  Object.keys(likedPosts).forEach((key) => delete likedPosts[key]);
+  Object.keys(repostedPosts).forEach((key) => delete repostedPosts[key]);
+
+  items.forEach((post) => {
+    if (post.viewerHasLiked) likedPosts[post.id] = true;
+    if (post.viewerHasReposted) repostedPosts[post.id] = true;
+  });
+};
+
+const loadPosts = async () => {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const response = await feedService.getPosts();
+    const items = Array.isArray(response.data?.data)
+      ? response.data.data.map(mapPost)
+      : [];
+    posts.value = items;
+    syncInteractionState(items);
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Erreur lors du chargement du fil d’actualité";
+  } finally {
+    loading.value = false;
+  }
+};
 
 const visiblePosts = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
@@ -156,8 +300,8 @@ const openProject = (projectId: string) => {
   router.push(`/projects/${projectId}`);
 };
 
-const toggleSavedPostProfile = async (post: FeedPost) => {
-  await saveProfile({
+const toggleSavedPostProfile = (post: FeedPost) => {
+  const saved = saveProfile({
     id: post.studentId,
     name: post.studentName,
     school: post.school.split("·")[0]?.trim() || post.school,
@@ -168,7 +312,7 @@ const toggleSavedPostProfile = async (post: FeedPost) => {
     badges: post.badges,
     hasPortfolio: true,
     profilePath: `/profile/student/${post.studentId}`,
-    portfolioPath: `/projects/${post.id}`,
+    portfolioPath: `/portfolio/${post.studentId}`,
   });
 
   savedFeedbackId.value = post.id;
@@ -184,43 +328,43 @@ const toggleComments = (postId: string) => {
 const toggleRepost = async (post: FeedPost) => {
   try {
     if (repostedPosts[post.id]) {
-      await removeFeedRepost(post.id);
-      repostedPosts[post.id] = false;
-      post.repostCount = Math.max(0, post.repostCount - 1);
+      await feedService.removeRepost(post.id);
     } else {
-      await repostFeedPost(post.id);
-      repostedPosts[post.id] = true;
-      post.repostCount += 1;
+      await feedService.repostPost(post.id);
     }
+    await loadPosts();
   } catch {
-    error.value = "Erreur lors du repost";
+    error.value = "Impossible de mettre a jour le repost.";
   }
 };
 
 const toggleConnect = async (post: FeedPost) => {
+  if (!post.studentId || post.studentId === myStudentId.value) return;
   if (connectedPosts[post.id]) return;
 
   try {
-    await sendConnectionRequest(post.studentId);
+    await connexionService.createConnexion({
+      userId: post.studentId,
+      id_destinataire: post.studentId,
+      message: `Demande de connexion vers ${post.studentName}`,
+    });
     connectedPosts[post.id] = true;
-  } catch {
-    error.value = "Erreur lors de la demande de connexion";
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible d’envoyer la demande de connexion.";
   }
 };
 
 const togglePostLike = async (post: FeedPost) => {
   try {
     if (likedPosts[post.id]) {
-      await unlikeFeedPost(post.id);
-      likedPosts[post.id] = false;
-      post.likeCount = Math.max(0, post.likeCount - 1);
+      await feedService.unlikePost(post.id);
     } else {
-      await likeFeedPost(post.id);
-      likedPosts[post.id] = true;
-      post.likeCount += 1;
+      await feedService.likePost(post.id);
     }
+    await loadPosts();
   } catch {
-    error.value = "Erreur lors du like";
+    error.value = "Impossible de mettre a jour le j’aime.";
   }
 };
 
@@ -229,7 +373,7 @@ const toggleCommentLike = (comment: FeedComment) => {
   comment.likeCount += likedComments[comment.id] ? 1 : -1;
 };
 
-const toggleReply = (commentId: string) => {
+const toggleReply = (commentId: number) => {
   openReplyCommentId.value =
     openReplyCommentId.value === commentId ? null : commentId;
 };
@@ -239,12 +383,20 @@ const addComment = async (post: FeedPost) => {
   if (!text) return;
 
   try {
-    await addFeedComment(post.id, text);
+    await feedService.createComment(post.id, text);
+    post.comments.unshift({
+      id: Date.now(),
+      authorId: myStudentId.value || "current-user",
+      authorName: getCurrentUserName(),
+      initials: toInitials(getCurrentUserName()),
+      text,
+      time: "A l'instant",
+      likeCount: 0,
+      replies: [],
+    });
     commentDrafts[post.id] = "";
-    await loadFeed();
-    openCommentPostId.value = post.id;
   } catch {
-    error.value = "Erreur lors de l'ajout du commentaire";
+    error.value = "Impossible d’ajouter le commentaire.";
   }
 };
 
@@ -253,12 +405,12 @@ const addReply = (comment: FeedComment) => {
   if (!text) return;
 
   comment.replies.push({
-    id: String(Date.now()),
-    authorId: "current-user",
-    authorName: "Vous",
-    initials: "VO",
+    id: Date.now(),
+    authorId: myStudentId.value || "current-user",
+    authorName: getCurrentUserName(),
+    initials: toInitials(getCurrentUserName()),
     text,
-    time: "À l'instant",
+    time: "A l'instant",
     likeCount: 0,
     replies: [],
   });
@@ -278,37 +430,48 @@ function openEditPost(post: FeedPost) {
   showPostModal.value = true;
 }
 
-function deletePost(id: string) {
+async function deletePost(id: string) {
   if (!confirm("Supprimer ce post définitivement ?")) return;
-  posts.value = posts.value.filter((p) => p.id !== id);
+
+  try {
+    await feedService.deletePost(id);
+    posts.value = posts.value.filter((p) => p.id !== id);
+  } catch {
+    error.value = "Impossible de supprimer ce post.";
+  }
 }
 
-function handleSavePost(data: Record<string, any>) {
-  if (editingPost.value) {
-    const idx = posts.value.findIndex((p) => p.id === editingPost.value!.id);
-    if (idx !== -1) {
-      posts.value[idx] = { ...posts.value[idx], ...data };
+async function handleSavePost(data: Record<string, any>) {
+  const payload = {
+    contenu: JSON.stringify({
+      projectTitle: data.projectTitle,
+      description: data.description,
+      technologies: data.technologies,
+      github: data.github,
+      demo: data.demo,
+      collaboratorsNames: data.collaborators || [],
+    }),
+    imageFile: data.imageFile || undefined,
+  };
+
+  try {
+    if (editingPost.value) {
+      await feedService.updatePost(editingPost.value.id, payload);
+    } else {
+      await feedService.createPost(payload);
     }
-  } else {
-    posts.value.unshift({
-      id: `post-${Date.now()}`,
-      studentId:           myStudentId.value,
-      studentName:         "Khadija Bennani",
-      initials:            "KB",
-      school:              "ENSA Tanger · GINF",
-      time:                "À l'instant",
-      badges:              [],
-      repostCount:         0,
-      recommendationCount: 0,
-      likeCount:           0,
-      score:               80,
-      comments:            [],
-      ...data,
-    });
+
+    showPostModal.value = false;
+    editingPost.value = null;
+    await loadPosts();
+  } catch {
+    error.value = "Impossible d’enregistrer ce post.";
   }
-  showPostModal.value = false;
-  editingPost.value = null;
 }
+
+onMounted(() => {
+  loadPosts();
+});
 
 </script>
 
@@ -346,11 +509,11 @@ function handleSavePost(data: Record<string, any>) {
           </button>
         </div>
 
-        <div v-if="isLoading" class="feed-state">Chargement...</div>
-        <div v-else-if="error" class="feed-state feed-state-error">{{ error }}</div>
+        <div v-if="loading" class="feed-state">Chargement...</div>
+        <div v-else-if="error" class="feed-state feed-state--error">{{ error }}</div>
+        <div v-else-if="!visiblePosts.length" class="feed-state">Aucun post trouvé.</div>
 
-        <template v-else>
-        <article v-for="post in visiblePosts" :key="post.id" class="feed-card">
+        <article v-for="post in !loading && !error ? visiblePosts : []" :key="post.id" class="feed-card">
           <div v-if="post.repostedBy" class="repost-line">
             {{ post.repostedBy }} a reposté ce projet
           </div>
@@ -397,10 +560,15 @@ function handleSavePost(data: Record<string, any>) {
                     type="button"
                     class="connect-button"
                     :class="{ active: connectedPosts[post.id] }"
+                    :disabled="post.studentId === myStudentId || connectedPosts[post.id]"
                     @click="toggleConnect(post)"
                   >
                     {{
-                      connectedPosts[post.id] ? "Demande envoyée" : "Connecter"
+                      post.studentId === myStudentId
+                        ? "Mon profil"
+                        : connectedPosts[post.id]
+                          ? "Demande envoyée"
+                          : "Connecter"
                     }}
                   </button>
                   <button
@@ -581,7 +749,6 @@ function handleSavePost(data: Record<string, any>) {
             </div>
           </div>
         </article>
-        </template>
       </section>
     </main>
   </div>
@@ -923,13 +1090,13 @@ function handleSavePost(data: Record<string, any>) {
 .feed-state {
   background: white;
   border-radius: var(--radius-card);
+  padding: 20px;
   color: var(--text-gray);
   font-weight: 800;
-  padding: 28px;
-  text-align: center;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
 }
 
-.feed-state-error {
+.feed-state--error {
   color: var(--error);
 }
 

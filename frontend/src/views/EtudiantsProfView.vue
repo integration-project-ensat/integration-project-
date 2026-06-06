@@ -1,251 +1,200 @@
-﻿<script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { SlidersHorizontal } from "../lib/icons";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
-
-type RequestStatus = "En attente" | "Validée" | "Refusée" | "Aucun";
-type RequestType =
-  | "Projet"
-  | "Stage"
-  | "Attestation"
-  | "Lettre de recommandation"
-  | "Aucune demande";
+import profApi from "@/services/profApi";
 
 interface ProfStudent {
   id: string;
   initials: string;
   name: string;
+  email: string;
+  apogee: string;
   school: string;
   field: string;
   city: string;
   score: number;
   recommendations: number;
+  badges: string[];
+  source: string;
+  attachedAt: string;
+  profilePath: string;
   portfolioPath: string;
-  requestType: RequestType;
-  requestTitle: string;
-  requestDescription: string;
-  requestDate: string;
-  status: RequestStatus;
 }
 
 const router = useRouter();
 const sidebarOpen = ref(true);
-const selectedStudent = ref<ProfStudent | null>(null);
 const showFilters = ref(false);
-
-const professorScope = {
-  schools: ["ENSA", "FST"],
-  fields: ["GINF", "GSEA", "DevOps"],
-};
-
-const students = reactive<ProfStudent[]>([
-  {
-    id: "kb",
-    initials: "KB",
-    name: "Khadija Bennani",
-    school: "ENSA",
-    field: "GINF",
-    city: "Tanger",
-    score: 92,
-    recommendations: 540,
-    portfolioPath: "/projects/portfolio-web",
-    requestType: "Projet",
-    requestTitle: "Portfolio Web",
-    requestDescription: "Validation du projet final avec lien GitHub et démonstration.",
-    requestDate: "Aujourd'hui, 10:20",
-    status: "En attente",
-  },
-  {
-    id: "ye",
-    initials: "YE",
-    name: "Yassine El Amrani",
-    school: "ENSA",
-    field: "DevOps",
-    city: "Tanger",
-    score: 85,
-    recommendations: 310,
-    portfolioPath: "/projects/stage-pfe-devops",
-    requestType: "Stage",
-    requestTitle: "Stage PFE DevOps",
-    requestDescription: "Demande de validation du stage et des missions réalisées.",
-    requestDate: "Il y a 35 min",
-    status: "En attente",
-  },
-  {
-    id: "sa",
-    initials: "SA",
-    name: "Sara Alaoui",
-    school: "FST",
-    field: "GSEA",
-    city: "Fès",
-    score: 95,
-    recommendations: 680,
-    portfolioPath: "/projects/attestation-cloud",
-    requestType: "Attestation",
-    requestTitle: "Attestation de stage Cloud",
-    requestDescription: "Attestation demandée après validation du stage cloud.",
-    requestDate: "Hier, 16:45",
-    status: "Validée",
-  },
-  {
-    id: "al",
-    initials: "AL",
-    name: "Amine Lahlou",
-    school: "ENSA",
-    field: "GINF",
-    city: "Tanger",
-    score: 78,
-    recommendations: 190,
-    portfolioPath: "/projects/suivi-pfe",
-    requestType: "Projet",
-    requestTitle: "Plateforme de suivi PFE",
-    requestDescription: "Validation de la version finale de la plateforme.",
-    requestDate: "Aujourd'hui, 09:05",
-    status: "En attente",
-  },
-  {
-    id: "nt",
-    initials: "NT",
-    name: "Nora Tazi",
-    school: "ENSA",
-    field: "GINF",
-    city: "Tanger",
-    score: 88,
-    recommendations: 260,
-    portfolioPath: "/projects/mobile-ensa",
-    requestType: "Projet",
-    requestTitle: "Application Mobile ENSA",
-    requestDescription: "Demande refusée à cause de documents manquants.",
-    requestDate: "Il y a 3 j",
-    status: "Refusée",
-  },
-  {
-    id: "mb",
-    initials: "MB",
-    name: "Mehdi Berrada",
-    school: "ENSA",
-    field: "GINF",
-    city: "Tanger",
-    score: 81,
-    recommendations: 140,
-    portfolioPath: "/projects/cybersecurity-lab",
-    requestType: "Lettre de recommandation",
-    requestTitle: "Recommandation concours cybersécurité",
-    requestDescription: "Demande de lettre pour un concours technique.",
-    requestDate: "Il y a 3 j",
-    status: "En attente",
-  },
-  {
-    id: "rh",
-    initials: "RH",
-    name: "Rania Haddad",
-    school: "FST",
-    field: "GSEA",
-    city: "Fès",
-    score: 74,
-    recommendations: 95,
-    portfolioPath: "/projects/embedded-sensors",
-    requestType: "Aucune demande",
-    requestTitle: "Aucune demande active",
-    requestDescription: "Aucune demande de validation pour le moment.",
-    requestDate: "-",
-    status: "Aucun",
-  },
-]);
+const loading = ref(false);
+const error = ref("");
+const success = ref("");
+const students = ref<ProfStudent[]>([]);
+const showAddModal = ref(false);
+const apogeeInput = ref("");
+const addingStudent = ref(false);
+const importingCsv = ref(false);
+const importSummary = ref<null | {
+  totalRows: number;
+  added: ProfStudent[];
+  alreadyLinked: string[];
+  missing: string[];
+}>(null);
 
 const schoolFilter = ref("Toutes");
 const fieldFilter = ref("Toutes");
 const cityFilter = ref("Toutes");
-const statusFilter = ref("Toutes");
+const sourceFilter = ref("Toutes");
 
-const scopedStudents = computed(() =>
-  students.filter(
-    (student) =>
-      professorScope.schools.includes(student.school) &&
-      professorScope.fields.includes(student.field),
-  ),
-);
+const sourceLabel = (value: string) => (value === "CSV" ? "CSV" : "Manuel");
+const formatDate = (value: string) =>
+  value ? new Date(value).toLocaleDateString("fr-FR") : "—";
+
+const loadStudents = async () => {
+  loading.value = true;
+  error.value = "";
+
+  try {
+    const response = await profApi.getAttachedStudents();
+    students.value = response.data?.data || [];
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de charger vos étudiants.";
+  } finally {
+    loading.value = false;
+  }
+};
 
 const schools = computed(() => [
   "Toutes",
-  ...new Set(scopedStudents.value.map((student) => student.school)),
+  ...new Set(students.value.map((student) => student.school).filter(Boolean)),
 ]);
 const fields = computed(() => [
   "Toutes",
-  ...new Set(scopedStudents.value.map((student) => student.field)),
+  ...new Set(students.value.map((student) => student.field).filter(Boolean)),
 ]);
 const cities = computed(() => [
   "Toutes",
-  ...new Set(scopedStudents.value.map((student) => student.city)),
+  ...new Set(students.value.map((student) => student.city).filter(Boolean)),
 ]);
-const statuses = ["Toutes", "En attente", "Validées", "Refusées", "Aucune demande"];
+const sources = ["Toutes", "Manuel", "CSV"];
 
 const filteredStudents = computed(() =>
-  scopedStudents.value.filter((student) => {
+  students.value.filter((student) => {
     const matchesSchool =
       schoolFilter.value === "Toutes" || student.school === schoolFilter.value;
     const matchesField =
       fieldFilter.value === "Toutes" || student.field === fieldFilter.value;
     const matchesCity =
       cityFilter.value === "Toutes" || student.city === cityFilter.value;
-    const matchesStatus =
-      statusFilter.value === "Toutes" ||
-      (statusFilter.value === "Validées" && student.status === "Validée") ||
-      (statusFilter.value === "Refusées" && student.status === "Refusée") ||
-      (statusFilter.value === "Aucune demande" && student.status === "Aucun") ||
-      student.status === statusFilter.value;
+    const matchesSource =
+      sourceFilter.value === "Toutes" ||
+      sourceLabel(student.source) === sourceFilter.value;
 
-    return matchesSchool && matchesField && matchesCity && matchesStatus;
+    return matchesSchool && matchesField && matchesCity && matchesSource;
   }),
 );
 
 const stats = computed(() => ({
-  total: scopedStudents.value.length,
-  pending: scopedStudents.value.filter((student) => student.status === "En attente")
-    .length,
-  accepted: scopedStudents.value.filter((student) => student.status === "Validée")
-    .length,
-  refused: scopedStudents.value.filter((student) => student.status === "Refusée")
-    .length,
+  total: students.value.length,
+  manual: students.value.filter((student) => student.source !== "CSV").length,
+  csv: students.value.filter((student) => student.source === "CSV").length,
+  averageScore: students.value.length
+    ? Math.round(
+        students.value.reduce((sum, student) => sum + student.score, 0) /
+          students.value.length,
+      )
+    : 0,
 }));
 
 const statCards = computed(() => [
   { label: "Total étudiants", value: stats.value.total },
-  { label: "Demandes en attente", value: stats.value.pending },
-  { label: "Validations acceptées", value: stats.value.accepted },
-  { label: "Validations refusées", value: stats.value.refused },
+  { label: "Ajouts manuels", value: stats.value.manual },
+  { label: "Ajouts CSV", value: stats.value.csv },
+  { label: "Score moyen", value: `${stats.value.averageScore}+` },
 ]);
 
-const statusClass = (status: RequestStatus) => ({
-  "is-pending": status === "En attente",
-  "is-valid": status === "Validée",
-  "is-refused": status === "Refusée",
-  "is-empty": status === "Aucun",
-});
-
-const updateStatus = (student: ProfStudent, status: "Validée" | "Refusée") => {
-  student.status = status;
-  if (selectedStudent.value?.id === student.id) selectedStudent.value.status = status;
+const clearFlash = () => {
+  success.value = "";
+  error.value = "";
 };
 
 const openStudentProfile = (student: ProfStudent) => {
-  router.push(`/profile/student/${student.id}`);
+  router.push(student.profilePath);
 };
 
 const openPortfolio = (student: ProfStudent) => {
   router.push(student.portfolioPath);
 };
 
-const studentBadges = (student: ProfStudent) => {
-  const field = student.field.toLowerCase();
-  if (field.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (field.includes("gsea")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (field.includes("ginf")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
-  return ["🌐 Web Developer"];
+const addStudentByApogee = async () => {
+  const numeroEtudiant = apogeeInput.value.trim();
+  if (!numeroEtudiant) return;
+
+  clearFlash();
+  addingStudent.value = true;
+
+  try {
+    const response = await profApi.attachStudent({
+      numero_etudiant: numeroEtudiant,
+    });
+    const attachedStudent = response.data?.data;
+
+    if (attachedStudent && !students.value.some((student) => student.id === attachedStudent.id)) {
+      students.value.unshift(attachedStudent);
+    }
+
+    success.value = response.data?.created
+      ? "Étudiant ajouté à votre liste."
+      : "Cet étudiant est déjà dans votre liste.";
+    apogeeInput.value = "";
+    showAddModal.value = false;
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible d'ajouter cet étudiant.";
+  } finally {
+    addingStudent.value = false;
+  }
 };
+
+const handleCsvSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  clearFlash();
+  importingCsv.value = true;
+
+  try {
+    const response = await profApi.importStudentsCsv(file);
+    importSummary.value = response.data?.data || null;
+    await loadStudents();
+    success.value = "Import CSV terminé.";
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible d'importer le fichier CSV.";
+  } finally {
+    importingCsv.value = false;
+    input.value = "";
+  }
+};
+
+const removeStudent = async (student: ProfStudent) => {
+  clearFlash();
+
+  try {
+    await profApi.detachStudent(student.id);
+    students.value = students.value.filter((item) => item.id !== student.id);
+    success.value = `${student.name} a été retiré de votre liste.`;
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de retirer cet étudiant.";
+  }
+};
+
+onMounted(loadStudents);
 </script>
 
 <template>
@@ -259,15 +208,40 @@ const studentBadges = (student: ProfStudent) => {
           <div>
             <p>Espace professeur</p>
             <h1>Mes étudiants</h1>
-            <span>Liste des étudiants liés à vos filières et écoles.</span>
+            <span>Ajoutez des étudiants depuis leur profil ou via un fichier CSV d'APOGEE.</span>
+          </div>
+
+          <div class="heading-actions">
+            <button type="button" class="primary-btn" @click="showAddModal = true">
+              Ajouter un étudiant
+            </button>
+            <label class="outline-btn upload-btn">
+              <input type="file" accept=".csv,text/csv" @change="handleCsvSelected" />
+              {{ importingCsv ? "Import..." : "Attacher fichier CSV" }}
+            </label>
           </div>
         </div>
+
+        <p v-if="success" class="flash flash-success">{{ success }}</p>
+        <p v-if="error" class="flash flash-error">{{ error }}</p>
 
         <div class="stats-grid">
           <article v-for="card in statCards" :key="card.label" class="stat-card">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
           </article>
+        </div>
+
+        <div v-if="importSummary" class="import-card">
+          <h3>Résultat import CSV</h3>
+          <p>
+            {{ importSummary.added.length }} ajoutés ·
+            {{ importSummary.alreadyLinked.length }} déjà liés ·
+            {{ importSummary.missing.length }} introuvables
+          </p>
+          <p v-if="importSummary.missing.length" class="import-note">
+            Introuvables : {{ importSummary.missing.join(", ") }}
+          </p>
         </div>
 
         <div class="students-table-card">
@@ -290,7 +264,7 @@ const studentBadges = (student: ProfStudent) => {
 
           <div v-if="showFilters" class="filters-panel">
             <label>
-              École / Faculté
+              Année
               <select v-model="schoolFilter">
                 <option v-for="school in schools" :key="school">{{ school }}</option>
               </select>
@@ -308,71 +282,56 @@ const studentBadges = (student: ProfStudent) => {
               </select>
             </label>
             <label>
-              Statut demande
-              <select v-model="statusFilter">
-                <option v-for="status in statuses" :key="status">{{ status }}</option>
+              Source
+              <select v-model="sourceFilter">
+                <option v-for="source in sources" :key="source">{{ source }}</option>
               </select>
             </label>
           </div>
 
-          <div class="table-wrap">
+          <div v-if="loading" class="table-empty">Chargement des étudiants...</div>
+          <div v-else-if="!filteredStudents.length" class="table-empty">
+            Aucun étudiant dans votre liste pour le moment.
+          </div>
+          <div v-else class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>Étudiant</th>
-                  <th>École / Faculté</th>
+                  <th>APOGEE</th>
                   <th>Filière</th>
                   <th>Ville</th>
                   <th>Score</th>
                   <th>Recommandations</th>
-                  <th>Portfolio</th>
-                  <th>Demande</th>
-                  <th>Statut</th>
+                  <th>Source</th>
+                  <th>Ajouté le</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="student in filteredStudents" :key="student.id">
                   <td>
-                    <button
-                      type="button"
-                      class="profile-cell"
-                      @click="openStudentProfile(student)"
-                    >
+                    <button type="button" class="profile-cell" @click="openStudentProfile(student)">
                       <span>{{ student.initials }}</span>
                       <div>
                         <strong>{{ student.name }}</strong>
-                        <SkillBadges :badges="studentBadges(student)" compact />
+                        <small>{{ student.email }}</small>
+                        <SkillBadges :badges="student.badges" compact />
                       </div>
                     </button>
                   </td>
-                  <td>{{ student.school }}</td>
+                  <td>{{ student.apogee || "—" }}</td>
                   <td>{{ student.field }}</td>
                   <td>{{ student.city }}</td>
                   <td><span class="score-pill">{{ student.score }}+</span></td>
-                  <td>{{ student.recommendations }}+</td>
-                  <td>
-                    <button type="button" class="table-btn" @click="openPortfolio(student)">
-                      Portfolio
-                    </button>
-                  </td>
-                  <td>{{ student.requestType }}</td>
-                  <td>
-                    <span class="status-badge" :class="statusClass(student.status)">
-                      {{ student.status }}
-                    </span>
-                  </td>
+                  <td>{{ student.recommendations }}</td>
+                  <td><span class="source-pill">{{ sourceLabel(student.source) }}</span></td>
+                  <td>{{ formatDate(student.attachedAt) }}</td>
                   <td>
                     <div class="action-row">
-                      <button type="button" @click="openPortfolio(student)">
-                        Voir portfolio
-                      </button>
-                      <button
-                        type="button"
-                        :disabled="student.status === 'Aucun'"
-                        @click="selectedStudent = student"
-                      >
-                        Voir demande
+                      <button type="button" @click="openPortfolio(student)">Portfolio</button>
+                      <button type="button" class="danger-btn" @click="removeStudent(student)">
+                        Retirer
                       </button>
                     </div>
                   </td>
@@ -384,57 +343,21 @@ const studentBadges = (student: ProfStudent) => {
       </section>
     </main>
 
-    <div v-if="selectedStudent" class="modal-backdrop" @click.self="selectedStudent = null">
+    <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
       <section class="details-modal">
-        <button type="button" class="modal-close" @click="selectedStudent = null">
-          ×
-        </button>
-        <p>Détails de la demande</p>
-        <h2>{{ selectedStudent.name }}</h2>
-
-        <div class="details-grid">
-          <article>
-            <span>Type</span>
-            <strong>{{ selectedStudent.requestType }}</strong>
-          </article>
-          <article>
-            <span>Date</span>
-            <strong>{{ selectedStudent.requestDate }}</strong>
-          </article>
-          <article>
-            <span>Statut</span>
-            <strong>{{ selectedStudent.status }}</strong>
-          </article>
-        </div>
-
+        <button type="button" class="modal-close" @click="showAddModal = false">×</button>
+        <p>Ajout manuel</p>
+        <h2>Ajouter un étudiant</h2>
         <div class="details-block">
-          <span>Titre</span>
-          <strong>{{ selectedStudent.requestTitle }}</strong>
+          <span>Numéro APOGEE</span>
+          <input v-model="apogeeInput" type="text" placeholder="Ex: ETU001" />
         </div>
-        <div class="details-block">
-          <span>Description</span>
-          <strong>{{ selectedStudent.requestDescription }}</strong>
-        </div>
-
         <div class="modal-actions">
-          <button type="button" class="outline-btn" @click="selectedStudent = null">
+          <button type="button" class="outline-btn" @click="showAddModal = false">
             Fermer
           </button>
-          <button
-            v-if="selectedStudent.status === 'En attente'"
-            type="button"
-            class="primary-btn"
-            @click="updateStatus(selectedStudent, 'Validée')"
-          >
-            Valider
-          </button>
-          <button
-            v-if="selectedStudent.status === 'En attente'"
-            type="button"
-            class="danger-btn"
-            @click="updateStatus(selectedStudent, 'Refusée')"
-          >
-            Refuser
+          <button type="button" class="primary-btn" :disabled="addingStudent" @click="addStudentByApogee">
+            {{ addingStudent ? "Ajout..." : "Ajouter" }}
           </button>
         </div>
       </section>
@@ -471,7 +394,8 @@ const studentBadges = (student: ProfStudent) => {
 .page-heading,
 .stat-card,
 .students-table-card,
-.details-modal {
+.details-modal,
+.import-card {
   background: white;
   border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: var(--radius-card);
@@ -480,14 +404,17 @@ const studentBadges = (student: ProfStudent) => {
 
 .page-heading {
   padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .page-heading p,
 .page-heading span,
 .stat-card span,
 .details-modal p,
-.details-block span,
-.details-grid span {
+.details-block span {
   color: var(--text-gray);
   font-weight: 800;
 }
@@ -496,6 +423,60 @@ const studentBadges = (student: ProfStudent) => {
   color: var(--text-dark);
   font-size: 34px;
   font-weight: 900;
+}
+
+.heading-actions,
+.modal-actions,
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primary-btn,
+.outline-btn,
+.filter-toggle,
+.action-row button {
+  border-radius: 100px 180px 0 100px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-btn {
+  border: 1px solid var(--purple);
+  background: var(--purple);
+  color: white;
+}
+
+.outline-btn,
+.filter-toggle,
+.action-row button {
+  border: 1px solid rgba(17, 24, 39, 0.35);
+  background: white;
+  color: var(--navy-mid);
+}
+
+.upload-btn input {
+  display: none;
+}
+
+.flash {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.flash-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.flash-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
 }
 
 .stats-grid {
@@ -514,6 +495,22 @@ const studentBadges = (student: ProfStudent) => {
   color: var(--purple);
   font-size: 32px;
   font-weight: 900;
+}
+
+.import-card {
+  padding: 18px;
+}
+
+.import-card h3 {
+  color: var(--text-dark);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.import-note {
+  margin-top: 8px;
+  color: var(--text-gray);
+  font-weight: 700;
 }
 
 .students-table-card {
@@ -545,12 +542,6 @@ const studentBadges = (student: ProfStudent) => {
   align-items: center;
   gap: 8px;
   height: 36px;
-  border-radius: 100px 180px 0px 100px;
-  border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
-  color: var(--navy-mid);
-  padding: 0 14px;
-  font-weight: 900;
 }
 
 .filter-toggle.active {
@@ -581,9 +572,10 @@ const studentBadges = (student: ProfStudent) => {
   font-weight: 900;
 }
 
-.filters-panel select {
-  height: 36px;
-  border: 0;
+.filters-panel select,
+.details-block input {
+  height: 40px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
   border-radius: var(--radius-pill);
   background: white;
   color: var(--text-dark);
@@ -593,6 +585,12 @@ const studentBadges = (student: ProfStudent) => {
 
 .table-wrap {
   overflow-x: auto;
+}
+
+.table-empty {
+  padding: 32px 18px;
+  color: var(--text-gray);
+  font-weight: 800;
 }
 
 table {
@@ -624,6 +622,7 @@ th {
   background: transparent;
   color: var(--text-dark);
   font-weight: 900;
+  text-align: left;
 }
 
 .profile-cell span {
@@ -637,8 +636,14 @@ th {
   font-size: 12px;
 }
 
+.profile-cell small {
+  display: block;
+  margin: 2px 0 6px;
+  color: var(--text-gray);
+}
+
 .score-pill,
-.status-badge {
+.source-pill {
   border-radius: var(--radius-pill);
   padding: 7px 12px;
 }
@@ -648,83 +653,14 @@ th {
   color: var(--purple);
 }
 
-.status-badge.is-pending {
-  background: rgba(245, 158, 11, 0.12);
-  color: #b45309;
-}
-
-.status-badge.is-valid {
-  background: rgba(16, 185, 129, 0.12);
-  color: #047857;
-}
-
-.status-badge.is-refused {
-  background: rgba(239, 68, 68, 0.12);
-  color: var(--error);
-}
-
-.status-badge.is-empty {
-  background: var(--input-bg);
-  color: var(--text-gray);
-}
-
-.table-btn,
-.primary-btn,
-.outline-btn,
-.danger-btn,
-.action-row button {
-  border-radius: 100px 180px 0 100px;
-  border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
-  color: var(--navy-mid);
-  padding: 8px 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.primary-btn {
-  border: 1px solid var(--purple);
-  background: var(--purple);
-  color: white;
-}
-
-.outline-btn {
-  background: white;
-  color: var(--text-navy);
+.source-pill {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
 }
 
 .danger-btn {
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  background: rgba(239, 68, 68, 0.08);
-  color: var(--error);
-}
-
-.primary-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.action-row {
-  display: flex;
-  gap: 8px;
-}
-
-.action-row button:hover,
-.table-btn:hover,
-.filter-toggle:hover {
-  background: rgba(79, 70, 229, 0.12);
-}
-
-.action-row button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.modal-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #dc2626 !important;
 }
 
 .modal-backdrop {
@@ -739,7 +675,7 @@ th {
 
 .details-modal {
   position: relative;
-  width: min(760px, 100%);
+  width: min(520px, 100%);
   padding: 30px;
 }
 
@@ -763,47 +699,24 @@ th {
   font-size: 34px;
 }
 
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.details-grid article,
 .details-block {
+  display: grid;
+  gap: 8px;
   border: 1px solid rgba(122, 127, 136, 0.22);
   border-radius: var(--radius-md);
   background: rgba(248, 250, 252, 0.8);
   padding: 16px;
-  display: grid;
-  gap: 8px;
 }
 
-.details-block {
-  margin-top: 14px;
-}
-
-.modal-actions {
-  margin-top: 20px;
-}
-
-@media (max-width: 1100px) {
-  .students-shell.shifted {
-    padding-left: 14px;
-  }
-
+@media (max-width: 960px) {
+  .page-heading,
   .stats-grid,
   .filters-panel {
-    grid-template-columns: repeat(2, minmax(160px, 1fr));
-  }
-}
-
-@media (max-width: 680px) {
-  .stats-grid,
-  .filters-card,
-  .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .page-heading {
+    flex-direction: column;
   }
 }
 </style>
-

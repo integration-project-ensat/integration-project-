@@ -4,7 +4,7 @@ const { ApiResponse } = require('../utils/apiResponse')
 const postController = {
   async getAll(req, res) {
     try {
-      const posts = await postService.findAll(req.query)
+      const posts = await postService.findAll(req.utilisateur, req.query)
       return res.json(ApiResponse.success(posts, 'Posts recuperes'))
     } catch (e) {
       return res.status(500).json(ApiResponse.serverError())
@@ -13,7 +13,7 @@ const postController = {
 
   async getOne(req, res) {
     try {
-      const post = await postService.findById(req.params.id)
+      const post = await postService.findById(req.params.id, req.utilisateur)
       if (!post) return res.status(404).json(ApiResponse.notFound('Post'))
       return res.json(ApiResponse.success(post))
     } catch (e) {

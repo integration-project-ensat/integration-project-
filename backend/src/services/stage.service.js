@@ -1,4 +1,5 @@
 const { prisma, toBigInt } = require('../models/prisma')
+const notificationService = require('./notification.service')
 
 const stageService = {
   async findAll(filters = {}) {
@@ -29,7 +30,7 @@ const stageService = {
 
   async create(data, etudiantId) {
     const { entreprise, poste, duree_semaines, missions, technologies, date_debut, date_fin, id_encadrant } = data
-    return prisma.stage.create({
+    const stage = await prisma.stage.create({
       data: {
         entreprise,
         poste,
@@ -43,6 +44,20 @@ const stageService = {
         statut: 'EN_ATTENTE'
       }
     })
+
+    if (id_encadrant) {
+      try {
+        await notificationService.creerNotification({
+          utilisateurId: id_encadrant,
+          type: 'SOUMISSION_STAGE',
+          message: `Un étudiant vous a soumis un stage "${entreprise || 'Stage'}" pour validation.`,
+          cibleId: stage.id_stage,
+          cibleType: 'STAGE',
+        })
+      } catch (e) {}
+    }
+
+    return stage
   },
 
   async update(id, data, etudiantId) {
@@ -86,25 +101,50 @@ const stageService = {
   async changerStatut(id, statut, validateurId, { commentaire_prof, motif_refus } = {}) {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
+    if (stage.id_encadrant && stage.id_encadrant !== BigInt(validateurId)) {
+      throw { statusCode: 403, message: 'Accès refusé' }
+    }
 
-    await prisma.elementValidable.upsert({
-      where: { id_element: stage.id_stage },
-      update: {
-        statut,
-        validateur_id: BigInt(validateurId),
-        date_validation: new Date(),
-        motif_refus: motif_refus ?? null
-      },
-      create: {
-        type: 'STAGE',
-        reference_id: stage.id_stage,
-        statut,
-        validateur_id: BigInt(validateurId),
-        date_soumission: new Date(),
-        date_validation: new Date(),
-        motif_refus: motif_refus ?? null
-      }
+    const existingElement = await prisma.elementValidable.findFirst({
+      where: { type: 'STAGE', reference_id: stage.id_stage }
     })
+
+    if (existingElement) {
+      await prisma.elementValidable.update({
+        where: { id_element: existingElement.id_element },
+        data: {
+          statut,
+          validateur_id: BigInt(validateurId),
+          date_validation: new Date(),
+          motif_refus: motif_refus ?? null
+        }
+      })
+    } else {
+      await prisma.elementValidable.create({
+        data: {
+          type: 'STAGE',
+          reference_id: stage.id_stage,
+          statut,
+          validateur_id: BigInt(validateurId),
+          date_soumission: new Date(),
+          date_validation: new Date(),
+          motif_refus: motif_refus ?? null
+        }
+      })
+    }
+
+    try {
+      await notificationService.creerNotification({
+        utilisateurId: stage.id_etudiant,
+        type: statut === 'VALIDE' ? 'VALIDATION_STAGE' : 'REFUS_STAGE',
+        message:
+          statut === 'VALIDE'
+            ? `Votre stage "${stage.entreprise || 'Stage'}" a été validé.`
+            : `Votre stage "${stage.entreprise || 'Stage'}" a été refusé.${motif_refus ? ` Motif: ${motif_refus}` : ''}`,
+        cibleId: stage.id_stage,
+        cibleType: 'STAGE',
+      })
+    } catch (e) {}
 
     return prisma.stage.update({
       where: { id_stage: BigInt(id) },
