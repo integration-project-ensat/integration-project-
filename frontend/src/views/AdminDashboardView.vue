@@ -98,7 +98,7 @@
         <ActivityTable :activities="plateformeActivities" />
 
         <!-- Historique des connexions -->
-        <div class="conn-card">
+        <div id="connexion-history" class="conn-card">
           <div class="conn-head">
             <div>
               <h3 class="section-title">Historique des connexions</h3>
@@ -256,9 +256,7 @@ const exportConnCSV = () => {
   a.click()
   URL.revokeObjectURL(url)
 }
-
-const mapDashboardToUI = (payload) => {
-  const d = payload?.data
+const mapDashboardToUI = (d) => {
   if (!d) return
 
   if (d.stats) {
@@ -271,21 +269,43 @@ const mapDashboardToUI = (payload) => {
   }
 
   if (d.croissance) {
-    const insRaw = (d.croissance.inscriptions || []).slice(0, 6).map((x) => Number(x.valeur ?? x.value ?? 0))
-    const porRaw = (d.croissance.portfolios || []).slice(0, 6).map((x) => Number(x.valeur ?? x.value ?? 0))
+    let insRaw = (d.croissance.inscriptions || [])
+  .slice(0, 6)
+  .map((x) => Number(x.valeur ?? x.value ?? 0))
 
+while (insRaw.length < 6) {
+  insRaw.unshift(0)
+}
+    let porRaw = (d.croissance.portfolios || [])
+  .slice(0, 6)
+  .map((x) => Number(x.valeur ?? x.value ?? 0))
+
+while (porRaw.length < 6) {
+  porRaw.unshift(0)
+}
+
+    if (insRaw.length === 1) {
+  insRaw.unshift(0)
+}
+
+if (porRaw.length === 1) {
+  porRaw.unshift(0)
+}
     const max = Math.max(1, ...insRaw, ...porRaw)
     const norm = (arr) => {
-      const out = new Array(6).fill(0)
-      for (let i = 0; i < Math.min(6, arr.length); i++) out[i] = Math.round((arr[i] / max) * 180)
-      return out
-    }
+  const out = new Array(6).fill(180)
+
+  for (let i = 0; i < Math.min(6, arr.length); i++) {
+    out[i] = 180 - Math.round((arr[i] / max) * 180)
+  }
+
+  return out
+}
 
     blueRaw.value = norm(insRaw)
     cyanRaw.value = norm(porRaw)
 
-    const moisLabels = (d.croissance.inscriptions || []).slice(0, 6).map((x) => x.mois).filter(Boolean)
-    if (moisLabels.length === 6) months.value = moisLabels
+    months.value = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun']
   }
 
   if (Array.isArray(d.repartitionFilieres)) {
@@ -313,43 +333,89 @@ const mapDashboardToUI = (payload) => {
   }
 
   if (Array.isArray(d.activiteRecente)) {
-    // Backend: [{id, utilisateur:{nom_complet,email,photo}, action, date, statut}]
-    connLogs.value = d.activiteRecente.map((log, idx) => {
-      const u = log.utilisateur || {}
-      const uiStatus = String(log.statut || '').toLowerCase() // 'complete' | 'annule'
 
-      const status = uiStatus === 'complete' ? 'SUCCESS' : uiStatus === 'annule' ? 'ERREUR' : 'SUCCESS'
+  connLogs.value = d.activiteRecente.map((log, idx) => {
 
-      return {
-        id: log.id ?? idx,
-        userName: u.nom_complet || u.email || 'Inconnu',
-        userInitials: (u.nom_complet
-          ? u.nom_complet.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('')
+    const u = log.utilisateur || {}
+
+    const uiStatus =
+      String(log.statut || '').toLowerCase()
+
+    const status =
+      uiStatus === 'complete'
+        ? 'SUCCESS'
+        : uiStatus === 'annule'
+          ? 'ERREUR'
+          : 'SUCCESS'
+
+    return {
+
+      id: log.id ?? idx,
+
+      userName:
+        u.nom_complet ||
+        u.email ||
+        'Inconnu',
+
+      userInitials: (
+        u.nom_complet
+          ? u.nom_complet
+              .split(' ')
+              .filter(Boolean)
+              .slice(0, 2)
+              .map(w => w[0])
+              .join('')
           : '??'
-        ).toUpperCase(),
-        userRole: log.action || 'Activité',
-        avatarColor: '#c7d2fe',
-        ip: '—',
-        agent: '—',
-        datetime: log.date ? String(log.date).replace('T', ' ').slice(0, 16) : '—',
-        status,
-        suspect: false,
-      }
-    })
-  }
+      ).toUpperCase(),
+
+      userRole: log.action || 'Activité',
+
+      avatarColor: '#c7d2fe',
+
+      ip: log.adresse_ip || '—',
+
+      agent: log.user_agent || '—',
+
+      datetime: log.date
+        ? String(log.date)
+            .replace('T', ' ')
+            .slice(0, 16)
+        : '—',
+
+      status,
+
+      suspect: false
+    }
+  })
+}
 
   if (Array.isArray(d.activitesPlateforme)) {
     plateformeActivities.value = d.activitesPlateforme.map((act) => {
       const u = act.utilisateur || {}
-      return {
-        id: act.id,
-        name: u.nom_complet || u.email || 'Inconnu',
-        email: u.email || '',
-        action: act.action,
-        date: act.date ? new Date(act.date).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—',
-        status: act.statut || 'completed',
-        avatarColor: '#c7d2fe'
-      }
+      const status =
+  String(act.statut).toLowerCase() === 'complete'
+    ? 'completed'
+    : String(act.statut).toLowerCase() === 'annule'
+      ? 'cancelled'
+      : 'pending'
+
+return {
+  id: act.id,
+  name: u.nom_complet || u.email || 'Inconnu',
+  email: u.email || '',
+  action: act.action,
+  date: act.date
+    ? new Date(act.date).toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : '—',
+  status, // ← utiliser la variable
+  avatarColor: '#c7d2fe'
+}
     })
   }
 }

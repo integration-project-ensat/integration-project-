@@ -334,6 +334,8 @@ if (user.auth_provider === 'GOOGLE') {
   });
 // Génération du token JWT et envoi de la réponse avec les données de l'utilisateur (sans le mot de passe)
   const token = generateToken(user);
+  console.log('LOGIN REUSSI POUR :', user.email, user.role);
+  
   await logConnexion({
     type: TypeEvenement.LOGIN_REUSSI,
     req,
@@ -356,7 +358,7 @@ const googleCallback = asyncHandler(async (req, res) => {
   if (!email) {
     return res.status(400).json({
       success: false,
-      message: 'Google n’a pas fourni d’email'
+      message: "Google n’a pas fourni d’email"
     });
   }
 
@@ -384,6 +386,12 @@ const googleCallback = asyncHandler(async (req, res) => {
       where: { id_utilisateur: existingUser.id_utilisateur },
       data: { derniere_connexion: new Date() }
     });
+
+    await logConnexion({
+    type: TypeEvenement.LOGIN_REUSSI,
+    req,
+    utilisateur: existingUser
+  });
 
     const token = generateToken(existingUser);
 
@@ -553,6 +561,12 @@ const completeGoogleSignup = asyncHandler(async (req, res) => {
     administrateur: true,
     profil: true
   }
+});
+
+await logConnexion({
+  type: TypeEvenement.LOGIN_REUSSI,
+  req,
+  utilisateur: fullUser
 });
 
 const finalToken = generateToken(fullUser);

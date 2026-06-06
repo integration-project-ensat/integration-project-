@@ -6,11 +6,14 @@
         <p class="section-sub">Dernières actions et soumissions sur la plateforme</p>
       </div>
       <div class="header-actions">
-        <button class="btn-outline">Voir tout</button>
-        <button class="btn-outline icon-btn">
-          <Clock :size="14" />
-          Historique
-        </button>
+        <button class="btn-outline" @click="showAllActivities = !showAllActivities">
+  {{ showAllActivities ? 'Réduire' : 'Voir tout' }}
+</button>
+
+<button class="btn-outline" @click="goToHistory">
+  <Clock :size="14" />
+  Historique
+</button>
       </div>
     </div>
  
@@ -25,7 +28,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in activities" :key="item.id" class="activity-row">
+        <tr v-for="item in displayedActivities" :key="item.id" class="activity-row">
           <td>
             <div class="user-cell">
               <div class="avatar" :style="{ background: item.avatarColor }">
@@ -54,15 +57,30 @@
 </template>
  
 <script setup>
+import { ref, computed } from 'vue'
 import { Clock, MoreHorizontal } from 'lucide-vue-next'
 import StatusBadge from './StatusBadge.vue'
- 
-defineProps({
+
+const props = defineProps({
   activities: {
     type: Array,
     default: () => []
   }
 })
+
+const showAllActivities = ref(false)
+
+const displayedActivities = computed(() =>
+  showAllActivities.value
+    ? props.activities
+    : props.activities.slice(0, 5)
+)
+
+const goToHistory = () => {
+  document
+    .getElementById('connexion-history')
+    ?.scrollIntoView({ behavior: 'smooth' })
+}
 
 const initials = (name) =>
   name

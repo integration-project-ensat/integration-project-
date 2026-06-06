@@ -66,6 +66,12 @@ async function logConnexion({
     
       const email = emailTente ?? utilisateur?.email ?? null;
 
+      console.log('CREATION JOURNAL', {
+  type,
+  utilisateur: utilisateur?.email,
+  role: utilisateur?.role
+});
+
     await prisma.journalConnexion.create({
       data: {
         action: type,
@@ -78,6 +84,7 @@ async function logConnexion({
         user_agent: userAgent,
       },
     });
+    console.log('JOURNAL OK');
   } catch (err) {
     // Ne jamais bloquer la réponse si le log échoue
     console.error('[JournalService] Échec enregistrement :', err.message);

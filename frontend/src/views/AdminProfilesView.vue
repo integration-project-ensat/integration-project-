@@ -473,7 +473,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="a in adminList" :key="a.id" class="admin-row">
+                <tr v-for="a in adminList" :key="a.id_utilisateur" class="admin-row">
                   <td>
                     <div class="student-cell">
                       <div class="avatar" :style="{ background: a.color }">{{ initials(a.nom + ' ' + a.prenom) }}</div>
@@ -485,7 +485,7 @@
                   <td class="date-cell">{{ a.createdAt }}</td>
                   <td>
                     <button
-  v-if="a.niveau_acces !== 'SUPER_ADMIN'"
+  v-if="canDeleteAdmin(a)"
   class="btn-del"
   @click="removeAdmin(a)"
   title="Supprimer"
@@ -765,6 +765,17 @@ const rejectProfessionnel = async (pro) => {
 const avatarColors = avatarColorsForUI
 const niveauLabel  = { standard: 'Standard', moderateur: 'Modérateur', super_admin: 'Super Admin' }
 
+const normalizeAdminLevel = (niveau) =>
+  String(niveau || 'STANDARD').toLowerCase()
+
+const formatDate = (value) =>
+  value
+    ? new Date(value).toLocaleDateString('fr-FR')
+    : '—'
+
+const canDeleteAdmin = (admin) =>
+  !admin.is_current_user && admin.niveau_acces !== 'SUPER_ADMIN'
+
 const newAdmin = ref({ nom: '', prenom: '', email: '', password: '', niveau: 'standard' })
 const showPwd      = ref(false)
 const adminCreated = ref(false)
@@ -772,7 +783,12 @@ const adminList = ref([])
 
 const loadAdmins = async () => {
   const { data } = await api.get('/admin/admins')
-  adminList.value = data.data
+  adminList.value = (data.data || []).map((admin, idx) => ({
+    ...admin,
+    niveau: normalizeAdminLevel(admin.niveau_acces),
+    createdAt: formatDate(admin.date_creation),
+    color: avatarColors[idx % avatarColors.length],
+  }))
 }
 
 onMounted(loadAdmins)
@@ -819,6 +835,16 @@ const createAdmin = async () => {
 }
 
 const removeAdmin = async (admin) => {
+
+if (admin.is_current_user) {
+  alert('Vous ne pouvez pas supprimer votre propre compte')
+  return
+}
+
+if (admin.niveau_acces === 'SUPER_ADMIN') {
+  alert('Impossible de supprimer un Super Admin')
+  return
+}
 
 if (
   !confirm(

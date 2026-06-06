@@ -53,37 +53,38 @@ export default {
   },
 
   async signup(payload) {
-    const backendRole = ROLE_MAP[payload.role]
+  const backendRole = ROLE_MAP[payload.role]
 
-    const backendPayload = {
-      nom: payload.lastName,
-      prenom: payload.firstName,
-      email: payload.email,
-      mot_de_passe: payload.password,
-      confirmation_mot_de_passe: payload.confirmPassword,
-      role: backendRole
-    }
+  const backendPayload = {
+    nom: payload.lastName,
+    prenom: payload.firstName,
+    email: payload.email,
+    mot_de_passe: payload.password,
+    confirmation_mot_de_passe: payload.confirmPassword,
+    role: backendRole
+  }
 
-    const fieldsMap = ROLE_FIELDS_MAP[backendRole]
-    if (fieldsMap) {
-      for (const [backendKey, frontendKey] of Object.entries(fieldsMap)) {
-        if (payload[frontendKey] !== undefined && payload[frontendKey] !== '') {
-          backendPayload[backendKey] = payload[frontendKey]
-        }
+  const fieldsMap = ROLE_FIELDS_MAP[backendRole]
+
+  if (fieldsMap) {
+    for (const [backendKey, frontendKey] of Object.entries(fieldsMap)) {
+      if (
+        payload[frontendKey] !== undefined &&
+        payload[frontendKey] !== ''
+      ) {
+        backendPayload[backendKey] =
+          payload[frontendKey]
       }
     }
+  }
 
-    const { data } = await api.post('/auth/sinscrire', backendPayload)
-    const role = BACKEND_TO_FRONT_ROLE[data.data?.user?.role]
+  const { data } = await api.post(
+    '/auth/sinscrire',
+    backendPayload
+  )
 
-    if (!role) {
-      throw new Error(`Rôle inconnu : ${data.data?.user?.role}`)
-    }
-
-    localStorage.setItem('token', data.data?.token)
-    localStorage.setItem('role', role)
-    return data
-  },
+  return data
+},
   startGoogleAuth() {
     const apiRoot = import.meta.env.VITE_API_BASE_URL || '/api'
     window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/google`

@@ -24,7 +24,7 @@ const props = defineProps({
   label: { type: String, required: true },
   value: { type: Number, required: true },
   trend: { type: Number, default: 0 },
-  icon: { type: Object, required: true },
+  icon: { type: [Object, Function], required: true },
 })
  
 const formattedValue = computed(() =>

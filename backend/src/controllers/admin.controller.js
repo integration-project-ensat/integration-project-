@@ -33,11 +33,20 @@ const getDashboard = asyncHandler(async (req, res) => {
     // Portfolios soumis
     prisma.portfolio.count(),
 
-    // Éléments validés
-    prisma.elementValidable.count({ where: { statut: 'VALIDE' } }),
+    // VALIDÉS
+  prisma.professionnel.count({
+    where: {
+      statut_validation: 'VALIDE'
+    }}),
+    // Éléments Att
+    prisma.professionnel.count({
+  where: {
+    statut_validation: 'EN_ATTENTE'
+  }
+}),
 
     // Éléments en attente
-    prisma.elementValidable.count({ where: { statut: 'EN_ATTENTE' } }),
+    // prisma.professionnel.count({ where: { statut_validation: 'EN_ATTENTE' } }),
 
     // Croissance 6 mois : inscriptions + portfolios soumis par mois
     prisma.$queryRaw`
@@ -116,18 +125,29 @@ const getDashboard = asyncHandler(async (req, res) => {
 
   // Formatage activité récente (connexions)
   const activiteFormatee = activiteRecente.map((log) => ({
-    id: log.id,
-    utilisateur: log.utilisateur
-      ? {
-          nom_complet: `${log.utilisateur.prenom} ${log.utilisateur.nom}`,
-          email: log.utilisateur.email,
-          photo: log.utilisateur.profil?.photo_profil ?? null,
-        }
-      : { nom_complet: log.nom_complet ?? 'Inconnu', email: log.email, photo: null },
-    action: _labelAction(log.action, log.raison),
-    date: log.date,
-    statut: _statutAction(log.action),
-  }));
+  id: log.id,
+  utilisateur: log.utilisateur
+    ? {
+        nom_complet: `${log.utilisateur.prenom} ${log.utilisateur.nom}`,
+        email: log.utilisateur.email,
+        photo: log.utilisateur.profil?.photo_profil ?? null,
+      }
+    : {
+        nom_complet: log.nom_complet ?? 'Inconnu',
+        email: log.email,
+        photo: null,
+      },
+
+  action: _labelAction(log.action, log.raison),
+
+  date: log.date,
+
+  statut: _statutAction(log.action),
+
+  adresse_ip: log.adresse_ip,
+
+  user_agent: log.user_agent
+}))
 
   const activitesPlateforme = [];
   nouveauxUsers.forEach(u => {
@@ -161,6 +181,7 @@ const getDashboard = asyncHandler(async (req, res) => {
   });
 
   activitesPlateforme.sort((a, b) => new Date(b.date) - new Date(a.date));
+
 
   res.json({
     success: true,
@@ -742,7 +763,12 @@ const getAdmins = asyncHandler(async (req, res) => {
       nom: true,
       prenom: true,
       email: true,
-      date_creation: true
+      date_creation: true,
+      administrateur: {
+        select: {
+          niveau_acces: true
+        }
+      }
     },
     orderBy: {
       date_creation: 'desc'
@@ -751,7 +777,15 @@ const getAdmins = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    data: admins
+    data: admins.map((admin) => ({
+      id_utilisateur: admin.id_utilisateur.toString(),
+      nom: admin.nom,
+      prenom: admin.prenom,
+      email: admin.email,
+      date_creation: admin.date_creation,
+      niveau_acces: admin.administrateur?.niveau_acces ?? 'STANDARD',
+      is_current_user: String(admin.id_utilisateur) === String(req.utilisateur.id_utilisateur)
+    }))
   })
 })
 
