@@ -1,6 +1,12 @@
 <template>
   <aside class="sidebar" :class="{ open: isOpen }">
-    <RouterLink :to="profileLink" class="sidebar-user">
+    <component
+      :is="forceNavigation ? 'a' : RouterLink"
+      :to="forceNavigation ? undefined : profileLink"
+      :href="forceNavigation ? profileLink : undefined"
+      class="sidebar-user"
+      @click="handleNavigation(profileLink, $event)"
+    >
       <div class="avatar-sm">
         <span>{{ initials }}</span>
       </div>
@@ -8,47 +14,63 @@
         <p class="user-name">{{ currentUser.name }}</p>
         <p class="user-email">{{ currentUser.email }}</p>
       </div>
-    </RouterLink>
+    </component>
 
     <nav class="sidebar-nav">
-      <RouterLink
+      <component
         v-for="item in navItems"
         :key="item.path"
-        :to="item.path"
+        :is="forceNavigation ? 'a' : RouterLink"
+        :to="forceNavigation ? undefined : item.path"
+        :href="forceNavigation ? item.path : undefined"
         class="nav-item"
-        :class="{ active: route.path === item.path }"
+        :class="{ active: isActive(item.path) }"
+        @click="handleNavigation(item.path, $event)"
       >
         <span class="nav-icon" v-html="item.icon" />
         <span>{{ item.label }}</span>
-      </RouterLink>
+      </component>
     </nav>
 
     <div class="sidebar-bottom">
-      <RouterLink to="/settings" class="nav-item">
+      <component
+        :is="forceNavigation ? 'a' : RouterLink"
+        :to="forceNavigation ? undefined : '/settings'"
+        :href="forceNavigation ? '/settings' : undefined"
+        class="nav-item"
+        @click="handleNavigation('/settings', $event)"
+      >
         <span class="nav-icon" v-html="icons.settings" />
         <span>Parametres</span>
-      </RouterLink>
-      <RouterLink to="/login" class="nav-item logout">
+      </component>
+      <a
+        href="/login"
+        class="nav-item logout"
+        @click="handleLogout"
+      >
         <span class="nav-icon" v-html="icons.logout" />
         <span>Deconnexion</span>
-      </RouterLink>
+      </a>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useAuthStore } from '@/store/auth.js'
+import authService from "@/services/auth.service.js";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     isOpen?: boolean;
+    forceNavigation?: boolean;
   }>(),
-  { isOpen: true },
+  { isOpen: true, forceNavigation: false },
 );
 
 const route = useRoute();
+const router = useRouter()
 const auth = useAuthStore()
 const currentUser = computed(() => ({
   name: auth.user?.name || 'Nom Prenom',
@@ -66,6 +88,31 @@ const initials = computed(() => {
 })
 
 const profileLink = computed(() => '/profile')
+
+function normalizedPath(path: string) {
+  return path.split('?')[0]
+}
+
+function isActive(path: string) {
+  return route.path === normalizedPath(path)
+}
+
+function handleNavigation(path: string, event?: Event) {
+  if (!props.forceNavigation) return
+  event?.preventDefault()
+  window.location.assign(path)
+}
+
+async function handleLogout(event: Event) {
+  event.preventDefault()
+  await authService.logout()
+  auth.logout()
+  if (props.forceNavigation) {
+    window.location.assign('/login')
+    return
+  }
+  router.push('/login')
+}
 
 const icons = {
   dashboard: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,

@@ -320,6 +320,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'open-recos'): void
+  (e: 'open-portfolio'): void
 }>()
 
 const tabs = ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
@@ -380,7 +381,7 @@ const handleTabClick = (tab: string) => {
   if (tab === 'Portfolio') {
     showCompetances.value = false
     showAbout.value = false
-    emit('update:modelValue', 'Portfolio')
+    emit('open-portfolio')
     return
   }
 

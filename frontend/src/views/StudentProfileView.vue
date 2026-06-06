@@ -3,10 +3,20 @@
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
     <div class="body-area">
-      <SideBar
-        :role="userRole"
-        :user="currentUser"
+      <SidebarStudent
+        v-if="userRole === 'student'"
         :isOpen="sidebarOpen"
+        :force-navigation="true"
+      />
+      <SidebarProf
+        v-else-if="userRole === 'teacher'"
+        :isOpen="sidebarOpen"
+        :force-navigation="true"
+      />
+      <SidebarPro
+        v-else
+        :isOpen="sidebarOpen"
+        :force-navigation="true"
       />
 
       <main class="content" :class="{ shifted: sidebarOpen }">
@@ -15,6 +25,7 @@
           :recent-recommendations="recommendations"
           v-model="activeTab"
           @open-recos="showRecosModal = true"
+          @open-portfolio="openPortfolio"
         />
 
         <section v-if="userRole === 'teacher'" class="teacher-actions">
@@ -204,10 +215,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth.js'
 import TopBar from '../components/TopBar.vue'
-import SideBar from '../components/SideBar.vue'
+import SidebarStudent from '../components/exploreStudent/Sidebar.vue'
+import SidebarProf from '../components/exploreProf/SidebarProf.vue'
+import SidebarPro from '../components/explorePro/SidebarPro.vue'
 import StudentProfileHeader from '../components/StudentProfileHeader.vue'
 import PostCard from '../components/PostCard.vue'
 import { commentaireService } from '../services/commentaire.service'
@@ -237,8 +250,16 @@ type ProfilePost = {
 }
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const sidebarOpen = ref(false)
+const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | null>(() => {
+  const role = String(auth.role || '').trim().toUpperCase()
+  if (role === 'TEACHER' || role === 'PROFESSEUR') return 'teacher'
+  if (role === 'PROFESSIONAL' || role === 'PROFESSIONNEL') return 'professional'
+  if (role === 'STUDENT' || role === 'ETUDIANT') return 'student'
+  return null
+})
 const roleFromRoute = computed<'student' | 'teacher' | 'professional' | null>(() => {
   const from = typeof route.query.from === 'string' ? route.query.from : ''
   if (from === 'prof') return 'teacher'
@@ -246,7 +267,7 @@ const roleFromRoute = computed<'student' | 'teacher' | 'professional' | null>(()
   if (from === 'student') return 'student'
   return null
 })
-const userRole = computed<'student' | 'teacher' | 'professional'>(() => roleFromRoute.value ?? auth.role ?? 'student')
+const userRole = computed<'student' | 'teacher' | 'professional'>(() => roleFromRoute.value ?? normalizedAuthRole.value ?? 'student')
 const allowedTabs = new Set(['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager'])
 const getRouteTab = () => {
   const tab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'
@@ -382,11 +403,28 @@ const xShareUrl = computed(() => {
   return `https://twitter.com/intent/tweet?text=${encodedShareText.value}&url=${encodedProfileUrl.value}`
 })
 
+function openPortfolio() {
+  const targetId = profileId.value
+  if (!targetId) return
+
+  const from =
+    userRole.value === 'teacher'
+      ? 'prof'
+      : userRole.value === 'professional'
+        ? 'pro'
+        : 'student'
+
+  router.push(`/portfolio/${targetId}?from=${from}`)
+}
+
 async function loadPosts() {
   try {
     const { data } = await postService.getPosts()
     const backendPosts = data.data || []
-    posts.value = backendPosts.map(mapBackendPost)
+    const filteredPosts = profileId.value
+      ? backendPosts.filter((post: any) => Number(post?.auteur?.id_utilisateur ?? post?.id_auteur ?? 0) === Number(profileId.value))
+      : backendPosts
+    posts.value = filteredPosts.map(mapBackendPost)
   } catch (error) {
     console.warn('Chargement des posts impossible, fallback mock conserve', error)
   }
@@ -413,8 +451,8 @@ async function loadProfile() {
       linkedin: backendProfile.linkedin
     }
 
-    posts.value = backendProfile.posts || posts.value
-    recommendations.value = backendProfile.recommendations || recommendations.value
+    posts.value = Array.isArray(backendProfile.posts) ? backendProfile.posts : posts.value
+    recommendations.value = Array.isArray(backendProfile.recommendations) ? backendProfile.recommendations : recommendations.value
   } catch (error) {
     console.warn('Chargement du profil complet impossible, fallback mock conserve', error)
   }
@@ -624,6 +662,10 @@ watch(
 
 watch(profileId, () => {
   loadAttachedStatus()
+  connectionSent.value = false
+  loadProfile()
+  loadPosts()
+  loadRecommendations()
 })
 </script>
 

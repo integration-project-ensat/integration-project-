@@ -114,6 +114,12 @@ const headerUserType = computed<"student" | "professeur" | "professionnel">(() =
   return "student";
 });
 
+const profileContextQuery = computed(() => {
+  if (role.value === "prof") return "?from=prof";
+  if (role.value === "pro") return "?from=pro";
+  return "?from=student";
+});
+
 const posts = ref<FeedPost[]>([]);
 
 const toInitials = (name: string) =>
@@ -293,7 +299,7 @@ const visiblePosts = computed(() => {
 });
 
 const openStudentProfile = (studentId: string) => {
-  router.push(`/profile/student/${studentId}`);
+  router.push(`/profile/student/${studentId}${profileContextQuery.value}`);
 };
 
 const openProject = (projectId: string) => {
@@ -311,8 +317,8 @@ const toggleSavedPostProfile = (post: FeedPost) => {
     recommendations: post.recommendationCount,
     badges: post.badges,
     hasPortfolio: true,
-    profilePath: `/profile/student/${post.studentId}`,
-    portfolioPath: `/portfolio/${post.studentId}`,
+    profilePath: `/profile/student/${post.studentId}${profileContextQuery.value}`,
+    portfolioPath: `/portfolio/${post.studentId}${profileContextQuery.value}`,
   });
 
   savedFeedbackId.value = post.id;
