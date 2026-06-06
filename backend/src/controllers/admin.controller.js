@@ -586,7 +586,55 @@ const getProfessionnels = asyncHandler(async (req, res) => {
     data: professionnels
   })
 })
+const getProfesseurs = asyncHandler(async (req, res) => {
 
+  const professeurs = await prisma.professeur.findMany({
+    include: {
+      utilisateur: {
+        select: {
+          id_utilisateur: true,
+          nom: true,
+          prenom: true,
+          email: true,
+          date_creation: true
+        }
+      }
+    }
+  })
+
+  res.json({
+    success: true,
+    data: professeurs
+  })
+})
+const deleteProfesseur = asyncHandler(async (req, res) => {
+
+  const id = BigInt(req.params.id)
+
+  const professeur = await prisma.professeur.findUnique({
+    where: {
+      id_utilisateur: id
+    }
+  })
+
+  if (!professeur) {
+    return res.status(404).json({
+      success: false,
+      message: 'Professeur introuvable'
+    })
+  }
+
+  await prisma.utilisateur.delete({
+    where: {
+      id_utilisateur: id
+    }
+  })
+
+  res.json({
+    success: true,
+    message: 'Professeur supprimé'
+  })
+})
 const validateProfessionnel = asyncHandler(async (req, res) => {
 
   const id = BigInt(req.params.id)
@@ -750,7 +798,34 @@ const deletePortfolio = asyncHandler(async (req, res) => {
     message: 'Portfolio supprimé avec succès'
   })
 })
+const deleteEtudiant = asyncHandler(async (req, res) => {
 
+  const id = BigInt(req.params.id)
+
+  const etudiant = await prisma.etudiant.findUnique({
+    where: {
+      id_utilisateur: id
+    }
+  })
+
+  if (!etudiant) {
+    return res.status(404).json({
+      success: false,
+      message: 'Étudiant introuvable'
+    })
+  }
+
+  await prisma.utilisateur.delete({
+    where: {
+      id_utilisateur: id
+    }
+  })
+
+  res.json({
+    success: true,
+    message: 'Étudiant supprimé'
+  })
+})
 // GET /api/admin/admins
 const getAdmins = asyncHandler(async (req, res) => {
 
@@ -788,7 +863,34 @@ const getAdmins = asyncHandler(async (req, res) => {
     }))
   })
 })
+const deleteProfessionnel = asyncHandler(async (req, res) => {
 
+  const id = BigInt(req.params.id)
+
+  const professionnel = await prisma.professionnel.findUnique({
+    where: {
+      id_utilisateur: id
+    }
+  })
+
+  if (!professionnel) {
+    return res.status(404).json({
+      success: false,
+      message: 'Professionnel introuvable'
+    })
+  }
+
+  await prisma.utilisateur.delete({
+    where: {
+      id_utilisateur: id
+    }
+  })
+
+  res.json({
+    success: true,
+    message: 'Professionnel supprimé'
+  })
+})
 
 // DELETE /api/admin/admins/:id
 const deleteAdmin = asyncHandler(async (req, res) => {
@@ -860,5 +962,9 @@ module.exports = {
   deleteAdmin,
   getProfessionnels,
   validateProfessionnel,
-  rejectProfessionnel
+  rejectProfessionnel,
+  getProfesseurs,
+  deleteEtudiant,
+  deleteProfesseur,
+  deleteProfessionnel
 };

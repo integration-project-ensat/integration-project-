@@ -246,10 +246,12 @@
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                           Modifier
                         </button>
-                        <button class="menu-item danger" @click="deleteProfile(p)">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                          Supprimer
-                        </button>
+                        <button
+  class="menu-item danger"
+  @click="deleteEtudiant(p.id)"
+>
+  Supprimer
+</button>
                       </div>
                     </button>
                   </div>
@@ -259,6 +261,85 @@
           </table>
 
           <!-- Section Professionnels -->
+           <div class="table-card" style="margin-top:20px;">
+  <div class="table-header">
+    <div class="table-title-block">
+      <h2 class="table-title">Liste des Professeurs</h2>
+      <span class="count-badge">
+        {{ professeurs.length }} profils trouvés
+      </span>
+    </div>
+  </div>
+
+  <table class="profiles-table">
+    <thead>
+      <tr>
+        <th>Professeur</th>
+        <th>Département</th>
+        <th>Spécialité</th>
+        <th>Code administratif</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr v-if="professeurs.length === 0">
+        <td colspan="5" class="empty-row">
+          Aucun professeur trouvé.
+        </td>
+      </tr>
+
+      <tr
+        v-for="prof in professeurs"
+        :key="prof.id_utilisateur"
+      >
+
+        <td>
+          <div class="student-cell">
+            <div
+              class="student-avatar"
+              style="background:#ddd6fe;"
+            >
+              {{ initials(
+                  prof.utilisateur.prenom + ' ' +
+                  prof.utilisateur.nom
+              ) }}
+            </div>
+
+            <div>
+              <p class="student-name">
+                {{ prof.utilisateur.prenom }}
+                {{ prof.utilisateur.nom }}
+              </p>
+
+              <p class="student-email">
+                {{ prof.utilisateur.email }}
+              </p>
+            </div>
+          </div>
+        </td>
+
+        <td>{{ prof.departement }}</td>
+
+        <td>{{ prof.specialite }}</td>
+
+        <td>{{ prof.code_administratif }}</td>
+
+        <td>
+          <button
+            class="btn-del"
+            @click="deleteProfesseur(prof)"
+          >
+            <Trash2 :size="14" />
+          </button>
+        </td>
+
+      </tr>
+
+    </tbody>
+  </table>
+</div>
 <div class="table-card" style="margin-top: 20px;">
   <div class="table-header">
     <div class="table-title-block">
@@ -375,6 +456,12 @@
             >
               Refuser
             </button>
+            <button
+  class="btn-del"
+  @click="deleteProfessionnel(pro.id_utilisateur)"
+>
+  <Trash2 :size="14" />
+</button>
           </div>
         </td>
       </tr>
@@ -523,7 +610,7 @@ import api from '@/services/api'
 /* ── Layout state ──────────────────────── */
 const search      = ref('')
 const sidebarOpen = ref(true)
-
+const professeurs = ref([])
 /* ── Filters ───────────────────────────── */
 const filters = ref({
   search:   '',
@@ -589,7 +676,10 @@ onMounted(async () => {
     apiLoadingProfiles.value = false
   }
 
-  await loadProfessionnels()
+  await Promise.all([
+  loadProfessionnels(),
+  loadProfesseurs()
+])
 
 
 })
@@ -708,7 +798,54 @@ const bulkVerify = async () => {
 
   }
 }
+const deleteProfesseur = async (prof) => {
+  if (
+    !confirm(
+      `Supprimer ${prof.utilisateur.prenom} ${prof.utilisateur.nom} ?`
+    )
+  ) return
 
+  await api.delete(
+    `/admin/professeurs/${prof.id_utilisateur}`
+  )
+
+  await loadProfesseurs()
+}
+const loadEtudiants = async () => {
+  const { data } = await api.get(
+    '/admin/etudiants',
+    {
+      params: {
+        page: 1,
+        limit: 1000
+      }
+    }
+  )
+
+  profiles.value = data.data.map(
+    (u, i) => mapEtudiantForUI(u, i)
+  )
+}
+const deleteEtudiant = async (id) => {
+
+  if (!confirm('Supprimer cet étudiant ?')) {
+    return
+  }
+
+  await api.delete(`/admin/etudiants/${id}`)
+
+  await loadEtudiants()
+}
+const deleteProfessionnel = async (id) => {
+
+  if (!confirm('Supprimer ce professionnel ?')) {
+    return
+  }
+
+  await api.delete(`/admin/professionnels/${id}`)
+
+  await loadProfessionnels()
+}
 const professionnels = ref([])
 const loadProfessionnels = async () => {
   try {
@@ -758,6 +895,17 @@ const rejectProfessionnel = async (pro) => {
       'Erreur lors du refus'
     )
 
+  }
+}
+const loadProfesseurs = async () => {
+  try {
+
+    const { data } = await api.get('/admin/professeurs')
+
+    professeurs.value = data.data
+
+  } catch (error) {
+    console.error(error)
   }
 }
 

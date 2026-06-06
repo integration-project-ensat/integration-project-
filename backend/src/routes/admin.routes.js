@@ -90,16 +90,48 @@ router.get(
   adminController.getProfessionnels
 )
 
+router.get(
+  '/professeurs',
+  adminController.getProfesseurs
+)
+router.delete(
+  '/professeurs/:id',
+  validate([
+    param('id')
+      .isInt({ min: 1 })
+      .withMessage('ID invalide')
+      .toInt()
+  ]),
+  adminController.deleteProfesseur
+)
 router.patch(
   '/professionnels/:id/valider',
   adminController.validateProfessionnel
 )
-
+router.delete(
+  '/etudiants/:id',
+  validate([
+    param('id')
+      .isInt({ min: 1 })
+      .withMessage('ID invalide')
+      .toInt()
+  ]),
+  adminController.deleteEtudiant
+)
 router.patch(
   '/professionnels/:id/refuser',
   adminController.rejectProfessionnel
 )
-
+router.delete(
+  '/professionnels/:id',
+  validate([
+    param('id')
+      .isInt({ min: 1 })
+      .withMessage('ID invalide')
+      .toInt()
+  ]),
+  adminController.deleteProfessionnel
+)
 // GET /api/admin/villes           — alimente le <select> Ville
 router.get('/villes', adminController.getVilles);
 
