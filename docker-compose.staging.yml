@@ -89,7 +89,7 @@ services:
     ports:
       - "8090:8090"
     volumes:
-      - ./reports/zap:/zap/wrk
+      - /tmp/zap:/zap/wrk
 
   trivy:
     image: aquasec/trivy:latest
