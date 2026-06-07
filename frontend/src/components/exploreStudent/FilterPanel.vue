@@ -1,17 +1,11 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from "vue";
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown } from "../../lib/icons";
 
 interface Props {
-  filters: {
-    year: number;
-    school: string;
-    field: string;
-    city: string;
-    score: string;
-    skills: string[];
-    recommendations: string;
-  };
+  // The parent may use French or English keys (filiere/field, ville/city, competences/skills).
+  // Accept a loose shape and handle keys defensively in the component.
+  filters: Record<string, any>;
 }
 
 const props = defineProps<Props>();
@@ -20,88 +14,263 @@ const emit = defineEmits<{
 }>();
 
 const sections = [
-  { title: "Annee", key: "year", options: [2026, 2025, 2024] },
-  { title: "Ecole/Faculte", key: "school", options: ["ENSA", "ENSAM", "FST"] },
-  { title: "Filiere", key: "field", options: ["GSR", "GINF", "GSEA"] },
-  { title: "Ville", key: "city", options: ["Tanger", "Rabat", "Fes"] },
-  { title: "Score", key: "score", options: ["90+", "80+", "70+"] },
-  { title: "Competences", key: "skills", options: ["KiCad", "Sec.", "DevOps"] },
+  {
+    title: "Annee",
+    key: "year",
+    options: [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018],
+  },
+  {
+    title: "Ecole/Faculte",
+    key: "school",
+    options: [
+      "ENSA",
+      "ENSAM",
+      "FST",
+      "EMI",
+      "INPT",
+      "EHTP",
+      "ENSEM",
+      "ENSET",
+      "ENSIAS",
+      "ENCG",
+      "UIR",
+      "UM6P",
+      "EMSI",
+      "SUPMTI",
+      "1337",
+      "YouCode",
+    ],
+  },
+  {
+    title: "Filiere",
+    key: "field",
+    options: [
+      "GINF",
+      "GSTR",
+      "GSEA",
+      "GIL",
+      "GTR",
+      "IID",
+      "Data Science",
+      "Cybersecurity",
+      "IA",
+      "DevOps",
+      "Cloud",
+      "Big Data",
+      "Web",
+      "Mobile",
+      "RÃ©seaux",
+    ],
+  },
+  {
+    title: "Ville",
+    key: "city",
+    options: [
+      "Tanger",
+      "Rabat",
+      "FÃ¨s",
+      "Casablanca",
+      "Marrakech",
+      "Agadir",
+      "Oujda",
+      "Tetouan",
+      "Kenitra",
+      "Meknes",
+      "El Jadida",
+      "Safi",
+      "Beni Mellal",
+      "Nador",
+      "Settat",
+      "Taza",
+      "Khouribga",
+      "Mohammedia",
+      "Laayoune",
+      "Dakhla",
+    ],
+  },
+  {
+    title: "Score",
+    key: "score",
+    options: [
+      "95+",
+      "90+",
+      "85+",
+      "80+",
+      "75+",
+      "70+",
+      "65+",
+      "60+",
+      "55+",
+      "50+",
+      "45+",
+      "40+",
+      "35+",
+      "30+",
+    ],
+  },
+  {
+    title: "Competences",
+    key: "skills",
+    options: [
+      "Java",
+      "Python",
+      "Spring",
+      "React",
+      "Vue.js",
+      "Node.js",
+      "Docker",
+      "Kubernetes",
+      "CI/CD",
+      "DevOps",
+      "Linux",
+      "Git",
+      "Cybersecurity",
+      "AWS",
+      "Figma",
+      "Flutter",
+    ],
+  },
   {
     title: "Recommandations",
     key: "recommendations",
-    options: ["500+", "100+", "50+"],
+    options: ["1000+", "500+", "300+", "200+", "100+", "50+", "20+"],
   },
 ] as const;
 
 type SectionKey = (typeof sections)[number]["key"];
+const INITIAL_VISIBLE_OPTIONS = 3;
+const VISIBLE_OPTIONS_STEP = 3;
 
 const isSelected = (key: SectionKey, option: string | number) => {
-  if (key === "skills") return props.filters.skills.includes(String(option));
-  if (key === "year") return props.filters.year === option;
-  if (key === "school") return props.filters.school === option;
-  if (key === "field") return props.filters.field === option;
-  if (key === "city") return props.filters.city === option;
-  if (key === "score") return props.filters.score === option;
-  return props.filters.recommendations === option;
+  const f: Record<string, any> = props.filters || {};
+
+  if (key === "skills") {
+    const skills: string[] = f.skills ?? f.competences ?? [];
+    return Array.isArray(skills) && skills.includes(String(option));
+  }
+
+  if (key === "year") return f.year === option;
+
+  if (key === "school") return f.school === option;
+
+  if (key === "field") {
+    return (f.field ?? f.filiere) === option;
+  }
+
+  if (key === "city") return (f.city ?? f.ville) === option;
+
+  if (key === "score") return f.score === option;
+
+  return (f.recommendations ?? f.recommandations) === option;
 };
 
 const toggleOption = (key: SectionKey, option: string | number) => {
+  const f: Record<string, any> = props.filters || {};
+
   if (key === "skills") {
     const value = String(option);
-    const nextSkills = props.filters.skills.includes(value)
-      ? props.filters.skills.filter((s) => s !== value)
-      : [...props.filters.skills, value];
-    emit("update:filters", { ...props.filters, skills: nextSkills });
+    const currentSkills: string[] = f.skills ?? f.competences ?? [];
+    const nextSkills = Array.isArray(currentSkills) && currentSkills.includes(value)
+      ? currentSkills.filter((s) => s !== value)
+      : [...(Array.isArray(currentSkills) ? currentSkills : []), value];
+
+    // Preserve parent's property name if using French key
+    if (f.competences !== undefined) {
+      emit("update:filters", { ...f, competences: nextSkills });
+    } else {
+      emit("update:filters", { ...f, skills: nextSkills });
+    }
     return;
   }
 
   if (key === "year") {
-    emit("update:filters", { ...props.filters, year: Number(option) });
+    emit("update:filters", { ...f, year: Number(option) });
     return;
   }
+
   if (key === "school") {
-    emit("update:filters", { ...props.filters, school: String(option) });
+    emit("update:filters", { ...f, school: String(option) });
     return;
   }
+
   if (key === "field") {
-    emit("update:filters", { ...props.filters, field: String(option) });
+    // field may be named 'field' or 'filiere' in parent
+    if (f.filiere !== undefined) {
+      emit("update:filters", { ...f, filiere: String(option) });
+    } else {
+      emit("update:filters", { ...f, field: String(option) });
+    }
     return;
   }
+
   if (key === "city") {
-    emit("update:filters", { ...props.filters, city: String(option) });
+    if (f.ville !== undefined) {
+      emit("update:filters", { ...f, ville: String(option) });
+    } else {
+      emit("update:filters", { ...f, city: String(option) });
+    }
     return;
   }
+
   if (key === "score") {
-    emit("update:filters", { ...props.filters, score: String(option) });
+    emit("update:filters", { ...f, score: String(option) });
     return;
   }
-  emit("update:filters", { ...props.filters, recommendations: String(option) });
+
+  // recommendations / recommandations
+  if (f.recommandations !== undefined) {
+    emit("update:filters", { ...f, recommandations: String(option) });
+  } else {
+    emit("update:filters", { ...f, recommendations: String(option) });
+  }
 };
 
-const expanded = ref<Record<string, boolean>>({});
+const visibleCounts = ref<Record<string, number>>({});
 
-const toggleMore = (key: SectionKey) => {
-  expanded.value = { ...expanded.value, [key]: !expanded.value[key] };
+const showMore = (key: SectionKey) => {
+  const section = sections.find((item) => item.key === key);
+  if (!section) return;
+
+  const currentCount = visibleCounts.value[key] ?? INITIAL_VISIBLE_OPTIONS;
+
+  visibleCounts.value = {
+    ...visibleCounts.value,
+    [key]: Math.min(currentCount + VISIBLE_OPTIONS_STEP, section.options.length),
+  };
 };
 
-const extraOptions: Record<SectionKey, Array<string | number>> = {
-  year: [],
-  school: ["Plus 1", "Plus 2"],
-  field: ["Plus 1", "Plus 2"],
-  city: ["Plus 1", "Plus 2"],
-  score: ["60+", "50+"],
-  skills: ["UI/UX", "Cloud", "AI"],
-  recommendations: ["20+", "10+"],
+const showLess = (key: SectionKey) => {
+  visibleCounts.value = {
+    ...visibleCounts.value,
+    [key]: INITIAL_VISIBLE_OPTIONS,
+  };
+};
+
+const visibleCountFor = (key: SectionKey) => {
+  return visibleCounts.value[key] ?? INITIAL_VISIBLE_OPTIONS;
 };
 
 const sectionOptions = computed(() => {
   const map = new Map<string, Array<string | number>>();
   for (const s of sections) {
-    const isOpen = Boolean(expanded.value[s.key]);
-    map.set(s.key, isOpen ? [...s.options, ...extraOptions[s.key]] : [...s.options]);
+    map.set(s.key, [...s.options].slice(0, visibleCountFor(s.key)));
   }
   return map;
 });
+
+const canToggleMore = (key: SectionKey) => {
+  const section = sections.find((item) => item.key === key);
+  return Boolean(section && section.options.length > INITIAL_VISIBLE_OPTIONS);
+};
+
+const hasMoreOptions = (key: SectionKey) => {
+  const section = sections.find((item) => item.key === key);
+  return Boolean(section && visibleCountFor(key) < section.options.length);
+};
+
+const isExpanded = (key: SectionKey) => {
+  return visibleCountFor(key) > INITIAL_VISIBLE_OPTIONS;
+};
 </script>
 
 <template>
@@ -109,7 +278,12 @@ const sectionOptions = computed(() => {
     <div class="fp-card">
       <div v-for="section in sections" :key="section.title" class="fp-section">
         <h4 class="fp-title">{{ section.title }}</h4>
-        <div class="fp-pillsRow" :class="{ 'fp-pillsRowYear': section.key === 'year' }">
+        <TransitionGroup
+          name="fp-pillFade"
+          tag="div"
+          class="fp-pillsRow"
+          :class="{ 'fp-pillsRowYear': section.key === 'year' }"
+        >
           <button
             v-for="option in sectionOptions.get(section.key) ?? section.options"
             :key="option"
@@ -123,15 +297,25 @@ const sectionOptions = computed(() => {
           >
             {{ option }}
           </button>
-        </div>
-        <div class="fp-plusRow">
+        </TransitionGroup>
+        <div v-if="canToggleMore(section.key)" class="fp-plusRow">
           <button
+            v-if="hasMoreOptions(section.key)"
             type="button"
             class="fp-pill fp-plus"
-            @click="toggleMore(section.key)"
+            @click="showMore(section.key)"
           >
             Plus
             <ChevronDown class="h-3 w-3" />
+          </button>
+          <button
+            v-if="isExpanded(section.key)"
+            type="button"
+            class="fp-pill fp-plus"
+            @click="showLess(section.key)"
+          >
+            Voir moins
+            <ChevronDown class="h-3 w-3 fp-plusIconOpen" />
           </button>
         </div>
       </div>
@@ -149,24 +333,25 @@ const sectionOptions = computed(() => {
 
 .fp-card {
   width: 100%;
+  height: 100%;
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 18px;
-  padding: 16px 14px;
+  border-radius: 0;
+  padding: 8px 14px 0;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
   max-height: 100%;
   overflow-y: auto;
 }
 
 .fp-section + .fp-section {
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .fp-title {
   font-size: 12px;
   font-weight: 800;
   color: rgb(2 6 23);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .fp-pillsRow {
@@ -175,8 +360,21 @@ const sectionOptions = computed(() => {
   gap: 10px 12px;
 }
 
+.fp-pillFade-enter-active,
+.fp-pillFade-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.fp-pillFade-enter-from,
+.fp-pillFade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
 .fp-pillsRowYear {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .fp-pill {
@@ -218,7 +416,7 @@ const sectionOptions = computed(() => {
 }
 
 .fp-plusRow {
-  margin-top: 8px;
+  margin-top: 5px;
 }
 
 .fp-plus {
@@ -229,6 +427,10 @@ const sectionOptions = computed(() => {
   padding-left: 14px;
   color: #6b7280;
   background: transparent;
+}
+
+.fp-plusIconOpen {
+  transform: rotate(180deg);
 }
 
 .fp-card::-webkit-scrollbar {
@@ -250,3 +452,4 @@ const sectionOptions = computed(() => {
   scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
 }
 </style>
+

@@ -19,31 +19,31 @@ const createLimiter = ({ windowMs, max, message }) =>
 
 const apiLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
   message: 'Too many requests from this IP. Please wait 15 minutes before retrying.',
 });
 
 const authLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 200,
   message: 'Too many authentication attempts. Please wait 15 minutes before retrying.',
 });
 
 const passwordLimiter = createLimiter({
   windowMs: 60 * 60 * 1000,
-  max: 5,
+  max: 200,
   message: 'Too many password reset requests. Please wait 1 hour before retrying.',
 });
 
 const profilLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: 200,
   message:
     'Too many profile requests. Please wait before retrying.',
 });
 const diplomeLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 40,
+  max: 200,
   message:
     'Too many diploma requests. Please wait before retrying.',
 });

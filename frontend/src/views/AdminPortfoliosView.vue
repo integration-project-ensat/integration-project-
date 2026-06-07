@@ -195,7 +195,7 @@ import {
 import AdminNavbar  from '../components/admin/AdminNavbar.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import AdminSubbar  from '../components/admin/AdminSubbar.vue'
- 
+import adminApi from '@/services/adminApi.js'
 /* ── Layout ─────────────────────────── */
 const search      = ref('')
 const sidebarOpen = ref(true)
@@ -223,15 +223,40 @@ const statusIcon = (s) => {
 }
  
 /* ── Portfolios data ─────────────────── */
-const portfolios = ref([
-  { id: 1, title: 'Design UI/UX – Application Mobile',    category: 'UI/UX Design',    author: 'Lucas Bernard',  date: '12 Oct 2023', status: 'verified', thumbColor: '#e0e7ff', decoColor: '#6366f1', decoColor2: '#a5b4fc', authorColor: '#c7d2fe' },
-  { id: 2, title: 'Développement Web – Portfolio 3D',     category: 'Fullstack Dev',   author: 'Sophie Martin',  date: '15 Oct 2023', status: 'pending',  thumbColor: '#fef3c7', decoColor: '#f59e0b', decoColor2: '#fcd34d', authorColor: '#fde68a' },
-  { id: 3, title: 'Campagne Marketing Digital',           category: 'Marketing',       author: 'Thomas Durand',  date: '10 Oct 2023', status: 'revision', thumbColor: '#dbeafe', decoColor: '#3b82f6', decoColor2: '#93c5fd', authorColor: '#bfdbfe' },
-  { id: 4, title: 'Système Design pour FinTech',          category: 'Product Design',  author: 'Emma Petit',     date: '18 Oct 2023', status: 'verified', thumbColor: '#d1fae5', decoColor: '#10b981', decoColor2: '#6ee7b7', authorColor: '#a7f3d0' },
-  { id: 5, title: 'Analyse de Données – Dashboard',       category: 'Data Science',    author: 'Marc Lefebvre',  date: '20 Oct 2023', status: 'verified', thumbColor: '#fce7f3', decoColor: '#ec4899', decoColor2: '#f9a8d4', authorColor: '#fbcfe8' },
-  { id: 6, title: 'Application de Gestion Immobilière',   category: 'Mobile Dev',      author: 'Chloé Morel',    date: '22 Oct 2023', status: 'pending',  thumbColor: '#ede9fe', decoColor: '#8b5cf6', decoColor2: '#c4b5fd', authorColor: '#ddd6fe' },
-])
- 
+const portfolios = ref([])
+const loadPortfolios = async () => {
+  try {
+    const response = await adminApi.getAdminPortfolios()
+
+    portfolios.value = response.data.data.map(portfolio => ({
+      id: Number(portfolio.id_portfolio),
+
+      title: portfolio.titre || 'Portfolio sans titre',
+
+      category: portfolio.theme || 'Non défini',
+
+      author:
+        portfolio.etudiant?.utilisateur
+          ? `${portfolio.etudiant.utilisateur.prenom} ${portfolio.etudiant.utilisateur.nom}`
+          : 'Étudiant',
+
+      date: portfolio.date_modification
+        ? new Date(portfolio.date_modification).toLocaleDateString('fr-FR')
+        : '-',
+
+      status: portfolio.est_public
+        ? 'verified'
+        : 'pending',
+
+      authorColor: '#c7d2fe',
+      thumbColor: '#e0e7ff',
+      decoColor: '#6366f1',
+      decoColor2: '#a5b4fc'
+    }))
+  } catch (error) {
+    console.error('Erreur chargement portfolios', error)
+  }
+}
 /* ── Filtering ───────────────────────── */
 const filteredPortfolios = computed(() => {
   const q = filters.value.search.toLowerCase()
@@ -247,7 +272,10 @@ const openMenu = ref(null)
 const toggleMenu = (id) => { openMenu.value = openMenu.value === id ? null : id }
 const closeMenu  = ()    => { openMenu.value = null }
  
-onMounted(()       => document.addEventListener('click', closeMenu))
+onMounted(() => {
+  document.addEventListener('click', closeMenu)
+  loadPortfolios()
+})  
 onBeforeUnmount(() => document.removeEventListener('click', closeMenu))
  
 /* ── Actions ─────────────────────────── */
@@ -275,11 +303,12 @@ const refresh = () => { filters.value = { search: '', category: '' } }
 .main-content.sidebar-open { left: 185px; }
  
 .page-content {
-  padding: 26px 28px;
+  padding: 26px 43px;
   display: flex;
   flex-direction: column;
   gap: 18px;
   min-height: 100%;
+  background: #dfe2ea;
 }
  
 /* ══ Breadcrumb ══════════════════════════════════ */

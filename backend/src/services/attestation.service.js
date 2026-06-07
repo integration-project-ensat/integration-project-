@@ -1,32 +1,121 @@
-const { body, param } = require('express-validator')
+const { prisma, toBigInt } = require('../models/prisma')
+const notificationService = require('./notification.service')
 
-const attestationValidator = {
-  creerRules: [
-    body('titre').notEmpty().withMessage('Le titre est requis'),
-    body('type').optional().isString(),
-    body('date').optional().isDate().withMessage('Date invalide'),
-    body('organisme').optional().isString(),
-    body('description').optional().isString(),
-  ],
+const attestationService = {
+  async findAll(filters = {}) {
+    const where = {}
+    if (filters.statut) where.element = { statut: filters.statut }
+    if (filters.validateurId) where.element = { ...where.element, validateur_id: toBigInt(filters.validateurId) }
 
-  modifierRules: [
-    param('id').isInt({ min: 1 }).withMessage('ID invalide'),
-    body('titre').optional().notEmpty().withMessage('Le titre ne peut pas être vide'),
-    body('type').optional().isString(),
-    body('date').optional().isDate().withMessage('Date invalide'),
-    body('organisme').optional().isString(),
-    body('description').optional().isString(),
-  ],
+    return prisma.attestation.findMany({
+      where,
+      include: {
+        element: {
+          include: {
+            validateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } }
+          }
+        }
+      },
+      orderBy: { id_attestation: 'desc' }
+    })
+  },
 
-  changerStatutRules: [
-    param('id').isInt({ min: 1 }).withMessage('ID invalide'),
-    body('statut').isIn(['EN_ATTENTE','VALIDE','REFUSE','CORRECTION_DEMANDEE']).withMessage('Statut invalide'),
-    body('motif_refus').optional().isString(),
-  ],
+  async findById(id) {
+    return prisma.attestation.findUnique({
+      where: { id_attestation: BigInt(id) },
+      include: {
+        element: {
+          include: {
+            validateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } }
+          }
+        }
+      }
+    })
+  },
 
-  idParamRules: [
-    param('id').isInt({ min: 1 }).withMessage('ID invalide'),
-  ]
+  async create(data, utilisateurId, fichierUrl) {
+    const element = await prisma.elementValidable.create({
+      data: {
+        type: 'ATTESTATION',
+        reference_id: 0,
+        statut: 'EN_ATTENTE',
+        date_soumission: new Date()
+      }
+    })
+
+    const attestation = await prisma.attestation.create({
+      data: {
+        id_element: element.id_element,
+        titre: data.titre,
+        type: data.type,
+        date: data.date ? new Date(data.date) : null,
+        organisme: data.organisme,
+        description: data.description
+      }
+    })
+
+    await prisma.elementValidable.update({
+      where: { id_element: element.id_element },
+      data: { reference_id: attestation.id_attestation }
+    })
+
+    return attestation
+  },
+
+  async update(id, data, utilisateurId) {
+    return prisma.attestation.update({
+      where: { id_attestation: BigInt(id) },
+      data: {
+        ...(data.titre !== undefined && { titre: data.titre }),
+        ...(data.type !== undefined && { type: data.type }),
+        ...(data.date !== undefined && { date: new Date(data.date) }),
+        ...(data.organisme !== undefined && { organisme: data.organisme }),
+        ...(data.description !== undefined && { description: data.description })
+      }
+    })
+  },
+
+  async delete(id) {
+    return prisma.attestation.delete({ where: { id_attestation: BigInt(id) } })
+  },
+
+  async changerStatut(id, statut, validateurId, motif_refus) {
+    const attestation = await prisma.attestation.findUnique({ where: { id_attestation: BigInt(id) } })
+    if (!attestation) return null
+
+    await prisma.elementValidable.update({
+      where: { id_element: attestation.id_element },
+      data: {
+        statut,
+        validateur_id: toBigInt(validateurId),
+        date_validation: new Date(),
+        motif_refus: motif_refus ?? null
+      }
+    })
+
+    try {
+      const message = statut === 'VALIDE'
+        ? `Votre attestation \"${attestation.titre || 'attestation'}\" a été validée.`
+        : `Votre attestation \"${attestation.titre || 'attestation'}\" a été refusée.${motif_refus ? ' Motif: ' + motif_refus : ''}`
+
+      // Le modele Attestation actuel ne stocke pas l'etudiant proprietaire.
+      // La notification sera branchee quand cette relation sera ajoutee au schema.
+    } catch (e) {
+      // Ignore notification failure
+    }
+
+    return this.findById(id)
+  },
+
+  async getHistorique(id) {
+    return prisma.elementValidable.findMany({
+      where: { type: 'ATTESTATION', reference_id: BigInt(id) },
+      include: {
+        validateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } }
+      },
+      orderBy: { id_element: 'desc' }
+    })
+  }
 }
 
-module.exports = attestationValidator
+module.exports = attestationService

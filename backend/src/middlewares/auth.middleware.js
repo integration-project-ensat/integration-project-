@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../../prisma/client');
 const { hasPermission } = require('../config/roles');
+const { estRévoqué } = require('../services/tokenBlacklist.service');
 
 const authentifier = async (req, res, next) => {
   try {
@@ -18,6 +19,13 @@ const authentifier = async (req, res, next) => {
       algorithms: ['HS256']
     });
 
+      if (decoded?.jti && await estRévoqué(decoded.jti)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session invalidée, veuillez vous reconnecter'
+      });
+    }
+    
     const utilisateur = await prisma.utilisateur.findUnique({
       where: { id_utilisateur: BigInt(decoded.userId) },
       select: {

@@ -1,9 +1,10 @@
 generator client {
   provider   = "prisma-client-js"
   engineType = "binary"
-  
 }
-
+datasource db {
+  provider = "postgresql"
+}
 model Repost {
   id_repost BigInt   @id @default(autoincrement())
   id_auteur BigInt
@@ -17,26 +18,6 @@ model Repost {
   @@map("reposts")
 }
 
-model Connexion {
-  id_connexion    BigInt          @id @default(autoincrement())
-  id_demandeur    BigInt
-  id_destinataire BigInt
-  statut          StatutConnexion @default(EN_ATTENTE)
-  message         String?
-  date_demande    DateTime        @default(now())
-  date_reponse    DateTime?
-
-  demandeur    Utilisateur @relation("ConnexionsDemandeur", fields: [id_demandeur], references: [id_utilisateur], onDelete: Cascade)
-  destinataire Utilisateur @relation("ConnexionsDestinataire", fields: [id_destinataire], references: [id_utilisateur], onDelete: Cascade)
-
-  @@unique([id_demandeur, id_destinataire])
-  @@map("connexions")
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
 enum RoleUtilisateur {
   ADMINISTRATEUR
   ETUDIANT
@@ -48,10 +29,27 @@ enum TypeNotification {
   SOUMISSION_PROJET
   VALIDATION_PROJET
   REFUS_PROJET
+
+  SOUMISSION_STAGE
+  VALIDATION_STAGE
+  REFUS_STAGE
+
   NOUVEAU_COMMENTAIRE
+  COMMENTAIRE_ACCEPTE
+  COMMENTAIRE_REFUSE
+
   NOUVELLE_RECOMMANDATION
+  RECOMMANDATION_ACCEPTEE
+  RECOMMANDATION_REFUSEE
+
   VALIDATION_ATTESTATION
+  REFUS_ATTESTATION
+
   BADGE_OBTENU
+  
+  DEMANDE_CONNEXION
+  CONNEXION_ACCEPTEE
+  CONNEXION_REFUSEE
 }
 
 enum Visibilite {
@@ -104,6 +102,7 @@ enum TypeActivite {
 enum StatutActivite {
   DECLAREE
   ATTESTEE_INSTITUTION
+  REFUSEE
 }
 
 enum MotifLettre {
@@ -199,10 +198,43 @@ enum StatutConnexion {
   EN_ATTENTE
   ACCEPTEE
   REFUSEE
+  BLOQUEE
 }
 enum NiveauAcces {
   SUPER_ADMIN
   STANDARD
+}
+
+enum ActionConnexion {
+  LOGIN_REUSSI
+  LOGIN_ECHOUE
+  DECONNEXION
+}
+
+enum RaisonEchec {
+  MOT_DE_PASSE_INCORRECT
+  EMAIL_INEXISTANT
+  EMAIL_NON_VERIFIE
+  COMPTE_INACTIF
+}
+model JournalConnexion {
+  id              BigInt           @id @default(autoincrement())
+  utilisateur_id  BigInt?
+  email           String?          @db.VarChar(255)
+  nom_complet     String?          @db.VarChar(200)
+  role            RoleUtilisateur?
+  action          ActionConnexion
+  raison          RaisonEchec?
+  adresse_ip      String?          @db.VarChar(45)
+  user_agent      String?          @db.VarChar(500)
+  date            DateTime         @default(now())
+ 
+  utilisateur     Utilisateur?     @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: SetNull)
+ 
+  @@index([action])
+  @@index([adresse_ip])
+  @@index([date])
+  @@map("journal_connexions")
 }
 model Utilisateur {
   id_utilisateur     BigInt  @id @default(autoincrement())
@@ -240,10 +272,13 @@ model Utilisateur {
   recommandations     Recommandation[]   @relation("AuteurRecommandations")
   reactions           Reaction[]
   postes              Poste[]
+  journal_connexions JournalConnexion[]
+  connexions_envoyees Connexion[] @relation("DemandeurConnexion")
+  connexions_recues   Connexion[] @relation("DestinataireConnexion")
+  profils_sauvegardes   ProfilSauvegarde[] @relation("ProfilsSauvegardes")
+sauvegarde_par_autres ProfilSauvegarde[] @relation("ProfilsSauvegardesParAutres")
   postes_collabores   PosteCollaborateur[]
   reposts             Repost[]
-  demandes_connexion_envoyees Connexion[] @relation("ConnexionsDemandeur")
-  demandes_connexion_recues   Connexion[] @relation("ConnexionsDestinataire")
 
   @@map("utilisateurs")
 }
@@ -741,4 +776,40 @@ model Reaction {
 
   @@unique([id_auteur, id_poste]) // une seule réaction par personne
   @@map("reactions")
+}
+model TokenRévoqué {
+  id         BigInt   @id @default(autoincrement())
+  jti        String   @unique @db.VarChar(100)
+  user_id    BigInt?
+  expires_at DateTime
+  date       DateTime @default(now())
+
+  @@index([expires_at])
+  @@map("tokens_revoques")
+}
+model Connexion {
+  id_connexion    BigInt @id @default(autoincrement())
+  demandeur_id    BigInt
+  destinataire_id BigInt
+  statut          StatutConnexion @default(EN_ATTENTE)
+  date_demande    DateTime @default(now())
+  date_reponse    DateTime?
+
+  demandeur    Utilisateur @relation("DemandeurConnexion", fields: [demandeur_id], references: [id_utilisateur], onDelete: Cascade)
+  destinataire Utilisateur @relation("DestinataireConnexion", fields: [destinataire_id], references: [id_utilisateur], onDelete: Cascade)
+
+  @@unique([demandeur_id, destinataire_id])
+  @@map("connexions")
+}
+model ProfilSauvegarde {
+  id              BigInt   @id @default(autoincrement())
+  id_sauvegardeur BigInt
+  id_etudiant     BigInt
+  date_sauvegarde DateTime @default(now())
+
+  sauvegardeur Utilisateur @relation("ProfilsSauvegardes", fields: [id_sauvegardeur], references: [id_utilisateur], onDelete: Cascade)
+  etudiant     Utilisateur @relation("ProfilsSauvegardesParAutres", fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
+
+  @@unique([id_sauvegardeur, id_etudiant])
+  @@map("profils_sauvegardes")
 }

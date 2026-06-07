@@ -6,6 +6,13 @@ const ROLE_MAP = {
   Professional: 'PROFESSIONNEL'
 }
 
+const BACKEND_TO_FRONT_ROLE = {
+  ADMINISTRATEUR: 'admin',
+  ETUDIANT: 'student',
+  PROFESSEUR: 'teacher',
+  PROFESSIONNEL: 'professional'
+}
+
 const ROLE_FIELDS_MAP = {
   ETUDIANT: {
     numero_etudiant: 'apogee',
@@ -23,49 +30,64 @@ const ROLE_FIELDS_MAP = {
     secteur: 'specialty'
   }
 }
+
 export default {
   async login(email, password) {
-    const { data } = await api.post('/auth/seconnecter', { email, mot_de_passe:password})
-    localStorage.setItem('token', data.token)
+    const { data } = await api.post('/auth/seconnecter', { email: email.trim().toLowerCase(), mot_de_passe: password })
+
+    const token = data.data?.token
+    const user  = data.data?.user
+    const role  = BACKEND_TO_FRONT_ROLE[user?.role]
+
+    if (!role) {
+      throw new Error(`Rôle inconnu : ${user?.role}`)
+    }
+
+    if (user) {
+      user.role = role
+    }
+
+    localStorage.setItem('token', token)
+    localStorage.setItem('role', role)
     return data
   },
 
   async signup(payload) {
-    const backendRole = ROLE_MAP[payload.role]
-    
-    const backendPayload = {
-      nom: payload.lastName,
-      prenom: payload.firstName,
-      email: payload.email,
-      mot_de_passe: payload.password,
-      confirmation_mot_de_passe: payload.confirmPassword,
-      role: backendRole
-    }
+  const backendRole = ROLE_MAP[payload.role]
 
-    const fieldsMap = ROLE_FIELDS_MAP[backendRole]
-    if (fieldsMap) {
-      for (const [backendKey, frontendKey] of Object.entries(fieldsMap)) {
-        if (payload[frontendKey] !== undefined && payload[frontendKey] !== '') {
-          backendPayload[backendKey] = payload[frontendKey]
-        }
+  const backendPayload = {
+    nom: payload.lastName,
+    prenom: payload.firstName,
+    email: payload.email,
+    mot_de_passe: payload.password,
+    confirmation_mot_de_passe: payload.confirmPassword,
+    role: backendRole
+  }
+
+  const fieldsMap = ROLE_FIELDS_MAP[backendRole]
+
+  if (fieldsMap) {
+    for (const [backendKey, frontendKey] of Object.entries(fieldsMap)) {
+      if (
+        payload[frontendKey] !== undefined &&
+        payload[frontendKey] !== ''
+      ) {
+        backendPayload[backendKey] =
+          payload[frontendKey]
       }
     }
+  }
 
-    const { data } = await api.post('/auth/sinscrire', backendPayload)
-    localStorage.setItem('token', data.token)
-    return data
-  },
+  const { data } = await api.post(
+    '/auth/sinscrire',
+    backendPayload
+  )
+
+  return data
+},
   startGoogleAuth() {
-    const baseURL =
-      import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
-
-    window.location.href = `${baseURL}/auth/google`
-  },
-  startGithubAuth() {
-    const baseURL =
-      import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
-
-    window.location.href = `${baseURL}/auth/github`
+    const apiRoot = import.meta.env.VITE_API_BASE_URL || '/api'
+    window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/google`
   },
   async forgotPassword(email) {
     return api.post('/auth/mot-de-passe-oublie', { email })
@@ -80,10 +102,19 @@ export default {
   },
 
   async resetPassword(payload) {
-    return api.post('/reinitialiser-mot-de-passe', payload)
+    return api.post('/auth/reinitialiser-mot-de-passe', {
+      token: payload.token,
+      nouveau_mot_de_passe: payload.newPassword,
+      confirmation_mot_de_passe: payload.confirmPassword
+    })
   },
-
-  logout() {
-    localStorage.removeItem('token')
+  async logout() {
+    try {
+      await api.post('/auth/deconnecter')
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('user')
+    }
   }
 }

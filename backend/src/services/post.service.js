@@ -1,4 +1,4 @@
-const prisma = require('../models/prisma')
+const { prisma, toBigInt } = require('../models/prisma')
 
 const includePost = {
   auteur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } },
@@ -75,6 +75,23 @@ const postService = {
       include: includePost,
     })
     return enrichWithReactionCounts(post)
+  },
+
+  async addComment(id, auteurId, contenu) {
+    const post = await prisma.poste.findUnique({ where: { id_poste: BigInt(id) } })
+    if (!post) return null
+
+    await prisma.commentaire.create({
+      data: {
+        id_poste: BigInt(id),
+        id_auteur: BigInt(auteurId),
+        contenu,
+        statut: 'VALIDE',
+        date: new Date(),
+      },
+    })
+
+    return this.findById(id)
   },
 
   async create(data, file, auteurId) {

@@ -1,18 +1,11 @@
 <template>
   <div class="dashboard-layout">
-
     <AdminNavbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
     <AdminSidebar :open="sidebarOpen" />
-    <AdminSubbar
-      title="Tableau de bord (Aperçu)"
-      v-model:searchQuery="search"
-      :sidebarOpen="sidebarOpen"
-    />
+    <AdminSubbar title="Tableau de bord (Aperçu)" v-model:searchQuery="search" :sidebarOpen="sidebarOpen" />
 
     <main class="main-content" :class="{ 'sidebar-open': sidebarOpen }">
-
       <section class="dashboard-content">
-
         <!-- KPI Cards -->
         <div class="stat-grid">
           <StatCard
@@ -27,7 +20,6 @@
 
         <!-- Charts row -->
         <div class="charts-row">
-
           <!-- Growth chart -->
           <div class="chart-card growth-card">
             <div class="chart-header">
@@ -51,22 +43,15 @@
                   </linearGradient>
                 </defs>
 
-                <!-- Grid lines -->
-                <line v-for="y in [40,80,120,160,200]" :key="y" x1="0" :y1="y" x2="540" :y2="y"
-                  stroke="#f1f5f9" stroke-width="1" />
+                <line v-for="y in [40, 80, 120, 160, 200]" :key="y" x1="0" :y1="y" x2="540" :y2="y" stroke="#f1f5f9" stroke-width="1" />
 
-                <!-- Blue area (inscriptions) -->
                 <path :d="blueArea" fill="url(#gradBlue)" />
-                <path :d="blueLine" fill="none" stroke="#6366f1" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round" />
+                <path :d="blueLine" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
 
-                <!-- Cyan area (soumissions) -->
                 <path :d="cyanArea" fill="url(#gradCyan)" />
-                <path :d="cyanLine" fill="none" stroke="#06b6d4" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round" />
+                <path :d="cyanLine" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
 
-              <!-- X labels -->
               <div class="chart-x-labels">
                 <span v-for="m in months" :key="m">{{ m }}</span>
               </div>
@@ -86,7 +71,9 @@
                 <circle
                   v-for="seg in donutSegments"
                   :key="seg.label"
-                  cx="80" cy="80" r="60"
+                  cx="80"
+                  cy="80"
+                  r="60"
                   fill="none"
                   :stroke="seg.color"
                   stroke-width="22"
@@ -108,11 +95,10 @@
           </div>
         </div>
 
-        <!-- Activity table -->
-        <ActivityTable />
+        <ActivityTable :activities="plateformeActivities" />
 
-        <!-- ══ Historique des connexions ══ -->
-        <div class="conn-card">
+        <!-- Historique des connexions -->
+        <div id="connexion-history" class="conn-card">
           <div class="conn-head">
             <div>
               <h3 class="section-title">Historique des connexions</h3>
@@ -128,7 +114,6 @@
             </div>
           </div>
 
-          <!-- Filters -->
           <div class="conn-filters">
             <div class="conn-filter-group">
               <select v-model="connFilter.status" class="conn-select">
@@ -160,13 +145,15 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="log in filteredLogs" :key="log.id"
-                  class="conn-row" :class="{ suspect: log.suspect }">
+                <tr
+                  v-for="log in filteredLogs"
+                  :key="log.id"
+                  class="conn-row"
+                  :class="{ suspect: log.suspect }"
+                >
                   <td>
                     <div class="conn-user">
-                      <div class="conn-avatar" :style="{ background: log.avatarColor }">
-                        {{ log.userInitials }}
-                      </div>
+                      <div class="conn-avatar" :style="{ background: log.avatarColor }">{{ log.userInitials }}</div>
                       <div>
                         <p class="conn-username">{{ log.userName }}</p>
                         <p class="conn-role">{{ log.userRole }}</p>
@@ -182,124 +169,271 @@
                   <td class="conn-agent">{{ log.agent }}</td>
                   <td class="conn-date">{{ log.datetime }}</td>
                   <td>
-                    <span class="conn-badge" :class="log.status.toLowerCase()">
-                      {{ log.status }}
-                    </span>
+                    <span class="conn-badge" :class="log.status.toLowerCase()">{{ log.status }}</span>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-
       </section>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Download, RefreshCw, Search } from 'lucide-vue-next'
 import { Users, Briefcase, CheckCircle, Clock } from 'lucide-vue-next'
 
-import AdminNavbar  from '../components/admin/AdminNavbar.vue'
+import adminApi from '@/services/adminApi.js'
+
+import AdminNavbar from '../components/admin/AdminNavbar.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
-import AdminSubbar  from '../components/admin/AdminSubbar.vue'
+import AdminSubbar from '../components/admin/AdminSubbar.vue'
 import StatCard from '../components/admin/StatCard.vue'
 import ActivityTable from '../components/admin/ActivityTable.vue'
 
 const search = ref('')
 const sidebarOpen = ref(true)
 
-const stats = [
-  { label: 'Profils Totaux',     value: 12482, trend: 12,  icon: Users },
-  { label: 'Portfolios Soumis',  value: 8650,  trend: 8.4, icon: Briefcase },
-  { label: 'Vérifiés',           value: 11200, trend: 1.6, icon: CheckCircle },
-  { label: 'En Attente',         value: 432,   trend: -5,  icon: Clock },
-]
+const months = ref(['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'])
 
-const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun']
+const stats = ref([])
 
-// Data points normalised to 200px height (0 = top)
-const blueRaw  = [180, 162, 145, 110, 60, 10]  // inscriptions
-const cyanRaw  = [190, 175, 158, 130, 90, 40]  // soumissions
-const xs       = [0, 108, 216, 324, 432, 540]
+// SVG datasets normalized to 200px height
+const blueRaw = ref([180, 162, 145, 110, 60, 10])
+const cyanRaw = ref([190, 175, 158, 130, 90, 40])
+const xs = [0, 108, 216, 324, 432, 540]
 
-const toPath = (ys) =>
-  ys.map((y, i) => `${i === 0 ? 'M' : 'L'} ${xs[i]} ${y}`).join(' ')
+const toPath = (ys) => ys.map((y, i) => `${i === 0 ? 'M' : 'L'} ${xs[i]} ${y}`).join(' ')
+const toArea = (ys) => toPath(ys) + ` L ${xs[xs.length - 1]} 200 L 0 200 Z`
 
-const toArea = (ys) =>
-  toPath(ys) + ` L ${xs[xs.length - 1]} 200 L 0 200 Z`
+const blueLine = computed(() => toPath(blueRaw.value))
+const blueArea = computed(() => toArea(blueRaw.value))
+const cyanLine = computed(() => toPath(cyanRaw.value))
+const cyanArea = computed(() => toArea(cyanRaw.value))
 
-const blueLine = computed(() => toPath(blueRaw))
-const blueArea = computed(() => toArea(blueRaw))
-const cyanLine = computed(() => toPath(cyanRaw))
-const cyanArea = computed(() => toArea(cyanRaw))
-
-// Donut: circumference of r=60 circle ≈ 376.99
-const total = 1650
-const sectors = [
-  { label: 'Design',        count: 450, color: '#6366f1' },
-  { label: 'Développement', count: 680, color: '#06b6d4' },
-  { label: 'Marketing',     count: 240, color: '#f59e0b' },
-  { label: 'IA & Data',     count: 280, color: '#8b5cf6' },
-]
-
-const C = 376.99
-let cumulative = 0
-const donutSegments = sectors.map((s) => {
-  const dash   = (s.count / total) * C
-  const offset = -cumulative
-  cumulative  += dash
-  return { ...s, dash, offset }
-})
-
-/* ── Connexions history ───────────────── */
-const connFilter = ref({ status: '', search: '' })
-
-const connLogs = ref([
-  { id: 1,  userName: 'Karim Bennani',  userInitials: 'KB', userRole: 'Super Admin',  avatarColor: '#c7d2fe', ip: '41.249.12.14',  agent: 'Chrome · Windows 11', datetime: '22/05/2026 10:22', status: 'SUCCESS', suspect: false },
-  { id: 2,  userName: 'MOT DE PASSE INCORRECT', userInitials: '??', userRole: 'Tentative',   avatarColor: '#fecaca', ip: '102.54.12.1',  agent: 'Firefox · Linux',     datetime: '22/05/2026 10:31', status: 'ERREUR',  suspect: true  },
-  { id: 3,  userName: 'Leila Chraibi',   userInitials: 'LC', userRole: 'Modérateur',   avatarColor: '#d1fae5', ip: '41.249.12.14',  agent: 'Chrome · Windows 11', datetime: '22/05/2026 11:00', status: 'TERMINE', suspect: false },
-  { id: 4,  userName: 'Admin Boss',       userInitials: 'AB', userRole: 'Super Admin',  avatarColor: '#fde68a', ip: '196.22.88.2',   agent: 'Edge · Windows',      datetime: '22/05/2026 11:10', status: 'SUCCESS', suspect: false },
-  { id: 5,  userName: 'MOT DE PASSE INCORRECT', userInitials: '??', userRole: 'Tentative',   avatarColor: '#fecaca', ip: '88.102.14.7',  agent: 'Safari · iPhone',     datetime: '22/05/2026 11:25', status: 'ERREUR',  suspect: true  },
-  { id: 6,  userName: 'Karim Bennani',  userInitials: 'KB', userRole: 'Super Admin',  avatarColor: '#c7d2fe', ip: '41.249.12.14',  agent: 'Chrome · Windows 11', datetime: '22/05/2026 12:05', status: 'SUCCESS', suspect: false },
-  { id: 7,  userName: 'MOT DE PASSE INCORRECT', userInitials: '??', userRole: 'Tentative',   avatarColor: '#fecaca', ip: '185.220.101.3', agent: 'curl · Linux',        datetime: '22/05/2026 12:18', status: 'ERREUR',  suspect: true  },
-  { id: 8,  userName: 'Admin Boss',       userInitials: 'AB', userRole: 'Super Admin',  avatarColor: '#fde68a', ip: '196.22.88.2',   agent: 'Edge · Windows',      datetime: '22/05/2026 13:00', status: 'SUCCESS', suspect: false },
+const donutSegments = ref([
+  { label: 'Design', count: 0, color: '#6366f1', dash: 0, offset: 0 },
+  { label: 'Développement', count: 0, color: '#06b6d4', dash: 0, offset: 0 },
+  { label: 'Marketing', count: 0, color: '#f59e0b', dash: 0, offset: 0 },
+  { label: 'IA & Data', count: 0, color: '#8b5cf6', dash: 0, offset: 0 },
 ])
 
+const plateformeActivities = ref([])
+
+/* Connexions history */
+const connFilter = ref({ status: '', search: '' })
+const connLogs = ref([])
+
 const filteredLogs = computed(() => {
-  return connLogs.value.filter(l => {
+  return connLogs.value.filter((l) => {
     const matchStatus = !connFilter.value.status || l.status === connFilter.value.status
     const q = connFilter.value.search.toLowerCase()
-    const matchSearch = !q || l.ip.includes(q) || l.agent.toLowerCase().includes(q) || l.userName.toLowerCase().includes(q)
+    const matchSearch =
+      !q ||
+      l.ip.includes(q) ||
+      l.agent.toLowerCase().includes(q) ||
+      l.userName.toLowerCase().includes(q)
     return matchStatus && matchSearch
   })
 })
 
-const suspectCount = computed(() => connLogs.value.filter(l => l.suspect).length)
+const suspectCount = computed(() => connLogs.value.filter((l) => l.suspect).length)
 
 const refreshConn = () => {
-  // Simule un refresh — en prod, appel API
-  const now = new Date()
-  const pad = n => String(n).padStart(2, '0')
-  const dt  = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`
-  connLogs.value.unshift({
-    id: Date.now(), userName: 'Admin Boss', userInitials: 'AB', userRole: 'Super Admin',
-    avatarColor: '#fde68a', ip: '196.22.88.2', agent: 'Edge · Windows',
-    datetime: dt, status: 'SUCCESS', suspect: false,
-  })
+  // en attendant un endpoint dédié, on recharge dashboard
+  loadDashboard().catch(() => {})
 }
 
 const exportConnCSV = () => {
-  const rows = [['Utilisateur','IP','User-Agent','Date & Heure','Statut'],
-    ...filteredLogs.value.map(l => [l.userName, l.ip, l.agent, l.datetime, l.status])]
-  const csv  = rows.map(r => r.join(',')).join('\n')
+  const rows = [['Utilisateur', 'IP', 'User-Agent', 'Date & Heure', 'Statut'], ...filteredLogs.value.map((l) => [l.userName, l.ip, l.agent, l.datetime, l.status])]
+  const csv = rows.map((r) => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
-  const url  = URL.createObjectURL(blob)
-  const a    = Object.assign(document.createElement('a'), { href: url, download: 'connexions.csv' })
-  a.click(); URL.revokeObjectURL(url)
+  const url = URL.createObjectURL(blob)
+  const a = Object.assign(document.createElement('a'), { href: url, download: 'connexions.csv' })
+  a.click()
+  URL.revokeObjectURL(url)
 }
+const mapDashboardToUI = (d) => {
+  if (!d) return
+
+  if (d.stats) {
+    stats.value = [
+      { label: 'Profils Totaux', value: d.stats.totalProfils ?? 0, trend: 0, icon: Users },
+      { label: 'Portfolios Soumis', value: d.stats.totalPortfolios ?? 0, trend: 0, icon: Briefcase },
+      { label: 'Vérifiés', value: d.stats.totalVerifies ?? 0, trend: 0, icon: CheckCircle },
+      { label: 'En Attente', value: d.stats.enAttente ?? 0, trend: 0, icon: Clock },
+    ]
+  }
+
+  if (d.croissance) {
+    let insRaw = (d.croissance.inscriptions || [])
+  .slice(0, 6)
+  .map((x) => Number(x.valeur ?? x.value ?? 0))
+
+while (insRaw.length < 6) {
+  insRaw.unshift(0)
+}
+    let porRaw = (d.croissance.portfolios || [])
+  .slice(0, 6)
+  .map((x) => Number(x.valeur ?? x.value ?? 0))
+
+while (porRaw.length < 6) {
+  porRaw.unshift(0)
+}
+
+    if (insRaw.length === 1) {
+  insRaw.unshift(0)
+}
+
+if (porRaw.length === 1) {
+  porRaw.unshift(0)
+}
+    const max = Math.max(1, ...insRaw, ...porRaw)
+    const norm = (arr) => {
+  const out = new Array(6).fill(180)
+
+  for (let i = 0; i < Math.min(6, arr.length); i++) {
+    out[i] = 180 - Math.round((arr[i] / max) * 180)
+  }
+
+  return out
+}
+
+    blueRaw.value = norm(insRaw)
+    cyanRaw.value = norm(porRaw)
+
+    months.value = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun']
+  }
+
+  if (Array.isArray(d.repartitionFilieres)) {
+    const palette = ['#6366f1', '#06b6d4', '#f59e0b', '#8b5cf6', '#f43f5e', '#14b8a6']
+    const totalCount = d.repartitionFilieres.reduce((acc, x) => acc + Number(x.count ?? 0), 0) || 1
+
+    const C = 376.99
+    let cumulative = 0
+
+    const mapped = d.repartitionFilieres.slice(0, 4).map((f, idx) => {
+      const count = Number(f.count ?? 0)
+      const dash = (count / totalCount) * C
+      const offset = -cumulative
+      cumulative += dash
+      return {
+        label: f.filiere ?? 'Autre',
+        count,
+        color: palette[idx % palette.length],
+        dash,
+        offset,
+      }
+    })
+
+    donutSegments.value = mapped
+  }
+
+  if (Array.isArray(d.activiteRecente)) {
+
+  connLogs.value = d.activiteRecente.map((log, idx) => {
+
+    const u = log.utilisateur || {}
+
+    const uiStatus =
+      String(log.statut || '').toLowerCase()
+
+    const status =
+      uiStatus === 'complete'
+        ? 'SUCCESS'
+        : uiStatus === 'annule'
+          ? 'ERREUR'
+          : 'SUCCESS'
+
+    return {
+
+      id: log.id ?? idx,
+
+      userName:
+        u.nom_complet ||
+        u.email ||
+        'Inconnu',
+
+      userInitials: (
+        u.nom_complet
+          ? u.nom_complet
+              .split(' ')
+              .filter(Boolean)
+              .slice(0, 2)
+              .map(w => w[0])
+              .join('')
+          : '??'
+      ).toUpperCase(),
+
+      userRole: log.action || 'Activité',
+
+      avatarColor: '#c7d2fe',
+
+      ip: log.adresse_ip || '—',
+
+      agent: log.user_agent || '—',
+
+      datetime: log.date
+        ? String(log.date)
+            .replace('T', ' ')
+            .slice(0, 16)
+        : '—',
+
+      status,
+
+      suspect: false
+    }
+  })
+}
+
+  if (Array.isArray(d.activitesPlateforme)) {
+    plateformeActivities.value = d.activitesPlateforme.map((act) => {
+      const u = act.utilisateur || {}
+      const status =
+  String(act.statut).toLowerCase() === 'complete'
+    ? 'completed'
+    : String(act.statut).toLowerCase() === 'annule'
+      ? 'cancelled'
+      : 'pending'
+
+return {
+  id: act.id,
+  name: u.nom_complet || u.email || 'Inconnu',
+  email: u.email || '',
+  action: act.action,
+  date: act.date
+    ? new Date(act.date).toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : '—',
+  status, // ← utiliser la variable
+  avatarColor: '#c7d2fe'
+}
+    })
+  }
+}
+
+const loadDashboard = async () => {
+  const resp = await adminApi.getAdminDashboard()
+  if (resp?.data?.success && resp.data.data) mapDashboardToUI(resp.data.data)
+}
+
+onMounted(() => {
+  loadDashboard().catch(() => {})
+  // reload when other admin pages emit an update
+  window.addEventListener('admin-dashboard-refresh', loadDashboard)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('admin-dashboard-refresh', loadDashboard)
+})
 </script>
 
 <style scoped>
@@ -309,15 +443,10 @@ const exportConnCSV = () => {
   font-family: 'Geist', 'DM Sans', 'Inter', sans-serif;
 }
 
-/*
-  main-content : occupe toute la fenêtre
-  SAUF la navbar (top: 50px) et la sidebar (margin-left: 185px).
-  Transition synchro avec le collapse de la sidebar.
-*/
 .main-content {
   position: fixed;
   top: 50px;
-  left: 0;          /* sidebar collapsed → pas de marge */
+  left: 0;
   right: 0;
   bottom: 0;
   overflow-y: auto;
@@ -326,27 +455,25 @@ const exportConnCSV = () => {
   transition: left 0.25s ease;
 }
 
-/* Quand la sidebar est ouverte, décale le contenu */
 .main-content.sidebar-open {
   left: 185px;
 }
 
 .dashboard-content {
-  padding: 70px 60px;
+  padding: 60px 8px 30px 43px;
   display: flex;
   flex-direction: column;
   gap: 22px;
   flex: 1;
+  background: #dfe2ea;
 }
 
-/* ── Stat grid ─────────────────────────────────── */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
 
-/* ── Charts row ────────────────────────────────── */
 .charts-row {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -394,9 +521,10 @@ const exportConnCSV = () => {
   white-space: nowrap;
   transition: background 0.15s;
 }
-.btn-outline:hover { background: #f8fafc; }
+.btn-outline:hover {
+  background: #f8fafc;
+}
 
-/* ── Line chart ────────────────────────────────── */
 .chart-area {
   display: flex;
   flex-direction: column;
@@ -419,7 +547,6 @@ const exportConnCSV = () => {
   color: #94a3b8;
 }
 
-/* ── Donut chart ───────────────────────────────── */
 .donut-card {
   gap: 14px;
 }
@@ -468,16 +595,20 @@ const exportConnCSV = () => {
   color: #0f172a;
 }
 
-/* ── Responsive ────────────────────────────────── */
 @media (max-width: 1100px) {
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-  .charts-row { grid-template-columns: 1fr; }
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 720px) {
-  .stat-grid { grid-template-columns: 1fr; }
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* ══ Connexions card ═══════════════════════════════ */
 .conn-card {
   background: #fff;
   border: 1px solid #e8eaf0;
@@ -486,103 +617,262 @@ const exportConnCSV = () => {
 }
 
 .conn-head {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 20px 22px 14px; gap: 12px; flex-wrap: wrap;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 22px 14px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.conn-actions { display: flex; gap: 8px; align-items: center; }
+.conn-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 .btn-export-conn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 13px; border: 1px solid #e2e8f0; border-radius: 8px;
-  background: transparent; font-size: 12.5px; font-weight: 500; color: #475569;
-  cursor: pointer; transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-.btn-export-conn:hover { background: #f8fafc; }
+.btn-export-conn:hover {
+  background: #f8fafc;
+}
 
 .btn-refresh-conn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 13px; border: none; border-radius: 8px;
-  background: #0d1b2a; color: white;
-  font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: none;
+  border-radius: 8px;
+  background: #0d1b2a;
+  color: white;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-.btn-refresh-conn:hover { background: #1e3a5f; }
+.btn-refresh-conn:hover {
+  background: #1e3a5f;
+}
 
-/* Filters */
 .conn-filters {
-  display: flex; align-items: center; gap: 10px;
-  padding: 0 22px 14px; flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px 14px;
+  flex-wrap: wrap;
 }
 
 .conn-select {
-  appearance: none; border: 1px solid #e2e8f0; border-radius: 8px;
-  padding: 7px 12px; background: #f8fafc; font-size: 13px; color: #334155;
-  cursor: pointer; outline: none; transition: border-color 0.15s;
-}
-.conn-select:focus { border-color: #6366f1; }
-
-.conn-search {
-  display: flex; align-items: center; gap: 7px;
-  border: 1px solid #e2e8f0; border-radius: 8px;
-  padding: 6px 12px; background: #f8fafc; flex: 1; max-width: 280px;
+  appearance: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px 12px;
+  background: #f8fafc;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
   transition: border-color 0.15s;
 }
-.conn-search:focus-within { border-color: #6366f1; background: #fff; }
-.conn-search svg { color: #94a3b8; flex-shrink: 0; }
-.conn-search input { background: transparent; border: none; outline: none; font-size: 13px; color: #334155; width: 100%; }
-.conn-search input::placeholder { color: #94a3b8; }
+.conn-select:focus {
+  border-color: #6366f1;
+}
+
+.conn-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  flex: 1;
+  max-width: 280px;
+  transition: border-color 0.15s;
+}
+.conn-search:focus-within {
+  border-color: #6366f1;
+  background: #fff;
+}
+.conn-search svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.conn-search input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #334155;
+  width: 100%;
+}
+.conn-search input::placeholder {
+  color: #94a3b8;
+}
 
 .conn-count {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12.5px; font-weight: 600; color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #ef4444;
   margin-left: auto;
 }
 .suspect-dot {
-  width: 8px; height: 8px; background: #ef4444; border-radius: 50;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50;
   animation: pulse 1.5s infinite;
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
-/* Table */
-.conn-table-wrap { overflow-x: auto; }
+.conn-table-wrap {
+  overflow-x: auto;
+}
 
-.conn-table { width: 100%; border-collapse: collapse; min-width: 680px; }
-.conn-table thead tr { background: #fafbff; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
-.conn-table th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.conn-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+.conn-table thead tr {
+  background: #fafbff;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+.conn-table th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
 
-.conn-row { border-bottom: 1px solid #f8fafc; transition: background 0.12s; }
-.conn-row:last-child { border-bottom: none; }
-.conn-row:hover { background: #fafbff; }
-.conn-row.suspect { background: #fff5f5; }
-.conn-row.suspect:hover { background: #fee2e2; }
+.conn-row {
+  border-bottom: 1px solid #f8fafc;
+  transition: background 0.12s;
+}
+.conn-row:last-child {
+  border-bottom: none;
+}
+.conn-row:hover {
+  background: #fafbff;
+}
+.conn-row.suspect {
+  background: #fff5f5;
+}
+.conn-row.suspect:hover {
+  background: #fee2e2;
+}
 
-.conn-table td { padding: 13px 16px; vertical-align: middle; }
+.conn-table td {
+  padding: 13px 16px;
+  vertical-align: middle;
+}
 
-.conn-user { display: flex; align-items: center; gap: 9px; }
+.conn-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
 .conn-avatar {
-  width: 32px; height: 32px; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: #334155; flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  flex-shrink: 0;
 }
-.conn-username { font-size: 13px; font-weight: 600; color: #1e293b; margin: 0 0 1px; }
-.conn-role     { font-size: 11px; color: #94a3b8; margin: 0; }
+.conn-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1px;
+}
+.conn-role {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+}
 
-.conn-ip { font-size: 13px; font-family: 'Courier New', monospace; color: #334155; display: flex; align-items: center; gap: 5px; }
-.conn-ip.ip-suspect { color: #ef4444; font-weight: 600; }
-.ip-flag { font-size: 12px; color: #ef4444; }
+.conn-ip {
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.conn-ip.ip-suspect {
+  color: #ef4444;
+  font-weight: 600;
+}
+.ip-flag {
+  font-size: 12px;
+  color: #ef4444;
+}
 
-.conn-agent { font-size: 12.5px; color: #64748b; }
-.conn-date  { font-size: 12.5px; color: #94a3b8; white-space: nowrap; font-family: 'Courier New', monospace; }
+.conn-agent {
+  font-size: 12.5px;
+  color: #64748b;
+}
+.conn-date {
+  font-size: 12.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-family: 'Courier New', monospace;
+}
 
 .conn-badge {
-  display: inline-block; padding: 3px 10px; border-radius: 20px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; white-space: nowrap;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
-.conn-badge.success { background: #ecfdf5; color: #16a34a; }
-.conn-badge.erreur  { background: #fef2f2; color: #dc2626; }
-.conn-badge.termine { background: #eff6ff; color: #2563eb; }
-
+.conn-badge.success {
+  background: #ecfdf5;
+  color: #16a34a;
+}
+.conn-badge.erreur {
+  background: #fef2f2;
+  color: #dc2626;
+}
+.conn-badge.termine {
+  background: #eff6ff;
+  color: #2563eb;
+}
 </style>
+

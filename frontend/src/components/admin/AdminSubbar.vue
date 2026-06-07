@@ -27,44 +27,15 @@
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        <span class="notif-dot"></span>
+        <span v-if="unreadCount > 0" class="notif-dot"></span>
       </button>
  
       <!-- Avatar -->
-      <div class="avatar-wrapper" ref="avatarRef" @click="toggleDropdown">
+      <div class="avatar-wrapper">
         <div class="avatar">
           <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="avatar-img" />
           <span v-else>{{ initials }}</span>
         </div>
- 
-        <transition name="dd">
-          <div v-if="dropdownOpen" class="dropdown" @click.stop>
-            <div class="dd-header">
-              <div class="avatar sm">
-                <img v-if="avatarUrl" :src="avatarUrl" alt="" class="avatar-img" />
-                <span v-else>{{ initials }}</span>
-              </div>
-              <div>
-                <p class="dd-name">{{ userName }}</p>
-                <p class="dd-role">{{ userRole }}</p>
-              </div>
-            </div>
-            <hr class="dd-sep" />
-            <button class="dd-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
-              Mon profil
-            </button>
-            <button class="dd-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
-              Paramètres
-            </button>
-            <hr class="dd-sep" />
-            <button class="dd-item danger">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Déconnexion
-            </button>
-          </div>
-        </transition>
       </div>
  
     </div>
@@ -73,6 +44,7 @@
  
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { notificationService } from '@/services/notification.service'
  
 const props = defineProps({
   title:       { type: String, default: '' },
@@ -92,41 +64,43 @@ const localSearch = computed({
 const initials = computed(() =>
   props.userName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 )
- 
-const dropdownOpen = ref(false)
-const avatarRef    = ref(null)
- 
-const toggleDropdown = () => { dropdownOpen.value = !dropdownOpen.value }
- 
-const onClickOutside = (e) => {
-  if (avatarRef.value && !avatarRef.value.contains(e.target)) {
-    dropdownOpen.value = false
+
+const unreadCount = ref(0)
+
+const loadUnreadNotifications = async () => {
+  try {
+    unreadCount.value = await notificationService.getUnreadCount()
+  } catch (error) {
+    unreadCount.value = 0
   }
 }
-onMounted(()       => document.addEventListener('mousedown', onClickOutside))
-onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
+
+onMounted(() => {
+  loadUnreadNotifications()
+})
 </script>
- 
+
 <style scoped>
 .subbar {
   position: fixed;
   top: 50px;          /* juste sous AdminNavbar (50px) */
-  left: 0;
-  right: 0;
+  left: 0px;
+  right: 26px;
   height: 56px;
   background: #fff;
   border-bottom: 1px solid #e8eaf0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  z-index: 150;
+  padding: 28px 8px 20px 43px; 
+  z-index: 10;
   transition: left 0.25s ease;
   gap: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
  
 /* Se décale quand la sidebar est ouverte */
-.subbar.sidebar-open { left: 185px; }
+.subbar.sidebar-open { left: 185px;box-shadow: 0 1px 0 #e8eaf0, 0 2px 8px rgba(0,0,0,0.04); }
  
 /* ── Title ── */
 .page-title {
@@ -150,17 +124,19 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   display: flex;
   align-items: center;
   gap: 7px;
-  background: #f8fafc;
+  background: #ebebeb;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
-  padding: 6px 12px;
-  width: 200px;
-  transition: width 0.25s, border-color 0.15s, background 0.15s;
+  border-radius: 20px;
+  padding: 7px 14px;
+  width: 290px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05) inset;
+  transition: width 0.25s, border-color 0.15s, box-shadow 0.15s;
 }
 .search-box:focus-within {
-  width: 260px;
+  width: 290px;
   border-color: #6366f1;
-  background: #fff;
+  /*background: #fff;*/
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.10);
 }
 .si       { color: #94a3b8; flex-shrink: 0; }
 .si-input {
@@ -177,45 +153,53 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
 /* Icon btn */
 .icon-btn {
   position: relative;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  width: 34px;
-  height: 34px;
-  display: flex;
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  transition: background 0.15s;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--purple);
+  color: white;
+  box-shadow: 0 8px 18px var(--text-gray);
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
-.icon-btn:hover { background: #f1f5f9; }
+.icon-btn svg {
+  stroke: white;
+}
+.icon-btn:hover { background: #f1f5f9;
+  border-radius: 8px;}
  
 .notif-dot {
   position: absolute;
-  top: 6px; right: 6px;
-  width: 7px; height: 7px;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
   background: #ef4444;
+  border: 2px solid #fff;
   border-radius: 50%;
-  border: 1.5px solid #fff;
 }
  
 /* Avatar */
 .avatar-wrapper { position: relative; cursor: pointer; }
  
 .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  display: flex;
+  position: relative;
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--purple);
   color: white;
-  overflow: hidden;
-  border: 2px solid transparent;
-  transition: border-color 0.15s;
+  box-shadow: 0 8px 18px var(--text-gray);
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 .avatar-wrapper:hover .avatar { border-color: #6366f1; }
 .avatar.sm {

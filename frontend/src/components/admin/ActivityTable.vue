@@ -6,11 +6,14 @@
         <p class="section-sub">Dernières actions et soumissions sur la plateforme</p>
       </div>
       <div class="header-actions">
-        <button class="btn-outline">Voir tout</button>
-        <button class="btn-outline icon-btn">
-          <Clock :size="14" />
-          Historique
-        </button>
+        <button class="btn-outline" @click="showAllActivities = !showAllActivities">
+  {{ showAllActivities ? 'Réduire' : 'Voir tout' }}
+</button>
+
+<button class="btn-outline" @click="goToHistory">
+  <Clock :size="14" />
+  Historique
+</button>
       </div>
     </div>
  
@@ -25,7 +28,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in activities" :key="item.id" class="activity-row">
+        <tr v-for="item in displayedActivities" :key="item.id" class="activity-row">
           <td>
             <div class="user-cell">
               <div class="avatar" :style="{ background: item.avatarColor }">
@@ -54,57 +57,31 @@
 </template>
  
 <script setup>
+import { ref, computed } from 'vue'
 import { Clock, MoreHorizontal } from 'lucide-vue-next'
 import StatusBadge from './StatusBadge.vue'
- 
-const activities = [
-  {
-    id: 1,
-    name: 'Marc-Antoine Dubois',
-    email: 'marc.dubois@ecole.fr',
-    action: 'Nouveau Portfolio soumis',
-    date: 'Il y a 2 min',
-    status: 'pending',
-    avatarColor: '#c7d2fe',
-  },
-  {
-    id: 2,
-    name: 'Sophie Laurent',
-    email: 's.laurent@univ-paris.fr',
-    action: 'Certification validée',
-    date: 'Il y a 15 min',
-    status: 'completed',
-    avatarColor: '#bbf7d0',
-  },
-  {
-    id: 3,
-    name: 'Thomas Bernard',
-    email: 't.bernard@tech.edu',
-    action: 'Mise à jour de profil',
-    date: 'Il y a 42 min',
-    status: 'completed',
-    avatarColor: '#fed7aa',
-  },
-  {
-    id: 4,
-    name: 'Léa Morel',
-    email: 'lea.morel@design.fr',
-    action: 'Nouvelle inscription',
-    date: 'Il y a 1h',
-    status: 'completed',
-    avatarColor: '#fce7f3',
-  },
-  {
-    id: 5,
-    name: 'Jean-Pierre Petit',
-    email: 'jp.petit@science.fr',
-    action: 'Demande de vérification',
-    date: 'Il y a 3h',
-    status: 'cancelled',
-    avatarColor: '#e2e8f0',
-  },
-]
- 
+
+const props = defineProps({
+  activities: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const showAllActivities = ref(false)
+
+const displayedActivities = computed(() =>
+  showAllActivities.value
+    ? props.activities
+    : props.activities.slice(0, 5)
+)
+
+const goToHistory = () => {
+  document
+    .getElementById('connexion-history')
+    ?.scrollIntoView({ behavior: 'smooth' })
+}
+
 const initials = (name) =>
   name
     .split(' ')
@@ -119,6 +96,7 @@ const initials = (name) =>
   background: #fff;
   border: 1px solid #e8eaf0;
   border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   padding: 24px;
 }
  

@@ -75,7 +75,7 @@ const activiteController = {
   async valider(req, res) {
     try {
       const { statut } = req.body
-      const activite = await activiteService.valider(req.params.id, req.utilisateur.id_utilisateur, statut)
+      const activite = await activiteService.valider(req.params.id, req.utilisateur, statut)
       if (!activite) return res.status(404).json(ApiResponse.notFound('Activité'))
       return res.json(ApiResponse.success(activite, `Activité ${statut.toLowerCase()}`))
     } catch (e) {

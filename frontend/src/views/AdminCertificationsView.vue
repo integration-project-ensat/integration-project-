@@ -242,135 +242,80 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Search, Check, X, Eye, ExternalLink, FileText, Image as ImageIcon } from 'lucide-vue-next'
 import AdminNavbar  from '../components/admin/AdminNavbar.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import AdminSubbar  from '../components/admin/AdminSubbar.vue'
+import api from '@/services/api.js'
+
 
 const sidebarOpen = ref(true)
 const search      = ref('')
 const page        = ref(1)
 const perPage     = 5
+const statusLabel = { pending: 'En attente', validated: 'ValidÃ©', refused: 'RefusÃ©' }
 
-const statusLabel = { pending: 'En attente', validated: 'Validé', refused: 'Refusé' }
+/* ═══ DONNÉES — chargées depuis le backend ═══ */
+const items = ref([])
 
-/* ═══ DONNÉES — exactement ce que l'étudiant a saisi ═══ */
-const items = ref([
-  {
-    id: 1,
-    studentName: 'Amine Bensaid', studentEmail: 'amine.b@univ-casa.ma', studentSchool: 'Université Hassan II',
-    title: 'AWS Cloud Practitioner', type: 'Amazon AWS', date: '12 Oct 2023',
-    dateStart: '01 Jul 2023', dateEnd: '10 Oct 2023', duration: '3 mois', location: 'En ligne',
-    status: 'pending', avatarColor: '#c7d2fe',
-    description: "J'ai préparé et obtenu la certification AWS Cloud Practitioner en 3 mois d'auto-formation. J'ai suivi les cours officiels AWS Skill Builder, complétés par des labs pratiques sur AWS Academy. J'ai passé l'examen CLF-C02 le 10 octobre 2023 avec un score de 847/1000 (seuil de passage : 700).",
-    skills: ['AWS EC2', 'AWS S3', 'AWS Lambda', 'Cloud Security', 'Pricing & Billing'],
-    photos: [
-      { name: 'badge_aws.png',        color: '#f59e0b' },
-      { name: 'score_exam.png',       color: '#d97706' },
-    ],
-    links: [
-      { label: 'Badge Credly vérifié', url: 'https://www.credly.com/badges/amine-aws-cp' },
-      { label: 'Profil AWS Certification', url: 'https://aws.amazon.com/verification/amine' },
-    ],
-    document: { name: 'certificat_aws_cloud_practitioner.pdf', type: 'Certificat officiel Amazon PDF' },
-  },
-  {
-    id: 2,
-    studentName: 'Sarah Mansouri', studentEmail: 's.mansouri@est-agadir.ac.ma', studentSchool: 'EST Agadir',
-    title: 'Google UX Design Certificate', type: 'Google', date: '14 Oct 2023',
-    dateStart: '01 Avr 2023', dateEnd: '12 Oct 2023', duration: '6 mois', location: 'En ligne (Coursera)',
-    status: 'pending', avatarColor: '#d1fae5',
-    description: "Certification professionnelle Google en UX Design obtenue via Coursera. Le programme couvre les 7 cours du parcours : fondements UX, wireframing, prototypage Figma, recherche utilisateur, tests d'utilisabilité, design accessible et portfolio. J'ai réalisé 3 projets pratiques dont une application de gestion de jardins.",
-    skills: ['Figma', 'Adobe XD', 'Recherche UX', 'Wireframing', 'Prototypage', 'Tests utilisateurs'],
-    photos: [
-      { name: 'projet_jardins_figma.png', color: '#10b981' },
-      { name: 'prototype_hifi.png',        color: '#059669' },
-      { name: 'rapport_tests_ux.png',      color: '#047857' },
-    ],
-    links: [
-      { label: 'Certificat Coursera',  url: 'https://coursera.org/verify/sarah-google-ux' },
-      { label: 'Portfolio Behance',    url: 'https://behance.net/sarah-mansouri-ux' },
-      { label: 'Projet Figma public',  url: 'https://figma.com/community/sarah-jardin' },
-    ],
-    document: { name: 'google_ux_certificate_sarah.pdf', type: 'Certificat Google / Coursera PDF' },
-  },
-  {
-    id: 3,
-    studentName: 'Youssef Ame', studentEmail: 'youssef.amrani@emi.ac.ma', studentSchool: 'EMI Rabat',
-    title: 'Cisco CCNA 200-301', type: 'Cisco', date: '16 Oct 2023',
-    dateStart: '01 Jun 2023', dateEnd: '15 Oct 2023', duration: '4,5 mois', location: 'Centre Pearson VUE, Rabat',
-    status: 'validated', avatarColor: '#fde68a',
-    description: "Certification réseau Cisco CCNA 200-301 obtenue après 4 mois de préparation intensive. J'ai utilisé le cours officiel Cisco NetAcad, le simulateur Packet Tracer pour les labs et des examens blancs sur Boson. Score final : 892/1000. La certification couvre IPv4/IPv6, OSPF, VLANs, ACL, NAT, sécurité réseau et automatisation.",
-    skills: ['IPv4 / IPv6', 'OSPF', 'VLANs & trunking', 'ACL & NAT', 'Cisco IOS', 'Packet Tracer'],
-    photos: [
-      { name: 'score_ccna_892.png',   color: '#6366f1' },
-      { name: 'lab_packet_tracer.png', color: '#4f46e5' },
-    ],
-    links: [
-      { label: 'Badge Cisco Credly', url: 'https://www.credly.com/badges/youssef-ccna' },
-      { label: 'Verification Cisco', url: 'https://cp.certmetrics.com/cisco/en/public/verify/credential/youssef' },
-    ],
-    document: { name: 'cisco_ccna_certificate_youssef.pdf', type: 'Certificat officiel Cisco PDF' },
-  },
-  {
-    id: 4,
-    studentName: 'Sofia Kenzi', studentEmail: 'sofia.kenzi@aui.ma', studentSchool: 'Al Akhawayn University',
-    title: 'TensorFlow Developer Certificate', type: 'Google / TensorFlow', date: '18 Oct 2023',
-    dateStart: '15 Jul 2023', dateEnd: '17 Oct 2023', duration: '3 mois', location: 'En ligne (exam à distance)',
-    status: 'pending', avatarColor: '#fbcfe8',
-    description: "Certification Google TensorFlow Developer obtenue après 3 mois de préparation. L'examen de 5 heures teste la maîtrise pratique de TensorFlow 2.x : régression, classification, CNN, NLP (text classification, LSTM), séries temporelles. Score : 88%. J'ai complété le spécialisation DeepLearning.AI sur Coursera en parallèle.",
-    skills: ['TensorFlow 2.x', 'Keras', 'CNN', 'LSTM / NLP', 'Time Series', 'Transfer Learning'],
-    photos: [
-      { name: 'badge_tf_developer.png', color: '#ec4899' },
-      { name: 'notebook_cnn.png',        color: '#db2777' },
-    ],
-    links: [
-      { label: 'Certificat TF Developer', url: 'https://www.credential.net/sofia-tf-developer' },
-      { label: 'Notebooks GitHub',         url: 'https://github.com/sofia/tf-certification-prep' },
-      { label: 'Spécialisation DeepAI',    url: 'https://coursera.org/verify/sofia-deeplearning' },
-    ],
-    document: { name: 'tensorflow_developer_certificate_sofia.pdf', type: 'Certificat officiel Google PDF' },
-  },
-  {
-    id: 5,
-    studentName: 'Karim Tazi', studentEmail: 'k.tazi@encg-fes.ma', studentSchool: 'ENCG Fès',
-    title: 'PMP – Project Management Professional', type: 'PMI', date: '20 Oct 2023',
-    dateStart: '01 Jan 2023', dateEnd: '19 Oct 2023', duration: '9 mois', location: 'Centre Prometric, Fès',
-    status: 'refused', avatarColor: '#e2e8f0',
-    description: "J'ai préparé la certification PMP du PMI après avoir accumulé 36 mois d'expérience en gestion de projet. La préparation a duré 9 mois : cours en ligne PMI, étude du PMBOK 7ème édition, 3000 questions de révision. Score à l'examen : 68% (seuil requis : 70%). Je compte repasser dans 3 mois.",
-    skills: ['Gestion de projet', 'PMBOK', 'Agile / Scrum', 'Gestion des risques', 'MS Project'],
-    photos: [
-      { name: 'score_pmp_68.png',  color: '#94a3b8' },
-      { name: 'etude_pmbok.jpg',   color: '#64748b' },
-    ],
-    links: [
-      { label: 'PMI ID de candidature', url: 'https://pmi.org/certifications/verify/karim-tazi-pmp' },
-    ],
-    document: { name: 'attestation_examen_pmp_karim.pdf', type: 'Relevé de notes PMI PDF' },
-  },
-  {
-    id: 6,
-    studentName: 'Nadia El Fassi', studentEmail: 'n.elfassi@univ-casa.ma', studentSchool: 'Université Hassan II',
-    title: 'Meta Front-End Developer', type: 'Meta', date: '22 Oct 2023',
-    dateStart: '01 Mar 2023', dateEnd: '21 Oct 2023', duration: '7 mois', location: 'En ligne (Coursera)',
-    status: 'pending', avatarColor: '#bfdbfe',
-    description: "Certification professionnelle Meta en développement front-end complétée en 7 mois via Coursera. Le programme couvre HTML/CSS avancé, JavaScript ES6+, React (hooks, context, routing), REST APIs, accessibilité WCAG, tests Jest et un projet Capstone complet. Mon projet final est un clone de réseau social avec authentification JWT.",
-    skills: ['React 18', 'JavaScript ES6+', 'CSS Grid / Flexbox', 'Jest', 'REST API', 'WCAG Accessibility'],
-    photos: [
-      { name: 'projet_capstone.png',   color: '#3b82f6' },
-      { name: 'composants_react.png',  color: '#2563eb' },
-      { name: 'score_tests_jest.png',  color: '#1d4ed8' },
-    ],
-    links: [
-      { label: 'Certificat Meta / Coursera', url: 'https://coursera.org/verify/nadia-meta-frontend' },
-      { label: 'Projet Capstone GitHub',      url: 'https://github.com/nadia/meta-capstone' },
-      { label: 'Site Capstone en ligne',      url: 'https://nadia-capstone.netlify.app' },
-    ],
-    document: { name: 'meta_frontend_certificate_nadia.pdf', type: 'Certificat officiel Meta / Coursera PDF' },
-  },
-])
 
+const mapAttestationForUI = (a) => {
+  // Backend: attestationController renvoie un objet attestation.
+  // On normalise vers les champs que la vue utilise.
+  const statut = a?.element?.statut ?? a?.statut ?? a?.status
+
+  const status =
+    typeof statut === 'string'
+      ? statut === 'EN_ATTENTE'
+        ? 'pending'
+        : statut === 'VALIDE'
+          ? 'validated'
+          : statut === 'REFUSE'
+            ? 'refused'
+            : statut === 'CORRECTION_DEMANDEE'
+              ? 'pending'
+              : 'pending'
+      : 'pending'
+
+  return {
+    ...a,
+    id: a?.id_attestation ?? a?.id,
+    studentName: a?.etudiant?.utilisateur
+      ? `${a.etudiant.utilisateur.prenom} ${a.etudiant.utilisateur.nom}`
+      : (a?.studentName ?? 'Etudiant non lie'),
+    studentEmail: a?.etudiant?.utilisateur?.email ?? a?.studentEmail ?? '',
+    studentSchool: a?.etudiant?.etablissement ?? a?.studentSchool ?? '',
+    title: a?.titre ?? a?.title ?? '',
+    type: a?.type ?? a?.organisme ?? a?.type ?? '',
+    date: a?.date ?? a?.createdAt ?? a?.dateSoumission ?? '',
+    dateStart: a?.date_debut ?? a?.dateStart,
+    dateEnd: a?.date_fin ?? a?.dateEnd,
+    duration: a?.duree ?? a?.duration,
+    location: a?.lieu ?? a?.location,
+    status,
+    avatarColor: '#c7d2fe',
+    description: a?.description ?? '',
+    skills: a?.skills ?? [],
+    photos: a?.photos ?? a?.preuves ?? [],
+    links: a?.links ?? [],
+    document: a?.document ?? null,
+    validateurId: a?.validateurId ?? a?.element?.validateur_id ?? a?.element?.validateur?.id_utilisateur,
+    motif_refus: a?.motif_refus ?? a?.element?.motif_refus ?? a?.motifRefus,
+  }
+}
+
+const loadCertifications = async () => {
+  try {
+    const resp = await api.get('/attestations')
+    const list = resp?.data?.data ?? resp?.data?.data?.data ?? []
+    items.value = Array.isArray(list) ? list.map(mapAttestationForUI) : []
+  } catch (e) {
+    items.value = []
+  }
+}
+
+onMounted(loadCertifications)
 
 /* ── Stats, filter, pagination ── */
 const stats        = computed(() => [
@@ -390,8 +335,44 @@ const pagEnd   = computed(() => Math.min(page.value * perPage, filteredItems.val
 const modal = ref({ open: false, item: null, action: 'view', reason: '' })
 const openDetail      = (item, action) => { modal.value = { open: true, item, action, reason: '' } }
 const closeModal      = () => { modal.value.open = false }
-const confirmValidate = () => { modal.value.item.status = 'validated'; closeModal() }
-const confirmRefuse   = () => { modal.value.item.status = 'refused';   closeModal() }
+const loadingAction = ref(false)
+
+const confirmValidate = async () => {
+  if (!modal.value.item) return
+  const id = modal.value.item.id
+  if (!id) return
+
+  loadingAction.value = true
+  try {
+    await api.patch(`/attestations/${id}/statut`, { statut: 'VALIDE' })
+    await loadCertifications()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
+    closeModal()
+  } finally {
+    loadingAction.value = false
+  }
+}
+
+const confirmRefuse = async () => {
+  if (!modal.value.item) return
+  const id = modal.value.item.id
+  if (!id) return
+
+  loadingAction.value = true
+  try {
+    await api.patch(`/attestations/${id}/statut`, {
+      statut: 'REFUSE',
+      motif_refus: modal.value.reason,
+    })
+    await loadCertifications()
+    // notify dashboard to refresh counts
+    try { window.dispatchEvent(new Event('admin-dashboard-refresh')) } catch (e) {}
+    closeModal()
+  } finally {
+    loadingAction.value = false
+  }
+}
 const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 </script>
 
@@ -400,7 +381,10 @@ const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).jo
 .dashboard-layout { min-height: 100vh; background: #f5f7fb; }
 .main-content { position: fixed; top: 106px; left: 0; right: 0; bottom: 0; overflow-y: auto; transition: left 0.25s ease; }
 .main-content.sidebar-open { left: 185px; }
-.page-content { padding: 28px 30px; display: flex; flex-direction: column; gap: 20px; min-height: 100%; }
+.page-content {
+   padding: 28px 8px 30px 43px; 
+  background: #dfe2ea;
+   display: flex; flex-direction: column; gap: 20px; min-height: 100%; }
 
 .page-title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px; letter-spacing: -0.4px; }
 .page-desc  { font-size: 13px; color: #64748b; margin: 0; }

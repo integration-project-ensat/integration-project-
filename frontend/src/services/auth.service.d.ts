@@ -19,7 +19,7 @@ declare const authService: {
     newPassword: string
     confirmPassword: string
   }): Promise<any>
-  logout(): void
+  logout(): Promise<any>
 }
 
 export default authService

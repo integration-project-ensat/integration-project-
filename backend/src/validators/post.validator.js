@@ -42,4 +42,9 @@ module.exports = {
     param('id').isInt({ min: 1 }).withMessage('ID poste invalide'),
     body('type').optional().isIn(reactionTypes).withMessage('Reaction invalide'),
   ],
+
+  commentRules: [
+    param('id').isInt({ min: 1 }).withMessage('ID poste invalide'),
+    body('contenu').trim().notEmpty().withMessage('Le contenu est requis'),
+  ],
 }

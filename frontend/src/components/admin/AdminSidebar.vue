@@ -45,6 +45,7 @@ import {
   LogOut,
 } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
+import authService from '@/services/auth.service.js'
  
 defineProps({
   open: { type: Boolean, default: true },
@@ -68,8 +69,8 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
  
-const handleLogout = () => {
-  localStorage.removeItem('token')
+const handleLogout = async () => {
+  await authService.logout()
   router.push('/login')
 }
 </script>
@@ -82,11 +83,11 @@ const handleLogout = () => {
   top: 50px;
   left: 0;
   bottom: 0;
-  width: 185px;
+  width: 220px;
  
   background: #fff;
   border-right: 1px solid #e8eaf0;
- 
+  box-shadow: 2px 0 12px rgba(0,0,0,0.04);
   /*
     Flex column : nav pousse vers le haut,
     spacer prend tout l'espace libre,
@@ -95,7 +96,7 @@ const handleLogout = () => {
   display: flex;
   flex-direction: column;
  
-  padding: 16px 12px;
+  padding: 16px 0px;
   z-index: 100;
   overflow-y: auto;
  
@@ -136,10 +137,10 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 11px;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border-radius: 0px;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   color: #64748b;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
@@ -160,6 +161,9 @@ const handleLogout = () => {
   background: #ede9fe;
   color: #6366f1;
   font-weight: 600;
+  border-radius: 0;                        /* supprimer le border-radius */
+  border-left: 3px solid #6366f1;         /* barre violette à gauche */
+  padding-left: 8px;  
 }
  
 .nav-label {

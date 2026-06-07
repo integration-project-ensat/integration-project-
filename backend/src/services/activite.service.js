@@ -1,4 +1,5 @@
-const prisma = require('../models/prisma')
+const { prisma, toBigInt } = require('../models/prisma')
+const notificationService = require('./notification.service')
 
 const activiteService = {
   async findAll(filters = {}) {
@@ -75,17 +76,65 @@ const activiteService = {
     })
   },
 
-  async valider(id, validateurId, statut) {
+  async valider(id, validateur, statut) {
     const activite = await prisma.activiteParascolaire.findUnique({ where: { id_activite: BigInt(id) } })
     if (!activite) return null
-
-    return prisma.activiteParascolaire.update({
+    const validateurId = validateur?.id_utilisateur ?? validateur
+    const isProfesseur = validateur?.role === 'PROFESSEUR'
+    const statutElement =
+      statut === 'ATTESTEE_INSTITUTION'
+        ? 'VALIDE'
+        : statut === 'REFUSEE'
+          ? 'REFUSE'
+          : 'EN_ATTENTE'
+    // Mettre à jour la table activite
+    const updated = await prisma.activiteParascolaire.update({
       where: { id_activite: BigInt(id) },
       data: {
         statut,
-        id_validateur: BigInt(validateurId)
+        ...(isProfesseur && { id_validateur: BigInt(validateurId) })
       }
     })
+
+    // Enregistrer / mettre à jour l'élément validable associé
+    try {
+      const existing = await prisma.elementValidable.findFirst({ where: { type: 'ACTIVITE', reference_id: activite.id_activite } })
+      if (existing) {
+        await prisma.elementValidable.update({
+          where: { id_element: existing.id_element },
+          data: { statut: statutElement, validateur_id: toBigInt(validateurId), date_validation: new Date() }
+        })
+      } else {
+        await prisma.elementValidable.create({
+          data: { type: 'ACTIVITE', reference_id: activite.id_activite, statut: statutElement, validateur_id: toBigInt(validateurId), date_soumission: new Date(), date_validation: new Date() }
+        })
+      }
+
+      // Notifications: informer l'étudiant
+      const utilisateurId = activite.id_etudiant
+      if (statut === 'ATTESTEE_INSTITUTION') {
+        await notificationService.creerNotification({
+          utilisateurId,
+          type: 'VALIDATION_STAGE',
+          message: `Votre activité \"${activite.nom || 'Activité'}\" a été validée.`,
+          cibleId: activite.id_activite,
+          cibleType: 'ACTIVITE'
+        })
+      } else {
+        // traitement générique pour autres statuts
+        await notificationService.creerNotification({
+          utilisateurId,
+          type: 'REFUS_STAGE',
+          message: `Le statut de votre activité \"${activite.nom || 'Activité'}\" a été mis à jour: ${statut}.`,
+          cibleId: activite.id_activite,
+          cibleType: 'ACTIVITE'
+        })
+      }
+    } catch (e) {
+      // ne pas bloquer la validation si la notification échoue
+    }
+
+    return updated
   }
 }
 

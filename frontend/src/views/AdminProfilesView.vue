@@ -246,10 +246,12 @@
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                           Modifier
                         </button>
-                        <button class="menu-item danger" @click="deleteProfile(p)">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                          Supprimer
-                        </button>
+                        <button
+  class="menu-item danger"
+  @click="deleteEtudiant(p.id)"
+>
+  Supprimer
+</button>
                       </div>
                     </button>
                   </div>
@@ -258,6 +260,214 @@
             </tbody>
           </table>
 
+          <!-- Section Professionnels -->
+           <div class="table-card" style="margin-top:20px;">
+  <div class="table-header">
+    <div class="table-title-block">
+      <h2 class="table-title">Liste des Professeurs</h2>
+      <span class="count-badge">
+        {{ professeurs.length }} profils trouvés
+      </span>
+    </div>
+  </div>
+
+  <table class="profiles-table">
+    <thead>
+      <tr>
+        <th>Professeur</th>
+        <th>Département</th>
+        <th>Spécialité</th>
+        <th>Code administratif</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr v-if="professeurs.length === 0">
+        <td colspan="5" class="empty-row">
+          Aucun professeur trouvé.
+        </td>
+      </tr>
+
+      <tr
+        v-for="prof in professeurs"
+        :key="prof.id_utilisateur"
+      >
+
+        <td>
+          <div class="student-cell">
+            <div
+              class="student-avatar"
+              style="background:#ddd6fe;"
+            >
+              {{ initials(
+                  prof.utilisateur.prenom + ' ' +
+                  prof.utilisateur.nom
+              ) }}
+            </div>
+
+            <div>
+              <p class="student-name">
+                {{ prof.utilisateur.prenom }}
+                {{ prof.utilisateur.nom }}
+              </p>
+
+              <p class="student-email">
+                {{ prof.utilisateur.email }}
+              </p>
+            </div>
+          </div>
+        </td>
+
+        <td>{{ prof.departement }}</td>
+
+        <td>{{ prof.specialite }}</td>
+
+        <td>{{ prof.code_administratif }}</td>
+
+        <td>
+          <button
+            class="btn-del"
+            @click="deleteProfesseur(prof)"
+          >
+            <Trash2 :size="14" />
+          </button>
+        </td>
+
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+<div class="table-card" style="margin-top: 20px;">
+  <div class="table-header">
+    <div class="table-title-block">
+      <h2 class="table-title">Liste des Professionnels</h2>
+      <span class="count-badge">{{ professionnels.length }} profils trouvés</span>
+    </div>
+  </div>
+
+  <table class="profiles-table">
+    <thead>
+      <tr>
+        <th>Professionnel</th>
+        <th>Entreprise</th>
+        <th>Poste</th>
+        <th>Statut</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-if="professionnels.length === 0">
+        <td colspan="5" class="empty-row">Aucun professionnel trouvé.</td>
+      </tr>
+      <tr
+        v-for="pro in professionnels"
+        :key="pro.id_utilisateur"
+        class="profile-row"
+      >
+        <!-- Professionnel -->
+        <td>
+          <div class="student-cell">
+            <div class="student-avatar" style="background: #bfdbfe;">
+              <span>{{ initials(pro.utilisateur.prenom + ' ' + pro.utilisateur.nom) }}</span>
+            </div>
+            <div>
+              <p class="student-name">{{ pro.utilisateur.prenom }} {{ pro.utilisateur.nom }}</p>
+              <p class="student-email">{{ pro.utilisateur.email }}</p>
+            </div>
+          </div>
+        </td>
+
+        <!-- Entreprise -->
+        <td>
+          <div class="school-cell">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            </svg>
+            {{ pro.entreprise }}
+          </div>
+        </td>
+
+        <!-- Poste -->
+        <td>
+          <div class="school-cell">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            {{ pro.poste }}
+          </div>
+        </td>
+
+        <!-- Statut -->
+        <td>
+          <span
+            class="status-badge"
+            :class="{
+              verified:   pro.statut_validation === 'VALIDE',
+              pending:    pro.statut_validation === 'EN_ATTENTE',
+              unverified: pro.statut_validation === 'REFUSE'
+            }"
+          >
+            <svg v-if="pro.statut_validation === 'valide'" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <svg v-else-if="pro.statut_validation === 'en_attente'" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <svg v-else width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            {{
+              pro.statut_validation === 'VALIDE'? 'Validé' :
+              pro.statut_validation === 'EN_ATTENTE'? 'En attente': 'Refusé'
+            }}
+          </span>
+        </td>
+
+        <!-- Actions -->
+        <td>
+          <div class="row-actions">
+            <button
+              class="btn-primary"
+              style="padding: 6px 12px; font-size: 12px;"
+              :disabled="pro.statut_validation === 'valide'"
+              @click="validateProfessionnel(pro)"
+            >
+              Valider
+            </button>
+            <button
+              class="btn-outline"
+              style="padding: 6px 12px; font-size: 12px; color: #ef4444; border-color: #fecaca;"
+              :disabled="pro.statut_validation === 'refuse'"
+              @click="rejectProfessionnel(pro)"
+            >
+              Refuser
+            </button>
+            <button
+  class="btn-del"
+  @click="deleteProfessionnel(pro.id_utilisateur)"
+>
+  <Trash2 :size="14" />
+</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
           <!-- Pagination -->
           <div class="pagination">
             <span class="pagination-info">
@@ -350,7 +560,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="a in adminList" :key="a.id" class="admin-row">
+                <tr v-for="a in adminList" :key="a.id_utilisateur" class="admin-row">
                   <td>
                     <div class="student-cell">
                       <div class="avatar" :style="{ background: a.color }">{{ initials(a.nom + ' ' + a.prenom) }}</div>
@@ -361,7 +571,12 @@
                   <td><span class="niveau-badge" :class="a.niveau">{{ niveauLabel[a.niveau] }}</span></td>
                   <td class="date-cell">{{ a.createdAt }}</td>
                   <td>
-                    <button class="btn-del" @click="removeAdmin(a.id)" title="Supprimer">
+                    <button
+  v-if="canDeleteAdmin(a)"
+  class="btn-del"
+  @click="removeAdmin(a)"
+  title="Supprimer"
+>
                       <Trash2 :size="14" />
                     </button>
                   </td>
@@ -390,33 +605,85 @@ import { Eye, EyeOff, UserPlus, CheckCircle, Trash2 } from 'lucide-vue-next'
 import AdminNavbar  from '../components/admin/AdminNavbar.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import AdminSubbar  from '../components/admin/AdminSubbar.vue'
+import api from '@/services/api'
 
 /* ── Layout state ──────────────────────── */
 const search      = ref('')
 const sidebarOpen = ref(true)
-
+const professeurs = ref([])
 /* ── Filters ───────────────────────────── */
 const filters = ref({
   search:   '',
   city:     '',
   school:   '',
-  minScore: 60,
+  minScore: 0,
 })
 
 const cities  = ['Casablanca', 'Agadir', 'Rabat', 'Ifrane', 'Fès', 'Marrakech']
 const schools = ['Université Hassan II', 'EST Agadir', 'EMI Rabat', 'Al Akhawayn University', 'ENCG Fès']
 
 /* ── Data ──────────────────────────────── */
-const profiles = ref([
-  { id: 1, name: 'Amine Bensaid',   email: 'amine.b@univ-casa.ma',     school: 'Université Hassan II',    city: 'Casablanca', score: 92, status: 'verified',    avatarColor: '#c7d2fe', photo: '' },
-  { id: 2, name: 'Sarah Mansouri',  email: 's.mansouri@est-agadir.ac.ma', school: 'EST Agadir',           city: 'Agadir',     score: 85, status: 'verified',    avatarColor: '#d1fae5', photo: '' },
-  { id: 3, name: 'Youssef Ame',     email: 'youssef.amrani@emi.ac.ma',  school: 'EMI Rabat',              city: 'Rabat',      score: 78, status: 'pending',     avatarColor: '#fde68a', photo: '' },
-  { id: 4, name: 'Sofia Kenzi',     email: 'sofia.kenzi@aui.ma',        school: 'Al Akhawayn University', city: 'Ifrane',     score: 95, status: 'verified',    avatarColor: '#fbcfe8', photo: '' },
-  { id: 5, name: 'Karim Tazi',      email: 'k.tazi@encg-fes.ma',        school: 'ENCG Fès',               city: 'Fès',        score: 64, status: 'unverified',  avatarColor: '#e2e8f0', photo: '' },
-  { id: 6, name: 'Nadia El Fassi',  email: 'n.elfassi@univ-casa.ma',    school: 'Université Hassan II',   city: 'Casablanca', score: 88, status: 'verified',    avatarColor: '#bfdbfe', photo: '' },
-  { id: 7, name: 'Omar Benali',     email: 'o.benali@emi.ac.ma',        school: 'EMI Rabat',              city: 'Rabat',      score: 71, status: 'pending',     avatarColor: '#fecaca', photo: '' },
-  { id: 8, name: 'Laila Chraibi',   email: 'l.chraibi@aui.ma',          school: 'Al Akhawayn University', city: 'Ifrane',     score: 90, status: 'verified',    avatarColor: '#a7f3d0', photo: '' },
+const profiles = ref([])
+
+const avatarColorsForUI = ['#c7d2fe','#d1fae5','#fde68a','#fbcfe8','#bfdbfe','#fecaca','#a7f3d0','#ddd6fe']
+
+const mapEtudiantForUI = (u, idx) => {
+  // API backend: /api/admin/etudiants renvoie des clés:
+  // { id, nom_complet, email, photo, etablissement, localisation, score_portfolio, statut }
+  const name = u?.nom_complet || ''
+  return {
+    id: u?.id,
+    name,
+    email: u?.email ?? '',
+    school: u?.etablissement ?? '—',
+    city: u?.localisation ?? '—',
+    score: u?.score_portfolio ?? 0,
+    status: u?.statut === 'verifie' ? 'verified' : u?.statut === 'en_attente' ? 'pending' : 'unverified',
+avatarColor: avatarColorsForUI[idx % avatarColorsForUI.length],
+    photo: u?.photo ?? '',
+  }
+}
+
+const apiLoadingProfiles = ref(false)
+
+onMounted(async () => {
+  // charger listes villes/établissements + étudiants
+
+
+  try {
+    apiLoadingProfiles.value = true
+
+    const [
+      villesResp,
+      etabResp,
+      etudiantsResp,
+    ] = await Promise.all([
+      api.get('/admin/villes'),
+      api.get('/admin/etablissements'),
+      api.get('/admin/etudiants', { params: { page: 1, limit: 1000 } }),
+    ])
+
+    cities.splice(0, cities.length, ...(villesResp?.data?.data ?? []))
+    schools.splice(0, schools.length, ...(etabResp?.data?.data ?? []))
+
+    const list = etudiantsResp?.data?.data ?? []
+    profiles.value = Array.isArray(list)
+      ? list.map((u, i) => mapEtudiantForUI(u, i))
+      : []
+  } catch (e) {
+    profiles.value = []
+  } finally {
+    apiLoadingProfiles.value = false
+  }
+
+  await Promise.all([
+  loadProfessionnels(),
+  loadProfesseurs()
 ])
+
+
+})
+
 
 /* ── Status helpers ────────────────────── */
 const statusLabel = { verified: 'Vérifié', pending: 'En attente', unverified: 'Non vérifié' }
@@ -488,43 +755,267 @@ const deleteProfile = (p) => {
 }
 const viewPortfolio = (p) => { console.log('portfolio', p) }
 
-const bulkVerify = () => {
-  profiles.value.forEach(p => {
-    if (selected.value.includes(p.id)) p.status = 'verified'
-  })
-  selected.value = []
+const bulkVerify = async () => {
+
+  if (selected.value.length === 0) {
+    alert('Sélectionnez au moins un étudiant')
+    return
+  }
+
+  try {
+
+    const { data } = await api.post(
+      '/admin/etudiants/verification-groupee',
+      {
+        ids: selected.value
+      }
+    )
+
+    alert(data.message)
+
+    const etudiantsResp = await api.get(
+      '/admin/etudiants',
+      {
+        params: {
+          page: 1,
+          limit: 1000
+        }
+      }
+    )
+
+    profiles.value = etudiantsResp.data.data.map(
+      (u, i) => mapEtudiantForUI(u, i)
+    )
+
+    selected.value = []
+
+  } catch (error) {
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la vérification'
+    )
+
+  }
+}
+const deleteProfesseur = async (prof) => {
+  if (
+    !confirm(
+      `Supprimer ${prof.utilisateur.prenom} ${prof.utilisateur.nom} ?`
+    )
+  ) return
+
+  await api.delete(
+    `/admin/professeurs/${prof.id_utilisateur}`
+  )
+
+  await loadProfesseurs()
+}
+const loadEtudiants = async () => {
+  const { data } = await api.get(
+    '/admin/etudiants',
+    {
+      params: {
+        page: 1,
+        limit: 1000
+      }
+    }
+  )
+
+  profiles.value = data.data.map(
+    (u, i) => mapEtudiantForUI(u, i)
+  )
+}
+const deleteEtudiant = async (id) => {
+
+  if (!confirm('Supprimer cet étudiant ?')) {
+    return
+  }
+
+  await api.delete(`/admin/etudiants/${id}`)
+
+  await loadEtudiants()
+}
+const deleteProfessionnel = async (id) => {
+
+  if (!confirm('Supprimer ce professionnel ?')) {
+    return
+  }
+
+  await api.delete(`/admin/professionnels/${id}`)
+
+  await loadProfessionnels()
+}
+const professionnels = ref([])
+const loadProfessionnels = async () => {
+  try {
+
+    const { data } = await api.get('/admin/professionnels')
+
+    professionnels.value = data.data
+
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const validateProfessionnel = async (pro) => {
+
+  try {
+
+    await api.patch(
+  `/admin/professionnels/${pro.id_utilisateur}/valider`
+)
+
+    await loadProfessionnels()
+
+  } catch (error) {
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la validation'
+    )
+
+  }
+}
+
+const rejectProfessionnel = async (pro) => {
+
+  try {
+
+    await api.patch(
+  `/admin/professionnels/${pro.id_utilisateur}/refuser`
+)
+    await loadProfessionnels()
+
+  } catch (error) {
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors du refus'
+    )
+
+  }
+}
+const loadProfesseurs = async () => {
+  try {
+
+    const { data } = await api.get('/admin/professeurs')
+
+    professeurs.value = data.data
+
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 /* ── Admin creation ─────────────────────── */
-const avatarColors = ['#c7d2fe','#d1fae5','#fde68a','#fbcfe8','#bfdbfe','#fecaca','#a7f3d0','#ddd6fe']
+const avatarColors = avatarColorsForUI
 const niveauLabel  = { standard: 'Standard', moderateur: 'Modérateur', super_admin: 'Super Admin' }
+
+const normalizeAdminLevel = (niveau) =>
+  String(niveau || 'STANDARD').toLowerCase()
+
+const formatDate = (value) =>
+  value
+    ? new Date(value).toLocaleDateString('fr-FR')
+    : '—'
+
+const canDeleteAdmin = (admin) =>
+  !admin.is_current_user && admin.niveau_acces !== 'SUPER_ADMIN'
 
 const newAdmin = ref({ nom: '', prenom: '', email: '', password: '', niveau: 'standard' })
 const showPwd      = ref(false)
 const adminCreated = ref(false)
-const adminList    = ref([
-  { id: 1, nom: 'Bennani', prenom: 'Karim',  email: 'k.bennani@admin.ma', niveau: 'super_admin', createdAt: '01 Jan 2024', color: '#c7d2fe' },
-  { id: 2, nom: 'Chraibi', prenom: 'Leila',  email: 'l.chraibi@admin.ma', niveau: 'moderateur',  createdAt: '15 Mar 2024', color: '#d1fae5' },
-])
+const adminList = ref([])
 
-const createAdmin = () => {
-  const a = {
-    id:        Date.now(),
-    nom:       newAdmin.value.nom,
-    prenom:    newAdmin.value.prenom,
-    email:     newAdmin.value.email,
-    niveau:    newAdmin.value.niveau,
-    createdAt: new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }),
-    color:     avatarColors[adminList.value.length % avatarColors.length],
-  }
-  adminList.value.push(a)
-  newAdmin.value = { nom: '', prenom: '', email: '', password: '', niveau: 'standard' }
-  adminCreated.value = true
-  setTimeout(() => { adminCreated.value = false }, 3000)
+const loadAdmins = async () => {
+  const { data } = await api.get('/admin/admins')
+  adminList.value = (data.data || []).map((admin, idx) => ({
+    ...admin,
+    niveau: normalizeAdminLevel(admin.niveau_acces),
+    createdAt: formatDate(admin.date_creation),
+    color: avatarColors[idx % avatarColors.length],
+  }))
 }
 
-const removeAdmin = (id) => {
-  adminList.value = adminList.value.filter(a => a.id !== id)
+onMounted(loadAdmins)
+
+const createAdmin = async () => {
+  try {
+
+    await api.post('/auth/admin/creer', {
+  nom: newAdmin.value.nom,
+  prenom: newAdmin.value.prenom,
+  email: newAdmin.value.email,
+
+  mot_de_passe: newAdmin.value.password,
+  confirmation_mot_de_passe: newAdmin.value.password,
+
+  role: 'ADMINISTRATEUR',
+
+  niveau_acces: newAdmin.value.niveau.toUpperCase()
+})
+    await loadAdmins()
+
+    newAdmin.value = {
+      nom: '',
+      prenom: '',
+      email: '',
+      password: '',
+      niveau: 'standard'
+    }
+
+    adminCreated.value = true
+
+    setTimeout(() => {
+      adminCreated.value = false
+    }, 3000)
+
+  } catch (error) {
+    console.error(error)
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la création'
+    )
+  }
+}
+
+const removeAdmin = async (admin) => {
+
+if (admin.is_current_user) {
+  alert('Vous ne pouvez pas supprimer votre propre compte')
+  return
+}
+
+if (admin.niveau_acces === 'SUPER_ADMIN') {
+  alert('Impossible de supprimer un Super Admin')
+  return
+}
+
+if (
+  !confirm(
+    `Supprimer l'administrateur ${admin.prenom} ${admin.nom} ?`
+  )
+) {
+  return
+}
+
+  try {
+
+    await api.delete(`/admin/admins/${admin.id_utilisateur}`)
+
+    await loadAdmins()
+
+  } catch (error) {
+    console.error(error)
+
+    alert(
+      error.response?.data?.message ||
+      'Erreur lors de la suppression'
+    )
+  }
 }
 
 const exportCSV = () => {
@@ -554,11 +1045,12 @@ const exportCSV = () => {
 .main-content.sidebar-open { left: 185px; }
 
 .page-content {
-  padding: 28px 30px;
+  padding: 28px 8px 30px 43px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   min-height: 100%;
+  background: #dfe2ea;
 }
 
 /* ══ Page header ══════════════════════════════════════ */
