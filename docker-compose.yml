@@ -22,9 +22,16 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
+      - AI_SERVICE_URL=http://ai-service:8000
     depends_on:
       - postgres
       - keycloak
+      - ai-service
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8000:8000"
 
   postgres:
     image: postgres:15-alpine

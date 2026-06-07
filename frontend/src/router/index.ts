@@ -29,6 +29,7 @@ import ActivitesView from "../views/ActivitesView.vue";
 import DashboardProfView from "../views/DashboardProfView.vue";
 import DashboardProView from "../views/DashboardProView.vue";
 import DashboardStudentView from "../views/DashboardStudentView.vue";
+import StudentAIRecommendationView from "../views/StudentAIRecommendationView.vue";
 import ConnexionsProView from "../views/ConnexionsProView.vue";
 import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
 import FeedView from "../views/FeedView.vue";
@@ -36,6 +37,7 @@ import EtudiantsProfView from "../views/EtudiantsProfView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
+import ProfileEditView from "../views/ProfileEditView.vue";
 
 import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
 
@@ -95,6 +97,17 @@ const router = createRouter({
     { path: "/github", component: Placeholder, meta: { requiresAuth: true } },
     { path: "/recos", component: Placeholder, meta: { requiresAuth: true } },
     { path: "/commentaires", component: Placeholder, meta: { requiresAuth: true } },
+    { path: '/profile', name: 'profile', component: StudentProfileView },
+    { path: '/profile/edit', name: 'profile-edit', component: ProfileEditView },
+    { path: "/dashboard", name: "dashboard", component: DashboardView },
+    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
+    { path: "/lettres", name: "letters", component: LettersView },
+    { path: '/projets', name: 'projets', component: ProjectsView },
+    { path: '/settings', name: 'settings', component: SettingsView },
+    { path: "/stages", name: "stages", component: StagesView },
+    { path: "/certifications", name: "certifications", component: CertificationsView },
+    { path: "/activites", name: "activites", component: ActivitesView },
+    { path: "/dashboard", redirect: "/pro/dashboard" },
     {
       path: "/pro/dashboard",
       name: "pro-dashboard",
@@ -108,6 +121,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresRole: 'student' }
     },
     { path: "/feed", name: "feed", component: FeedView },
+    {
+      path: "/student/ai-recommendation",
+      name: "student-ai-recommendation",
+      component: StudentAIRecommendationView,
+    },
+    { path: "/feed", redirect: "/student/feed" },
     { path: "/student/feed", name: "student-feed", component: FeedView },
     { path: "/prof/feed", name: "prof-feed", component: FeedView },
     { path: "/pro/feed", name: "pro-feed", component: FeedView },

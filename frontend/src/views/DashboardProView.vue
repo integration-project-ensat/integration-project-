@@ -49,14 +49,54 @@ interface SavedProfile {
 const router = useRouter();
 const sidebarOpen = ref(true);
 const isStageModalOpen = ref(false);
-const interns = ref<Intern[]>([]);
-const savedProfiles = ref<SavedProfile[]>([]);
-const pendingRequests = ref(0);
-const acceptedRequests = ref(0);
-const refusedRequests = ref(0);
-const publishedOffers = ref(0);
-const profileName = ref("Bienvenue, professionnel");
-const totalSaved = computed(() => savedProfiles.value.length);
+const { savedProfiles, totalSaved } = useProSavedProfiles();
+const { pendingRequests, acceptedRequests, refusedRequests } = useProConnections();
+
+const interns = ref<Intern[]>([
+  {
+    id: "yassine-el-amrani",
+    initials: "YE",
+    name: "Yassine El Amrani",
+    school: "ENSA Tanger",
+    field: "DevOps",
+    city: "Tanger",
+    score: 85,
+    startDate: "12/05/2026",
+    badges: ["🌊 DevOps", "🔐 Security Aware"],
+    status: "Actif",
+    profilePath: "/profile/student/yassine-el-amrani",
+    portfolioPath: "/projects/stage-devops",
+  },
+  {
+    id: "sara-alaoui",
+    initials: "SA",
+    name: "Sara Alaoui",
+    school: "ENSA Tanger",
+    field: "Cloud",
+    city: "Tanger",
+    score: 95,
+    startDate: "02/04/2026",
+    badges: ["🧠 AI / Data", "🌐 Web Developer"],
+    status: "Actif",
+    profilePath: "/profile/student/sara-alaoui",
+    portfolioPath: "/projects/cloud-dashboard",
+  },
+  {
+    id: "nora-tazi",
+    initials: "NT",
+    name: "Nora Tazi",
+    school: "FST Fès",
+    field: "Mobile",
+    city: "Fès",
+    score: 80,
+    startDate: "15/02/2026",
+
+    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
+    status: "Terminé",
+    profilePath: "/profile/student/nora-tazi",
+    portfolioPath: "/projects/mobile-ensa",
+  },
+]);
 
 const newStage = ref({
   title: "",
@@ -81,7 +121,11 @@ const stats = computed(() => [
   },
   {
     title: "Demandes de connexion",
+<<<<<<< HEAD
     value: pendingRequests.value,
+=======
+    value: pendingRequests.value.length,
+>>>>>>> origin/Frontend
     info: "À traiter",
     icon: UserPlus,
   },
@@ -112,9 +156,9 @@ const schoolDistribution = [
 ];
 
 const connectionAnalytics = computed(() => [
-  { label: "Acceptées", value: acceptedRequests.value },
-  { label: "Refusées", value: refusedRequests.value },
-  { label: "En attente", value: pendingRequests.value },
+  { label: "Acceptées", value: acceptedRequests.value.length },
+  { label: "Refusées", value: refusedRequests.value.length },
+  { label: "En attente", value: pendingRequests.value.length },
 ]);
 
 const loadDashboard = async () => {
@@ -206,11 +250,11 @@ const submitStage = () => {
               <thead>
                 <tr>
                   <th>Nom</th>
-                  <th>Ã‰cole / FacultÃ©</th>
-                  <th>FiliÃ¨re</th>
+                  <th>École / Faculté</th>
+                  <th>Filière</th>
                   <th>Ville</th>
                   <th>Score</th>
-                  <th>Date dÃ©but stage</th>
+                  <th>Date début stage</th>
                   <th>Statut</th>
                   <th>Actions</th>
                 </tr>
@@ -268,7 +312,7 @@ const submitStage = () => {
           <div class="section-heading">
             <div>
               <p>Top Profiles</p>
-              <h2>Profils sauvegardÃ©s rÃ©cents</h2>
+              <h2>Profils sauvegardés récents</h2>
             </div>
           </div>
 
@@ -293,7 +337,7 @@ const submitStage = () => {
               </div>
             </button>
             <p v-if="!savedProfiles.length" class="empty-state">
-              Aucun profil sauvegardÃ©.
+              Aucun profil sauvegardé.
             </p>
           </div>
         </article>
@@ -302,13 +346,13 @@ const submitStage = () => {
           <div class="section-heading">
             <div>
               <p>Analytics</p>
-              <h2>Vue rÃ©seau</h2>
+              <h2>Vue réseau</h2>
             </div>
             <BarChart3 class="analytics-icon" />
           </div>
 
           <div class="chart-block">
-            <h3>RÃ©partition des filiÃ¨res</h3>
+            <h3>Répartition des filières</h3>
             <div v-for="item in fieldDistribution" :key="item.label" class="bar-row">
               <span>{{ item.label }}</span>
               <div class="bar-track">
@@ -320,7 +364,7 @@ const submitStage = () => {
 
           <div class="mini-chart-grid">
             <div>
-              <h3>Stagiaires par Ã©cole</h3>
+              <h3>Stagiaires par école</h3>
               <p v-for="item in schoolDistribution" :key="item.label">
                 <span>{{ item.label }}</span>
                 <strong>{{ item.value }}</strong>
@@ -345,7 +389,7 @@ const submitStage = () => {
             <p>Nouvelle offre</p>
             <h2>Ajouter un stage</h2>
           </div>
-          <button type="button" @click="isStageModalOpen = false">Ã—</button>
+          <button type="button" @click="isStageModalOpen = false">×</button>
         </div>
 
         <form class="stage-form" @submit.prevent="submitStage">
@@ -354,7 +398,7 @@ const submitStage = () => {
             <input v-model="newStage.title" required placeholder="Stage PFE DevOps" />
           </label>
           <label>
-            FiliÃ¨re recherchÃ©e
+            Filière recherchée
             <input v-model="newStage.field" required placeholder="DevOps, Cloud..." />
           </label>
           <label>
@@ -362,21 +406,21 @@ const submitStage = () => {
             <input v-model="newStage.city" required placeholder="Tanger" />
           </label>
           <label>
-            DurÃ©e
-            <input v-model="newStage.duration" required placeholder="4 Ã  6 mois" />
+            Durée
+            <input v-model="newStage.duration" required placeholder="4 à 6 mois" />
           </label>
           <label class="full-field">
             Description
             <textarea
               v-model="newStage.description"
               required
-              placeholder="DÃ©crivez les missions, technologies et profil recherchÃ©..."
+              placeholder="Décrivez les missions, technologies et profil recherché..."
             />
           </label>
 
           <div class="modal-actions">
             <button type="button" @click="isStageModalOpen = false">Annuler</button>
-            <button type="submit">Publier lâ€™offre</button>
+            <button type="submit">Publier l?offre</button>
           </div>
         </form>
       </section>

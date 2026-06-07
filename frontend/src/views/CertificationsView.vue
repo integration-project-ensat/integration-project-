@@ -235,9 +235,9 @@ const filtered = () => {
 
 <style scoped>
 .page { height: 100vh; width: 100vw; overflow: hidden; background: var(--input-bg); padding-top: 50px; font-family: var(--font-body); }
-.shell { height: calc(100vh - 50px); padding: 20px; overflow-y: auto; transition: var(--ease); }
-.shellShift { padding-left: 238px; }
-.content-panel { max-width: 820px; margin: 0 auto; background: #fff; border-radius: var(--radius-card); box-shadow: 0 4px 24px rgba(17,24,39,0.08); overflow: hidden; }
+.shell { height: calc(100vh - 50px); padding: 14px; overflow-y: auto; transition: var(--ease); }
+.shellShift { padding-left: 234px; padding-right: 14px; }
+.content-panel { width: 100%; max-width: none; margin: 0; background: #fff; border-radius: var(--radius-card); box-shadow: 0 4px 24px rgba(17,24,39,0.08); overflow: hidden; }
 
 .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid var(--input-bg); }
 .header-left { display: flex; align-items: center; gap: 14px; }

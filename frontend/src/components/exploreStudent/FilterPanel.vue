@@ -59,7 +59,7 @@ const sections = [
       "Big Data",
       "Web",
       "Mobile",
-      "RÃ©seaux",
+      "Réseaux",
     ],
   },
   {
@@ -68,7 +68,7 @@ const sections = [
     options: [
       "Tanger",
       "Rabat",
-      "FÃ¨s",
+      "Fès",
       "Casablanca",
       "Marrakech",
       "Agadir",
