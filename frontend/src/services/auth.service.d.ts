@@ -9,6 +9,8 @@ declare const authService: {
     role: string
     [key: string]: string
   }): Promise<any>
+  startGoogleAuth(): void
+  startGithubAuth(): void
   forgotPassword(email: string): Promise<any>
   verifyCode(email: string, code: string): Promise<any>
   resendCode(email: string): Promise<any>

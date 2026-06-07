@@ -56,10 +56,16 @@ export default {
     return data
   },
   startGoogleAuth() {
-  const baseURL =
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+    const baseURL =
+      import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
-  window.location.href = `${baseURL}/auth/google`
+    window.location.href = `${baseURL}/auth/google`
+  },
+  startGithubAuth() {
+    const baseURL =
+      import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+
+    window.location.href = `${baseURL}/auth/github`
   },
   async forgotPassword(email) {
     return api.post('/auth/mot-de-passe-oublie', { email })

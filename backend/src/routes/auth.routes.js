@@ -10,6 +10,49 @@ const validate = require('../middlewares/validate');
 const { authentifier, autoriserRoles } = require('../middlewares/auth.middleware');
 const { ROLES } = require('../config/roles');
 
+function hasOAuthCredentials(clientId, clientSecret, callbackUrl) {
+  return Boolean(
+    clientId &&
+    clientSecret &&
+    callbackUrl &&
+    !clientId.startsWith('ton_') &&
+    !clientSecret.startsWith('ton_') &&
+    !clientId.startsWith('REMPLACE_MOI') &&
+    !clientSecret.startsWith('REMPLACE_MOI')
+  );
+}
+
+function requireGithubOAuthConfig(req, res, next) {
+  if (
+    hasOAuthCredentials(
+      process.env.GITHUB_CLIENT_ID,
+      process.env.GITHUB_CLIENT_SECRET,
+      process.env.GITHUB_CALLBACK_URL
+    )
+  ) {
+    return next();
+  }
+
+  return res.status(500).send(`
+    <!doctype html>
+    <html lang="fr">
+      <head>
+        <meta charset="utf-8" />
+        <title>Configuration GitHub manquante</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 32px; line-height: 1.5; color: #1f2937; }
+          code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        <h1>Configuration GitHub OAuth manquante</h1>
+        <p>Remplace <code>GITHUB_CLIENT_ID</code> et <code>GITHUB_CLIENT_SECRET</code> dans <code>backend/.env</code> par les vraies valeurs de ton OAuth App GitHub, puis redemarre le backend.</p>
+        <p>Callback attendu: <code>http://localhost:3000/api/auth/github/callback</code></p>
+      </body>
+    </html>
+  `);
+}
+
 // VALIDATION RÉUTILISABLE (liens admin valider/refuser)
 const validationLienAdmin = [
   param('utilisateurId')
@@ -65,6 +108,29 @@ router.get(
 router.post(
   '/google/complete-profile',
   authController.completeGoogleSignup
+);
+
+router.get(
+  '/github',
+  requireGithubOAuthConfig,
+  passport.authenticate('github', {
+    scope: ['user:email']
+  })
+);
+
+router.get(
+  '/github/callback',
+  requireGithubOAuthConfig,
+  passport.authenticate('github', {
+    session: false,
+    failureRedirect: '/login'
+  }),
+  authController.githubCallback
+);
+
+router.post(
+  '/github/complete-profile',
+  authController.completeGithubSignup
 );
 
 

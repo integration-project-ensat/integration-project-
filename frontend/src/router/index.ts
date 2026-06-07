@@ -18,6 +18,8 @@ import StudentPortfolioView from "../views/StudentPortfolioView.vue";
 import StagesView from "../views/StagesView.vue";
 import CertificationsView from "../views/CertificationsView.vue";
 import ActivitesView from "../views/ActivitesView.vue";
+import OAuthSuccessView from "../views/OAuthSuccessView.vue";
+import CompleteProfileView from "../views/CompleteProfileView.vue";
 
 // Vues placeholder pour les pages pas encore développées
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
@@ -28,6 +30,8 @@ export default createRouter({
     { path: "/", redirect: "/login" },
     { path: "/login", name: "login", component: LoginView },
     { path: "/signup", name: "signup", component: SignupView },
+    { path: "/oauth-success", name: "oauth-success", component: OAuthSuccessView },
+    { path: "/complete-profile", name: "complete-profile", component: CompleteProfileView },
     { path: "/forgot", name: "forgot", component: ForgetPasswordView },
     { path: "/reset-password", name: "reset", component: ResetPasswordView },
     { path: "/verify-code", name: "verify-code", component: VerifyCodeView },

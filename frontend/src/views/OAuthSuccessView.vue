@@ -1,6 +1,6 @@
 <template>
   <div class="loading-wrap">
-    <p>Connexion Google en cours...</p>
+    <p>Connexion en cours...</p>
   </div>
 </template>
 

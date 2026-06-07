@@ -1,19 +1,16 @@
-version: '3.8'
+version: "3.8"
+
 services:
   frontend:
-    build: 
+    build:
       context: ./frontend
-dockerfile: Dockerfile.dev
-
-# ports:
-#   - "8080:80"
-
-expose:
-  - "80"
-depends_on:
+      dockerfile: Dockerfile.dev
+    expose:
+      - "80"
+    depends_on:
       - backend
- 
-backend:
+
+  backend:
     build: ./backend
     env_file:
       - .env
@@ -31,8 +28,8 @@ backend:
     depends_on:
       - postgres
       - keycloak
- 
-postgres:
+
+  postgres:
     image: postgres:15-alpine
     environment:
       - POSTGRES_DB=${DB_NAME:-portfolio_db}
@@ -41,17 +38,15 @@ postgres:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-
     ports:
-      - "5432:5432"  
- 
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 10
 
-keycloak:
+  keycloak:
     image: quay.io/keycloak/keycloak:latest
     ports:
       - "8081:8080"
@@ -69,7 +64,7 @@ keycloak:
       postgres:
         condition: service_healthy
 
-nginx:
+  nginx:
     image: nginx:alpine
     ports:
       - "80:80"
@@ -81,7 +76,7 @@ nginx:
       - frontend
       - backend
 
-grafana:
+  grafana:
     image: grafana/grafana:latest
     container_name: portfolio_grafana
     restart: unless-stopped
@@ -91,35 +86,20 @@ grafana:
       - GF_SERVER_ROOT_URL=http://localhost:3001
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
-      - GF_AUTH_GENERIC_OAUTH_ENABLED=true
-      - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
-      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
-      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${GRAFANA_OAUTH_SECRET:-grafana-secret}
-      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile
-      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost:8081/realms/portfolio-realm/protocol/openid-connect/auth
-      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak:8080/realms/portfolio-realm/protocol/openid-connect/token
-      - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak:8080/realms/portfolio-realm/protocol/openid-connect/userinfo
-      - GF_AUTH_GENERIC_OAUTH_REDIRECT_URI=http://localhost:3001/login/generic_oauth
-      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH="contains(roles[*], 'chef-equipe') && 'Admin' || contains(roles[*], 'adjoint') && 'Admin' || contains(roles[*], 'devops') && 'Editor' || contains(roles[*], 'qa') && 'Editor' || 'Viewer'"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json
-      - ./monitoring/provisioning/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
     depends_on:
       - prometheus
-      - keycloak
 
-prometheus:
+  prometheus:
     image: prom/prometheus:latest
     container_name: portfolio_prometheus
     restart: unless-stopped
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/var/prometheus/data
-    depends_on:
-      - keycloak
+      - prometheus_data:/prometheus
 
-node-exporter:
+  node-exporter:
     image: prom/node-exporter:latest
     container_name: portfolio_node_exporter
     restart: unless-stopped
@@ -128,11 +108,11 @@ node-exporter:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+
 volumes:
   postgres-data:
   grafana_data:
   prometheus_data:
-  keycloak_dat

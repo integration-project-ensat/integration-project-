@@ -272,10 +272,10 @@ if (!user.est_actif) {
   return res.status(403).json({ message: 'En attente de validation administrative.' });
 }
 
-if (user.auth_provider === 'GOOGLE') {
+if (user.auth_provider !== 'LOCAL') {
   return res.status(400).json({
     success: false,
-    message: 'Ce compte utilise Google Sign-In'
+    message: `Ce compte utilise ${user.auth_provider} Sign-In`
   });
 }
 
@@ -304,13 +304,17 @@ if (user.auth_provider === 'GOOGLE') {
   });
 });
 
-const googleCallback = asyncHandler(async (req, res) => {
-  const { googleId, email, nom, prenom } = req.user;
+const handleOAuthCallback = async (req, res, provider) => {
+  const providerIdField = provider === 'GOOGLE' ? 'googleId' : 'githubId';
+  const providerDbField = provider === 'GOOGLE' ? 'google_id' : 'github_id';
+  const tempFlag = provider === 'GOOGLE' ? 'tempGoogleSignup' : 'tempGithubSignup';
+  const providerId = req.user[providerIdField];
+  const { email, nom, prenom } = req.user;
 
   if (!email) {
     return res.status(400).json({
       success: false,
-      message: 'Google n’a pas fourni d’email'
+      message: `${provider} n'a pas fourni d'email`
     });
   }
 
@@ -325,18 +329,27 @@ const googleCallback = asyncHandler(async (req, res) => {
     }
   });
 
-  // CAS 1 : compte existe en LOCAL
-  if (existingUser && existingUser.auth_provider !== 'GOOGLE') {
+  // CAS 1 : compte existe avec un autre provider
+  if (existingUser && existingUser.auth_provider !== provider) {
     return res.redirect(
-      `${process.env.FRONTEND_URL}/login?error=email_exists_local`
+      `${process.env.FRONTEND_URL}/login?error=email_exists_${existingUser.auth_provider.toLowerCase()}`
     );
   }
 
-  // CAS 2 : compte Google existant
-  if (existingUser && existingUser.auth_provider === 'GOOGLE') {
+  // CAS 2 : compte OAuth existant
+  if (existingUser && existingUser.auth_provider === provider) {
+    if (provider === 'GITHUB' && existingUser.role !== ROLES.ETUDIANT) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=github_students_only`
+      );
+    }
+
     await prisma.utilisateur.update({
       where: { id_utilisateur: existingUser.id_utilisateur },
-      data: { derniere_connexion: new Date() }
+      data: {
+        derniere_connexion: new Date(),
+        [providerDbField]: existingUser[providerDbField] || providerId
+      }
     });
 
     const token = generateToken(existingUser);
@@ -346,26 +359,34 @@ const googleCallback = asyncHandler(async (req, res) => {
     );
   }
 
-  // CAS 3 : nouveau compte Google
+  // CAS 3 : nouveau compte OAuth
   const tempToken = jwt.sign(
     {
       email,
       nom,
       prenom,
-      googleId,
-      tempGoogleSignup: true
+      [providerIdField]: providerId,
+      provider,
+      [tempFlag]: true
     },
     process.env.JWT_SECRET,
     { expiresIn: '15m' }
   );
 
   return res.redirect(
-    `${process.env.FRONTEND_URL}/complete-profile?token=${tempToken}`
+    `${process.env.FRONTEND_URL}/complete-profile?provider=${provider.toLowerCase()}&token=${tempToken}`
   );
+};
+
+const googleCallback = asyncHandler(async (req, res) => {
+  return handleOAuthCallback(req, res, 'GOOGLE');
 });
 
-const completeGoogleSignup = asyncHandler(async (req, res) => {
+const completeOAuthSignup = async (req, res, provider) => {
   const { token, role, ...specificData } = req.body;
+  const providerIdField = provider === 'GOOGLE' ? 'googleId' : 'githubId';
+  const providerDbField = provider === 'GOOGLE' ? 'google_id' : 'github_id';
+  const tempFlag = provider === 'GOOGLE' ? 'tempGoogleSignup' : 'tempGithubSignup';
 
   if (!token) {
     return res.status(400).json({
@@ -385,7 +406,7 @@ const completeGoogleSignup = asyncHandler(async (req, res) => {
     });
   }
 
-  if (!decoded.tempGoogleSignup) {
+  if (!decoded[tempFlag] || decoded.provider !== provider) {
     return res.status(403).json({
       success: false,
       message: 'Token non autorisé'
@@ -396,6 +417,13 @@ const completeGoogleSignup = asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Rôle invalide'
+    });
+  }
+
+  if (provider === 'GITHUB' && role !== ROLES.ETUDIANT) {
+    return res.status(403).json({
+      success: false,
+      message: "L'authentification avec GitHub est réservée aux étudiants"
     });
   }
 
@@ -431,8 +459,8 @@ const completeGoogleSignup = asyncHandler(async (req, res) => {
         nom: decoded.nom,
         prenom: decoded.prenom,
         role,
-        google_id: decoded.googleId,
-        auth_provider: 'GOOGLE',
+        [providerDbField]: decoded[providerIdField],
+        auth_provider: provider,
 
         mot_de_passe_hashe: null,
 
@@ -513,12 +541,24 @@ const finalToken = generateToken(fullUser);
 
   res.status(201).json({
     success: true,
-    message: 'Compte Google créé avec succès',
+    message: `Compte ${provider} créé avec succès`,
     data: {
       token: finalToken,
       user: sanitizeUser(fullUser)
     }
   });
+};
+
+const completeGoogleSignup = asyncHandler(async (req, res) => {
+  return completeOAuthSignup(req, res, 'GOOGLE');
+});
+
+const githubCallback = asyncHandler(async (req, res) => {
+  return handleOAuthCallback(req, res, 'GITHUB');
+});
+
+const completeGithubSignup = asyncHandler(async (req, res) => {
+  return completeOAuthSignup(req, res, 'GITHUB');
 });
 
 
@@ -851,6 +891,8 @@ module.exports = {
     login,
     googleCallback,
     completeGoogleSignup,
+    githubCallback,
+    completeGithubSignup,
     verifierCode,
     renvoyerCode, 
     getCurrentUser,
