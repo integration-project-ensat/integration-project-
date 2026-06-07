@@ -99,7 +99,7 @@ const router = createRouter({
     { path: "/commentaires", component: Placeholder, meta: { requiresAuth: true } },
     { path: '/profile', name: 'profile', component: StudentProfileView },
     { path: '/profile/edit', name: 'profile-edit', component: ProfileEditView },
-    { path: "/dashboard", name: "dashboard", component: DashboardView },
+    { path: "/dashboard", name: "dashboard", component: DashboardProView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
     { path: '/projets', name: 'projets', component: ProjectsView },

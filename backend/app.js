@@ -98,14 +98,11 @@ app.use('/api/competences', competenceRoutes)
 app.use('/api/profil/photo',  photoRoutes)
 app.use('/api/profil/banner', bannerRoutes)
 app.use('/api/profil', diplomeLimiter, profileRoutes)
-<<<<<<< HEAD
 app.use('/api/diplomes',diplomeLimiter, diplomeRoutes)
-=======
 app.use('/api/profil/photo', photoRoutes)
 app.use('/api/diplomes', diplomeLimiter, diplomeRoutes)
 app.use('/api/ai', aiRoutes)
 
->>>>>>> origin/Frontend
 app.use('/api/projets', projetRoutes)
 app.use('/api/stages', stageRoutes)
 app.use('/api/activites', activiteRoutes)
