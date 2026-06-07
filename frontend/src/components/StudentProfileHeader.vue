@@ -100,7 +100,7 @@
 
           <!-- Liens réseaux sociaux -->
           <div v-if="profile.github || profile.linkedin" class="social-links">
-            <a v-if="profile.github" :href="profile.github" target="_blank" rel="noopener" class="social-btn github" aria-label="GitHub">
+            <a v-if="profile.github"   :href="profile.github"   target="_blank" rel="noopener" class="social-btn github"   aria-label="GitHub">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
               </svg>
@@ -117,173 +117,228 @@
       </div>
     </div>
 
+  <!-- Bouton modifier le profil -->
+  <div class="edit-bar">
+    <button v-if="!loading" class="btn-edit-profile" @click="openEdit">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      Modifier le profil
+    </button>
+  </div>
+
     <!-- Message d'erreur API -->
     <p v-if="error" class="api-error">
       ⚠️ Impossible de charger le profil : {{ error }}
     </p>
 
   </section>
+
+  <!-- Modal d'édition du profil -->
+  <Teleport to="body">
+    <div v-if="editing" class="edit-backdrop" @click.self="editing = false">
+      <div class="edit-modal" role="dialog" aria-modal="true">
+
+        <div class="edit-modal-head">
+          <h2>Modifier le profil</h2>
+          <button class="close-btn" @click="editing = false" aria-label="Fermer">✕</button>
+        </div>
+
+        <div class="edit-modal-body">
+
+          <!-- Avatar + couleur bannière -->
+          <div class="edit-avatar-row">
+            <div class="edit-avatar-preview" :style="{ background: editForm.bannerColor }">
+              <img v-if="editForm.avatarPreview" :src="editForm.avatarPreview" class="edit-avatar-img" alt="Avatar" />
+              <span v-else class="edit-avatar-initials">{{ editInitials }}</span>
+            </div>
+            <div class="edit-avatar-actions">
+              <label class="btn-upload-avatar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Changer la photo
+                <input type="file" accept="image/*" @change="onAvatarFileChange" />
+              </label>
+              <button v-if="editForm.avatarPreview" type="button" class="btn-remove-avatar" @click="editForm.avatarPreview = null">
+                Supprimer la photo
+              </button>
+              <div class="color-row">
+                <span class="color-label">Couleur bannière :</span>
+                <input type="color" v-model="editForm.bannerColor" class="color-input" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Champs -->
+          <div class="edit-grid">
+            <div class="edit-field">
+              <label>Nom complet</label>
+              <input v-model="editForm.name" placeholder="Ex: Khadija Bennani" />
+            </div>
+            <div class="edit-field">
+              <label>Filière</label>
+              <input v-model="editForm.field" placeholder="Ex: GINF, IoT, DevOps..." />
+            </div>
+            <div class="edit-field">
+              <label>Année</label>
+              <input v-model="editForm.year" placeholder="Ex: 3ème année" />
+            </div>
+            <div class="edit-field">
+              <label>École / Établissement</label>
+              <input v-model="editForm.school" placeholder="Ex: ENSA Tanger" />
+            </div>
+            <div class="edit-field">
+              <label>Ville</label>
+              <input v-model="editForm.city" placeholder="Ex: Tanger, Casablanca..." />
+            </div>
+            <div class="edit-field">
+              <label>APOGEE</label>
+              <input v-model="editForm.apogee" placeholder="Ex: 12345678" />
+            </div>
+            <div class="edit-field">
+              <label>GitHub</label>
+              <input v-model="editForm.github" placeholder="https://github.com/votre-username" />
+            </div>
+            <div class="edit-field">
+              <label>LinkedIn</label>
+              <input v-model="editForm.linkedin" placeholder="https://linkedin.com/in/votre-profil" />
+            </div>
+          </div>
+
+          <div class="edit-field full">
+            <label>Bio</label>
+            <textarea v-model="editForm.bio" placeholder="Parlez de vous, vos passions, vos objectifs..." rows="3" />
+          </div>
+
+        </div>
+
+        <div class="edit-modal-foot">
+          <button class="btn-cancel" @click="editing = false">Annuler</button>
+          <button class="btn-save" @click="saveEdit">Enregistrer</button>
+        </div>
+
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { profileService } from '@/services/profile.service.js'
 
-// ── Props ──────────────────────────────────────────────
 const props = defineProps({
-  userId: {
-    type: [Number, String],
-    default: null
-  }
+  userId: { type: [Number, String], default: null }
 })
 
-const route = useRoute()
-
-const resolvedId = computed(() => {
-  if (props.userId != null) return props.userId
-  if (route.params.id)      return route.params.id
-  return null
-})
-
-// ── State ──────────────────────────────────────────────
+// ── State ──
 const profile = ref({
-  name:        '',
-  email:       '',
-  apogee:      '',
-  field:       '',
-  year:        '',
-  school:      '',
-  city:        '',
-  avatar:      null,
-  bannerColor: '#1a3c5e',
-  bio:         '',
-  isVerified:  false,
-  github:      null,
-  linkedin:    null,
+  name: '', email: '', apogee: '', field: '', year: '', school: '',
+  city: '', avatar: null, bannerColor: '#1a3c5e', bio: '',
+  isVerified: false, github: null, linkedin: null,
 })
 const loading = ref(true)
 const error   = ref(null)
 
-// ── Helper pour charger le profil ──────────────────────
-const loadProfile = async () => {
+// ── Edit modal state ──
+const editing  = ref(false)
+const editForm = reactive({
+  name: '', field: '', year: '', school: '', city: '', apogee: '',
+  bio: '', github: '', linkedin: '', bannerColor: '#1a3c5e',
+  avatarPreview: null,
+})
+
+onMounted(async () => {
   try {
-    loading.value = true
-    error.value   = null
-    const data = await profileService.getProfile(resolvedId.value)
+    const id = props.userId ?? localStorage.getItem('userId') ?? 1
+    const data = await profileService.getProfile(id)
     profile.value = { ...profile.value, ...data }
   } catch (err) {
     error.value = err.message
   } finally {
     loading.value = false
   }
-}
+})
 
-// ── SCRUM-139 : Connexion API ──────────────────────────
-onMounted(loadProfile)
-
-// ── Watch for userId changes ───────────────────────────
-watch(resolvedId, loadProfile)
-
-// ── Computed ───────────────────────────────────────────
+// ── Computed ──
 const initials = computed(() => {
   if (!profile.value.name) return '?'
-  return profile.value.name
-    .split(' ')
-    .slice(0, 2)
-    .map(w => w[0]?.toUpperCase() ?? '')
-    .join('')
+  return profile.value.name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
+})
+
+const editInitials = computed(() => {
+  if (!editForm.name) return '?'
+  return editForm.name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
 })
 
 const accentColor = computed(() => profile.value.bannerColor ?? '#1a3c5e')
 
-// SCRUM-137 : style dynamique de la bannière
 const bannerStyle = computed(() => ({
   background: `linear-gradient(135deg, ${accentColor.value} 0%, #2e6da4 100%)`
 }))
 
-// ── Méthodes ───────────────────────────────────────────
+// ── Méthodes ──
 function onAvatarError(e) {
   e.target.style.display = 'none'
   profile.value.avatar = null
+}
+
+function openEdit() {
+  Object.assign(editForm, {
+    name:          profile.value.name,
+    field:         profile.value.field,
+    year:          profile.value.year,
+    school:        profile.value.school,
+    city:          profile.value.city,
+    apogee:        profile.value.apogee,
+    bio:           profile.value.bio,
+    github:        profile.value.github ?? '',
+    linkedin:      profile.value.linkedin ?? '',
+    bannerColor:   profile.value.bannerColor ?? '#1a3c5e',
+    avatarPreview: profile.value.avatar ?? null,
+  })
+  editing.value = true
+}
+
+function onAvatarFileChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = ev => { editForm.avatarPreview = ev.target?.result }
+  reader.readAsDataURL(file)
+}
+
+function saveEdit() {
+  profile.value = {
+    ...profile.value,
+    name:        editForm.name,
+    field:       editForm.field,
+    year:        editForm.year,
+    school:      editForm.school,
+    city:        editForm.city,
+    apogee:      editForm.apogee,
+    bio:         editForm.bio,
+    github:      editForm.github || null,
+    linkedin:    editForm.linkedin || null,
+    bannerColor: editForm.bannerColor,
+    avatar:      editForm.avatarPreview,
+  }
+  editing.value = false
 }
 </script>
 
 <style scoped>
 /* ══ SCRUM-137 : BANNER ══════════════════════════════ */
 .profile-header {
-
-  background: white;
-  border-radius: 14px;
-  margin-top: 35px;
-  margin-bottom: 10px;
-  overflow: hidden;
-  box-shadow: 0 14px 38px rgba(15, 23, 42, .08);
-}
-
-.cover-section {
-  position: relative;
-  margin-bottom: 56px;
-  isolation: isolate;
-}
-
-.cover-img {
   width: 100%;
-  height: 190px;
-  background-color: #eef5ff;
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, .9) 0%, rgba(255, 255, 255, .14) 38%, rgba(255, 255, 255, 0) 72%),
-    radial-gradient(circle at 86% 18%, rgba(3, 155, 229, .34) 0%, rgba(3, 155, 229, .11) 36%, transparent 62%),
-    radial-gradient(circle at 18% 78%, rgba(94, 53, 177, .2) 0%, rgba(94, 53, 177, .08) 42%, transparent 66%),
-    radial-gradient(#9ca3af .85px, transparent .85px),
-    radial-gradient(#cbd5e1 .85px, transparent .85px),
-    linear-gradient(120deg, #f8fbff 0%, #eaf4ff 46%, #f6f2ff 100%);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 22px 22px, 22px 22px, 100% 100%;
-  background-position: 0 0, 0 0, 0 0, 0 0, 11px 11px, 0 0;
-  position: relative;
+  background: #f5f7fa;
+  border-radius: 16px;
   overflow: hidden;
-  border-bottom: 1px solid rgba(148, 163, 184, .26);
-  border-radius: 0 0 34px 34px / 0 0 18px 18px;
-  clip-path: ellipse(116% 100% at 50% 0%);
-}
-
-.cover-img::before,
-.cover-img::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  border-radius: 999px;
-}
-
-.cover-img::before {
-  width: 290px;
-  height: 88px;
-  right: -42px;
-  top: 34px;
-  background: linear-gradient(90deg, rgba(3, 155, 229, .2), rgba(94, 53, 177, .12));
-  transform: rotate(-13deg);
-}
-
-.cover-img::after {
-  width: 230px;
-  height: 70px;
-  left: -64px;
-  bottom: 18px;
-  background: linear-gradient(90deg, rgba(94, 53, 177, .14), rgba(3, 155, 229, .14));
-  transform: rotate(16deg);
-}
-
-.cover-section::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 64px;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 78%);
-
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .banner {
@@ -312,41 +367,14 @@ function onAvatarError(e) {
 .avatar-wrapper {
   position: relative;
   flex-shrink: 0;
-  z-index: 2;
-  bottom: -50px;
-  left: 24px;
-  padding: 5px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .8);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, .14);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
 }
 
 .avatar {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  border: 4px solid white;
-  background: var(--avatar-bg, #039be5);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-head);
-  font-size: 1.5rem;
-  font-weight: 700;
-  overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
-}
-
-.avatar img,
-.recos-avatar img,
-.reco-avatar img {
-  width: 100%;
-  height: 100%;
-
+  border: 4px solid #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   object-fit: cover;
   display: block;
   background: #e0e7ef;
@@ -492,56 +520,242 @@ function onAvatarError(e) {
   color: #c62828;
 }
 
+/* ══ EDIT BAR ════════════════════════════════════════ */
+.edit-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 32px 16px;
+}
+
+.btn-edit-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1.5px solid #4f46e5;
+  background: white;
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-edit-profile:hover { background: #4f46e5; color: white; }
+
+/* ══ MODAL EDIT ══════════════════════════════════════ */
+.edit-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(17, 24, 39, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.edit-modal {
+  background: white;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.22);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.edit-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.edit-modal-head h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #7a7f88;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.close-btn:hover { background: #e5e7eb; }
+
+.edit-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+
+.edit-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.edit-avatar-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.edit-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+.edit-avatar-initials {
+  font-size: 26px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.edit-avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-upload-avatar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  background: #4f46e5;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-upload-avatar input { display: none; }
+
+.btn-remove-avatar {
+  background: none;
+  border: none;
+  color: #df1e21;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+.btn-remove-avatar:hover { text-decoration: underline; }
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-label { font-size: 0.78rem; color: #7a7f88; }
+
+.color-input {
+  width: 36px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.edit-field.full { grid-column: 1 / -1; }
+
+.edit-field label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #7a7f88;
+}
+
+.edit-field input,
+.edit-field textarea {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  color: #111827;
+  background: white;
+  outline: none;
+  resize: vertical;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: all 0.2s ease;
+}
+.edit-field input:focus,
+.edit-field textarea:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.edit-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.btn-cancel {
+  padding: 9px 18px;
+  border-radius: 50px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #7a7f88;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn-cancel:hover { background: #e5e7eb; }
+
+.btn-save {
+  padding: 9px 22px;
+  border-radius: 50px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-save:hover { background: #243559; }
+
 /* ══ SCRUM-140 : RESPONSIVE ══════════════════════════ */
 
 /* Tablette (≤ 768px) */
 @media (max-width: 768px) {
-
   .banner { height: 120px; }
-
-  .profile-header {
-    border-radius: 12px;
-  }
-
-  .cover-section {
-    margin-bottom: 50px;
-  }
-
-  .cover-img {
-    height: 158px;
-    clip-path: ellipse(130% 100% at 50% 0%);
-  }
-
-  .cover-img::before {
-    width: 210px;
-    height: 68px;
-    right: -76px;
-    top: 28px;
-  }
-
-  .cover-img::after {
-    width: 180px;
-    height: 58px;
-    left: -86px;
-    bottom: 20px;
-  }
-
-  .avatar-wrap {
-    left: 18px;
-    bottom: -46px;
-  }
-
-  .avatar {
-    width: 88px;
-    height: 88px;
-  }
-
-  .competances-dropdown {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-}
-
 
   .cover {
     flex-direction: column;
@@ -559,8 +773,7 @@ function onAvatarError(e) {
 
   .meta-row { gap: 6px; }
   .meta-chip { font-size: 11px; }
-
-
+}
 
 /* Mobile (≤ 480px) */
 @media (max-width: 480px) {
@@ -577,4 +790,3 @@ function onAvatarError(e) {
   .social-btn { font-size: 11px; padding: 5px 10px; }
 }
 </style>
-
