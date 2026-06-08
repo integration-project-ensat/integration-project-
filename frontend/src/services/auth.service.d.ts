@@ -1,4 +1,10 @@
 declare const authService: {
+  normalizeBackendRole(role: unknown): 'admin' | 'student' | 'teacher' | 'professional' | null
+  persistSession(user: Record<string, any>, token: string): {
+    token: string
+    role: 'admin' | 'student' | 'teacher' | 'professional'
+    user: Record<string, any>
+  }
   login(email: string, password: string): Promise<any>
   signup(payload: {
     firstName: string

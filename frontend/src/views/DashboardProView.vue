@@ -51,8 +51,6 @@ interface SavedProfile {
 const router = useRouter();
 const sidebarOpen = ref(true);
 const isStageModalOpen = ref(false);
-<<<<<<< HEAD
-const interns = ref<Intern[]>([]);
 const savedProfiles = ref<SavedProfile[]>([]);
 const pendingRequests = ref(0);
 const acceptedRequests = ref(0);
@@ -61,9 +59,6 @@ const publishedOffers = ref(0);
 const profileName = ref("Bienvenue, professionnel");
 const totalSaved = computed(() => savedProfiles.value.length);
 const isSubmittingStage = ref(false);
-=======
-const { savedProfiles, totalSaved } = useProSavedProfiles();
-const { pendingRequests, acceptedRequests, refusedRequests } = useProConnections();
 
 const interns = ref<Intern[]>([
   {
@@ -110,7 +105,6 @@ const interns = ref<Intern[]>([
     portfolioPath: "/projects/mobile-ensa",
   },
 ]);
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 const newStage = ref({
   title: "",
@@ -135,11 +129,7 @@ const stats = computed(() => [
   },
   {
     title: "Demandes de connexion",
-<<<<<<< HEAD
     value: pendingRequests.value,
-=======
-    value: pendingRequests.value.length,
->>>>>>> origin/Frontend
     info: "À traiter",
     icon: UserPlus,
   },
@@ -188,9 +178,9 @@ const schoolDistribution = computed(() => {
 });
 
 const connectionAnalytics = computed(() => [
-  { label: "Acceptées", value: acceptedRequests.value.length },
-  { label: "Refusées", value: refusedRequests.value.length },
-  { label: "En attente", value: pendingRequests.value.length },
+  { label: "Acceptées", value: acceptedRequests.value },
+  { label: "Refusées", value: refusedRequests.value },
+  { label: "En attente", value: pendingRequests.value },
 ]);
 
 const loadDashboard = async () => {
@@ -200,7 +190,7 @@ const loadDashboard = async () => {
       const data = response.data.data;
       profileName.value = data.profile?.name ?? profileName.value;
       interns.value = Array.isArray(data.interns)
-        ? data.interns.map((intern) => ({
+        ? data.interns.map((intern: Intern) => ({
             ...intern,
             badges:
               Array.isArray(intern.badges) && intern.badges.length
@@ -496,13 +486,10 @@ const submitStage = async () => {
 
           <div class="modal-actions">
             <button type="button" @click="isStageModalOpen = false">Annuler</button>
-<<<<<<< HEAD
             <button type="submit" :disabled="isSubmittingStage">
               {{ isSubmittingStage ? 'Publication...' : 'Publier l’offre' }}
             </button>
-=======
             <button type="submit">Publier l?offre</button>
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
           </div>
         </form>
       </section>

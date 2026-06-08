@@ -1,16 +1,9 @@
 ﻿<script setup lang="ts">
-<<<<<<< HEAD
 import { computed, onMounted, ref } from "vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { getCareerRecommendation } from "../services/aiRecommendation.service";
 import { profileService } from "../services/profile.service";
-=======
-import { computed, ref } from "vue";
-import Sidebar from "../components/exploreStudent/Sidebar.vue";
-import Topbar from "../components/exploreStudent/Topbar.vue";
-import { getCareerRecommendation } from "../services/aiRecommendation.service";
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 type Career =
   | "Web Developer"
@@ -37,21 +30,17 @@ interface RecommendationResult {
   technologiesToLearn: string[];
   summary: string;
   roadmap: Array<{ step: string; title: string; items: string[] }>;
-<<<<<<< HEAD
   debug?: {
     modelScore?: number;
     rulesScore?: number;
     alignmentBonus?: number;
     profileRichness?: number;
   };
-=======
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 }
 
 const sidebarOpen = ref(true);
 const targetCareer = ref<Career>("DevOps");
 const loading = ref(false);
-<<<<<<< HEAD
 const loadingProfile = ref(true);
 const error = ref("");
 const profileError = ref("");
@@ -59,12 +48,6 @@ const result = ref<RecommendationResult | null>(null);
 const profileSource = ref<any>(null);
 const customCareerInput = ref("");
 const profilePreview = ref<any>(null);
-=======
-const error = ref("");
-const result = ref<RecommendationResult | null>(null);
-const profileSource = ref<any>(null);
-const customCareerInput = ref("");
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 const careers: Career[] = [
   "Web Developer",
@@ -80,35 +63,19 @@ const careers: Career[] = [
   "UI/UX Designer",
 ];
 
-<<<<<<< HEAD
 const analyzedProfile = computed(() => profileSource.value || profilePreview.value || null);
 const analyzedStudent = computed(() => analyzedProfile.value?.student || null);
 const analyzedSkills = computed(() => {
   const values = analyzedProfile.value?.skills;
   return Array.isArray(values) ? values.filter(Boolean) : [];
 });
-=======
-const mockStudentProfile = {
-  name: "Nom Étudiant",
-  filiere: "GINF",
-  skills: ["Vue", "Node.js", "Git", "PostgreSQL", "REST API"],
-  projects: [
-    "Portfolio Web avec Vue",
-    "API backend Node.js",
-    "Dashboard de suivi de stages",
-  ],
-  technologies: ["Vue.js", "Express", "PostgreSQL", "Docker", "GitHub"],
-  badges: ["Web Developer", "Backend", "Full Stack"],
-  stages: ["Stage développement full stack avec Vue 3 et Node.js"],
-};
 
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 const scoreStyle = computed(() => ({
   width: `${result.value?.matchScore ?? 0}%`,
 }));
 
 const selectedCareer = computed(() => customCareerInput.value.trim() || targetCareer.value);
-<<<<<<< HEAD
+
 const storedUserId = computed(() => {
   try {
     const raw = localStorage.getItem("user");
@@ -122,23 +89,18 @@ const storedUserId = computed(() => {
 
 async function analyzeProfile() {
   if (!profilePreview.value || !storedUserId.value) {
-    error.value = "Impossible de lancer l’analyse sans un vrai profil étudiant chargé depuis le backend.";
+    error.value = "Impossible de lancer l'analyse sans un vrai profil étudiant chargé depuis le backend.";
     result.value = null;
     profileSource.value = null;
     return;
   }
 
-=======
-
-async function analyzeProfile() {
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
   loading.value = true;
   error.value = "";
 
   try {
     const response = await getCareerRecommendation({
       targetCareer: selectedCareer.value,
-<<<<<<< HEAD
       studentId: storedUserId.value,
       skills: profilePreview.value.skills,
       projects: profilePreview.value.projects,
@@ -155,30 +117,10 @@ async function analyzeProfile() {
       "Impossible de générer la recommandation IA sans un vrai profil étudiant connecté.";
     result.value = null;
     profileSource.value = null;
-=======
-      skills: mockStudentProfile.skills,
-      projects: mockStudentProfile.projects,
-      technologies: mockStudentProfile.technologies,
-      badges: mockStudentProfile.badges,
-      stages: mockStudentProfile.stages,
-      student: {
-        name: mockStudentProfile.name,
-        filiere: mockStudentProfile.filiere,
-        source: "mock",
-      },
-    });
-    result.value = response.data.data;
-    profileSource.value = response.data.profileSource || mockStudentProfile;
-  } catch (apiError: any) {
-    error.value =
-      apiError.response?.data?.message ||
-      "Impossible de générer la recommandation IA pour le moment.";
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
   } finally {
     loading.value = false;
   }
 }
-<<<<<<< HEAD
 
 function buildProfilePreview(profile: any) {
   const raw = profile?.raw || {};
@@ -235,19 +177,17 @@ onMounted(async () => {
   profileError.value = "";
 
   try {
-    const profile = await profileService.getProfile(null);
+    const profile = await profileService.getCurrentUser();
     profilePreview.value = buildProfilePreview(profile);
   } catch (apiError: any) {
     profilePreview.value = null;
     profileError.value =
       apiError?.response?.data?.message ||
-      "Impossible de charger le vrai profil étudiant pour l’analyse IA.";
+      "Impossible de charger le vrai profil étudiant pour l'analyse IA.";
   } finally {
     loadingProfile.value = false;
   }
 });
-=======
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 </script>
 
 <template>
@@ -289,7 +229,6 @@ onMounted(async () => {
 
           <div class="profile-box">
             <h3>Profil analysé</h3>
-<<<<<<< HEAD
             <p v-if="loadingProfile" class="profile-source">Chargement du profil backend...</p>
             <p v-else-if="profileError" class="profile-source error-message">{{ profileError }}</p>
             <template v-else-if="analyzedStudent">
@@ -302,14 +241,6 @@ onMounted(async () => {
               </div>
             </template>
             <p v-else class="profile-source">Aucun profil réel détecté.</p>
-=======
-            <p class="profile-source">
-              {{ mockStudentProfile.name }} · {{ mockStudentProfile.filiere }}
-            </p>
-            <div class="chips">
-              <span v-for="skill in mockStudentProfile.skills" :key="skill">{{ skill }}</span>
-            </div>
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
           </div>
 
           <label class="career-field">
@@ -322,11 +253,7 @@ onMounted(async () => {
             <small>Si vous écrivez un métier ici, il remplace le choix sélectionné.</small>
           </label>
 
-<<<<<<< HEAD
           <button class="primary-btn" :disabled="loading || loadingProfile || !profilePreview" @click="analyzeProfile">
-=======
-          <button class="primary-btn" :disabled="loading" @click="analyzeProfile">
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
             <span v-if="loading" class="loader" />
             {{ loading ? "Analyse en cours..." : "Analyser mon profil" }}
           </button>
@@ -335,11 +262,7 @@ onMounted(async () => {
         </article>
 
         <article class="result-card">
-<<<<<<< HEAD
           <template v-if="result && analyzedStudent">
-=======
-          <template v-if="result">
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
             <div class="result-header">
               <div>
                 <p class="eyebrow">Score de compatibilité</p>
@@ -362,7 +285,6 @@ onMounted(async () => {
               <div class="score-fill" :style="scoreStyle" />
             </div>
 
-<<<<<<< HEAD
             <div class="analysis-debug">
               <span>ID: {{ analyzedStudent.id || storedUserId || "?" }}</span>
               <span>Source: {{ analyzedStudent.source || "unknown" }}</span>
@@ -372,17 +294,11 @@ onMounted(async () => {
               <span>Richness: {{ result.debug?.profileRichness ?? "-" }}</span>
             </div>
 
-=======
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
             <p class="summary">{{ result.summary }}</p>
           </template>
           <div v-else class="empty-state">
-            <h2>Prêt pour l’analyse</h2>
-<<<<<<< HEAD
-            <p>Le résultat IA apparaîtra ici après l’analyse de votre vrai profil backend.</p>
-=======
-            <p>Le résultat IA apparaîtra ici après l’analyse du profil mock.</p>
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
+            <h2>Prêt pour l'analyse</h2>
+            <p>Le résultat IA apparaîtra ici après l'analyse de votre vrai profil backend.</p>
           </div>
         </article>
       </section>
@@ -414,7 +330,7 @@ onMounted(async () => {
 
       <section v-if="result" class="roadmap-card">
         <div>
-          <p class="eyebrow">Plan d’amélioration</p>
+          <p class="eyebrow">Plan d'amélioration</p>
           <h2>Roadmap personnalisée</h2>
         </div>
 
@@ -493,12 +409,8 @@ h1 {
 .card-text,
 .summary,
 .empty-state p,
-<<<<<<< HEAD
 .timeline p,
 .profile-source {
-=======
-.timeline p {
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
   color: var(--navy-mid);
   font-weight: 700;
 }
@@ -678,7 +590,6 @@ h1 {
   transition: width 0.5s ease;
 }
 
-<<<<<<< HEAD
 .analysis-debug {
   display: flex;
   flex-wrap: wrap;
@@ -695,8 +606,6 @@ h1 {
   font-weight: 800;
 }
 
-=======
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 .recommendation-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -783,7 +692,3 @@ h1 {
   }
 }
 </style>
-<<<<<<< HEAD
-=======
-
->>>>>>> 17e94a3800439359d3ab055de733deaacc378057
