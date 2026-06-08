@@ -476,10 +476,38 @@ SONAR_URL="http://localhost:9000"
 SONAR_ADMIN="admin"
 SONAR_PASSWORD="${SONAR_PASSWORD:-PheraCore2025!}"
 
-# Récupérer le certificat du realm Keycloak
-SONAR_CERT=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/keys" \
-  -H "Authorization: Bearer $TOKEN" | \
-  grep -o '"certificate":"[^"]*' | head -1 | cut -d'"' -f4)
+# Récupérer le certificat SAML du realm Keycloak
+SONAR_CERT_B64=$(
+  curl -s "$KEYCLOAK_URL/realms/$REALM/protocol/saml/descriptor" | awk '
+    /<ds:X509Certificate>/ {
+      in_cert = 1
+      sub(/.*<ds:X509Certificate>/, "")
+    }
+    in_cert {
+      if (match($0, /<\/ds:X509Certificate>/)) {
+        sub(/<\/ds:X509Certificate>.*/, "")
+        cert = cert $0
+        gsub(/[[:space:]]/, "", cert)
+        print cert
+        exit
+      }
+      cert = cert $0
+    }
+  '
+)
+
+if [[ -z "$SONAR_CERT_B64" ]]; then
+  echo "ERREUR : impossible de récupérer le certificat SAML Keycloak"
+  exit 1
+fi
+
+SONAR_CERT=$(
+  {
+    echo "-----BEGIN CERTIFICATE-----"
+    printf '%s' "$SONAR_CERT_B64" | fold -w 64
+    echo "-----END CERTIFICATE-----"
+  }
+)
 
 # Attendre que SonarQube soit prêt
 echo "  Attente que SonarQube soit prêt..."
