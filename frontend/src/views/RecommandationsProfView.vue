@@ -11,7 +11,7 @@ import type {
   RecommendationStatus,
 } from "./DashboardProfView.vue";
 
-type RecommendationTab = "Tout" | "En attente" | "Acceptées";
+type RecommendationTab = "Tout" | "En attente" | "Acceptées" | "Refusées";
 
 const router = useRouter();
 const sidebarOpen = ref(true);
@@ -24,7 +24,7 @@ const acceptedStatus = "Acceptée" as RecommendationStatus;
 const refusedStatus = "Refusée" as RecommendationStatus;
 const error = ref<string | null>(null);
 
-const tabs: RecommendationTab[] = ["Tout", "En attente", "Acceptées"];
+const tabs: RecommendationTab[] = ["Tout", "En attente", "Acceptées", "Refusées"];
 
 const filteredRequests = computed(() => {
   if (activeTab.value === "Tout") {
@@ -33,6 +33,11 @@ const filteredRequests = computed(() => {
   if (activeTab.value === "Acceptées") {
     return recommendations.value.filter(
       (request) => request.status === acceptedStatus,
+    );
+  }
+  if (activeTab.value === "Refusées") {
+    return recommendations.value.filter(
+      (request) => request.status === refusedStatus,
     );
   }
 
@@ -237,7 +242,7 @@ onMounted(() => {
                   class="action-btn danger"
                   @click.stop="refuseRequest(request)"
                 >
-                  Retirer
+                  Refuser
                 </button>
               </div>
             </div>
@@ -320,7 +325,7 @@ onMounted(() => {
             class="action-btn danger"
             @click="refuseRequest(selectedRequest)"
           >
-            Retirer
+            Refuser
           </button>
         </div>
       </section>

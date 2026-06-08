@@ -385,7 +385,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
                   class="soft-danger"
                   @click="removeConnection(request.id)"
                 >
-                  Refuser
+                  Retirer
                 </button>
                 <button type="button" @click="router.push(request.profilePath)">
                   Voir profil
