@@ -19,6 +19,19 @@ const mapRecommendation = (item) => ({
   date: item?.date_recommandation || item?.date || '',
 })
 
+const mapGithubRepo = (item) => ({
+  id: Number(item?.id_depot ?? item?.id ?? Date.now()),
+  name: item?.nom_depot || 'Depot',
+  url: item?.url_depot || '',
+  commits: Number(item?.nb_commits ?? 0),
+  languages:
+    item?.langages && typeof item.langages === 'object'
+      ? Object.keys(item.langages)
+      : [],
+  isPublic: item?.est_public !== false,
+  createdAt: item?.date_creation || '',
+})
+
 const mapPost = (item) => ({
   id: Number(item?.id_poste ?? item?.id ?? Date.now()),
   author: item?.author || fullName(item?.auteur) || 'Auteur inconnu',
@@ -47,6 +60,14 @@ const normalizeProfile = (payload) => {
 
   const recommendations = Array.isArray(payload?.recommendations)
     ? payload.recommendations.map(mapRecommendation)
+    : Array.isArray(student?.recommandations_recues)
+      ? student.recommandations_recues.map(mapRecommendation)
+      : []
+
+  const githubIntegration = student?.github_integration || {}
+  const githubUsername = githubIntegration?.github_username || ''
+  const githubRepos = Array.isArray(githubIntegration?.depots)
+    ? githubIntegration.depots.map(mapGithubRepo)
     : []
 
   return {
@@ -75,7 +96,19 @@ const normalizeProfile = (payload) => {
     email: payload?.email || profile?.email_professionnel || '',
     website: payload?.website || student?.portfolio?.url_public || '',
     linkedin: payload?.linkedin || profile?.linkedin_url || '',
+    github:
+      payload?.github ||
+      (githubUsername ? `https://github.com/${githubUsername}` : ''),
+    githubUsername,
+    githubRepos,
     apogee: student?.numero_etudiant || '',
+    portfolioId: Number(student?.portfolio?.id_portfolio ?? 0) || null,
+    competences: Array.isArray(student?.competences)
+      ? student.competences.map((item) => item?.competence?.nom).filter(Boolean)
+      : [],
+    projectsData: Array.isArray(student?.projets) ? student.projets : [],
+    stagesData: Array.isArray(student?.stages) ? student.stages : [],
+    badgesData: Array.isArray(student?.badges) ? student.badges : [],
     raw: payload,
     posts: Array.isArray(payload?.posts) ? payload.posts.map(mapPost) : [],
     recommendations,

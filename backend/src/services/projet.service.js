@@ -1,6 +1,23 @@
 const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
 
+function normalizeTechnologies(input) {
+  if (Array.isArray(input)) {
+    return input
+      .map((item) => String(item || '').trim())
+      .filter(Boolean)
+  }
+
+  if (typeof input === 'string') {
+    return input
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+
+  return []
+}
+
 const projetService = {
   async findAll(filters = {}) {
     const where = {}
@@ -31,7 +48,8 @@ const projetService = {
   },
 
   async create(data, etudiantId) {
-    const { titre, description, type, role, resultats, lien_github, id_professeur, visibilite } = data
+    const { titre, description, type, role, resultats, lien_github, id_professeur, visibilite, technologies } = data
+    const techNames = normalizeTechnologies(technologies)
     return prisma.projet.create({
       data: {
         titre,
@@ -43,7 +61,21 @@ const projetService = {
         visibilite,
         id_etudiant: BigInt(etudiantId),
         ...(id_professeur && { id_professeur: BigInt(id_professeur) }),
-        statut: 'EN_ATTENTE'
+        statut: 'EN_ATTENTE',
+        ...(techNames.length
+          ? {
+              technologies: {
+                create: techNames.map((nom) => ({
+                  technologie: {
+                    connectOrCreate: {
+                      where: { nom },
+                      create: { nom },
+                    },
+                  },
+                })),
+              },
+            }
+          : {}),
       }
     })
   },
@@ -53,7 +85,8 @@ const projetService = {
     if (!projet) return null
     if (projet.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
 
-    const { titre, description, type, role, resultats, lien_github, visibilite, id_professeur } = data
+    const { titre, description, type, role, resultats, lien_github, visibilite, id_professeur, technologies } = data
+    const techNames = normalizeTechnologies(technologies)
     return prisma.projet.update({
       where: { id_projet: BigInt(id) },
       data: {
@@ -65,6 +98,21 @@ const projetService = {
         ...(lien_github !== undefined && { lien_github }),
         ...(visibilite && { visibilite }),
         ...(id_professeur && { id_professeur: BigInt(id_professeur) }),
+        ...(technologies !== undefined
+          ? {
+              technologies: {
+                deleteMany: {},
+                create: techNames.map((nom) => ({
+                  technologie: {
+                    connectOrCreate: {
+                      where: { nom },
+                      create: { nom },
+                    },
+                  },
+                })),
+              },
+            }
+          : {}),
       }
     })
   },

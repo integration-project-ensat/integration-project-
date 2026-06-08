@@ -14,12 +14,34 @@ const buildProfileInclude = (role) => {
           include: {
             competences: { include: { competence: true } },
             diplomes: true,
+            portfolio: true,
             projets: {
               where: { statut: 'VALIDE' },
               include: { technologies: { include: { technologie: true } } }
             },
             stages: { where: { statut: 'VALIDE' } },
             activites: true,
+            recommandations_recues: {
+              include: {
+                auteur: {
+                  select: {
+                    id_utilisateur: true,
+                    nom: true,
+                    prenom: true,
+                    role: true,
+                    profil: { select: { photo_profil: true } }
+                  }
+                }
+              },
+              orderBy: { id_recommandation: 'desc' }
+            },
+            github_integration: {
+              include: {
+                depots: {
+                  orderBy: { nb_commits: 'desc' }
+                }
+              }
+            },
             badges: { include: { badge: true } },
             score_credibilite: true
           }

@@ -1,16 +1,17 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import profApi from "@/services/profApi";
+import { resolveProfileBadges } from "../utils/profileBadges";
 import type {
   RecommendationRequest,
   RecommendationStatus,
 } from "./DashboardProfView.vue";
 
-type RecommendationTab = "Tout" | "En attente" | "Acceptées";
+type RecommendationTab = "Tout" | "En attente" | "AcceptÃ©es";
 
 const router = useRouter();
 const sidebarOpen = ref(true);
@@ -19,16 +20,16 @@ const selectedRequest = ref<RecommendationRequest | null>(null);
 const writingRequest = ref<RecommendationRequest | null>(null);
 const letterDraft = ref("");
 const recommendations = ref<RecommendationRequest[]>([]);
-const acceptedStatus = "Acceptée" as RecommendationStatus;
-const refusedStatus = "Refusée" as RecommendationStatus;
+const acceptedStatus = "AcceptÃ©e" as RecommendationStatus;
+const refusedStatus = "RefusÃ©e" as RecommendationStatus;
 
-const tabs: RecommendationTab[] = ["Tout", "En attente", "Acceptées"];
+const tabs: RecommendationTab[] = ["Tout", "En attente", "AcceptÃ©es"];
 
 const filteredRequests = computed(() => {
   if (activeTab.value === "Tout") {
     return recommendations.value;
   }
-  if (activeTab.value === "Acceptées") {
+  if (activeTab.value === "AcceptÃ©es") {
     return recommendations.value.filter(
       (request) => request.status === acceptedStatus,
     );
@@ -42,8 +43,8 @@ const filteredRequests = computed(() => {
 const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
-  if (status === "Acceptée" || status === "AcceptÃ©e") return "Acceptée";
-  if (status === "Refusée" || status === "RefusÃ©e") return "Refusée";
+  if (status === "AcceptÃ©e" || status === "AcceptÃƒÂ©e") return "AcceptÃ©e";
+  if (status === "RefusÃ©e" || status === "RefusÃƒÂ©e") return "RefusÃ©e";
   return "En attente";
 };
 
@@ -109,12 +110,10 @@ const refuseRequest = async (request: RecommendationRequest) => {
 };
 
 const studentBadges = (request: RecommendationRequest) => {
-  const text = `${request.profileInfo} ${request.title}`.toLowerCase();
-  if (text.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (text.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (text.includes("cyber"))
-    return ["🔐 Security Aware", "🏆 Hackathon Participant"];
-  return ["🌐 Web Developer"];
+  return resolveProfileBadges({
+    filiere: request.profileInfo,
+    field: request.title,
+  });
 };
 
 onMounted(() => {
@@ -200,7 +199,7 @@ onMounted(() => {
                   class="action-btn muted"
                   @click.stop="openDetailsModal(request)"
                 >
-                  Voir détails
+                  Voir dÃ©tails
                 </button>
                 <button
                   v-if="request.status === 'En attente'"
@@ -208,7 +207,7 @@ onMounted(() => {
                   class="action-btn primary"
                   @click.stop="openWriteModal(request)"
                 >
-                  Accepter et écrire
+                  Accepter et Ã©crire
                 </button>
                 <button
                   v-if="request.status === 'En attente'"
@@ -233,7 +232,7 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Détails de la demande</p>
+            <p>DÃ©tails de la demande</p>
             <button
               type="button"
               class="modal-student-link"
@@ -243,7 +242,7 @@ onMounted(() => {
             </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
-            ×
+            Ã—
           </button>
         </div>
 
@@ -268,12 +267,12 @@ onMounted(() => {
         </div>
 
         <div class="details-section">
-          <span>Message étudiant</span>
+          <span>Message Ã©tudiant</span>
           <p>{{ selectedRequest.message }}</p>
         </div>
 
         <div v-if="selectedRequest.writtenLetter" class="details-section">
-          <span>Lettre écrite</span>
+          <span>Lettre Ã©crite</span>
           <p>{{ selectedRequest.writtenLetter }}</p>
         </div>
 
@@ -291,7 +290,7 @@ onMounted(() => {
             class="action-btn primary"
             @click="openWriteModal(selectedRequest)"
           >
-            Accepter et écrire
+            Accepter et Ã©crire
           </button>
           <button
             v-if="selectedRequest.status === 'En attente'"
@@ -313,11 +312,11 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Écrire la lettre</p>
+            <p>Ã‰crire la lettre</p>
             <h2>{{ writingRequest.studentName }}</h2>
           </div>
           <button type="button" class="modal-close" @click="closeWriteModal">
-            ×
+            Ã—
           </button>
         </div>
 
@@ -332,7 +331,7 @@ onMounted(() => {
           <textarea
             v-model="letterDraft"
             rows="8"
-            placeholder="Écrivez la lettre de recommandation ici..."
+            placeholder="Ã‰crivez la lettre de recommandation ici..."
           ></textarea>
         </label>
 
@@ -689,3 +688,4 @@ onMounted(() => {
   outline: none;
 }
 </style>
+

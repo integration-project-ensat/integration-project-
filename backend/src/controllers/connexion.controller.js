@@ -62,21 +62,9 @@ const connexionController = {
 
   async getMine(req, res) {
     try {
-      let connexions = await connexionService.findMine(
+      const connexions = await connexionService.findMine(
         req.utilisateur.id_utilisateur,
       );
-
-      if (!connexions.length && process.env.NODE_ENV !== "production") {
-        await connexionService.ensureSampleConnexions(
-          req.utilisateur.id_utilisateur,
-          req.utilisateur.role,
-          req.utilisateur.email,
-        );
-        connexions = await connexionService.findMine(
-          req.utilisateur.id_utilisateur,
-        );
-      }
-
       return res.json(ApiResponse.success(connexions, "Connexions récupérées"));
     } catch (e) {
       return res.status(500).json(ApiResponse.serverError());
@@ -85,21 +73,9 @@ const connexionController = {
 
   async getMesDemandes(req, res) {
     try {
-      let connexions = await connexionService.getMesDemandes(
+      const connexions = await connexionService.getMesDemandes(
         req.utilisateur.id_utilisateur,
       );
-
-      if (!connexions.length && process.env.NODE_ENV !== "production") {
-        await connexionService.ensureSampleConnexions(
-          req.utilisateur.id_utilisateur,
-          req.utilisateur.role,
-          req.utilisateur.email,
-        );
-        connexions = await connexionService.getMesDemandes(
-          req.utilisateur.id_utilisateur,
-        );
-      }
-
       return res.json(
         ApiResponse.success(connexions, "Mes demandes récupérées"),
       );
@@ -110,21 +86,9 @@ const connexionController = {
 
   async getDemandesRecues(req, res) {
     try {
-      let connexions = await connexionService.getDemandesRecues(
+      const connexions = await connexionService.getDemandesRecues(
         req.utilisateur.id_utilisateur,
       );
-
-      if (!connexions.length && process.env.NODE_ENV !== "production") {
-        await connexionService.ensureSampleConnexions(
-          req.utilisateur.id_utilisateur,
-          req.utilisateur.role,
-          req.utilisateur.email,
-        );
-        connexions = await connexionService.getDemandesRecues(
-          req.utilisateur.id_utilisateur,
-        );
-      }
-
       return res.json(
         ApiResponse.success(connexions, "Demandes reçues récupérées"),
       );
@@ -135,21 +99,9 @@ const connexionController = {
 
   async getMesConnexions(req, res) {
     try {
-      let connexions = await connexionService.getMesConnexions(
+      const connexions = await connexionService.getMesConnexions(
         req.utilisateur.id_utilisateur,
       );
-
-      if (!connexions.length && process.env.NODE_ENV !== "production") {
-        await connexionService.ensureSampleConnexions(
-          req.utilisateur.id_utilisateur,
-          req.utilisateur.role,
-          req.utilisateur.email,
-        );
-        connexions = await connexionService.getMesConnexions(
-          req.utilisateur.id_utilisateur,
-        );
-      }
-
       return res.json(
         ApiResponse.success(connexions, "Mes connexions récupérées"),
       );

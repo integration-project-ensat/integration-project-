@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
+import { stageService } from "../services/stage.service";
 
 interface Stage {
   id: number;
@@ -16,20 +17,7 @@ interface Stage {
 
 const sidebarOpen = ref(true);
 const showForm = ref(false);
-
-const stages = ref<Stage[]>([
-  {
-    id: 1,
-    entreprise: "OCP Group",
-    poste: "Développeur Full Stack",
-    lieu: "Casablanca, Maroc",
-    dateDebut: "2025-07",
-    dateFin: "2025-09",
-    description:
-      "Développement d'une application interne de gestion des ressources humaines avec Vue 3 et Node.js.",
-    competences: ["Vue 3", "Node.js", "PostgreSQL", "Docker"],
-  },
-]);
+const stages = ref<Stage[]>([]);
 
 const newStage = ref({
   entreprise: "",
@@ -41,46 +29,76 @@ const newStage = ref({
   competences: "",
 });
 
-function ajouterStage() {
-  if (!newStage.value.entreprise || !newStage.value.poste) return;
-  stages.value.push({
-    id: Date.now(),
-    entreprise: newStage.value.entreprise,
-    poste: newStage.value.poste,
-    lieu: newStage.value.lieu,
-    dateDebut: newStage.value.dateDebut,
-    dateFin: newStage.value.dateFin,
-    description: newStage.value.description,
-    competences: newStage.value.competences
-      .split(",")
-      .map((c) => c.trim())
-      .filter(Boolean),
-  });
-  newStage.value = {
-    entreprise: "",
-    poste: "",
+function mapStage(item: any): Stage {
+  return {
+    id: Number(item?.id_stage),
+    entreprise: item?.entreprise || "Entreprise",
+    poste: item?.poste || "Stage",
     lieu: "",
-    dateDebut: "",
-    dateFin: "",
-    description: "",
-    competences: "",
+    dateDebut: item?.date_debut ? String(item.date_debut).slice(0, 7) : "",
+    dateFin: item?.date_fin ? String(item.date_fin).slice(0, 7) : "",
+    description: item?.missions || "",
+    competences: String(item?.technologies || "").split(',').map((c: string) => c.trim()).filter(Boolean),
   };
-  showForm.value = false;
 }
 
-function supprimerStage(id: number) {
-  stages.value = stages.value.filter((s) => s.id !== id);
+async function loadStages() {
+  try {
+    const { data } = await stageService.getMesStages();
+    const raw = Array.isArray(data?.data) ? data.data : [];
+    stages.value = raw.map(mapStage);
+  } catch (error) {
+    console.warn("Chargement des stages impossible", error);
+    stages.value = [];
+  }
+}
+
+async function ajouterStage() {
+  if (!newStage.value.entreprise || !newStage.value.poste) return;
+  try {
+    await stageService.createStage({
+      entreprise: newStage.value.entreprise,
+      poste: newStage.value.poste,
+      missions: newStage.value.description,
+      technologies: newStage.value.competences,
+      date_debut: newStage.value.dateDebut ? `${newStage.value.dateDebut}-01` : undefined,
+      date_fin: newStage.value.dateFin ? `${newStage.value.dateFin}-01` : undefined,
+    });
+    newStage.value = {
+      entreprise: "",
+      poste: "",
+      lieu: "",
+      dateDebut: "",
+      dateFin: "",
+      description: "",
+      competences: "",
+    };
+    showForm.value = false;
+    await loadStages();
+  } catch (error) {
+    console.warn("Creation du stage impossible", error);
+  }
+}
+
+async function supprimerStage(id: number) {
+  try {
+    await stageService.deleteStage(id);
+    await loadStages();
+  } catch (error) {
+    console.warn("Suppression du stage impossible", error);
+  }
 }
 
 function formatDate(d: string) {
   if (!d) return "";
   const [y, m] = d.split("-");
-  const mois = [
-    "", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
-    "Juil", "Août", "Sep", "Oct", "Nov", "Déc",
-  ];
+  const mois = ["", "Jan", "Fev", "Mar", "Avr", "Mai", "Juin", "Juil", "Aout", "Sep", "Oct", "Nov", "Dec"];
   return `${mois[parseInt(m || "0")]} ${y}`;
 }
+
+onMounted(() => {
+  loadStages();
+});
 </script>
 
 <template>

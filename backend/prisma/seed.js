@@ -1529,6 +1529,12 @@ async function seedElementsValidables(projets, stages, activites, admin) {
       await prisma.attestation.upsert({
         where: { id_element: saved.id_element },
         update: {
+          id_etudiant:
+            saved.type === "PROJET"
+              ? projets.find((projet) => projet.id_projet === saved.reference_id)?.id_etudiant
+              : saved.type === "STAGE"
+                ? stages.find((stage) => stage.id_stage === saved.reference_id)?.id_etudiant
+                : activites.find((activite) => activite.id_activite === saved.reference_id)?.id_etudiant,
           titre: `Attestation de ${attestationType.toLowerCase()}`,
           type: attestationType,
           date: toDate("2026-01-12"),
@@ -1538,6 +1544,12 @@ async function seedElementsValidables(projets, stages, activites, admin) {
         },
         create: {
           id_element: saved.id_element,
+          id_etudiant:
+            saved.type === "PROJET"
+              ? projets.find((projet) => projet.id_projet === saved.reference_id)?.id_etudiant
+              : saved.type === "STAGE"
+                ? stages.find((stage) => stage.id_stage === saved.reference_id)?.id_etudiant
+                : activites.find((activite) => activite.id_activite === saved.reference_id)?.id_etudiant,
           titre: `Attestation de ${attestationType.toLowerCase()}`,
           type: attestationType,
           date: toDate("2026-01-12"),

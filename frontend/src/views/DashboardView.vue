@@ -1,64 +1,31 @@
-<template>
+﻿<template>
   <div class="page">
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
     <div class="body-area">
-      <SideBar
-        :role="userRole"
-        :user="currentUser"
-        :isOpen="sidebarOpen"
-      />
+      <SideBar :isOpen="sidebarOpen" />
 
       <main class="content" :class="{ shifted: sidebarOpen }">
-        <!-- État de chargement -->
         <div v-if="isLoading" class="loading-state">
           <p>Chargement de votre dashboard...</p>
         </div>
 
-        <!-- État d'erreur -->
         <div v-else-if="error" class="error-state">
           <p>⚠️ {{ error }}</p>
         </div>
 
-        <!-- Contenu principal -->
         <template v-else>
           <section class="dashboard-head">
             <div>
+              <p class="dashboard-kicker">Espace étudiant</p>
               <h1>Dashboard</h1>
-              <p>Vue globale des statistiques, profils et opportunités.</p>
-            </div>
-
-            <div class="role-tabs">
-              <button
-                type="button"
-                class="role-tab"
-                :class="{ active: userRole === 'student' }"
-                @click="userRole = 'student'"
-              >
-                Étudiant
-              </button>
-              <button
-                type="button"
-                class="role-tab"
-                :class="{ active: userRole === 'teacher' }"
-                @click="userRole = 'teacher'"
-              >
-                Professeur
-              </button>
-              <button
-                type="button"
-                class="role-tab"
-                :class="{ active: userRole === 'professional' }"
-                @click="userRole = 'professional'"
-              >
-                Professionnel
-              </button>
+              <p>Vue globale de votre progression, activité récente et opportunités.</p>
             </div>
           </section>
 
           <section class="stats-grid">
             <div
-              v-for="stat in stats"
+              v-for="stat in studentStats"
               :key="stat.label"
               class="stat-card"
               :style="{ '--accent': stat.color }"
@@ -128,6 +95,7 @@
                   <span :class="`dot-${index}`"></span>
                   {{ activity }}
                 </p>
+                <p v-if="!activities.length">Aucune activité récente.</p>
               </div>
             </article>
 
@@ -136,7 +104,7 @@
               <div class="opportunity">
                 <strong>
                   <span class="opp-badge green">{{ studentStats.find(s => s.label === 'Stages postulés')?.value || '0' }} stages</span>
-                  postuls
+                  postulés
                 </strong>
                 <p>Basés sur vos candidatures et votre activité récente.</p>
               </div>
@@ -152,7 +120,7 @@
 
           <section class="results-card">
             <div class="results-head">
-              <h2>Résultats filtrés</h2>
+              <h2>Professionnels suggérés</h2>
               <span>{{ filteredProfiles.length }} profils</span>
             </div>
             <div class="profile-grid">
@@ -185,89 +153,50 @@ import TopBar from "../components/TopBar.vue";
 import SideBar from "../components/exploreStudent/Sidebar.vue";
 import studentApi from "@/services/studentApi";
 
-type UserRole = "student" | "teacher" | "professional";
-type FilterKey = "category" | "degree" | "certification" | "city" | "gender";
+type FilterKey = "category" | "sector" | "role" | "city";
 
 const sidebarOpen = ref(true);
-const storedRole = localStorage.getItem("role") as UserRole | null;
-const userRole = ref<UserRole>(storedRole === "teacher" || storedRole === "professional" ? storedRole : "student");
 const openFilter = ref<FilterKey | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-
-const currentUser = ref({
-  name: "Chargement...",
-  email: "",
-  avatar: "",
-});
-
 const profileProgress = ref(0);
+const activities = ref<string[]>([]);
+const profiles = ref<Array<{ name: string; role: string; city: string; level: string; skill: string; sector: string; photo?: string }>>([]);
 
 const filters = reactive<Record<FilterKey, string>>({
   category: "Tous",
-  degree: "Tous",
-  certification: "Toutes",
+  sector: "Tous",
+  role: "Tous",
   city: "Toutes",
-  gender: "Tous",
 });
 
 const filterConfigs: Array<{ key: FilterKey; label: string; options: string[] }> = [
-  { key: "category",      label: "Catégorie",     options: ["Tous", "Étudiant", "Professeur", "Professionnel"] },
-  { key: "degree",        label: "Diplôme",       options: ["Tous", "Licence", "Master", "Doctorat", "Ingénieur"] },
-  { key: "certification", label: "Certification", options: ["Toutes", "Vue.js", "Docker", "AWS", "Python"] },
-  { key: "city",          label: "Ville",         options: ["Toutes", "Tanger", "Tétouan", "Rabat", "Casablanca"] },
-  { key: "gender",        label: "Sexe",          options: ["Tous", "Femme", "Homme"] },
+  { key: "category", label: "Catégorie", options: ["Tous", "Professionnel"] },
+  { key: "sector", label: "Secteur", options: ["Tous", "Tech", "Finance", "Conseil", "Industrie", "Autre"] },
+  { key: "role", label: "Poste", options: ["Tous", "Développeur", "Chef de projet", "Consultant", "Ingénieur", "Autre"] },
+  { key: "city", label: "Ville", options: ["Toutes", "Tanger", "Tétouan", "Rabat", "Casablanca", "Marrakech", "Fès"] },
 ];
 
 const studentStats = ref([
-  { label: "Score profil",    value: "0",    color: "#5b4fcf" },
-  { label: "Recommandations", value: "0",   color: "#0f9e74" },
-  { label: "Projets",         value: "0",    color: "#d85a30" },
-  { label: "Stages postulés", value: "0",    color: "#ba7517" },
-  { label: "Certifications",  value: "0",   color: "#185fa5" },
-  { label: "Compétences",     value: "0",   color: "#d4537e" },
+  { label: "Score profil", value: "0", color: "#5b4fcf" },
+  { label: "Recommandations", value: "0", color: "#0f9e74" },
+  { label: "Projets", value: "0", color: "#d85a30" },
+  { label: "Stages postulés", value: "0", color: "#ba7517" },
+  { label: "Certifications", value: "0", color: "#185fa5" },
+  { label: "Compétences", value: "0", color: "#d4537e" },
 ]);
-
-const teacherStats = [
-  { label: "Étudiants suivis",        value: "34",   color: "#5b4fcf" },
-  { label: "Recos envoyées",          value: "128",  color: "#0f9e74" },
-  { label: "Projets encadrés",        value: "12",   color: "#d85a30" },
-  { label: "Demandes reçues",         value: "18",   color: "#ba7517" },
-  { label: "Certifications validées", value: "9",    color: "#185fa5" },
-  { label: "Vues du profil",          value: "860",  color: "#d4537e" },
-];
-
-const professionalStats = [
-  { label: "Stages publiés",       value: "7",     color: "#5b4fcf" },
-  { label: "Candidatures",         value: "96",    color: "#0f9e74" },
-  { label: "Étudiants connectés",  value: "42",    color: "#d85a30" },
-  { label: "Recos envoyées",       value: "31",    color: "#ba7517" },
-  { label: "Entretiens",           value: "14",    color: "#185fa5" },
-  { label: "Vues du profil",       value: "1 080", color: "#d4537e" },
-];
-
-const stats = computed(() => {
-  if (userRole.value === "teacher") return teacherStats;
-  if (userRole.value === "professional") return professionalStats;
-  return studentStats.value;
-});
-
-const activities = ref<string[]>([]);
-const profiles = ref<Array<{ name: string; role: string; city: string; level: string; skill: string; gender: string; photo?: string }>>([]);
 
 const filteredProfiles = computed(() =>
   profiles.value.filter((profile) => {
-    const matchCategory      = filters.category === "Tous"       || profile.role.includes(filters.category);
-    const matchDegree        = filters.degree === "Tous"         || profile.level === filters.degree;
-    const matchCertification = filters.certification === "Toutes"|| profile.skill === filters.certification;
-    const matchCity          = filters.city === "Toutes"         || profile.city === filters.city;
-    const matchGender        = filters.gender === "Tous"         || profile.gender === filters.gender;
-    
-    return matchCategory && matchDegree && matchCertification && matchCity && matchGender;
+    const matchCategory = filters.category === "Tous" || profile.role.includes(filters.category);
+    const matchSector = filters.sector === "Tous" || profile.sector === filters.sector;
+    const matchRole = filters.role === "Tous" || profile.skill.includes(filters.role);
+    const matchCity = filters.city === "Toutes" || profile.city === filters.city;
+
+    return matchCategory && matchSector && matchRole && matchCity;
   })
 );
 
-// Charge les données du dashboard depuis l'API
 const loadDashboard = async () => {
   try {
     isLoading.value = true;
@@ -280,21 +209,15 @@ const loadDashboard = async () => {
 
     if (dashboardResponse.data.success) {
       const data = dashboardResponse.data.data;
-      currentUser.value = {
-        name: data.profile.nom,
-        email: data.profile.email,
-        avatar: data.profile.photo || "",
-      };
-
       profileProgress.value = data.profileProgress ?? 0;
 
       studentStats.value = [
-        { label: "Score profil",    value: String(data.stats.scoreProfile ?? 0),    color: "#5b4fcf" },
+        { label: "Score profil", value: String(data.stats.scoreProfile ?? 0), color: "#5b4fcf" },
         { label: "Recommandations", value: String(data.stats.recommandations ?? 0), color: "#0f9e74" },
-        { label: "Projets",         value: String(data.stats.projets ?? 0),         color: "#d85a30" },
-        { label: "Stages postulés", value: String(data.stats.stages ?? 0),          color: "#ba7517" },
-        { label: "Certifications",  value: String(data.stats.badges ?? 0),          color: "#185fa5" },
-        { label: "Compétences",     value: String(data.stats.competences ?? 0),     color: "#d4537e" },
+        { label: "Projets", value: String(data.stats.projets ?? 0), color: "#d85a30" },
+        { label: "Stages postulés", value: String(data.stats.stages ?? 0), color: "#ba7517" },
+        { label: "Certifications", value: String(data.stats.badges ?? 0), color: "#185fa5" },
+        { label: "Compétences", value: String(data.stats.competences ?? 0), color: "#d4537e" },
       ];
 
       activities.value = Array.isArray(data.activities)
@@ -307,9 +230,9 @@ const loadDashboard = async () => {
         name: pro.nom || "Professionnel",
         role: "Professionnel",
         city: pro.profil?.adresse || "—",
-        level: pro.secteur || "—",
-        skill: pro.poste || "—",
-        gender: "N/A",
+        level: pro.secteur || "Autre",
+        skill: pro.poste || "Autre",
+        sector: pro.secteur || "Autre",
         photo: pro.photo || undefined,
       }));
     }
@@ -322,7 +245,6 @@ const loadDashboard = async () => {
 };
 
 onMounted(() => {
-  // Charger les données au montage du composant
   loadDashboard();
 });
 
@@ -350,7 +272,6 @@ function avatarColorClass(name: string) {
 </script>
 
 <style scoped>
-/* ── Page & layout ────────────────────────────────────────────────────────── */
 .page {
   min-height: 100vh;
   background: #f0f2f8;
@@ -402,13 +323,19 @@ function avatarColorClass(name: string) {
   z-index: 1;
 }
 
-/* ── Header ───────────────────────────────────────────────────────────────── */
 .dashboard-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+.dashboard-kicker {
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 6px;
 }
 
 .dashboard-head h1 {
@@ -424,41 +351,6 @@ function avatarColorClass(name: string) {
   color: var(--text-dark);
 }
 
-.role-tabs {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: white;
-  border-radius: 8px;
-  padding: 8px;
-  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.07);
-}
-
-.role-tab {
-  min-height: 38px;
-  padding: 0 18px;
-  border-radius: 100px;
-  background: transparent;
-  color: var(--text-dark);
-  font-family: var(--font-head);
-  font-size: .85rem;
-  font-weight: 700;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease;
-}
-
-.role-tab.active {
-  background: var(--purple);
-  color: white;
-}
-
-.role-tab:hover:not(.active) {
-  border-color: var(--purple);
-  color: var(--purple);
-}
-
-/* ── Stats ────────────────────────────────────────────────────────────────── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(140px, 1fr));
@@ -496,12 +388,11 @@ function avatarColorClass(name: string) {
   color: var(--accent);
 }
 
-/* ── Filters ──────────────────────────────────────────────────────────────── */
 .filters-card {
   background: #ffffff;
   border-radius: 14px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   padding: 18px;
   margin-bottom: 20px;
@@ -566,7 +457,7 @@ function avatarColorClass(name: string) {
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  z-index: 150; /* Augmenté pour passer devant le reste */
+  z-index: 150;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -596,7 +487,6 @@ function avatarColorClass(name: string) {
   color: var(--text-dark);
 }
 
-/* ── Mid grid ─────────────────────────────────────────────────────────────── */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr;
@@ -623,7 +513,6 @@ function avatarColorClass(name: string) {
   margin-bottom: 18px;
 }
 
-/* Progress */
 .progress-row {
   display: flex;
   justify-content: space-between;
@@ -654,7 +543,6 @@ function avatarColorClass(name: string) {
   font-size: .88rem;
 }
 
-/* Activity dots */
 .activity-list {
   display: grid;
   gap: 20px;
@@ -678,7 +566,6 @@ function avatarColorClass(name: string) {
 .dot-1 { background: #0f9e74; }
 .dot-2 { background: #ba7517; }
 
-/* Opportunities */
 .opportunity {
   padding: 14px 0;
   border-bottom: 1px solid #f0f0f0;
@@ -712,7 +599,6 @@ function avatarColorClass(name: string) {
 .opp-badge.green { background: #eaf3de; color: #3b6d11; }
 .opp-badge.coral { background: #faece7; color: #993c1d; }
 
-/* ── Results ──────────────────────────────────────────────────────────────── */
 .results-card {
   background: #ffffff;
   border-radius: 14px;
@@ -771,7 +657,6 @@ function avatarColorClass(name: string) {
   color: var(--text-dark);
 }
 
-/* ── Avatars ──────────────────────────────────────────────────────────────── */
 .avatar {
   width: 48px;
   height: 48px;
@@ -796,11 +681,10 @@ function avatarColorClass(name: string) {
 .avatar-purple    { --avatar-bg: #5e35b1; }
 .avatar-slate     { --avatar-bg: #5c6bc0; }
 
-/* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
   .stats-grid,
   .profile-grid    { grid-template-columns: repeat(3, 1fr); }
-  .filters-card    { grid-template-columns: repeat(3, 1fr); }
+  .filters-card    { grid-template-columns: repeat(2, 1fr); }
   .dashboard-grid  { grid-template-columns: 1fr; }
 }
 
@@ -810,13 +694,11 @@ function avatarColorClass(name: string) {
   .content::before { left: 12px; right: 12px; top: 68px; bottom: 12px; }
   .content.shifted::before { left: 12px; }
   .dashboard-head  { flex-direction: column; align-items: flex-start; }
-  .role-tabs       { width: 100%; overflow-x: auto; }
   .stats-grid,
   .filters-card,
   .profile-grid    { grid-template-columns: 1fr; }
 }
 
-/* ── States (Loading & Error) ──────────────────────────────────────────── */
 .loading-state,
 .error-state {
   display: flex;

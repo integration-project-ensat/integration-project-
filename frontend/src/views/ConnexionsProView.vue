@@ -1,25 +1,43 @@
-<script setup lang="ts">
-import { computed, ref } from "vue";
+﻿<script setup lang="ts">
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
-import {
-  type ProConnectionStatus,
-  useProConnections,
-} from "../store/proConnections";
+import { connexionService } from "../services/connexion.service";
 
 const router = useRouter();
 const route = useRoute();
 const sidebarOpen = ref(true);
 const activeTab = ref<"pending" | "accepted">("pending");
-const { pendingRequests, acceptedRequests, refusedRequests, updateRequest } =
-  useProConnections();
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+
+type ProConnectionStatus = "pending" | "sent" | "accepted";
+
+interface ProConnectionRequest {
+  id: string;
+  initials: string;
+  name: string;
+  school: string;
+  field: string;
+  message: string;
+  time: string;
+  status: ProConnectionStatus;
+  profilePath: string;
+  canAccept?: boolean;
+  canCancel?: boolean;
+  canRemove?: boolean;
+}
+
+const pendingRequests = ref<ProConnectionRequest[]>([]);
+const acceptedRequests = ref<ProConnectionRequest[]>([]);
+const rawConnexionData = ref<any>(null);
 
 const tabs = [
-  { key: "pending", label: "En attente" },
+  { key: "pending", label: "Demandes" },
   { key: "accepted", label: "Mes connexions" },
 ] as const;
 
@@ -29,13 +47,46 @@ const currentRole = computed(() => {
   return "pro";
 });
 
-const visibleRequests = computed(() => {
-  if (activeTab.value === "accepted") return acceptedRequests.value;
-  return pendingRequests.value;
+const syncActiveTabFromRoute = () => {
+  const tab = String(route.query.tab || "").toLowerCase();
+  activeTab.value = tab === "accepted" ? "accepted" : "pending";
+};
+
+const profileContextQuery = computed(() => {
+  if (currentRole.value === "prof") return "?from=prof";
+  if (currentRole.value === "pro") return "?from=pro";
+  return "?from=student";
 });
 
-const setStatus = (id: string, status: ProConnectionStatus) => {
-  updateRequest(id, status);
+const visibleRequests = computed(() =>
+  activeTab.value === "accepted"
+    ? acceptedRequests.value
+    : pendingRequests.value,
+);
+
+const emptyStateMessage = computed(() =>
+  activeTab.value === "accepted"
+    ? "Aucune connexion acceptee pour le moment."
+    : "Aucune demande dans cette categorie.",
+);
+
+const hasAcceptedConnections = computed(() => acceptedRequests.value.length > 0);
+
+const formatRelativeDate = (dateValue?: string | null) => {
+  if (!dateValue) return "Récemment";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "Récemment";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
+
+  if (diffMinutes < 60) return `Il y a ${diffMinutes} min`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `Il y a ${diffHours} h`;
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays === 1) return "Hier";
+  return `Il y a ${diffDays} jours`;
 };
 
 const connectionBadges = (field: string) => {
@@ -43,8 +94,228 @@ const connectionBadges = (field: string) => {
   if (normalized.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
   if (normalized.includes("data")) return ["🧠 AI / Data"];
   if (normalized.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
+  if (normalized.includes("cyber")) return ["🔐 Security Aware"];
   return ["🌐 Web Developer"];
 };
+
+const toInitials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+const getCurrentUserId = () => {
+  const rawUser = localStorage.getItem("user");
+  if (!rawUser) return null;
+
+  try {
+    const user = JSON.parse(rawUser);
+    const id = user?.id ?? user?.id_utilisateur;
+    return id == null ? null : String(id);
+  } catch {
+    return null;
+  }
+};
+
+const getFieldLabel = (user: any) =>
+  user?.etudiant?.filiere || user?.role || "Étudiant";
+
+const getSchoolLabel = (user: any) => user?.profil?.adresse || "Étudiant";
+
+const mapReceivedRequest = (connexion: any): ProConnectionRequest => {
+  const demandeur = connexion.demandeur ?? {};
+  const name =
+    [demandeur.prenom, demandeur.nom].filter(Boolean).join(" ").trim() ||
+    "Étudiant";
+
+  return {
+    id: String(connexion.id_connexion),
+    initials: toInitials(name),
+    name,
+    school: getSchoolLabel(demandeur),
+    field: getFieldLabel(demandeur),
+    message: "Demande de connexion étudiant",
+    time: formatRelativeDate(connexion.date_demande),
+    status: "pending",
+    canAccept: true,
+    canCancel: true,
+    profilePath: `/profile/student/${demandeur.id_utilisateur}${profileContextQuery.value}`,
+  };
+};
+
+const mapSentRequest = (connexion: any): ProConnectionRequest => {
+  const destinataire = connexion.destinataire ?? {};
+  const name =
+    [destinataire.prenom, destinataire.nom].filter(Boolean).join(" ").trim() ||
+    "Connexion";
+
+  return {
+    id: String(connexion.id_connexion),
+    initials: toInitials(name),
+    name,
+    school: getSchoolLabel(destinataire),
+    field: getFieldLabel(destinataire),
+    message: "Demande envoyée",
+    time: formatRelativeDate(connexion.date_demande),
+    status: "sent",
+    canAccept: false,
+    canCancel: true,
+    profilePath: `/profile/student/${destinataire.id_utilisateur}${profileContextQuery.value}`,
+  };
+};
+
+const mapAcceptedRequest = (
+  connexion: any,
+  currentUserId: string | null,
+): ProConnectionRequest => {
+  const demandeurId = String(connexion.demandeur?.id_utilisateur ?? "");
+  const otherUser =
+    currentUserId && demandeurId === currentUserId
+      ? connexion.destinataire
+      : connexion.demandeur;
+
+  const name =
+    [otherUser?.prenom, otherUser?.nom].filter(Boolean).join(" ").trim() ||
+    "Connexion";
+
+  return {
+    id: String(connexion.id_connexion),
+    initials: toInitials(name),
+    name,
+    school: getSchoolLabel(otherUser),
+    field: getFieldLabel(otherUser),
+    message: "Connexion acceptée",
+    time: formatRelativeDate(connexion.date_reponse || connexion.date_demande),
+    status: "accepted",
+    canRemove: true,
+    profilePath: `/profile/student/${otherUser?.id_utilisateur}${profileContextQuery.value}`,
+  };
+};
+
+const normalizeStatus = (status: string) =>
+  String(status || "")
+    .trim()
+    .toUpperCase();
+
+const loadConnections = async () => {
+  if (!localStorage.getItem("token")) {
+    pendingRequests.value = [];
+    acceptedRequests.value = [];
+    error.value = "Connectez-vous pour gérer les connexions réelles.";
+    rawConnexionData.value = null;
+    return;
+  }
+
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const currentUserId = getCurrentUserId();
+    const response = await connexionService.getConnexions();
+    rawConnexionData.value = response.data;
+    let data = Array.isArray(response.data?.data) ? response.data.data : [];
+
+    if (!data.length) {
+      const [receivedResponse, sentResponse, acceptedResponse] =
+        await Promise.all([
+          connexionService.getDemandesRecues(),
+          connexionService.getMesDemandes(),
+          connexionService.getMesConnexions(),
+        ]);
+
+      rawConnexionData.value = {
+        received: receivedResponse.data,
+        sent: sentResponse.data,
+        accepted: acceptedResponse.data,
+      };
+
+      const receivedPending = Array.isArray(receivedResponse.data?.data)
+        ? receivedResponse.data.data.map(mapReceivedRequest)
+        : [];
+
+      const sentPending = Array.isArray(sentResponse.data?.data)
+        ? sentResponse.data.data
+            .filter(
+              (connexion: any) =>
+                normalizeStatus(connexion.statut) === "EN_ATTENTE",
+            )
+            .map(mapSentRequest)
+        : [];
+
+      pendingRequests.value = [...receivedPending, ...sentPending];
+
+      acceptedRequests.value = Array.isArray(acceptedResponse.data?.data)
+        ? acceptedResponse.data.data.map((connexion: any) =>
+            mapAcceptedRequest(connexion, currentUserId),
+          )
+        : [];
+
+      return;
+    }
+
+    pendingRequests.value = data
+      .filter(
+        (connexion: any) => normalizeStatus(connexion.statut) === "EN_ATTENTE",
+      )
+      .map((connexion: any) => {
+        const demandeurId = String(connexion.demandeur?.id_utilisateur ?? "");
+        return demandeurId === currentUserId
+          ? mapSentRequest(connexion)
+          : mapReceivedRequest(connexion);
+      });
+
+    acceptedRequests.value = data
+      .filter(
+        (connexion: any) => normalizeStatus(connexion.statut) === "ACCEPTEE",
+      )
+      .map((connexion: any) => mapAcceptedRequest(connexion, currentUserId));
+
+  } catch (err: any) {
+    if (err?.response?.status === 401) {
+      router.push("/login");
+      return;
+    }
+    error.value =
+      err?.response?.data?.message ||
+      "Erreur lors du chargement des connexions";
+    rawConnexionData.value = err?.response?.data ?? null;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const acceptRequest = async (id: string) => {
+  await connexionService.accepterConnexion(id);
+  await loadConnections();
+};
+
+const removeRequest = async (id: string) => {
+  await connexionService.refuserConnexion(id);
+  await loadConnections();
+};
+
+const removeConnection = async (id: string) => {
+  await connexionService.supprimerConnexion(id);
+  await loadConnections();
+};
+
+const setActiveTab = (tab: "pending" | "accepted") => {
+  activeTab.value = tab;
+  router.replace({
+    path: route.path,
+    query: { ...route.query, tab },
+  });
+};
+
+onMounted(() => {
+  syncActiveTabFromRoute();
+  loadConnections();
+});
+
+watch(() => route.query.tab, syncActiveTabFromRoute);
 </script>
 
 <template>
@@ -68,15 +339,18 @@ const connectionBadges = (field: string) => {
             :key="tab.key"
             type="button"
             :class="{ active: activeTab === tab.key }"
-            @click="activeTab = tab.key"
+            @click="setActiveTab(tab.key)"
           >
             {{ tab.label }}
           </button>
         </div>
 
         <div class="requests-grid">
+          <p v-if="isLoading" class="empty-state">Chargement...</p>
+          <p v-else-if="error" class="empty-state">{{ error }}</p>
+
           <article
-            v-for="request in visibleRequests"
+            v-for="request in !isLoading && !error ? visibleRequests : []"
             :key="request.id"
             class="request-card"
           >
@@ -102,19 +376,27 @@ const connectionBadges = (field: string) => {
 
               <div class="request-actions">
                 <button
-                  v-if="request.status !== 'accepted'"
+                  v-if="request.canAccept"
                   type="button"
-                  @click="setStatus(request.id, 'accepted')"
+                  @click="acceptRequest(request.id)"
                 >
                   Accepter
                 </button>
                 <button
-                  v-if="request.status !== 'refused'"
+                  v-if="request.canCancel"
                   type="button"
                   class="soft-danger"
-                  @click="setStatus(request.id, 'refused')"
+                  @click="removeRequest(request.id)"
                 >
                   Refuser
+                </button>
+                <button
+                  v-if="request.canRemove"
+                  type="button"
+                  class="soft-danger"
+                  @click="removeConnection(request.id)"
+                >
+                  Retirer
                 </button>
                 <button type="button" @click="router.push(request.profilePath)">
                   Voir profil
@@ -123,9 +405,29 @@ const connectionBadges = (field: string) => {
             </div>
           </article>
 
-          <p v-if="!visibleRequests.length" class="empty-state">
-            Aucune connexion dans cette catégorie.
-          </p>
+          <div
+            v-if="!isLoading && !error && !visibleRequests.length"
+            class="empty-state"
+          >
+            <p>{{ emptyStateMessage }}</p>
+            <button
+              v-if="activeTab === 'pending' && hasAcceptedConnections"
+              type="button"
+              class="empty-link"
+              @click="setActiveTab('accepted')"
+            >
+              Voir mes connexions
+            </button>
+            <div
+              v-if="rawConnexionData && error"
+              class="debug-output"
+            >
+              <p><strong>Données brutes reçues :</strong></p>
+              <pre class="debug-json"
+                >{{ JSON.stringify(rawConnexionData, null, 2) }}
+              </pre>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -270,6 +572,16 @@ const connectionBadges = (field: string) => {
   color: var(--text-gray);
   font-weight: 800;
   padding: 16px;
+}
+
+.empty-link {
+  margin-top: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 24, 39, 0.18);
+  background: white;
+  color: var(--navy-mid);
+  padding: 8px 14px;
+  font-weight: 900;
 }
 
 @media (max-width: 900px) {

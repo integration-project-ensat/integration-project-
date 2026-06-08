@@ -172,9 +172,6 @@ const navItems = [
   { path: "/certifications", label: "Diplômes & Certifications", icon: icons.certifications },
   { path: "/activites", label: "Activités parascolaires", icon: icons.activites },
   { path: "/portfolio", label: "My Portfolio", icon: icons.portfolio },
-  { path: "/github", label: "GitHub", icon: icons.github },
-  { path: "/recos", label: "Mes Recos", icon: icons.recos },
-  { path: "/commentaires", label: "Commentaires", icon: icons.recos },
   { path: "/ai-analyzer", label: "AI Portfolio", icon: icons.ai },
   { path: "/lettres", label: "Lettres de Recos", icon: icons.letter },
 ];

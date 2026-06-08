@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
+import { attestationService } from "../services/attestation.service";
+import { diplomeService } from "../services/diplome.service";
 
 interface Certification {
   id: number;
+  source: "diplome" | "attestation";
   titre: string;
   organisme: string;
   type: "diplome" | "certification" | "formation";
@@ -17,27 +20,7 @@ interface Certification {
 const sidebarOpen = ref(true);
 const showForm = ref(false);
 const activeTab = ref<"tous" | "diplome" | "certification" | "formation">("tous");
-
-const certifications = ref<Certification[]>([
-  {
-    id: 1,
-    titre: "Licence en Génie Informatique",
-    organisme: "ENSA Marrakech",
-    type: "diplome",
-    dateObtention: "2024-07",
-    description: "Formation d'ingénieur en génie informatique — réseaux, développement logiciel et systèmes embarqués.",
-  },
-  {
-    id: 2,
-    titre: "AWS Cloud Practitioner",
-    organisme: "Amazon Web Services",
-    type: "certification",
-    dateObtention: "2025-03",
-    dateExpiration: "2028-03",
-    lienVerification: "https://aws.amazon.com/verification",
-    description: "Certification fondamentale AWS couvrant les services cloud, la sécurité et la facturation.",
-  },
-]);
+const certifications = ref<Certification[]>([]);
 
 const newCert = ref({
   titre: "",
@@ -50,7 +33,7 @@ const newCert = ref({
 });
 
 const typeLabels: Record<Certification["type"], string> = {
-  diplome: "Diplôme",
+  diplome: "Dipl�me",
   certification: "Certification",
   formation: "Formation",
 };
@@ -61,36 +44,118 @@ const typeColors: Record<Certification["type"], string> = {
   formation: "#10b981",
 };
 
-function ajouterCertification() {
-  if (!newCert.value.titre || !newCert.value.organisme) return;
-  certifications.value.push({
-    id: Date.now(),
-    ...newCert.value,
-    dateExpiration: newCert.value.dateExpiration || undefined,
-    lienVerification: newCert.value.lienVerification || undefined,
-  });
-  newCert.value = {
-    titre: "", organisme: "", type: "certification",
-    dateObtention: "", dateExpiration: "", lienVerification: "", description: "",
+function mapDiplome(item: any): Certification {
+  return {
+    id: Number(item?.id_diplome),
+    source: "diplome",
+    titre: item?.titre_diplome || "Dipl�me",
+    organisme: item?.etablissement || "�tablissement non renseign�",
+    type: "diplome",
+    dateObtention: item?.annee_fin ? `${item.annee_fin}-06` : "",
+    description: item?.domaine || "",
   };
-  showForm.value = false;
 }
 
-function supprimerCertification(id: number) {
-  certifications.value = certifications.value.filter((c) => c.id !== id);
+function mapAttestation(item: any): Certification {
+  const rawType = String(item?.type || "").toLowerCase();
+  const mappedType: Certification["type"] = rawType.includes("formation")
+    ? "formation"
+    : "certification";
+
+  return {
+    id: Number(item?.id_attestation),
+    source: "attestation",
+    titre: item?.titre || item?.type || "Attestation",
+    organisme: item?.organisme || "Organisme non renseign�",
+    type: mappedType,
+    dateObtention: item?.date ? String(item.date).slice(0, 7) : "",
+    dateExpiration: item?.date_retention ? String(item.date_retention).slice(0, 7) : undefined,
+    lienVerification: undefined,
+    description: item?.description || "",
+  };
+}
+
+async function loadCertifications() {
+  try {
+    const [diplomesResponse, attestationsResponse] = await Promise.all([
+      diplomeService.getMesDiplomes(),
+      attestationService.getAttestations({ statut: "VALIDE" }),
+    ]);
+
+    const diplomes = Array.isArray(diplomesResponse?.data?.data)
+      ? diplomesResponse.data.data.map(mapDiplome)
+      : [];
+    const attestations = Array.isArray(attestationsResponse?.data?.data)
+      ? attestationsResponse.data.data.map(mapAttestation)
+      : [];
+
+    certifications.value = [...diplomes, ...attestations];
+  } catch (error) {
+    console.warn("Chargement des dipl�mes/certifications impossible", error);
+    certifications.value = [];
+  }
+}
+
+async function ajouterCertification() {
+  if (!newCert.value.titre || !newCert.value.organisme) return;
+
+  try {
+    if (newCert.value.type === "diplome") {
+      await diplomeService.createDiplome({
+        titre_diplome: newCert.value.titre,
+        etablissement: newCert.value.organisme,
+        domaine: newCert.value.description,
+        annee_fin: newCert.value.dateObtention ? Number(newCert.value.dateObtention.slice(0, 4)) : undefined,
+      });
+    } else {
+      await attestationService.createAttestation({
+        titre: newCert.value.titre,
+        type: newCert.value.type === "formation" ? "Formation" : "Certification",
+        date: newCert.value.dateObtention ? `${newCert.value.dateObtention}-01` : undefined,
+        organisme: newCert.value.organisme,
+        description: newCert.value.description,
+      });
+    }
+
+    newCert.value = {
+      titre: "", organisme: "", type: "certification",
+      dateObtention: "", dateExpiration: "", lienVerification: "", description: "",
+    };
+    showForm.value = false;
+    await loadCertifications();
+  } catch (error) {
+    console.warn("Cr�ation dipl�me/certification impossible", error);
+  }
+}
+
+async function supprimerCertification(item: Certification) {
+  try {
+    if (item.source === "diplome") {
+      await diplomeService.deleteDiplome(item.id);
+    } else {
+      await attestationService.deleteAttestation(item.id);
+    }
+    await loadCertifications();
+  } catch (error) {
+    console.warn("Suppression dipl�me/certification impossible", error);
+  }
 }
 
 function formatDate(d: string) {
   if (!d) return "";
   const [y, m] = d.split("-");
-  const mois = ["", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+  const mois = ["", "Jan", "F�v", "Mar", "Avr", "Mai", "Juin", "Juil", "Ao�t", "Sep", "Oct", "Nov", "D�c"];
   return `${mois[parseInt(m || "0")]} ${y}`;
 }
 
-const filtered = () => {
+const filtered = computed(() => {
   if (activeTab.value === "tous") return certifications.value;
   return certifications.value.filter((c) => c.type === activeTab.value);
-};
+});
+
+onMounted(() => {
+  loadCertifications();
+});
 </script>
 
 <template>
@@ -181,7 +246,7 @@ const filtered = () => {
         </div>
 
         <!-- Empty state -->
-        <div v-if="filtered().length === 0 && !showForm" class="empty-state">
+        <div v-if="filtered.length === 0 && !showForm" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5">
             <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
           </svg>
@@ -190,7 +255,7 @@ const filtered = () => {
 
         <!-- Liste -->
         <div class="cert-list">
-          <div v-for="cert in filtered()" :key="cert.id" class="cert-card">
+          <div v-for="cert in filtered" :key="`${cert.source}-${cert.id}`" class="cert-card">
             <div class="cert-left" :style="{ background: typeColors[cert.type] + '18', borderColor: typeColors[cert.type] + '33' }">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" :stroke="typeColors[cert.type]" stroke-width="2">
                 <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
@@ -205,7 +270,7 @@ const filtered = () => {
                   <h3 class="cert-title">{{ cert.titre }}</h3>
                   <p class="cert-org">{{ cert.organisme }}</p>
                 </div>
-                <button class="btn-delete" @click="supprimerCertification(cert.id)">
+                <button class="btn-delete" @click="supprimerCertification(cert)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
                   </svg>
@@ -289,3 +354,4 @@ const filtered = () => {
 .verify-link { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--purple); font-weight: 600; text-decoration: none; font-family: var(--font-head); transition: var(--ease); }
 .verify-link:hover { color: var(--navy-mid); text-decoration: underline; }
 </style>
+

@@ -1,46 +1,81 @@
-<template>
-  <div class="page">
-    <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
-    <div class="body-area">
-      <SideBar :role="userRole" :user="currentUser" :isOpen="sidebarOpen" />
+﻿<template>
+  <div class="ai-page">
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" @toggleTheme="undefined" />
+    <Sidebar :is-open="sidebarOpen" />
 
-      <main class="content" :class="{ shifted: sidebarOpen }">
+    <main class="ai-content" :class="{ shifted: sidebarOpen }">
+      <section class="hero-card">
+        <div>
+          <p class="eyebrow">Espace étudiant</p>
+          <h1>AI Portfolio Analyzer</h1>
+          <p class="subtitle">
+            Analysez votre portfolio réel, vos compétences et vos projets avec les données du backend.
+          </p>
+        </div>
+        <button class="primary-btn hero-btn" :disabled="loadingAnalysis || !studentId" @click="analyzeMyPortfolio">
+          <span v-if="loadingAnalysis" class="loader" />
+          {{ loadingAnalysis ? 'Analyse en cours...' : 'Analyser mon portfolio' }}
+        </button>
+      </section>
 
-        <!-- ── Header ── -->
-        <section class="page-head">
-          <div class="head-left">
-            <div class="head-badge">
-              <span class="badge-dot"></span>
-              IA Active
+      <div v-if="pageLoading" class="page-state">Chargement de votre portfolio...</div>
+      <div v-else-if="pageError" class="page-state page-state--error">{{ pageError }}</div>
+
+      <template v-else>
+        <section class="profile-overview">
+          <article class="overview-card">
+            <p class="eyebrow">Profil analysé</p>
+            <h2>{{ profilePreview.student.name }}</h2>
+            <p class="overview-text">
+              {{ profilePreview.student.filiere || 'Filière non renseignée' }}
+              <span v-if="profilePreview.student.anneeUniversitaire">· {{ profilePreview.student.anneeUniversitaire }}</span>
+            </p>
+            <div class="chips">
+              <span v-for="skill in displayedSkills" :key="skill">{{ skill }}</span>
+              <span v-if="!displayedSkills.length">Aucune compétence détectée.</span>
             </div>
-            <h1>AI Portfolio <span class="gradient-text">Analyzer</span></h1>
-            <p>Analyse intelligente de votre portfolio professionnel.</p>
-          </div>
-          <button class="analyze-btn" @click="analyzeMyPortfolio" :disabled="loading">
-            <span v-if="loading" class="btn-spinner"></span>
-            <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            {{ loading ? 'Analyse en cours…' : 'Analyser mon portfolio' }}
-          </button>
+          </article>
+
+          <article class="overview-card stats-card">
+            <div class="stat-item">
+              <strong>{{ profilePreview.projectsMeta.length }}</strong>
+              <span>Projets</span>
+            </div>
+            <div class="stat-item">
+              <strong>{{ profilePreview.stages.length }}</strong>
+              <span>Stages</span>
+            </div>
+            <div class="stat-item">
+              <strong>{{ profilePreview.skills.length }}</strong>
+              <span>Compétences</span>
+            </div>
+            <div class="stat-item">
+              <strong>{{ profilePreview.badges.length }}</strong>
+              <span>Badges</span>
+            </div>
+          </article>
         </section>
 
-        <!-- ── Score ── -->
         <section class="score-section">
           <div class="score-card">
             <div class="score-ring-wrap">
               <svg class="score-ring" width="130" height="130" viewBox="0 0 130 130">
-                <circle cx="65" cy="65" r="56" fill="none" stroke="#ede9fe" stroke-width="10"/>
+                <circle cx="65" cy="65" r="56" fill="none" stroke="#ede9fe" stroke-width="10" />
                 <circle
-                  cx="65" cy="65" r="56" fill="none"
-                  stroke="url(#scoreGrad)" stroke-width="10"
+                  cx="65"
+                  cy="65"
+                  r="56"
+                  fill="none"
+                  stroke="url(#scoreGrad)"
+                  stroke-width="10"
                   stroke-linecap="round"
-                  :stroke-dasharray="`${2 * Math.PI * 56 * analysis.score / 100} ${2 * Math.PI * 56 * (1 - analysis.score / 100)}`"
+                  :stroke-dasharray="scoreDasharray"
                   stroke-dashoffset="88"
-                  style="transition: stroke-dasharray .9s cubic-bezier(.4,0,.2,1)"
                 />
                 <defs>
                   <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#a78bfa"/>
-                    <stop offset="100%" stop-color="#6d28d9"/>
+                    <stop offset="0%" stop-color="#a78bfa" />
+                    <stop offset="100%" stop-color="#6d28d9" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -49,9 +84,10 @@
                 <span class="score-max">/100</span>
               </div>
             </div>
+
             <div class="score-meta">
-              <h2>Portfolio Score</h2>
-              <p>Votre portfolio est globalement bien construit mais peut être amélioré.</p>
+              <h2>Score portfolio</h2>
+              <p>{{ analysisFeedback }}</p>
               <div class="score-level" :class="scoreLevelClass">
                 <span class="level-dot"></span>
                 {{ scoreLevel }}
@@ -60,362 +96,564 @@
           </div>
         </section>
 
-        <!-- ── 3 cards ── -->
         <section class="cards-grid">
-
           <article class="info-card card-forces">
             <div class="card-header">
-              <div class="card-icon-wrap green-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
-              </div>
+              <div class="card-icon-wrap green-icon">✓</div>
               <h3>Forces</h3>
             </div>
             <ul>
-              <li v-for="item in analysis.strengths" :key="item">
-                <span class="li-dot green-dot"></span>{{ item }}
-              </li>
+              <li v-for="item in analysis.strengths" :key="item"><span class="li-dot green-dot"></span>{{ item }}</li>
+              <li v-if="!analysis.strengths.length"><span class="li-dot green-dot"></span>Aucune force détectée pour le moment.</li>
             </ul>
           </article>
 
           <article class="info-card card-weak">
             <div class="card-header">
-              <div class="card-icon-wrap red-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              </div>
-              <h3>Faiblesses</h3>
+              <div class="card-icon-wrap red-icon">!</div>
+              <h3>Points à améliorer</h3>
             </div>
             <ul>
-              <li v-for="item in analysis.weaknesses" :key="item">
-                <span class="li-dot red-dot"></span>{{ item }}
-              </li>
+              <li v-for="item in analysis.weaknesses" :key="item"><span class="li-dot red-dot"></span>{{ item }}</li>
+              <li v-if="!analysis.weaknesses.length"><span class="li-dot red-dot"></span>Aucun point bloquant détecté.</li>
             </ul>
           </article>
 
           <article class="info-card card-reco">
             <div class="card-header">
-              <div class="card-icon-wrap purple-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-              </div>
+              <div class="card-icon-wrap purple-icon">+</div>
               <h3>Recommandations</h3>
             </div>
             <ul>
-              <li v-for="item in analysis.recommendations" :key="item">
-                <span class="li-dot purple-dot"></span>{{ item }}
-              </li>
+              <li v-for="item in analysis.recommendations" :key="item"><span class="li-dot purple-dot"></span>{{ item }}</li>
+              <li v-if="!analysis.recommendations.length"><span class="li-dot purple-dot"></span>Aucune recommandation supplémentaire.</li>
             </ul>
           </article>
-
         </section>
 
-        <!-- ── AI Section ── -->
         <section class="ai-section">
-
-          <!-- AI Feedback -->
           <div class="ai-feedback-card">
             <div class="ai-card-head">
-              <div class="ai-logo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
-              </div>
-              <span>Analyse IA</span>
+              <div class="ai-logo">AI</div>
+              <span>Résumé de l'analyse</span>
             </div>
-            <p class="ai-feedback-text">{{ analysis.aiFeedback }}</p>
+            <p class="ai-feedback-text">{{ analysisFeedback }}</p>
           </div>
 
-          <!-- Right column -->
           <div class="ai-right-col">
-
-            <!-- Improve description -->
             <div class="tool-card">
-              <h3 class="tool-title">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Description du projet
-              </h3>
+              <h3 class="tool-title">Description du projet</h3>
+              <label class="field-label" v-if="projectOptions.length">
+                <span>Projet source</span>
+                <select v-model="selectedProjectId" class="styled-input">
+                  <option v-for="project in projectOptions" :key="project.id" :value="project.id">
+                    {{ project.title }}
+                  </option>
+                </select>
+              </label>
               <textarea
                 v-model="projectDescription"
-                rows="4"
+                rows="5"
                 class="styled-textarea"
-                placeholder="Décrivez votre projet…"
+                placeholder="Décrivez votre projet..."
               />
-              <button class="action-btn primary-action" @click="improveDescription" :disabled="loadingDesc">
-                <span v-if="loadingDesc" class="btn-spinner small"></span>
-                <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                Améliorer avec IA
+              <button class="primary-btn" :disabled="loadingDesc || !projectDescription.trim()" @click="improveDescription">
+                <span v-if="loadingDesc" class="loader" />
+                {{ loadingDesc ? 'Amélioration...' : 'Améliorer avec IA' }}
               </button>
-              <transition name="slide-up">
-                <div v-if="improvedDescription" class="result-box">
-                  <div class="result-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
-                    Description améliorée
-                  </div>
-                  <p>{{ improvedDescription }}</p>
-                </div>
-              </transition>
+              <div v-if="toolErrors.improve" class="inline-error">{{ toolErrors.improve }}</div>
+              <div v-if="improvedDescription" class="result-box">
+                <div class="result-label">Description améliorée</div>
+                <p>{{ improvedDescription }}</p>
+              </div>
             </div>
 
-            <!-- AI Tools -->
             <div class="tool-card">
-              <h3 class="tool-title">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                Outils IA
-              </h3>
+              <h3 class="tool-title">Outils IA</h3>
               <div class="tools-btns">
-                <button class="action-btn primary-action" @click="generateSummary" :disabled="loadingContent">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  Résumé Professionnel
+                <button class="primary-btn slim" :disabled="loadingContent" @click="generateSummary">
+                  <span v-if="loadingContent && activeTool === 'summary'" class="loader" />
+                  Résumé professionnel
                 </button>
-                <button class="action-btn ghost-action" @click="generateReadmeFile" :disabled="loadingContent">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                <button class="ghost-btn slim" :disabled="loadingContent || !selectedProject" @click="generateReadmeFile">
+                  <span v-if="loadingContent && activeTool === 'readme'" class="loader dark" />
                   Générer README
                 </button>
               </div>
-              <transition name="slide-up">
-                <div v-if="generatedContent" class="result-box generated-result">
-                  <div class="result-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    Résultat IA
-                  </div>
-                  <textarea readonly rows="8" :value="generatedContent" class="output-textarea"/>
-                </div>
-              </transition>
+              <div v-if="toolErrors.content" class="inline-error">{{ toolErrors.content }}</div>
+              <div v-if="generatedContent" class="result-box generated-result">
+                <div class="result-label">Résultat IA</div>
+                <textarea readonly rows="10" :value="generatedContent" class="output-textarea"></textarea>
+              </div>
             </div>
-
           </div>
         </section>
-
-      </main>
-    </div>
+      </template>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import TopBar from '../components/TopBar.vue'
-import SideBar from '../components/exploreStudent/Sidebar.vue'
-import {
-  analyzePortfolio,
-  generateProfessionalSummary,
-  generateReadme,
-  improveProjectDescription
-} from '../services/ai.service'
+import { computed, onMounted, ref, watch } from 'vue'
+import Sidebar from '../components/exploreStudent/Sidebar.vue'
+import Topbar from '../components/exploreStudent/Topbar.vue'
+import { generateProfessionalSummary, generateReadme, improveProjectDescription } from '../services/ai.service'
+import { portfolioAnalyzerService } from '../services/portfolioAnalyzer.service'
+import { profileService } from '../services/profile.service'
+
+interface AnalysisState {
+  score: number
+  strengths: string[]
+  weaknesses: string[]
+  recommendations: string[]
+}
 
 const sidebarOpen = ref(true)
-const loading = ref(false)
+const pageLoading = ref(true)
+const loadingAnalysis = ref(false)
 const loadingDesc = ref(false)
 const loadingContent = ref(false)
-const userRole = 'student'
-const currentUser = { name: 'Nom Prenom', email: 'etudiant@example.com', avatar: '' }
-
-const projectDescription = ref('Application de gestion de stock.')
+const pageError = ref('')
 const improvedDescription = ref('')
 const generatedContent = ref('')
+const activeTool = ref<'summary' | 'readme' | ''>('')
+const selectedProjectId = ref<number | null>(null)
+const projectDescription = ref('')
+const toolErrors = ref({ improve: '', content: '' })
 
-const analysis = ref({
-  score: 74,
-  strengths: ['GitHub connecté', '3 projets publiés', '5 compétences validées'],
-  weaknesses: ['Descriptions trop courtes', 'Pas de screenshots', 'Profil LinkedIn absent'],
-  recommendations: ["Ajouter des captures d'écran", 'Ajouter un profil LinkedIn', 'Détailler davantage les projets'],
-  aiFeedback: "Votre portfolio possède une bonne base technique. Les projets sont pertinents mais les descriptions manquent de détails. Ajoutez des captures d'écran et un profil LinkedIn pour améliorer votre visibilité auprès des recruteurs."
+const emptyAnalysis = (): AnalysisState => ({
+  score: 0,
+  strengths: [],
+  weaknesses: [],
+  recommendations: [],
+})
+
+const analysis = ref<AnalysisState>(emptyAnalysis())
+const profilePreview = ref({
+  student: {
+    id: null as number | null,
+    name: 'Profil étudiant',
+    filiere: '',
+    anneeUniversitaire: '',
+    email: '',
+    linkedin: '',
+    github: '',
+    bio: '',
+    source: 'profile',
+  },
+  skills: [] as string[],
+  projectsMeta: [] as Array<{
+    id: number
+    title: string
+    type: string
+    description: string
+    github: string
+    technologies: string[]
+    images: string[]
+  }>,
+  projects: [] as string[],
+  technologies: [] as string[],
+  badges: [] as string[],
+  stages: [] as string[],
+})
+
+const studentId = computed(() => {
+  if (profilePreview.value.student.id) return profilePreview.value.student.id
+
+  try {
+    const raw = localStorage.getItem('user')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return Number(parsed?.id ?? parsed?.id_utilisateur ?? 0) || null
+  } catch {
+    return null
+  }
+})
+
+const projectOptions = computed(() => profilePreview.value.projectsMeta)
+const selectedProject = computed(
+  () => projectOptions.value.find((project) => project.id === selectedProjectId.value) || null,
+)
+const displayedSkills = computed(() => profilePreview.value.skills.slice(0, 10))
+
+const scoreDasharray = computed(() => {
+  const circumference = 2 * Math.PI * 56
+  return `${circumference * analysis.value.score / 100} ${circumference * (1 - analysis.value.score / 100)}`
 })
 
 const scoreLevel = computed(() => {
-  const s = analysis.value.score
-  if (s >= 85) return 'Excellent'
-  if (s >= 70) return 'Bon niveau'
-  if (s >= 50) return 'Moyen'
+  const score = analysis.value.score
+  if (score >= 85) return 'Excellent'
+  if (score >= 70) return 'Bon niveau'
+  if (score >= 50) return 'Moyen'
   return 'À améliorer'
 })
 
 const scoreLevelClass = computed(() => {
-  const s = analysis.value.score
-  if (s >= 85) return 'level-excellent'
-  if (s >= 70) return 'level-good'
-  if (s >= 50) return 'level-mid'
+  const score = analysis.value.score
+  if (score >= 85) return 'level-excellent'
+  if (score >= 70) return 'level-good'
+  if (score >= 50) return 'level-mid'
   return 'level-low'
 })
 
-const improveDescription = async () => {
-  loadingDesc.value = true
-  const result = await improveProjectDescription(projectDescription.value)
-  improvedDescription.value = result.result
-  loadingDesc.value = false
+const analysisFeedback = computed(() => {
+  if (analysis.value.score >= 85) {
+    return 'Votre portfolio est solide et prêt à être présenté, avec quelques optimisations possibles pour le rendre encore plus convaincant.'
+  }
+  if (analysis.value.score >= 70) {
+    return 'Votre portfolio repose sur de bonnes bases. En renforçant les éléments listés ci-dessous, vous gagnerez vite en crédibilité.'
+  }
+  if (analysis.value.score >= 50) {
+    return 'Votre portfolio est exploitable mais plusieurs informations importantes manquent encore pour bien valoriser votre profil.'
+  }
+  return 'Votre portfolio a besoin d’être enrichi avant de refléter correctement votre niveau et vos expériences.'
+})
+
+function normalizeTechnologies(project: any) {
+  if (!Array.isArray(project?.technologies)) return []
+  return project.technologies
+    .map((item: any) => item?.technologie?.nom || item?.nom || item)
+    .filter(Boolean)
 }
 
-const generateSummary = async () => {
-  loadingContent.value = true
-  const result = await generateProfessionalSummary({ nom: 'Khadija', skills: ['Vue.js', 'Node.js', 'PostgreSQL'], projects: ['Portfolio Platform'] })
-  generatedContent.value = result.result
-  loadingContent.value = false
+function normalizeImages(project: any) {
+  if (Array.isArray(project?.captures) && project.captures.length) return project.captures.filter(Boolean)
+  if (project?.image_url) return [project.image_url]
+  return []
 }
 
-const generateReadmeFile = async () => {
-  loadingContent.value = true
-  const result = await generateReadme({ title: 'Gestion Stock', description: 'Application web de gestion de stock', technologies: ['Vue.js', 'Node.js', 'PostgreSQL'] })
-  generatedContent.value = result.result
-  loadingContent.value = false
-}
+function buildProfilePreview(profile: any) {
+  const raw = profile?.raw || {}
+  const student = raw?.etudiant || {}
+  const projectsMeta = Array.isArray(profile?.projectsData)
+    ? profile.projectsData.map((project: any) => ({
+        id: Number(project?.id_projet ?? project?.id ?? Date.now()),
+        title: project?.titre || 'Projet',
+        type: project?.type || 'Projet',
+        description: project?.description || '',
+        github: project?.lien_github || '',
+        technologies: normalizeTechnologies(project),
+        images: normalizeImages(project),
+      }))
+    : []
 
-const analyzeMyPortfolio = async () => {
-  loading.value = true
-  try {
-    const result = await analyzePortfolio({
-      nom: 'Khadija',
-      skills: ['Vue.js', 'Node.js', 'PostgreSQL'],
-      projects: [{ title: 'Portfolio Platform', description: 'Application web portfolio' }]
-    })
-    analysis.value = {
-      score: result.score,
-      strengths: result.strengths,
-      weaknesses: result.weaknesses,
-      recommendations: result.recommendations,
-      aiFeedback: result.professionalFeedback
-    }
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
+  return {
+    student: {
+      id: profile?.id || null,
+      name: profile?.name || 'Profil étudiant',
+      filiere: student?.filiere || profile?.title || '',
+      anneeUniversitaire: student?.annee_universitaire || profile?.school || '',
+      email: profile?.email || '',
+      linkedin: profile?.linkedin || '',
+      github: profile?.github || '',
+      bio: profile?.bio || '',
+      source: 'profile',
+    },
+    skills: Array.isArray(profile?.competences) ? profile.competences.filter(Boolean) : [],
+    projectsMeta,
+    projects: projectsMeta.flatMap((project) => [project.title, project.description]).filter(Boolean),
+    technologies: projectsMeta.flatMap((project) => project.technologies).filter(Boolean),
+    badges: Array.isArray(profile?.badgesData)
+      ? profile.badgesData.map((item: any) => item?.badge?.nom || item?.nom).filter(Boolean)
+      : [],
+    stages: Array.isArray(profile?.stagesData)
+      ? profile.stagesData.flatMap((stage: any) => [stage?.entreprise, stage?.poste, stage?.missions]).filter(Boolean)
+      : [],
   }
 }
+
+async function loadProfile() {
+  pageLoading.value = true
+  pageError.value = ''
+
+  try {
+    const profile = await profileService.getProfile(null)
+    profilePreview.value = buildProfilePreview(profile)
+    selectedProjectId.value = profilePreview.value.projectsMeta[0]?.id || null
+    projectDescription.value = profilePreview.value.projectsMeta[0]?.description || profilePreview.value.student.bio || ''
+  } catch (error: any) {
+    pageError.value = error?.response?.data?.message || 'Impossible de charger le portfolio étudiant.'
+  } finally {
+    pageLoading.value = false
+  }
+}
+
+async function analyzeMyPortfolio() {
+  if (!studentId.value) {
+    pageError.value = 'Aucun étudiant connecté n’a été détecté pour analyser le portfolio.'
+    return
+  }
+
+  loadingAnalysis.value = true
+  pageError.value = ''
+
+  try {
+    const result = await portfolioAnalyzerService.analyzePortfolio(studentId.value)
+    analysis.value = {
+      score: Number(result?.score ?? 0),
+      strengths: Array.isArray(result?.strengths) ? result.strengths : [],
+      weaknesses: Array.isArray(result?.weaknesses) ? result.weaknesses : [],
+      recommendations: Array.isArray(result?.recommendations) ? result.recommendations : [],
+    }
+  } catch (error: any) {
+    pageError.value = error?.response?.data?.message || 'Impossible d’analyser le portfolio pour le moment.'
+    analysis.value = emptyAnalysis()
+  } finally {
+    loadingAnalysis.value = false
+  }
+}
+
+async function improveDescription() {
+  toolErrors.value.improve = ''
+  improvedDescription.value = ''
+  loadingDesc.value = true
+
+  try {
+    const result = await improveProjectDescription(projectDescription.value)
+    improvedDescription.value = result?.result || ''
+  } catch (error: any) {
+    toolErrors.value.improve = error?.response?.data?.message || 'Le service IA de réécriture est indisponible.'
+  } finally {
+    loadingDesc.value = false
+  }
+}
+
+async function generateSummary() {
+  toolErrors.value.content = ''
+  generatedContent.value = ''
+  loadingContent.value = true
+  activeTool.value = 'summary'
+
+  try {
+    const result = await generateProfessionalSummary({
+      nom: profilePreview.value.student.name,
+      filiere: profilePreview.value.student.filiere,
+      anneeUniversitaire: profilePreview.value.student.anneeUniversitaire,
+      bio: profilePreview.value.student.bio,
+      email: profilePreview.value.student.email,
+      linkedin: profilePreview.value.student.linkedin,
+      github: profilePreview.value.student.github,
+      skills: profilePreview.value.skills,
+      badges: profilePreview.value.badges,
+      projects: profilePreview.value.projectsMeta.map((project) => ({
+        title: project.title,
+        description: project.description,
+        technologies: project.technologies,
+      })),
+      stages: profilePreview.value.stages,
+    })
+    generatedContent.value = result?.result || ''
+  } catch (error: any) {
+    toolErrors.value.content = error?.response?.data?.message || 'Le résumé IA n’est pas disponible pour le moment.'
+  } finally {
+    loadingContent.value = false
+    activeTool.value = ''
+  }
+}
+
+async function generateReadmeFile() {
+  if (!selectedProject.value) return
+
+  toolErrors.value.content = ''
+  generatedContent.value = ''
+  loadingContent.value = true
+  activeTool.value = 'readme'
+
+  try {
+    const result = await generateReadme({
+      title: selectedProject.value.title,
+      description: projectDescription.value || selectedProject.value.description,
+      technologies: selectedProject.value.technologies,
+      github: selectedProject.value.github,
+    })
+    generatedContent.value = result?.result || ''
+  } catch (error: any) {
+    toolErrors.value.content = error?.response?.data?.message || 'La génération README n’est pas disponible pour le moment.'
+  } finally {
+    loadingContent.value = false
+    activeTool.value = ''
+  }
+}
+
+watch(selectedProject, (project) => {
+  if (!project) return
+  improvedDescription.value = ''
+  if (!projectDescription.value || projectDescription.value === '') {
+    projectDescription.value = project.description || ''
+    return
+  }
+  projectDescription.value = project.description || projectDescription.value
+})
+
+onMounted(async () => {
+  await loadProfile()
+  if (!pageError.value) {
+    await analyzeMyPortfolio()
+  }
+})
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Figtree:wght@400;500;600&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-.page {
+.ai-page {
   min-height: 100vh;
-  background: #f5f4f8;
-  padding-top: 60px;
-  font-family: 'Figtree', sans-serif;
-  color: #1e1a2e;
+  background: var(--bg-soft-purple);
+  color: var(--text-dark);
+  font-family: var(--font-body);
 }
 
-.body-area { position: relative; }
-
-.content {
-  padding: 36px 32px;
-  transition: padding-left .3s ease;
+.ai-content {
+  width: 100%;
+  padding: 78px 24px 32px;
+  transition: var(--ease);
 }
 
-.content.shifted { padding-left: 262px; }
+.ai-content.shifted {
+  padding-left: 244px;
+}
 
-/* ── Header ── */
-.page-head {
+.hero-card,
+.overview-card,
+.score-card,
+.info-card,
+.ai-feedback-card,
+.tool-card {
+  background: white;
+  border-radius: var(--radius-card);
+  box-shadow: 0 18px 35px rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.hero-card {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 36px;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.head-badge {
-  display: inline-flex;
+  gap: 24px;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: #6d28d9;
-  background: #ede9fe;
-  border: 1px solid #ddd6fe;
-  padding: 5px 12px;
-  border-radius: 999px;
-  margin-bottom: 12px;
+  padding: 28px;
+  margin-bottom: 20px;
 }
 
-.badge-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #7c3aed;
-  animation: glow-pulse 2s ease-in-out infinite;
+.hero-btn {
+  width: auto;
+  min-width: 220px;
 }
 
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,.35); }
-  50%       { box-shadow: 0 0 0 5px rgba(124,58,237,0); }
-}
-
-.head-left h1 {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 2.4rem;
+.eyebrow {
+  color: var(--text-gray);
   font-weight: 800;
-  color: #1e1a2e;
-  line-height: 1.1;
+  font-family: var(--font-head);
   margin-bottom: 8px;
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+h1,
+h2,
+h3 {
+  font-family: var(--font-head);
+  color: var(--navy);
 }
 
-.head-left p {
-  font-size: 14px;
-  color: #6b7280;
-  max-width: 400px;
+h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
 }
 
-.analyze-btn {
+.subtitle,
+.overview-text,
+.ai-feedback-text,
+.page-state,
+.result-box p {
+  color: var(--navy-mid);
+  font-weight: 700;
+}
+
+.page-state {
+  background: white;
+  border-radius: var(--radius-card);
+  padding: 24px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.page-state--error,
+.inline-error {
+  color: var(--error);
+}
+
+.profile-overview {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(220px, 0.8fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.overview-card {
+  padding: 24px;
+}
+
+.stats-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+
+.stat-item {
+  background: var(--bg-soft-purple);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+}
+
+.stat-item strong {
+  display: block;
+  font-size: 1.8rem;
+  font-family: var(--font-head);
+  color: var(--purple);
+}
+
+.stat-item span {
+  color: var(--navy-mid);
+  font-weight: 800;
+}
+
+.chips {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #7c3aed, #5b21b6);
-  color: white;
-  border: none;
-  padding: 13px 24px;
-  border-radius: 12px;
-  font-family: 'Figtree', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .2s ease;
-  white-space: nowrap;
-  box-shadow: 0 4px 18px rgba(124,58,237,.3);
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.analyze-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(124,58,237,.4);
+.chips span {
+  background: white;
+  color: var(--purple);
+  border-radius: var(--radius-pill);
+  padding: 8px 12px;
+  font-weight: 800;
+  border: 1px solid #e5defe;
 }
 
-.analyze-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-/* ── Score ── */
-.score-section { margin-bottom: 24px; }
+.score-section,
+.cards-grid,
+.ai-section {
+  margin-top: 20px;
+}
 
 .score-card {
-  background: white;
-  border: 1px solid #e5e3f0;
-  border-radius: 20px;
   padding: 28px 32px;
   display: flex;
   align-items: center;
   gap: 32px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(124,58,237,.06);
-}
-
-.score-card::before {
-  content: '';
-  position: absolute;
-  top: -40px; right: -40px;
-  width: 200px; height: 200px;
-  background: radial-gradient(circle, rgba(167,139,250,.07) 0%, transparent 70%);
-  pointer-events: none;
 }
 
 .score-ring-wrap {
   position: relative;
-  width: 130px; height: 130px;
+  width: 130px;
+  height: 130px;
   flex-shrink: 0;
 }
 
-.score-ring { transform: rotate(-90deg); }
+.score-ring {
+  transform: rotate(-90deg);
+}
 
 .score-inner {
   position: absolute;
@@ -427,33 +665,20 @@ const analyzeMyPortfolio = async () => {
 }
 
 .score-num {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: var(--font-head);
   font-size: 2.2rem;
-  font-weight: 800;
-  color: #1e1a2e;
-  line-height: 1;
+  font-weight: 900;
+  color: var(--navy);
 }
 
 .score-max {
-  font-size: 11px;
-  color: #9ca3af;
-  font-weight: 500;
-}
-
-.score-meta h2 {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #1e1a2e;
-  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--text-gray);
 }
 
 .score-meta p {
-  font-size: 14px;
-  color: #6b7280;
+  margin: 10px 0 14px;
   line-height: 1.6;
-  margin-bottom: 14px;
-  max-width: 460px;
 }
 
 .score-level {
@@ -461,275 +686,238 @@ const analyzeMyPortfolio = async () => {
   align-items: center;
   gap: 7px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 5px 14px;
-  border-radius: 999px;
-  letter-spacing: .04em;
+  border-radius: var(--radius-pill);
 }
 
-.level-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.level-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
 
-.level-excellent { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.level-excellent {
+  background: #d1fae5;
+  color: #065f46;
+}
 .level-excellent .level-dot { background: #10b981; }
-.level-good { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
+.level-good {
+  background: #ede9fe;
+  color: #5b21b6;
+}
 .level-good .level-dot { background: #7c3aed; }
-.level-mid  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-.level-mid .level-dot  { background: #f59e0b; }
-.level-low  { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-.level-low .level-dot  { background: #ef4444; }
+.level-mid {
+  background: #fef3c7;
+  color: #92400e;
+}
+.level-mid .level-dot { background: #f59e0b; }
+.level-low {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.level-low .level-dot { background: #ef4444; }
 
-/* ── 3 Cards ── */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
-  margin-bottom: 24px;
 }
 
-@media (max-width: 860px) { .cards-grid { grid-template-columns: 1fr; } }
-
-.info-card {
-  background: white;
-  border: 1px solid #e5e3f0;
-  border-radius: 16px;
+.info-card,
+.ai-feedback-card,
+.tool-card {
   padding: 22px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.04);
-  transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 
-.info-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
-.card-forces:hover { border-color: #a7f3d0; }
-.card-weak:hover   { border-color: #fca5a5; }
-.card-reco:hover   { border-color: #c4b5fd; }
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.card-header h3 {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e1a2e;
-}
-
-.card-icon-wrap {
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.green-icon  { background: #d1fae5; color: #059669; }
-.red-icon    { background: #fee2e2; color: #dc2626; }
-.purple-icon { background: #ede9fe; color: #7c3aed; }
-
-.info-card ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-
-.info-card li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 13.5px;
-  color: #4b5563;
-  line-height: 1.55;
-}
-
-.li-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-.green-dot  { background: #10b981; }
-.red-dot    { background: #ef4444; }
-.purple-dot { background: #7c3aed; }
-
-/* ── AI Section ── */
-.ai-section {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 18px;
-}
-
-@media (max-width: 900px) { .ai-section { grid-template-columns: 1fr; } }
-
-.ai-feedback-card {
-  background: white;
-  border: 1px solid #e5e3f0;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.04);
-}
-
+.card-header,
 .ai-card-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 18px;
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #1e1a2e;
 }
 
+.card-icon-wrap,
 .ai-logo {
-  width: 32px; height: 32px;
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-  border: 1px solid #c4b5fd;
-  border-radius: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #7c3aed;
+  font-weight: 900;
 }
 
-.ai-feedback-text {
-  font-size: 14px;
-  color: #4b5563;
-  line-height: 1.8;
+.green-icon { background: #d1fae5; color: #059669; }
+.red-icon { background: #fee2e2; color: #dc2626; }
+.purple-icon,
+.ai-logo { background: #ede9fe; color: #7c3aed; }
+
+.info-card ul {
+  list-style: none;
+  display: grid;
+  gap: 10px;
 }
 
-.ai-right-col { display: flex; flex-direction: column; gap: 18px; }
+.info-card li {
+  display: flex;
+  gap: 10px;
+  color: var(--navy-mid);
+  font-weight: 700;
+  line-height: 1.55;
+}
 
-.tool-card {
-  background: white;
-  border: 1px solid #e5e3f0;
-  border-radius: 16px;
-  padding: 22px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+.li-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+
+.green-dot { background: #10b981; }
+.red-dot { background: #ef4444; }
+.purple-dot { background: #7c3aed; }
+
+.ai-section {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  gap: 18px;
+}
+
+.ai-right-col {
+  display: grid;
+  gap: 18px;
 }
 
 .tool-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #1e1a2e;
   margin-bottom: 14px;
 }
 
-.tool-title svg { color: #7c3aed; flex-shrink: 0; }
-
-.styled-textarea {
-  width: 100%;
-  background: #faf9ff;
-  border: 1px solid #e5e3f0;
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-family: 'Figtree', sans-serif;
-  font-size: 13.5px;
-  color: #374151;
-  resize: vertical;
-  transition: border-color .2s;
-  outline: none;
+.field-label {
+  display: grid;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.field-label span {
+  color: var(--navy);
+  font-family: var(--font-head);
+  font-weight: 800;
+}
+
+.styled-input,
+.styled-textarea,
+.output-textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid #d7dce5;
+  background: white;
+  color: var(--navy);
+  padding: 14px 16px;
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+}
+
+.styled-textarea,
+.output-textarea {
+  resize: vertical;
   line-height: 1.6;
 }
 
-.styled-textarea::placeholder { color: #c4b5fd; }
-.styled-textarea:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px rgba(167,139,250,.15); }
+.tools-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
-.tools-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-
-.action-btn {
+.primary-btn,
+.ghost-btn {
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  font-family: var(--font-head);
+  transition: var(--ease);
+  border: 1px solid transparent;
+  padding: 14px 18px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 10px 16px;
-  border-radius: 9px;
-  font-family: 'Figtree', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .18s;
-  border: none;
+  justify-content: center;
+  gap: 10px;
 }
 
-.primary-action {
-  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+.primary-btn {
+  background: var(--purple);
   color: white;
-  box-shadow: 0 3px 12px rgba(124,58,237,.25);
+  box-shadow: 0 12px 26px rgba(79, 70, 229, 0.22);
 }
 
-.primary-action:hover:not(:disabled) {
-  box-shadow: 0 5px 18px rgba(124,58,237,.38);
-  transform: translateY(-1px);
+.ghost-btn {
+  background: white;
+  color: var(--navy);
+  border-color: #d7dce5;
 }
 
-.ghost-action {
-  background: #f9f8ff;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
+.slim {
+  width: auto;
+  min-width: 180px;
 }
 
-.ghost-action:hover:not(:disabled) {
-  background: #ede9fe;
-  border-color: #c4b5fd;
+.primary-btn:disabled,
+.ghost-btn:disabled {
+  opacity: 0.75;
 }
-
-.action-btn:disabled { opacity: .45; cursor: not-allowed; }
 
 .result-box {
   margin-top: 14px;
-  background: #faf9ff;
+  background: var(--bg-soft-purple);
   border: 1px solid #e5e3f0;
-  border-radius: 10px;
-  padding: 14px 16px;
+  border-radius: 16px;
+  padding: 16px;
 }
 
 .result-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-  color: #7c3aed;
+  color: var(--purple);
+  font-family: var(--font-head);
+  font-size: 0.8rem;
+  font-weight: 900;
   margin-bottom: 10px;
 }
 
-.result-box p {
-  font-size: 13.5px;
-  color: #4b5563;
-  line-height: 1.7;
-}
-
-.output-textarea {
-  width: 100%;
-  background: transparent;
-  border: none;
-  font-family: 'Figtree', sans-serif;
-  font-size: 13px;
-  color: #4b5563;
-  resize: none;
-  outline: none;
-  line-height: 1.7;
-}
-
-.btn-spinner {
-  width: 14px; height: 14px;
-  border: 2px solid rgba(255,255,255,.3);
+.loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin .65s linear infinite;
-  flex-shrink: 0;
+  animation: spin 0.8s linear infinite;
 }
 
-.btn-spinner.small { width: 12px; height: 12px; }
+.loader.dark {
+  border-color: rgba(79, 70, 229, 0.24);
+  border-top-color: var(--purple);
+}
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-.slide-up-enter-active { transition: all .3s cubic-bezier(.4,0,.2,1); }
-.slide-up-enter-from   { opacity: 0; transform: translateY(8px); }
+@media (max-width: 980px) {
+  .ai-content.shifted {
+    padding-left: 24px;
+  }
 
-@media (max-width: 700px) {
-  .content { padding: 20px 16px; }
-  .head-left h1 { font-size: 1.8rem; }
-  .score-card { flex-direction: column; text-align: center; }
-  .content.shifted { padding-left: 16px; }
+  .profile-overview,
+  .cards-grid,
+  .ai-section {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card,
+  .score-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>

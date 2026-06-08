@@ -1,5 +1,24 @@
 const rateLimit = require('express-rate-limit');
 
+const isLocalRequest = (req) => {
+  const forwardedFor = String(req.headers['x-forwarded-for'] || '').toLowerCase()
+  const ip = String(req.ip || req.socket?.remoteAddress || '').toLowerCase()
+  const host = String(req.hostname || '').toLowerCase()
+
+  return (
+    process.env.NODE_ENV !== 'production' ||
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '::1' ||
+    ip.includes('127.0.0.1') ||
+    ip.includes('::1') ||
+    ip.includes('localhost') ||
+    forwardedFor.includes('127.0.0.1') ||
+    forwardedFor.includes('::1') ||
+    forwardedFor.includes('localhost')
+  )
+}
+
 const createLimiter = ({ windowMs, max, message }) =>
   rateLimit({
     windowMs,
@@ -14,7 +33,7 @@ const createLimiter = ({ windowMs, max, message }) =>
         retryAfter: Math.ceil(windowMs / 1000 / 60),
       });
     },
-    skip: (req) => req.path === '/health',
+    skip: (req) => req.path === '/health' || isLocalRequest(req),
   });
 
 const apiLimiter = createLimiter({

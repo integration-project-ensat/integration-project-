@@ -296,6 +296,7 @@ model Etudiant {
   projets                 Projet[]
   stages                  Stage[]
   activites               ActiviteParascolaire[]
+  attestations            Attestation[]
   lettres_recommandation  LettreRecommandation[]
   recommandations_recues  Recommandation[] @relation("RecommandationsRecues")
   portfolio               Portfolio?
@@ -558,6 +559,7 @@ model ElementValidable {
 model Attestation {
   id_attestation BigInt    @id @default(autoincrement())
   id_element     BigInt    @unique
+  id_etudiant    BigInt?
   titre          String?   @db.VarChar(200)
   type           String?   @db.VarChar(200)
   date           DateTime? @db.Date
@@ -566,6 +568,7 @@ model Attestation {
   description    String?
 
   element ElementValidable @relation(fields: [id_element], references: [id_element], onDelete: Cascade)
+  etudiant Etudiant?       @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
 
   @@map("attestations")
 }

@@ -1,16 +1,34 @@
-<script setup lang="ts">
-import { computed, ref } from "vue";
+﻿<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
+import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
+import { postService } from "../services/post.service";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 const route = useRoute();
 const router = useRouter();
 const sidebarOpen = ref(true);
+const loading = ref(true);
+const error = ref("");
+
+const fromQuery = computed(() => String(route.query.from || ""));
+const role = computed<"student" | "prof" | "pro">(() => {
+  if (fromQuery.value === "prof" || fromQuery.value === "teacher") return "prof";
+  if (fromQuery.value === "pro" || fromQuery.value === "professional") return "pro";
+
+  const storedRole = String(localStorage.getItem("role") || "").toUpperCase();
+  if (storedRole === "PROFESSEUR" || storedRole === "TEACHER") return "prof";
+  if (storedRole === "PROFESSIONNEL" || storedRole === "PROFESSIONAL") return "pro";
+  return "student";
+});
 
 interface ProjectDetails {
   id: string;
+  studentId: string;
   studentName: string;
   initials: string;
   school: string;
@@ -20,68 +38,112 @@ interface ProjectDetails {
   technologies: string[];
   github?: string;
   demo?: string;
+  previewImage?: string;
+  profilePath: string;
 }
 
-const projects: ProjectDetails[] = [
-  {
-    id: "portfolio-web",
-    studentName: "Khadija Bennani",
-    initials: "KB",
-    school: "ENSA Tanger · GINF",
-    title: "Portfolio Web",
-    description:
-      "Application portfolio moderne avec recommandations, projets, authentification et dashboard de suivi.",
-    badges: ["🌐 Web Developer", "🔐 Security Aware", "🏆 Hackathon Participant"],
-    technologies: ["Vue.js", "Node.js", "Docker", "PostgreSQL"],
-    github: "github.com/khadija/portfolio-web",
-    demo: "portfolio-demo.local",
-  },
-  {
-    id: "stage-devops",
-    studentName: "Yassine El Amrani",
-    initials: "YE",
-    school: "ENSA Tanger · DevOps",
-    title: "Pipeline CI/CD pour microservices",
-    description:
-      "Mise en place d'un pipeline CI/CD avec tests automatisés, Docker Compose et monitoring Prometheus.",
-    badges: ["🌊 DevOps", "🔐 Security Aware"],
-    technologies: ["Docker", "CI/CD", "GitLab", "Prometheus"],
-    github: "github.com/yassine/devops-pipeline",
-  },
-  {
-    id: "cloud-dashboard",
-    studentName: "Sara Alaoui",
-    initials: "SA",
-    school: "ENSA Tanger · Cloud",
-    title: "Cloud Cost Dashboard",
-    description:
-      "Dashboard pour suivre les coûts cloud, détecter les anomalies et proposer des optimisations.",
-    badges: ["🧠 AI / Data", "🌐 Web Developer"],
-    technologies: ["AWS", "Vue.js", "Python", "Figma"],
-    demo: "cloud-cost-demo.local",
-  },
-  {
-    id: "mobile-ensa",
-    studentName: "Nora Tazi",
-    initials: "NT",
-    school: "ENSA Tanger · Mobile",
-    title: "Application Mobile ENSA",
-    description:
-      "Application mobile pour les annonces, événements, clubs et demandes administratives des étudiants.",
-    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
-    technologies: ["Flutter", "Firebase", "Figma"],
-  },
-];
+const project = ref<ProjectDetails | null>(null);
 
-const project = computed<ProjectDetails>(() =>
-  projects.find((item) => item.id === route.params.id) ?? projects[0]!,
-);
+const toInitials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+const parseStructuredContent = (content: string) => {
+  try {
+    const parsed = JSON.parse(content);
+    return typeof parsed === "object" && parsed ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const fullName = (user: any) =>
+  [user?.prenom, user?.nom].filter(Boolean).join(" ").trim() || "Étudiant";
+
+const resolveBackendAsset = (path: string) => {
+  if (!path || /^https?:\/\//.test(path)) return path;
+  const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+  const backendBase = apiBase.replace(/\/api\/?$/, "");
+  return `${backendBase}${path}`;
+};
+
+const normalizeExternalUrl = (value?: string) => {
+  if (!value) return "";
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+};
+
+const mapProject = (post: any): ProjectDetails => {
+  const structured = parseStructuredContent(post?.contenu || "");
+  const studentName = fullName(post?.auteur);
+  const studentId = String(post?.auteur?.id_utilisateur ?? "");
+  const school = [post?.auteur?.profil?.adresse, post?.auteur?.etudiant?.filiere || post?.auteur?.role]
+    .filter(Boolean)
+    .join(" · ");
+
+  return {
+    id: String(post?.id_poste ?? route.params.id ?? ""),
+    studentId,
+    studentName,
+    initials: toInitials(studentName),
+    school: school || "Maroc",
+    title:
+      structured?.projectTitle ||
+      String(post?.contenu || "").split("\n")[0]?.slice(0, 70) ||
+      "Publication",
+    description: structured?.description || post?.contenu || "",
+    badges: resolveProfileBadges({
+      badges: post?.auteur?.etudiant?.badges,
+      competences: post?.auteur?.etudiant?.competences,
+      filiere: post?.auteur?.etudiant?.filiere,
+      bio: post?.auteur?.profil?.bio,
+    }),
+    technologies: Array.isArray(structured?.technologies)
+      ? structured.technologies.filter(Boolean)
+      : [],
+    github: normalizeExternalUrl(structured?.github),
+    demo: normalizeExternalUrl(structured?.demo),
+    previewImage: post?.image_url ? resolveBackendAsset(post.image_url) : "",
+    profilePath: `/profile/student/${studentId}?from=${role.value}`,
+  };
+};
+
+async function loadProject() {
+  loading.value = true;
+  error.value = "";
+
+  try {
+    const { data } = await postService.getPost(route.params.id);
+    const backendPost = data?.data || data;
+
+    if (!backendPost) {
+      error.value = "Projet introuvable.";
+      project.value = null;
+      return;
+    }
+
+    project.value = mapProject(backendPost);
+  } catch (apiError: any) {
+    error.value = apiError?.response?.data?.message || "Impossible de charger ce projet.";
+    project.value = null;
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(loadProject);
 </script>
 
 <template>
   <div class="project-page">
     <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
-    <SidebarStudent :isOpen="sidebarOpen" />
+    <SidebarStudent v-if="role === 'student'" :is-open="sidebarOpen" />
+    <SidebarProf v-else-if="role === 'prof'" :is-open="sidebarOpen" />
+    <SidebarPro v-else :is-open="sidebarOpen" />
 
     <main class="project-shell" :class="{ 'project-shellShift': sidebarOpen }">
       <section class="project-card">
@@ -89,35 +151,44 @@ const project = computed<ProjectDetails>(() =>
           Retour au fil
         </button>
 
-        <div class="student-row">
-          <div class="student-avatar">{{ project.initials }}</div>
-          <div>
-            <h1>{{ project.title }}</h1>
-            <button
-              type="button"
-              class="student-link"
-              @click="router.push(`/profile/student/${project.id}`)"
-            >
-              {{ project.studentName }}
-            </button>
-            <SkillBadges :badges="project.badges" compact />
-            <p>{{ project.school }}</p>
+        <div v-if="loading" class="page-state">Chargement du projet...</div>
+        <div v-else-if="error" class="page-state page-state--error">{{ error }}</div>
+
+        <template v-else-if="project">
+          <div class="student-row">
+            <div class="student-avatar">{{ project.initials }}</div>
+            <div>
+              <h1>{{ project.title }}</h1>
+              <button
+                type="button"
+                class="student-link"
+                @click="router.push(project.profilePath)"
+              >
+                {{ project.studentName }}
+              </button>
+              <SkillBadges :badges="project.badges" compact />
+              <p>{{ project.school }}</p>
+            </div>
           </div>
-        </div>
 
-        <div class="preview">{{ project.title }}</div>
-        <p class="description">{{ project.description }}</p>
+          <div v-if="project.previewImage" class="preview has-image">
+            <img :src="project.previewImage" :alt="project.title" class="preview-image" />
+          </div>
+          <div v-else class="preview">{{ project.title }}</div>
 
-        <div class="tag-row">
-          <span v-for="technology in project.technologies" :key="technology">
-            {{ technology }}
-          </span>
-        </div>
+          <p class="description">{{ project.description }}</p>
 
-        <div class="link-row">
-          <a v-if="project.github" href="#" @click.prevent>{{ project.github }}</a>
-          <a v-if="project.demo" href="#" @click.prevent>{{ project.demo }}</a>
-        </div>
+          <div class="tag-row">
+            <span v-for="technology in project.technologies" :key="technology">
+              {{ technology }}
+            </span>
+          </div>
+
+          <div class="link-row">
+            <a v-if="project.github" :href="project.github" target="_blank" rel="noopener">GitHub</a>
+            <a v-if="project.demo" :href="project.demo" target="_blank" rel="noopener">Démo</a>
+          </div>
+        </template>
       </section>
     </main>
   </div>
@@ -127,7 +198,7 @@ const project = computed<ProjectDetails>(() =>
 .project-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--bg-soft-purple);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -150,6 +221,15 @@ const project = computed<ProjectDetails>(() =>
   border-radius: var(--radius-card);
   box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
   padding: 24px;
+}
+
+.page-state {
+  color: var(--navy-mid);
+  font-weight: 700;
+}
+
+.page-state--error {
+  color: var(--error);
 }
 
 .back-button,
@@ -179,6 +259,7 @@ const project = computed<ProjectDetails>(() =>
 h1 {
   font-size: 30px;
   font-weight: 800;
+  font-family: var(--font-head);
 }
 
 p {
@@ -196,6 +277,17 @@ p {
   justify-content: center;
   margin: 22px 0;
   font-weight: 800;
+}
+
+.preview.has-image {
+  padding: 0;
+  overflow: hidden;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .description {
@@ -218,5 +310,11 @@ p {
   padding: 8px 13px;
   font-size: 12px;
   font-weight: 800;
+}
+
+@media (max-width: 980px) {
+  .project-shellShift {
+    padding-left: 22px;
+  }
 }
 </style>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
+import { activiteService } from "../services/activite.service";
 
 interface Activite {
   id: number;
@@ -20,7 +21,7 @@ const categorieLabels: Record<Activite["categorie"], string> = {
   sport: "Sport",
   culturel: "Culturel",
   associatif: "Associatif",
-  benevolat: "Bénévolat",
+  benevolat: "Benevolat",
   autre: "Autre",
 };
 
@@ -32,27 +33,7 @@ const categorieColors: Record<Activite["categorie"], string> = {
   autre: "#64748b",
 };
 
-const activites = ref<Activite[]>([
-  {
-    id: 1,
-    titre: "Capitaine équipe de football",
-    organisation: "ENSA Tanger",
-    categorie: "sport",
-    dateDebut: "2023-09",
-    dateFin: "2024-06",
-    description:
-      "Capitaine de l'équipe de football de l'école lors du tournoi inter-écoles régional. Organisation des entraînements et coordination avec l'administration.",
-  },
-  {
-    id: 2,
-    titre: "Membre du club IEEE",
-    organisation: "IEEE Student Branch ENSA",
-    categorie: "associatif",
-    dateDebut: "2024-10",
-    description:
-      "Participation active au club IEEE : organisation de workshops techniques, présentation de projets d'innovation lors du Hackathon annuel.",
-  },
-]);
+const activites = ref<Activite[]>([]);
 
 const newActivite = ref({
   titre: "",
@@ -63,41 +44,112 @@ const newActivite = ref({
   description: "",
 });
 
-function ajouterActivite() {
-  if (!newActivite.value.titre || !newActivite.value.organisation) return;
-  activites.value.push({
-    id: Date.now(),
-    titre: newActivite.value.titre,
-    organisation: newActivite.value.organisation,
-    categorie: newActivite.value.categorie,
-    dateDebut: newActivite.value.dateDebut,
-    dateFin: newActivite.value.dateFin || undefined,
-    description: newActivite.value.description,
-  });
-  newActivite.value = {
-    titre: "",
-    organisation: "",
-    categorie: "associatif",
-    dateDebut: "",
-    dateFin: "",
-    description: "",
-  };
-  showForm.value = false;
+function fromBackendType(type: string | null | undefined): Activite["categorie"] {
+  switch (String(type || '').toUpperCase()) {
+    case 'COMPETITION':
+      return 'sport';
+    case 'EVENEMENT':
+      return 'culturel';
+    case 'ASSOCIATION':
+      return 'benevolat';
+    case 'CLUB':
+      return 'associatif';
+    default:
+      return 'autre';
+  }
 }
 
-function supprimerActivite(id: number) {
-  activites.value = activites.value.filter((a) => a.id !== id);
+function toBackendType(type: Activite["categorie"]) {
+  switch (type) {
+    case 'sport':
+      return 'COMPETITION';
+    case 'culturel':
+      return 'EVENEMENT';
+    case 'benevolat':
+      return 'ASSOCIATION';
+    case 'associatif':
+      return 'CLUB';
+    default:
+      return 'HACKATHON';
+  }
+}
+
+function mapPeriode(periode: string | null | undefined) {
+  const value = String(periode || '');
+  const parts = value.split(' - ').map((item) => item.trim());
+  return {
+    dateDebut: parts[0] || '',
+    dateFin: parts[1] || '',
+  };
+}
+
+function mapActivite(item: any): Activite {
+  const periode = mapPeriode(item?.periode);
+  return {
+    id: Number(item?.id_activite),
+    titre: item?.nom || 'Activite',
+    organisation: item?.statut || 'Activite etudiante',
+    categorie: fromBackendType(item?.type),
+    dateDebut: periode.dateDebut,
+    dateFin: periode.dateFin || undefined,
+    description: item?.description || '',
+  };
+}
+
+async function loadActivites() {
+  try {
+    const { data } = await activiteService.getMesActivites();
+    const raw = Array.isArray(data?.data) ? data.data : [];
+    activites.value = raw.map(mapActivite);
+  } catch (error) {
+    console.warn("Chargement des activites impossible", error);
+    activites.value = [];
+  }
+}
+
+async function ajouterActivite() {
+  if (!newActivite.value.titre || !newActivite.value.organisation) return;
+  try {
+    await activiteService.createActivite({
+      nom: newActivite.value.titre,
+      type: toBackendType(newActivite.value.categorie),
+      periode: [newActivite.value.dateDebut, newActivite.value.dateFin].filter(Boolean).join(' - '),
+      description: newActivite.value.description || newActivite.value.organisation,
+    });
+    newActivite.value = {
+      titre: "",
+      organisation: "",
+      categorie: "associatif",
+      dateDebut: "",
+      dateFin: "",
+      description: "",
+    };
+    showForm.value = false;
+    await loadActivites();
+  } catch (error) {
+    console.warn("Creation de l'activite impossible", error);
+  }
+}
+
+async function supprimerActivite(id: number) {
+  try {
+    await activiteService.deleteActivite(id);
+    await loadActivites();
+  } catch (error) {
+    console.warn("Suppression de l'activite impossible", error);
+  }
 }
 
 function formatDate(d: string) {
   if (!d) return "";
   const [y, m] = d.split("-");
-  const mois = [
-    "", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
-    "Juil", "Août", "Sep", "Oct", "Nov", "Déc",
-  ];
+  const mois = ["", "Jan", "Fev", "Mar", "Avr", "Mai", "Juin", "Juil", "Aout", "Sep", "Oct", "Nov", "Dec"];
   return `${mois[parseInt(m || "0")]} ${y}`;
 }
+
+onMounted(() => {
+  loadActivites();
+});
 </script>
 
 <template>
@@ -229,7 +281,7 @@ function formatDate(d: string) {
 .page { height: 100vh; width: 100vw; overflow: hidden; background: var(--input-bg); padding-top: 50px; font-family: var(--font-body); }
 .shell { height: calc(100vh - 50px); padding: 20px; overflow-y: auto; transition: var(--ease); }
 .shellShift { padding-left: 238px; }
-.content-panel { max-width: 820px; margin: 0 auto; background: #fff; border-radius: var(--radius-card); box-shadow: 0 4px 24px rgba(17,24,39,0.08); overflow: hidden; }
+.content-panel { width: 100%; max-width: none; margin: 0; background: #fff; border-radius: var(--radius-card); box-shadow: 0 4px 24px rgba(17,24,39,0.08); overflow: hidden; }
 
 .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid var(--input-bg); }
 .header-left { display: flex; align-items: center; gap: 14px; }

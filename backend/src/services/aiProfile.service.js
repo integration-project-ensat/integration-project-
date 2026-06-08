@@ -30,18 +30,10 @@ async function findStudentForAnalysis(req, requestedStudentId) {
   const tokenUserId = getUserIdFromToken(req)
   const studentId = requestedStudentId || tokenUserId
 
-  if (studentId) {
-    const student = await getStudentProfileData(studentId)
-    if (student) return student
-  }
+  if (!studentId) return null
 
-  const firstStudent = await prisma.etudiant.findFirst({
-    select: { id_utilisateur: true },
-    orderBy: { id_utilisateur: 'asc' }
-  })
-
-  if (!firstStudent) return null
-  return getStudentProfileData(firstStudent.id_utilisateur)
+  const student = await getStudentProfileData(studentId)
+  return student || null
 }
 
 async function getStudentProfileData(studentId) {
@@ -70,6 +62,11 @@ async function getStudentProfileData(studentId) {
       },
       stages: true,
       activites: true,
+      attestations: {
+        include: {
+          element: true
+        }
+      },
       badges: {
         include: {
           badge: true
@@ -92,6 +89,7 @@ function buildAiPayloadFromStudent(targetCareer, student) {
   const skills = unique([
     ...student.competences.map((item) => item.competence?.nom),
     student.filiere,
+    student.annee_universitaire,
     student.portfolio?.objectif_pro,
     student.score_credibilite?.niveau
   ])
@@ -103,6 +101,16 @@ function buildAiPayloadFromStudent(targetCareer, student) {
       project.type,
       project.role,
       project.resultats
+    ]),
+    ...student.activites.flatMap((activity) => [
+      activity.nom,
+      activity.type,
+      activity.description
+    ]),
+    ...student.diplomes.flatMap((diploma) => [
+      diploma.titre_diplome,
+      diploma.domaine,
+      diploma.etablissement
     ]),
     ...(student.github_integration?.depots?.map((repo) => repo.nom_depot) ?? [])
   ])
@@ -116,19 +124,30 @@ function buildAiPayloadFromStudent(targetCareer, student) {
       stage.poste,
       stage.missions
     ]),
+    ...student.attestations.flatMap((attestation) => [
+      attestation.type,
+      attestation.organisme,
+      attestation.titre
+    ]),
     ...(student.github_integration?.depots?.flatMap((repo) => extractGithubLanguages(repo.langages)) ?? [])
   ])
 
   const badges = unique(student.badges.map((item) => item.badge?.nom))
 
   const stages = unique(
-    student.stages.flatMap((stage) => [
-      stage.entreprise,
-      stage.poste,
-      stage.missions,
-      stage.technologies,
-      stage.statut
-    ])
+    [
+      ...student.stages.flatMap((stage) => [
+        stage.entreprise,
+        stage.poste,
+        stage.missions,
+        stage.technologies,
+        stage.statut
+      ]),
+      ...student.recommandations_recues.flatMap((recommendation) => [
+        recommendation.role_auteur,
+        recommendation.message
+      ])
+    ]
   )
 
   return {
@@ -144,6 +163,7 @@ function buildAiPayloadFromStudent(targetCareer, student) {
       email: student.utilisateur?.email,
       filiere: student.filiere,
       anneeUniversitaire: student.annee_universitaire,
+      objectifPro: student.portfolio?.objectif_pro ?? null,
       score: student.score_credibilite?.score_total?.toString() ?? null,
       source: 'database'
     }

@@ -268,6 +268,10 @@ const loadPosts = async () => {
     posts.value = items;
     syncInteractionState(items);
   } catch (err: any) {
+    if (err?.response?.status === 401) {
+      router.push('/login');
+      return;
+    }
     error.value =
       err?.response?.data?.message || "Erreur lors du chargement du fil d’actualité";
   } finally {
@@ -303,7 +307,7 @@ const openStudentProfile = (studentId: string) => {
 };
 
 const openProject = (projectId: string) => {
-  router.push(`/projects/${projectId}`);
+  router.push(`/projects/${projectId}?from=${role.value}`);
 };
 
 const toggleSavedPostProfile = (post: FeedPost) => {

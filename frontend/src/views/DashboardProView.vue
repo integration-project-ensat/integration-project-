@@ -14,6 +14,8 @@ import SidebarPro from "../components/explorePro/SidebarPro.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import profApi from "@/services/profApi";
+import { postService } from "../services/post.service";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 interface Intern {
   id: string;
@@ -57,6 +59,7 @@ const refusedRequests = ref(0);
 const publishedOffers = ref(0);
 const profileName = ref("Bienvenue, professionnel");
 const totalSaved = computed(() => savedProfiles.value.length);
+const isSubmittingStage = ref(false);
 
 const newStage = ref({
   title: "",
@@ -70,7 +73,7 @@ const stats = computed(() => [
   {
     title: "Total stagiaires",
     value: interns.value.length,
-    info: "+2 ce mois",
+    info: "Connexions étudiantes",
     icon: Users,
   },
   {
@@ -94,22 +97,40 @@ const stats = computed(() => [
   {
     title: "Offres publiées",
     value: publishedOffers.value,
-    info: "Actives",
+    info: "Posts professionnels",
     icon: BriefcaseBusiness,
   },
 ]);
 
-const fieldDistribution = [
-  { label: "DevOps", value: 42 },
-  { label: "Cloud", value: 34 },
-  { label: "Mobile", value: 24 },
-];
+const fieldDistribution = computed(() => {
+  const counts = interns.value.reduce<Record<string, number>>((acc, intern) => {
+    const key = intern.field || "Autre";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const total = Math.max(interns.value.length, 1);
 
-const schoolDistribution = [
-  { label: "ENSA", value: 6 },
-  { label: "ENSAM", value: 3 },
-  { label: "FST", value: 2 },
-];
+  return Object.entries(counts)
+    .map(([label, count]) => ({
+      label,
+      value: Math.round((count / total) * 100),
+    }))
+    .sort((left, right) => right.value - left.value)
+    .slice(0, 4);
+});
+
+const schoolDistribution = computed(() => {
+  const counts = interns.value.reduce<Record<string, number>>((acc, intern) => {
+    const key = intern.school || "Autre";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(counts)
+    .map(([label, value]) => ({ label, value }))
+    .sort((left, right) => right.value - left.value)
+    .slice(0, 4);
+});
 
 const connectionAnalytics = computed(() => [
   { label: "Acceptées", value: acceptedRequests.value },
@@ -123,7 +144,18 @@ const loadDashboard = async () => {
     if (response.data?.success) {
       const data = response.data.data;
       profileName.value = data.profile?.name ?? profileName.value;
-      interns.value = Array.isArray(data.interns) ? data.interns : [];
+      interns.value = Array.isArray(data.interns)
+        ? data.interns.map((intern) => ({
+            ...intern,
+            badges:
+              Array.isArray(intern.badges) && intern.badges.length
+                ? intern.badges
+                : resolveProfileBadges({
+                    filiere: intern.field,
+                    school: intern.school,
+                  }),
+          }))
+        : [];
       savedProfiles.value = Array.isArray(data.savedProfiles) ? data.savedProfiles : [];
       pendingRequests.value = data.connections?.pending ?? 0;
       acceptedRequests.value = data.connections?.accepted ?? 0;
@@ -143,16 +175,49 @@ const openPath = (path: string) => {
   router.push(path);
 };
 
-const submitStage = () => {
-  publishedOffers.value += 1;
-  newStage.value = {
-    title: "",
-    field: "",
-    city: "",
-    duration: "",
-    description: "",
-  };
-  isStageModalOpen.value = false;
+const submitStage = async () => {
+  if (
+    !newStage.value.title.trim() ||
+    !newStage.value.field.trim() ||
+    !newStage.value.city.trim() ||
+    !newStage.value.duration.trim() ||
+    !newStage.value.description.trim()
+  ) {
+    return;
+  }
+
+  isSubmittingStage.value = true;
+
+  try {
+    const payload = new FormData();
+    payload.append(
+      "contenu",
+      JSON.stringify({
+        projectTitle: newStage.value.title.trim(),
+        description: newStage.value.description.trim(),
+        technologies: [newStage.value.field.trim(), newStage.value.duration.trim()],
+        demo: newStage.value.city.trim(),
+        github: "",
+      }),
+    );
+    payload.append("visibilite", "PUBLIC");
+
+    await postService.createPost(payload);
+
+    newStage.value = {
+      title: "",
+      field: "",
+      city: "",
+      duration: "",
+      description: "",
+    };
+    isStageModalOpen.value = false;
+    await loadDashboard();
+  } catch (err: any) {
+    console.error("Erreur publication offre/stage", err);
+  } finally {
+    isSubmittingStage.value = false;
+  }
 };
 </script>
 
@@ -376,7 +441,9 @@ const submitStage = () => {
 
           <div class="modal-actions">
             <button type="button" @click="isStageModalOpen = false">Annuler</button>
-            <button type="submit">Publier l?offre</button>
+            <button type="submit" :disabled="isSubmittingStage">
+              {{ isSubmittingStage ? 'Publication...' : 'Publier l’offre' }}
+            </button>
           </div>
         </form>
       </section>

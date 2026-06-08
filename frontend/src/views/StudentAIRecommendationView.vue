@@ -1,8 +1,9 @@
 ﻿<script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { getCareerRecommendation } from "../services/aiRecommendation.service";
+import { profileService } from "../services/profile.service";
 
 type Career =
   | "Web Developer"
@@ -29,15 +30,24 @@ interface RecommendationResult {
   technologiesToLearn: string[];
   summary: string;
   roadmap: Array<{ step: string; title: string; items: string[] }>;
+  debug?: {
+    modelScore?: number;
+    rulesScore?: number;
+    alignmentBonus?: number;
+    profileRichness?: number;
+  };
 }
 
 const sidebarOpen = ref(true);
 const targetCareer = ref<Career>("DevOps");
 const loading = ref(false);
+const loadingProfile = ref(true);
 const error = ref("");
+const profileError = ref("");
 const result = ref<RecommendationResult | null>(null);
 const profileSource = ref<any>(null);
 const customCareerInput = ref("");
+const profilePreview = ref<any>(null);
 
 const careers: Career[] = [
   "Web Developer",
@@ -53,54 +63,129 @@ const careers: Career[] = [
   "UI/UX Designer",
 ];
 
-const mockStudentProfile = {
-  name: "Nom Étudiant",
-  filiere: "GINF",
-  skills: ["Vue", "Node.js", "Git", "PostgreSQL", "REST API"],
-  projects: [
-    "Portfolio Web avec Vue",
-    "API backend Node.js",
-    "Dashboard de suivi de stages",
-  ],
-  technologies: ["Vue.js", "Express", "PostgreSQL", "Docker", "GitHub"],
-  badges: ["Web Developer", "Backend", "Full Stack"],
-  stages: ["Stage développement full stack avec Vue 3 et Node.js"],
-};
-
+const analyzedProfile = computed(() => profileSource.value || profilePreview.value || null);
+const analyzedStudent = computed(() => analyzedProfile.value?.student || null);
+const analyzedSkills = computed(() => {
+  const values = analyzedProfile.value?.skills;
+  return Array.isArray(values) ? values.filter(Boolean) : [];
+});
 const scoreStyle = computed(() => ({
   width: `${result.value?.matchScore ?? 0}%`,
 }));
 
 const selectedCareer = computed(() => customCareerInput.value.trim() || targetCareer.value);
+const storedUserId = computed(() => {
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.id || parsed?.id_utilisateur || null;
+  } catch {
+    return null;
+  }
+});
 
 async function analyzeProfile() {
+  if (!profilePreview.value || !storedUserId.value) {
+    error.value = "Impossible de lancer l’analyse sans un vrai profil étudiant chargé depuis le backend.";
+    result.value = null;
+    profileSource.value = null;
+    return;
+  }
+
   loading.value = true;
   error.value = "";
 
   try {
     const response = await getCareerRecommendation({
       targetCareer: selectedCareer.value,
-      skills: mockStudentProfile.skills,
-      projects: mockStudentProfile.projects,
-      technologies: mockStudentProfile.technologies,
-      badges: mockStudentProfile.badges,
-      stages: mockStudentProfile.stages,
-      student: {
-        name: mockStudentProfile.name,
-        filiere: mockStudentProfile.filiere,
-        source: "mock",
-      },
+      studentId: storedUserId.value,
+      skills: profilePreview.value.skills,
+      projects: profilePreview.value.projects,
+      technologies: profilePreview.value.technologies,
+      badges: profilePreview.value.badges,
+      stages: profilePreview.value.stages,
+      student: profilePreview.value.student,
     });
     result.value = response.data.data;
-    profileSource.value = response.data.profileSource || mockStudentProfile;
+    profileSource.value = response.data.profileSource || profilePreview.value;
   } catch (apiError: any) {
     error.value =
       apiError.response?.data?.message ||
-      "Impossible de générer la recommandation IA pour le moment.";
+      "Impossible de générer la recommandation IA sans un vrai profil étudiant connecté.";
+    result.value = null;
+    profileSource.value = null;
   } finally {
     loading.value = false;
   }
 }
+
+function buildProfilePreview(profile: any) {
+  const raw = profile?.raw || {};
+  const student = raw?.etudiant || {};
+
+  return {
+    skills: Array.isArray(profile?.competences) ? profile.competences : [],
+    projects: Array.isArray(profile?.projectsData)
+      ? profile.projectsData
+          .flatMap((project: any) => [
+            project?.titre,
+            project?.description,
+            project?.type,
+            project?.role,
+            project?.resultats,
+          ])
+          .filter(Boolean)
+      : [],
+    technologies: Array.isArray(profile?.projectsData)
+      ? profile.projectsData.flatMap((project: any) =>
+          Array.isArray(project?.technologies)
+            ? project.technologies
+                .map((item: any) => item?.technologie?.nom)
+                .filter(Boolean)
+            : [],
+        )
+      : [],
+    badges: Array.isArray(profile?.badgesData)
+      ? profile.badgesData.map((item: any) => item?.badge?.nom).filter(Boolean)
+      : [],
+    stages: Array.isArray(profile?.stagesData)
+      ? profile.stagesData
+          .flatMap((stage: any) => [
+            stage?.entreprise,
+            stage?.poste,
+            stage?.missions,
+            stage?.technologies,
+          ])
+          .filter(Boolean)
+      : [],
+    student: {
+      id: profile?.id || storedUserId.value,
+      name: profile?.name || "Profil étudiant",
+      filiere: student?.filiere || profile?.title || "Filière non renseignée",
+      anneeUniversitaire: student?.annee_universitaire || null,
+      objectifPro: raw?.portfolio?.objectif_pro || null,
+      source: "profile",
+    },
+  };
+}
+
+onMounted(async () => {
+  loadingProfile.value = true;
+  profileError.value = "";
+
+  try {
+    const profile = await profileService.getProfile(null);
+    profilePreview.value = buildProfilePreview(profile);
+  } catch (apiError: any) {
+    profilePreview.value = null;
+    profileError.value =
+      apiError?.response?.data?.message ||
+      "Impossible de charger le vrai profil étudiant pour l’analyse IA.";
+  } finally {
+    loadingProfile.value = false;
+  }
+});
 </script>
 
 <template>
@@ -142,12 +227,18 @@ async function analyzeProfile() {
 
           <div class="profile-box">
             <h3>Profil analysé</h3>
-            <p class="profile-source">
-              {{ mockStudentProfile.name }} · {{ mockStudentProfile.filiere }}
-            </p>
-            <div class="chips">
-              <span v-for="skill in mockStudentProfile.skills" :key="skill">{{ skill }}</span>
-            </div>
+            <p v-if="loadingProfile" class="profile-source">Chargement du profil backend...</p>
+            <p v-else-if="profileError" class="profile-source error-message">{{ profileError }}</p>
+            <template v-else-if="analyzedStudent">
+              <p class="profile-source">
+                {{ analyzedStudent.name }} · {{ analyzedStudent.filiere || "Filière non renseignée" }}
+              </p>
+              <div class="chips">
+                <span v-for="skill in analyzedSkills" :key="skill">{{ skill }}</span>
+                <span v-if="!analyzedSkills.length">Aucune compétence détectée.</span>
+              </div>
+            </template>
+            <p v-else class="profile-source">Aucun profil réel détecté.</p>
           </div>
 
           <label class="career-field">
@@ -160,7 +251,7 @@ async function analyzeProfile() {
             <small>Si vous écrivez un métier ici, il remplace le choix sélectionné.</small>
           </label>
 
-          <button class="primary-btn" :disabled="loading" @click="analyzeProfile">
+          <button class="primary-btn" :disabled="loading || loadingProfile || !profilePreview" @click="analyzeProfile">
             <span v-if="loading" class="loader" />
             {{ loading ? "Analyse en cours..." : "Analyser mon profil" }}
           </button>
@@ -169,7 +260,7 @@ async function analyzeProfile() {
         </article>
 
         <article class="result-card">
-          <template v-if="result">
+          <template v-if="result && analyzedStudent">
             <div class="result-header">
               <div>
                 <p class="eyebrow">Score de compatibilité</p>
@@ -192,11 +283,20 @@ async function analyzeProfile() {
               <div class="score-fill" :style="scoreStyle" />
             </div>
 
+            <div class="analysis-debug">
+              <span>ID: {{ analyzedStudent.id || storedUserId || "?" }}</span>
+              <span>Source: {{ analyzedStudent.source || "unknown" }}</span>
+              <span>Model: {{ result.debug?.modelScore ?? "-" }}</span>
+              <span>Rules: {{ result.debug?.rulesScore ?? "-" }}</span>
+              <span>Align: {{ result.debug?.alignmentBonus ?? "-" }}</span>
+              <span>Richness: {{ result.debug?.profileRichness ?? "-" }}</span>
+            </div>
+
             <p class="summary">{{ result.summary }}</p>
           </template>
           <div v-else class="empty-state">
             <h2>Prêt pour l’analyse</h2>
-            <p>Le résultat IA apparaîtra ici après l’analyse du profil mock.</p>
+            <p>Le résultat IA apparaîtra ici après l’analyse de votre vrai profil backend.</p>
           </div>
         </article>
       </section>
@@ -307,7 +407,8 @@ h1 {
 .card-text,
 .summary,
 .empty-state p,
-.timeline p {
+.timeline p,
+.profile-source {
   color: var(--navy-mid);
   font-weight: 700;
 }
@@ -487,6 +588,22 @@ h1 {
   transition: width 0.5s ease;
 }
 
+.analysis-debug {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.analysis-debug span {
+  background: #eeecff;
+  color: var(--purple);
+  border-radius: var(--radius-pill);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .recommendation-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -573,4 +690,3 @@ h1 {
   }
 }
 </style>
-

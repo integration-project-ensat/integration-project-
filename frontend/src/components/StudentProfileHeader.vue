@@ -312,6 +312,8 @@ const props = defineProps<{
     email?: string
     website?: string
     linkedin?: string
+    technicalSkills?: SkillItem[]
+    softSkills?: SkillItem[]
   }
   modelValue: string
   recentRecommendations?: Recommendation[]
@@ -325,21 +327,8 @@ const emit = defineEmits<{
 
 const tabs = ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
 
-// Données des compétences
-const technicalSkills = ref<SkillItem[]>([
-  { name: 'Vue.js', level: 90, description: 'Maîtrise avancée de l\'écosystème Vue 3 (Composition API, Pinia, Vue Router) et intégration de maquettes complexes.', projectsCount: 3 },
-  { name: 'TypeScript', level: 80, description: 'Typage strict, interfaces, génériques et sécurisation du code applicatif sur des architectures Front-End.', projectsCount: 2 },
-  { name: 'Python', level: 75, description: 'Développement de scripts d\'automatisation, manipulation de données et algorithmique avancée.', projectsCount: 1 },
-  { name: 'Docker', level: 65, description: 'Conteneurisation d\'applications, configuration de Dockerfile et orchestration légère de services de développement.', projectsCount: 1 },
-  { name: 'Git', level: 85, description: 'Gestion de versions, workflows d\'équipe (Git Flow), résolution de conflits et revues de code.', projectsCount: 4 }
-])
-
-const softSkills = ref<SkillItem[]>([
-  { name: 'Travail en équipe', level: 95, description: 'Excellente collaboration lors des projets de groupe académiques, écoute active et répartition agile des tâches.', projectsCount: 3 },
-  { name: 'Communication', level: 85, description: 'Capacité à vulgariser des concepts techniques complexes devant un jury ou des collaborateurs non-techniques.', projectsCount: 2 },
-  { name: 'Adaptabilité', level: 90, description: 'Facilité à monter rapidement en compétences sur de nouvelles technologies ou à s\'ajuster aux changements de scope.', projectsCount: 4 },
-  { name: 'Résolution de problèmes', level: 88, description: 'Approche analytique et méthodique face aux bugs ou aux blocages structurels dans un projet.', projectsCount: 2 }
-])
+const technicalSkills = computed(() => props.profile.technicalSkills ?? [])
+const softSkills = computed(() => props.profile.softSkills ?? [])
 
 // Liens de Partage Dynamiques
 const profileUrl = computed(() => {

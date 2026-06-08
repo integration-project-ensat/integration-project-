@@ -238,16 +238,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
+import { projetService } from '../services/projet.service'
 
-// ── Layout ──────────────────────────────────────────────────────────────────
 const sidebarOpen = ref(true)
 const userRole = 'student'
 const currentUser = { name: 'Nom Prenom', email: 'Exemple.exemple@univ.etu.ac.ma', avatar: '' }
 
-// ── Types ───────────────────────────────────────────────────────────────────
 interface Project {
   id: number
   name: string
@@ -260,14 +259,11 @@ interface Project {
   url: string
 }
 
-
-
-// ── Categories config ────────────────────────────────────────────────────────
 const categories = [
-  { value: 'all',      label: 'Tous',       color: '#6b7280' },
-  { value: 'personal', label: 'Personnel',  color: '#5b4fcf' },
-  { value: 'academic', label: 'Académique', color: '#0f9e74' },
-  { value: 'training', label: 'Formation',  color: '#d85a30' },
+  { value: 'all', label: 'Tous', color: '#6b7280' },
+  { value: 'personal', label: 'Personnel', color: '#5b4fcf' },
+  { value: 'academic', label: 'Academique', color: '#0f9e74' },
+  { value: 'training', label: 'Formation', color: '#d85a30' },
 ]
 
 function categoryColor(cat: string) {
@@ -283,54 +279,48 @@ function badgeStyle(cat: string) {
   return { background: color + '18', color }
 }
 
-// ── Data ─────────────────────────────────────────────────────────────────────
-const projects = ref([] as Project[])
-
-projects.value = [
-  {
-    id: 1,
-    name: 'PheraCore Platform',
-    description: 'Plateforme de portfolio connectant les étudiants aux opportunités professionnelles au Nord du Maroc.',
-    category: 'academic',
-    technologies: ['Vue.js', 'Vite', 'TypeScript', 'Docker', 'MySQL'],
-    supervisor: 'Dr. Karim Benali',
-    teamMembers: ['Ferdaous', 'Sara El Amrani', 'Yassine Benali'],
-    completedAt: '2025-06-01',
-    url: 'https://github.com/pheracore',
-  },
-  {
-    id: 2,
-    name: 'Algorithme de Dijkstra',
-    description: "Implémentation et visualisation de l'algorithme de Dijkstra.",
-    category: 'academic',
-    technologies: ['Python', 'Matplotlib'],
-    supervisor: 'M. Ghailani',
-    teamMembers: [],
-    completedAt: '2025-03-15',
-    url: '',
+function fromBackendType(type: string | null | undefined): Project['category'] {
+  switch (String(type || '').toUpperCase()) {
+    case 'PERSONNEL':
+      return 'personal'
+    case 'HACKATHON':
+    case 'STAGE':
+      return 'training'
+    default:
+      return 'academic'
   }
-]
-
-// ── Filters ──────────────────────────────────────────────────────────────────
-const activeCategory = ref('all')
-const searchQuery = ref('')
-
-const filteredProjects = computed(() => {
-  return projects.value.filter(p => {
-    const matchCat = activeCategory.value === 'all' || p.category === activeCategory.value
-    const matchSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || p.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || p.technologies.some(t => t.toLowerCase().includes(searchQuery.value.toLowerCase()))
-    return matchCat && matchSearch
-  })
-})
-
-function countByCategory(cat: string) {
-  if (cat === 'all') return projects.value.length
-  return projects.value.filter(p => p.category === cat).length
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
+function toBackendType(category: Project['category']) {
+  switch (category) {
+    case 'personal':
+      return 'PERSONNEL'
+    case 'training':
+      return 'HACKATHON'
+    default:
+      return 'INTEGRATION'
+  }
+}
+
+function mapProject(item: any): Project {
+  return {
+    id: Number(item?.id_projet),
+    name: item?.titre || 'Projet sans titre',
+    description: item?.description || '',
+    category: fromBackendType(item?.type),
+    technologies: Array.isArray(item?.technologies)
+      ? item.technologies.map((entry: any) => entry?.technologie?.nom).filter(Boolean)
+      : [],
+    supervisor: [item?.professeur?.utilisateur?.prenom, item?.professeur?.utilisateur?.nom].filter(Boolean).join(' '),
+    teamMembers: [],
+    completedAt: '',
+    url: item?.lien_github || '',
+  }
+}
+
+const projects = ref([] as Project[])
+const activeCategory = ref('all')
+const searchQuery = ref('')
 const showModal = ref(false)
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
@@ -344,6 +334,33 @@ const emptyForm = (): Omit<Project, 'id'> => ({
 })
 
 const form = reactive<Omit<Project, 'id'>>(emptyForm())
+
+async function loadProjects() {
+  try {
+    const { data } = await projetService.getMesProjets()
+    const raw = Array.isArray(data?.data) ? data.data : []
+    projects.value = raw.map(mapProject)
+  } catch (error) {
+    console.warn('Chargement des projets impossible', error)
+    projects.value = []
+  }
+}
+
+const filteredProjects = computed(() => {
+  return projects.value.filter(p => {
+    const matchCat = activeCategory.value === 'all' || p.category === activeCategory.value
+    const needle = searchQuery.value.toLowerCase()
+    const matchSearch = p.name.toLowerCase().includes(needle)
+      || p.description.toLowerCase().includes(needle)
+      || p.technologies.some(t => t.toLowerCase().includes(needle))
+    return matchCat && matchSearch
+  })
+})
+
+function countByCategory(cat: string) {
+  if (cat === 'all') return projects.value.length
+  return projects.value.filter(p => p.category === cat).length
+}
 
 function openModal(project?: Project) {
   if (project) {
@@ -373,21 +390,38 @@ function closeModal() {
   showModal.value = false
 }
 
-function saveProject() {
-  if (!form.name || !form.category || !form.completedAt) return
+async function saveProject() {
+  if (!form.name) return
 
-  if (isEditing.value && editingId.value !== null) {
-    const idx = projects.value.findIndex(p => p.id === editingId.value)
-    if (idx !== -1) projects.value[idx] = { id: editingId.value, ...form }
-  } else {
-    const newId = Date.now()
-    projects.value.unshift({ id: newId, ...form })
+  const payload = {
+    titre: form.name,
+    description: form.description,
+    type: toBackendType(form.category),
+    role: form.supervisor || undefined,
+    lien_github: form.url || undefined,
+    technologies: form.technologies,
   }
-  closeModal()
+
+  try {
+    if (isEditing.value && editingId.value !== null) {
+      await projetService.updateProjet(editingId.value, payload)
+    } else {
+      await projetService.createProjet(payload)
+    }
+    closeModal()
+    await loadProjects()
+  } catch (error) {
+    console.warn('Enregistrement du projet impossible', error)
+  }
 }
 
-function deleteProject(id: number) {
-  projects.value = projects.value.filter(p => p.id !== id)
+async function deleteProject(id: number) {
+  try {
+    await projetService.deleteProjet(id)
+    await loadProjects()
+  } catch (error) {
+    console.warn('Suppression du projet impossible', error)
+  }
 }
 
 function addTech() {
@@ -410,7 +444,6 @@ function removeMember(i: number) {
   form.teamMembers.splice(i, 1)
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDate(dateStr: string) {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -419,6 +452,10 @@ function formatDate(dateStr: string) {
 function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
 }
+
+onMounted(() => {
+  loadProjects()
+})
 </script>
 
 <style scoped>

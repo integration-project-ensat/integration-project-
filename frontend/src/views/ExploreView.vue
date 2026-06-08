@@ -8,6 +8,7 @@ import ProfileCard   from '../components/exploreStudent/ProfileCard.vue'
 import Sidebar       from '../components/exploreStudent/Sidebar.vue'
 import Topbar        from '../components/exploreStudent/Topbar.vue'
 import { explorerProfils, type ProfilExplore } from '../services/profilApi'
+import { mapExploreProfileCard } from '../utils/exploreProfileCard'
 
 // ─── State ────────────────────────────────────
 const searchQuery = ref('')
@@ -70,16 +71,7 @@ const changerPage = (page: number) => {
 }
 
 // ─── Adapter le profil pour ProfileCard ───────
-const adapterProfil = (p: ProfilExplore) => ({
-  id:              p.id_utilisateur,
-  name:            `${p.prenom} ${p.nom}`,
-  role:            p.etudiant?.diplomes?.[0]?.titre_diplome ?? '',
-  school:          p.etudiant?.diplomes?.[0]?.etablissement ?? '',
-  city:            p.profil?.adresse ?? '',
-  score:           p.etudiant?.score_credibilite?.score_total ?? 0,
-  recommendations: p.nb_recommandations,
-  recos:           []
-})
+const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'student')
 
 const handleUpdateFilters = (next: typeof filters.value) => {
   filters.value = next

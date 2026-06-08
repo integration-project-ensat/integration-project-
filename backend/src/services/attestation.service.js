@@ -7,9 +7,57 @@ const attestationService = {
     if (filters.statut) where.element = { statut: filters.statut }
     if (filters.validateurId) where.element = { ...where.element, validateur_id: toBigInt(filters.validateurId) }
 
+    if (filters.etudiantId) {
+      const etudiantId = toBigInt(filters.etudiantId)
+      const [projets, stages, activites] = await Promise.all([
+        prisma.projet.findMany({
+          where: { id_etudiant: etudiantId },
+          select: { id_projet: true }
+        }),
+        prisma.stage.findMany({
+          where: { id_etudiant: etudiantId },
+          select: { id_stage: true }
+        }),
+        prisma.activiteParascolaire.findMany({
+          where: { id_etudiant: etudiantId },
+          select: { id_activite: true }
+        })
+      ])
+
+      const legacyElementReferences = [
+        ...projets.map((projet) => ({ type: 'PROJET', reference_id: projet.id_projet })),
+        ...stages.map((stage) => ({ type: 'STAGE', reference_id: stage.id_stage })),
+        ...activites.map((activite) => ({ type: 'ACTIVITE', reference_id: activite.id_activite }))
+      ]
+
+      const legacyElements = legacyElementReferences.length
+        ? await prisma.elementValidable.findMany({
+            where: {
+              OR: legacyElementReferences
+            },
+            select: { id_element: true }
+          })
+        : []
+
+      const legacyElementIds = legacyElements.map((element) => element.id_element)
+
+      where.OR = [
+        { id_etudiant: etudiantId },
+        ...(legacyElementIds.length ? [{ id_element: { in: legacyElementIds } }] : [])
+      ]
+    }
+
     return prisma.attestation.findMany({
       where,
       include: {
+        etudiant: {
+          select: {
+            id_utilisateur: true,
+            utilisateur: {
+              select: { nom: true, prenom: true, email: true }
+            }
+          }
+        },
         element: {
           include: {
             validateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } }
@@ -24,6 +72,14 @@ const attestationService = {
     return prisma.attestation.findUnique({
       where: { id_attestation: BigInt(id) },
       include: {
+        etudiant: {
+          select: {
+            id_utilisateur: true,
+            utilisateur: {
+              select: { nom: true, prenom: true, email: true }
+            }
+          }
+        },
         element: {
           include: {
             validateur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } }
@@ -46,6 +102,7 @@ const attestationService = {
     const attestation = await prisma.attestation.create({
       data: {
         id_element: element.id_element,
+        id_etudiant: toBigInt(utilisateurId),
         titre: data.titre,
         type: data.type,
         date: data.date ? new Date(data.date) : null,

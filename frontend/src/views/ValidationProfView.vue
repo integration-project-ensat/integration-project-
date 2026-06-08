@@ -1,10 +1,11 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import profApi from "@/services/profApi";
+import { resolveProfileBadges } from "../utils/profileBadges";
 import type {
   ValidationRequest,
   ValidationStatus,
@@ -30,15 +31,15 @@ const filteredRequests = computed(() => {
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "ValidÃ©") return "Validé";
-  if (status === "Refusé" || status === "RefusÃ©") return "Refusé";
+  if (status === "ValidÃ©" || status === "ValidÃƒÂ©") return "ValidÃ©";
+  if (status === "RefusÃ©" || status === "RefusÃƒÂ©") return "RefusÃ©";
   return "En attente";
 };
 
 const statusClass = (status: ValidationStatus) => ({
   "is-pending": status === "En attente",
-  "is-valid": status === "Validé",
-  "is-refused": status === "Refusé",
+  "is-valid": status === "ValidÃ©",
+  "is-refused": status === "RefusÃ©",
 });
 
 const loadRequests = async () => {
@@ -81,12 +82,11 @@ const openStudentProfile = (request: ValidationRequest) => {
 };
 
 const studentBadges = (request: ValidationRequest) => {
-  const title = request.title.toLowerCase();
-  if (title.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (title.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (title.includes("mobile"))
-    return ["🌐 Web Developer", "🏆 Hackathon Participant"];
-  return ["🌐 Web Developer"];
+  return resolveProfileBadges({
+    filiere: request.type,
+    field: request.title,
+    bio: request.description,
+  });
 };
 
 onMounted(() => {
@@ -171,7 +171,7 @@ onMounted(() => {
                   v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn primary"
-                  @click.stop="updateStatus(request, 'Validé')"
+                  @click.stop="updateStatus(request, 'ValidÃ©')"
                 >
                   Valider
                 </button>
@@ -179,7 +179,7 @@ onMounted(() => {
                   v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn danger"
-                  @click.stop="updateStatus(request, 'Refusé')"
+                  @click.stop="updateStatus(request, 'RefusÃ©')"
                 >
                   Refuser
                 </button>
@@ -188,7 +188,7 @@ onMounted(() => {
                   class="action-btn muted"
                   @click.stop="openDetailsModal(request)"
                 >
-                  Voir détails
+                  Voir dÃ©tails
                 </button>
               </div>
             </div>
@@ -205,7 +205,7 @@ onMounted(() => {
       <section class="letter-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Détails de la demande</p>
+            <p>DÃ©tails de la demande</p>
             <button
               type="button"
               class="modal-student-link"
@@ -215,7 +215,7 @@ onMounted(() => {
             </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
-            ×
+            Ã—
           </button>
         </div>
 
@@ -269,14 +269,14 @@ onMounted(() => {
           <button
             type="button"
             class="action-btn primary"
-            @click="updateSelectedStatus('Validé')"
+            @click="updateSelectedStatus('ValidÃ©')"
           >
             Valider
           </button>
           <button
             type="button"
             class="action-btn danger"
-            @click="updateSelectedStatus('Refusé')"
+            @click="updateSelectedStatus('RefusÃ©')"
           >
             Refuser
           </button>
@@ -631,3 +631,4 @@ onMounted(() => {
   font-weight: 800;
 }
 </style>
+

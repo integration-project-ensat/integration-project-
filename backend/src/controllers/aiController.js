@@ -84,7 +84,7 @@ async function getCareerRecommendation(req, res) {
     const recommendation = await requestCareerRecommendation(payload)
     return res.status(200).json({
       success: true,
-      profileSource: payload.student,
+      profileSource: payload,
       data: recommendation
     })
   } catch (error) {

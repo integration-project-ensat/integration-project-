@@ -14,6 +14,7 @@ import {
   getMesSauvegardes,
   type ProfilExplore
 } from '../services/profilApi'
+import { mapExploreProfileCard } from '../utils/exploreProfileCard'
 // ─── State ────────────────────────────────────
 const searchQuery    = ref('')
 const sidebarOpen    = ref(true)
@@ -62,8 +63,8 @@ const toSavedProfile = (profile: ProfilExplore) => ({
     .filter(Boolean),
   hasPortfolio: Boolean(profile.etudiant?.score_credibilite),
   savedAt: new Date().toLocaleDateString("fr-FR"),
-  profilePath: `/profile/student/${profile.id_utilisateur}`,
-  portfolioPath: `/profile/student/${profile.id_utilisateur}`,
+  profilePath: `/profile/student/${profile.id_utilisateur}?from=pro`,
+  portfolioPath: `/portfolio/${profile.id_utilisateur}?from=pro`,
 })
 
 const addLocalSavedProfile = (profile: ProfilExplore) => {
@@ -165,16 +166,7 @@ const changerPage = (page: number) => {
 }
 
 // ─── Adapter le profil pour ProfileCard ───────
-const adapterProfil = (p: ProfilExplore) => ({
-  id:              p.id_utilisateur,
-  name:            `${p.prenom} ${p.nom}`,
-  role:            p.etudiant?.diplomes?.[0]?.titre_diplome ?? '',
-  school:          p.etudiant?.diplomes?.[0]?.etablissement ?? '',
-  city:            p.profil?.adresse ?? '',
-  score:           p.etudiant?.score_credibilite?.score_total ?? 0,
-  recommendations: p.nb_recommandations,
-  recos:           []
-})
+const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'pro')
 
 // ─── Helpers ──────────────────────────────────
 const profileId = (profile: ProfilExplore) => profile.id_utilisateur

@@ -20,6 +20,15 @@
       />
 
       <main class="content" :class="{ shifted: sidebarOpen }">
+        <div v-if="profileLoading" class="page-state">
+          Chargement du profil...
+        </div>
+
+        <div v-else-if="profileError" class="page-state page-state--error">
+          {{ profileError }}
+        </div>
+
+        <template v-else>
         <StudentProfileHeader
           :profile="profile"
           :recent-recommendations="recommendations"
@@ -171,11 +180,12 @@
     </div>
   </div>
 </section>
+        </template>
       </main>
     </div>
 
     <div
-      v-if="showRecosModal"
+      v-if="showRecosModal && !profileLoading && !profileError"
       class="modal-backdrop"
       @click.self="showRecosModal = false"
     >
@@ -253,6 +263,8 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const sidebarOpen = ref(false)
+const profileLoading = ref(true)
+const profileError = ref('')
 const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | null>(() => {
   const role = String(auth.role || '').trim().toUpperCase()
   if (role === 'TEACHER' || role === 'PROFESSEUR') return 'teacher'
@@ -308,46 +320,23 @@ const currentUser = computed(() => {
 })
 
 const profile = ref({
-  id: 1,
-  name: 'Nom Prenom',
-  score: 90,
-  title: 'Ex Developpeur Operations & Support',
-  school: 'Ex Dassault Université de Bretagne Occidentale',
-  location: 'Ex Tanger, Tanger-Tetouan-Hussima, Maroc',
-  recos: '500+',
+  id: 0,
+  name: '',
+  score: 0,
+  title: '',
+  school: '',
+  location: '',
+  recos: '0',
   avatar: '',
-  bio: 'Étudiant motivé, intéressé par le développement web, les projets académiques et la collaboration avec des enseignants et professionnels.',
-  email: 'exemple.exemple@univ.etu.ac.ma',
-  website: 'https://portfolio.example.com',
-  linkedin: 'https://linkedin.com/in/example'
+  bio: '',
+  email: '',
+  website: '',
+  linkedin: '',
+  technicalSkills: [] as Array<{ name: string; level: number; description: string; projectsCount: number }>,
+  softSkills: [] as Array<{ name: string; level: number; description: string; projectsCount: number }>
 })
 
-const recommendations = ref<Recommendation[]>([
-  {
-    id: 1,
-    author: 'Mme Professeur Nom',
-    role: 'teacher',
-    avatar: '',
-    message: 'Étudiant sérieux, autonome et très impliqué dans ses projets.',
-    date: '23 Mai 2026'
-  },
-  {
-    id: 2,
-    author: 'Mr Professionnel Nom',
-    role: 'professional',
-    avatar: '',
-    message: 'Très bonne capacité d’analyse et excellent esprit de collaboration.',
-    date: '20 Mai 2026'
-  },
-  {
-    id: 3,
-    author: 'Mme Professeur Exemple',
-    role: 'teacher',
-    avatar: '',
-    message: '',
-    date: '18 Mai 2026'
-  }
-])
+const recommendations = ref<Recommendation[]>([])
 
 const connectionSent = ref(false)
 
@@ -363,16 +352,7 @@ async function sendConnectionRequest() {
   }
 }
 
-const posts = ref<ProfilePost[]>([
-  {
-    id: 1,
-    author: 'Nom Prenom & Nom Prenom',
-    subtitle: 'Ex Collaboration pour un projet académique',
-    description: 'Ex de description d\'un projet académique ou une stage application de gestion de biblio d\'une application web permettant de gérer les livres, les emprunts et les utilisateurs en sous supervision de Mme @k3blghzal et Mr @fianfiani en collaboration ... pour faire quelque chose.',
-    avatar: '',
-    images: []
-  }
-])
+const posts = ref<ProfilePost[]>([])
 
 const copied = ref(false)
 
@@ -419,21 +399,40 @@ function openPortfolio() {
 
 async function loadPosts() {
   try {
-    const { data } = await postService.getPosts()
+    const { data } = await postService.getPosts(
+      profileId.value ? { id_auteur: profileId.value } : {}
+    )
     const backendPosts = data.data || []
-    const filteredPosts = profileId.value
-      ? backendPosts.filter((post: any) => Number(post?.auteur?.id_utilisateur ?? post?.id_auteur ?? 0) === Number(profileId.value))
-      : backendPosts
-    posts.value = filteredPosts.map(mapBackendPost)
+    posts.value = backendPosts.map(mapBackendPost)
   } catch (error) {
-    console.warn('Chargement des posts impossible, fallback mock conserve', error)
+    console.warn('Chargement des posts impossible', error)
+    posts.value = []
   }
 }
 
 async function loadProfile() {
+  profileLoading.value = true
+  profileError.value = ''
   try {
-    const backendResp = await profileService.getProfile(profileStudentId.value)
-    const backendProfile = backendResp?.data ?? backendResp
+    const backendProfile = await profileService.getProfile(profileStudentId.value)
+    const rawStudent = backendProfile?.raw?.etudiant || {}
+    const rawCompetences = Array.isArray(rawStudent?.competences) ? rawStudent.competences : []
+    const technicalSkills = rawCompetences
+      .filter((item: any) => String(item?.competence?.categorie || '').toUpperCase() !== 'COMPORTEMENTALE')
+      .map((item: any) => ({
+        name: item?.competence?.nom || 'Compétence',
+        level: Number(item?.niveau_maitrise ?? 75),
+        description: 'Compétence issue du profil étudiant.',
+        projectsCount: 0
+      }))
+    const softSkills = rawCompetences
+      .filter((item: any) => String(item?.competence?.categorie || '').toUpperCase() === 'COMPORTEMENTALE')
+      .map((item: any) => ({
+        name: item?.competence?.nom || 'Compétence',
+        level: Number(item?.niveau_maitrise ?? 75),
+        description: 'Compétence comportementale issue du profil étudiant.',
+        projectsCount: 0
+      }))
 
     profile.value = {
       ...profile.value,
@@ -448,13 +447,20 @@ async function loadProfile() {
       bio: backendProfile.bio,
       email: backendProfile.email,
       website: backendProfile.website,
-      linkedin: backendProfile.linkedin
+      linkedin: backendProfile.linkedin,
+      technicalSkills,
+      softSkills
     }
 
     posts.value = Array.isArray(backendProfile.posts) ? backendProfile.posts : posts.value
     recommendations.value = Array.isArray(backendProfile.recommendations) ? backendProfile.recommendations : recommendations.value
   } catch (error) {
-    console.warn('Chargement du profil complet impossible, fallback mock conserve', error)
+    console.warn('Chargement du profil complet impossible', error)
+    profileError.value = "Impossible de charger ce profil pour le moment."
+    posts.value = []
+    recommendations.value = []
+  } finally {
+    profileLoading.value = false
   }
 }
 
@@ -467,7 +473,8 @@ async function loadRecommendations() {
     const backendRecommendations = data.data || []
     recommendations.value = backendRecommendations.map(mapBackendRecommendation)
   } catch (error) {
-    console.warn('Chargement des recommandations impossible, fallback mock conserve', error)
+    console.warn('Chargement des recommandations impossible', error)
+    recommendations.value = []
   }
 }
 
@@ -529,17 +536,6 @@ async function sendRecommendation() {
   } catch (error) {
     console.error('Erreur envoi recommandation', error)
   }
-
-  recommendations.value.unshift({
-    id: Date.now(),
-    author: currentUser.value.name,
-    role: 'teacher',
-    avatar: currentUser.value.avatar,
-    message: recommendationMessage.value.trim(),
-    date: "Aujourd’hui"
-  })
-
-  recommendationMessage.value = ''
 }
 
 function getInitials(name: string) {
@@ -673,6 +669,19 @@ watch(profileId, () => {
 .page {
   min-height: 100vh;
   background: #f0f2f8;
+}
+
+.page-state {
+  background: white;
+  border-radius: 12px;
+  padding: 22px;
+  color: var(--text-dark);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+.page-state--error {
+  color: #dc2626;
 }
 
 .body-area {

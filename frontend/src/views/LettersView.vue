@@ -105,9 +105,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
+import { lettreService } from '../services/lettre.service'
 
 const sidebarOpen = ref(true)
 const userRole = 'student'
@@ -131,30 +132,7 @@ interface Letter {
   }
 }
 
-const letters = ref<Letter[]>([
-  {
-    id: 1,
-    subject: 'Lettre de recommandation – Stage Développeur Web',
-    preview: 'C\'est avec grand plaisir que je recommande Ferdaous pour ce poste...',
-    content: `<p>Madame, Monsieur,</p>
-      <p>C'est avec grand plaisir que je recommande <strong>Ferdaous</strong> pour ce poste de développeur web.</p>
-      <p>Durant son parcours académique, elle a démontré des qualités exceptionnelles de rigueur et d'investissement.</p>
-      <p>Cordialement,</p>`,
-    receivedAt: '2025-04-10T09:30:00',
-    author: { name: 'Dr. Karim Benali', role: 'Professeur', institution: 'FSTT Tanger', avatar: null },
-  },
-  {
-    id: 2,
-    subject: 'Recommandation pour Master MIAGE',
-    preview: 'Je soussigné atteste que cette étudiante a suivi avec excellence...',
-    content: `<p>À qui de droit,</p>
-      <p>Je soussigné atteste que cette étudiante a suivi avec excellence le cours de Systèmes d'Information.</p>
-      <p>Je la recommande sans réserve pour intégrer un programme de Master.</p>`,
-    receivedAt: '2025-03-22T14:00:00',
-    author: { name: 'Prof. Samira Ouali', role: 'Maître de conférences', institution: 'ENCG Tanger', avatar: null },
-  },
-])
-
+const letters = ref<Letter[]>([])
 const selectedLetter = ref<Letter | null>(null)
 
 function getInitials(name: string) {
@@ -175,27 +153,46 @@ function closeModal() {
   selectedLetter.value = null
 }
 
-async function downloadPdf(letter: Letter) {
-  const { jsPDF } = await import('jspdf')
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-
-  doc.setFontSize(16)
-  doc.setFont('helvetica', 'bold')
-  doc.text(letter.subject, 20, 30)
-
-  doc.setFontSize(11)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`De : ${letter.author.name} — ${letter.author.role}, ${letter.author.institution}`, 20, 42)
-  doc.text(`Reçue le : ${formatDate(letter.receivedAt)}`, 20, 50)
-  doc.setLineWidth(0.3)
-  doc.line(20, 55, 190, 55)
-
-  const plainText = letter.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-  const lines = doc.splitTextToSize(plainText, 170)
-  doc.text(lines, 20, 65)
-
-  doc.save(`lettre_${letter.id}_${letter.author.name.replace(/\s/g, '_')}.pdf`)
+function downloadPdf(letter: Letter) {
+  window.open(lettreService.getPdfUrl(letter.id), '_blank', 'noopener')
 }
+
+function mapBackendLetter(letter: any): Letter {
+  const author = letter?.professeur?.utilisateur || {}
+  const content = letter?.contenu || '<p>Aucun contenu r�dig� pour le moment.</p>'
+  return {
+    id: Number(letter?.id_lettre),
+    subject: `Lettre de recommandation${letter?.motif ? ` � ${String(letter.motif).toLowerCase()}` : ''}`,
+    preview: String(content).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Aper�u indisponible.',
+    content,
+    receivedAt: letter?.date_souhaitee || new Date().toISOString(),
+    author: {
+      name: [author?.prenom, author?.nom].filter(Boolean).join(' ') || 'Professeur inconnu',
+      role: 'Professeur',
+      institution: letter?.professeur?.departement || '�tablissement non renseign�',
+      avatar: author?.profil?.photo_profil || null,
+    },
+  }
+}
+
+async function loadLetters() {
+  try {
+    const rawUser = localStorage.getItem('user')
+    const parsed = rawUser ? JSON.parse(rawUser) : null
+    const studentId = parsed?.id || parsed?.id_utilisateur
+    if (!studentId) return
+
+    const { data } = await lettreService.getMesLettres(studentId)
+    letters.value = Array.isArray(data) ? data.map(mapBackendLetter) : []
+  } catch (error) {
+    console.warn('Chargement des lettres impossible', error)
+    letters.value = []
+  }
+}
+
+onMounted(() => {
+  loadLetters()
+})
 </script>
 
 <style scoped>

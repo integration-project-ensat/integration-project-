@@ -533,7 +533,62 @@ def flatten_profile(profile: dict) -> List[str]:
         if isinstance(values, str):
             values = [values]
         items.extend(str(value) for value in values if str(value).strip())
+    student = profile.get("student", {})
+    if isinstance(student, dict):
+        items.extend(
+            str(value)
+            for value in [
+                student.get("filiere"),
+                student.get("anneeUniversitaire"),
+                student.get("objectifPro"),
+                student.get("score"),
+            ]
+            if str(value or "").strip()
+        )
     return items
+
+
+def compute_alignment_bonus(profile: dict, target_career: str, corrected_career: str) -> int:
+    student = profile.get("student", {}) if isinstance(profile.get("student"), dict) else {}
+    alignment_text = " ".join(
+        normalize(str(value))
+        for value in [
+            student.get("filiere"),
+            student.get("objectifPro"),
+            corrected_career,
+            target_career,
+        ]
+        if str(value or "").strip()
+    )
+
+    bonus = 0
+    target_tokens = tokenize(corrected_career or target_career)
+    for token in target_tokens:
+        if token and token in alignment_text:
+            bonus += 6
+
+    if "cyber" in alignment_text and "cyber" in " ".join(target_tokens):
+        bonus += 10
+    if "data" in alignment_text and any(token in {"data", "science", "analyst", "ml", "ai"} for token in target_tokens):
+        bonus += 10
+    if any(token in alignment_text for token in ["devops", "cloud", "docker", "kubernetes"]) and any(
+        token in {"devops", "cloud"} for token in target_tokens
+    ):
+        bonus += 10
+    if any(token in alignment_text for token in ["web", "frontend", "backend", "full", "stack"]) and any(
+        token in {"web", "frontend", "backend", "full", "stack"} for token in target_tokens
+    ):
+        bonus += 8
+
+    return min(bonus, 25)
+
+
+def compute_profile_richness(profile: dict) -> int:
+    total_items = sum(
+        len(profile.get(field, [])) if isinstance(profile.get(field, []), list) else 0
+        for field in ["skills", "projects", "technologies", "badges", "stages"]
+    )
+    return min(total_items * 2, 20)
 
 
 def load_model():
@@ -588,7 +643,17 @@ class CareerRecommendationModel:
 
         coverage = 1 - (len(missing_skills) / max(len(requirements["skills"]), 1))
         rules_score = int(round(max(0, min(1, coverage)) * 100))
-        match_score = int(round((model_score * 0.25) + (rules_score * 0.75)))
+        alignment_bonus = compute_alignment_bonus(profile, target_career, corrected_career)
+        profile_richness = compute_profile_richness(profile)
+        match_score = int(
+            round(
+                (model_score * 0.2)
+                + (rules_score * 0.55)
+                + alignment_bonus
+                + profile_richness
+            )
+        )
+        match_score = max(0, min(100, match_score))
 
         roadmap = [
             {
@@ -615,6 +680,12 @@ class CareerRecommendationModel:
             "analysisMode": "custom" if custom_target else "trained",
             "matchedDomains": requirements.get("matchedDomains", []),
             "matchScore": match_score,
+            "debug": {
+                "modelScore": model_score,
+                "rulesScore": rules_score,
+                "alignmentBonus": alignment_bonus,
+                "profileRichness": profile_richness,
+            },
             "missingSkills": missing_skills,
             "recommendedProjects": recommended_projects[:3],
             "technologiesToLearn": technologies_to_learn,
