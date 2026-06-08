@@ -1,4 +1,4 @@
-const prisma = require("../../prisma/client");
+﻿const prisma = require("../../prisma/client");
 const asyncHandler = require("../middlewares/asyncHandler");
 const profilService = require("../services/profil.service");
 
@@ -18,10 +18,28 @@ const toInitials = (nomComplet) => {
 };
 
 const mapValidationStatus = (statut) => {
-  if (statut === "VALIDE") return "Validé";
-  if (statut === "REFUSE") return "Refusé";
+  if (statut === "VALIDE") return "ValidÃ©";
+  if (statut === "REFUSE") return "RefusÃ©";
   return "En attente";
 };
+
+const compareIsoDatesDesc = (left, right) => {
+  const leftTime = new Date(left || 0).getTime();
+  const rightTime = new Date(right || 0).getTime();
+  return rightTime - leftTime;
+};
+
+const sortByPriority = (items, priorityMap) =>
+  [...items].sort((left, right) => {
+    const leftPriority = priorityMap[left.status] ?? 99;
+    const rightPriority = priorityMap[right.status] ?? 99;
+
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority;
+    }
+
+    return compareIsoDatesDesc(left.date, right.date);
+  });
 
 const getProfDashboard = asyncHandler(async (req, res) => {
   const userId = BigInt(req.utilisateur.id_utilisateur);
@@ -101,7 +119,7 @@ const getProfDashboard = asyncHandler(async (req, res) => {
     ]),
   );
 
-  const validationRequests = [
+  const validationRequests = sortByPriority([
     ...projets.map((projet) => ({
       id: projet.id_projet.toString(),
       studentId: projet.etudiant?.id_utilisateur?.toString() ?? "unknown",
@@ -130,18 +148,22 @@ const getProfDashboard = asyncHandler(async (req, res) => {
       status: mapValidationStatus(stage.statut),
       attachments: [],
     })),
-  ];
+  ], {
+    "En attente": 0,
+    "ValidÃ©": 1,
+    "RefusÃ©": 2,
+  });
 
-  const recommendationRequests = lettres
+  const recommendationRequests = sortByPriority(lettres
     .map((lettre) => {
       const validationStatut = lettreValidationMap.get(
         lettre.id_lettre.toString(),
       );
       const status =
         validationStatut === "REFUSE"
-          ? "Refusée"
+          ? "RefusÃ©e"
           : lettre.statut === "REDIGEE" || validationStatut === "VALIDE"
-            ? "Acceptée"
+            ? "AcceptÃ©e"
             : "En attente";
 
       return {
@@ -149,7 +171,7 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         studentId: lettre.etudiant?.id_utilisateur?.toString() ?? "unknown",
         studentName: formatName(lettre.etudiant?.utilisateur),
         initials: toInitials(formatName(lettre.etudiant?.utilisateur)),
-        profileInfo: lettre.etudiant?.filiere || "Étudiant",
+        profileInfo: lettre.etudiant?.filiere || "Ã‰tudiant",
         title: lettre.motif
           ? `Lettre ${lettre.motif.toLowerCase()}`
           : "Lettre de recommandation",
@@ -161,15 +183,19 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         writtenLetter: lettre.contenu || null,
       };
     })
-    .filter((item) => item.status !== "Refusée");
+    .filter((item) => item.status !== "RefusÃ©e"), {
+    "En attente": 0,
+    "AcceptÃ©e": 1,
+    "RefusÃ©e": 2,
+  });
 
   const stats = {
     total: validationRequests.length,
     pending: validationRequests.filter((item) => item.status === "En attente")
       .length,
-    validated: validationRequests.filter((item) => item.status === "Validé")
+    validated: validationRequests.filter((item) => item.status === "ValidÃ©")
       .length,
-    refused: validationRequests.filter((item) => item.status === "Refusé")
+    refused: validationRequests.filter((item) => item.status === "RefusÃ©")
       .length,
   };
 
@@ -179,7 +205,7 @@ const getProfDashboard = asyncHandler(async (req, res) => {
       (item) => item.status === "En attente",
     ).length,
     accepted: recommendationRequests.filter(
-      (item) => item.status === "Acceptée",
+      (item) => item.status === "AcceptÃ©e",
     ).length,
     refused: 0,
   };
@@ -289,9 +315,9 @@ const getProDashboard = asyncHandler(async (req, res) => {
         id: otherUser.id_utilisateur.toString(),
         initials: toInitials(fullName),
         name: fullName,
-        school: otherUser.etudiant?.filiere || "Ã‰tudiant",
-        field: otherUser.etudiant?.filiere || "â€”",
-        city: otherUser.profil?.adresse || "â€”",
+        school: otherUser.etudiant?.filiere || "Ãƒâ€°tudiant",
+        field: otherUser.etudiant?.filiere || "Ã¢â‚¬â€",
+        city: otherUser.profil?.adresse || "Ã¢â‚¬â€",
         score: Number(otherUser.etudiant?.score_credibilite?.score_total ?? 0),
         startDate: connexion.date_reponse
           ? connexion.date_reponse.toISOString().split("T")[0]
@@ -310,9 +336,9 @@ const getProDashboard = asyncHandler(async (req, res) => {
     return {
       id: saved.id,
       name: fullName,
-      school: etudiant.etudiant?.filiere || "Ã‰tudiant",
-      field: etudiant.etudiant?.filiere || "â€”",
-      city: etudiant.profil?.adresse || "â€”",
+      school: etudiant.etudiant?.filiere || "Ãƒâ€°tudiant",
+      field: etudiant.etudiant?.filiere || "Ã¢â‚¬â€",
+      city: etudiant.profil?.adresse || "Ã¢â‚¬â€",
       score: Number(etudiant.etudiant?.score_credibilite?.score_total ?? 0),
       recommendations: 0,
       badges: (etudiant.etudiant?.badges || [])
@@ -351,3 +377,5 @@ module.exports = {
   getProfDashboard,
   getProDashboard,
 };
+
+

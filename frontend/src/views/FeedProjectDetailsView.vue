@@ -17,12 +17,13 @@ const error = ref("");
 
 const fromQuery = computed(() => String(route.query.from || ""));
 const role = computed<"student" | "prof" | "pro">(() => {
-  if (fromQuery.value === "prof" || fromQuery.value === "teacher") return "prof";
-  if (fromQuery.value === "pro" || fromQuery.value === "professional") return "pro";
-
   const storedRole = String(localStorage.getItem("role") || "").toUpperCase();
   if (storedRole === "PROFESSEUR" || storedRole === "TEACHER") return "prof";
   if (storedRole === "PROFESSIONNEL" || storedRole === "PROFESSIONAL") return "pro";
+  if (storedRole === "ETUDIANT" || storedRole === "STUDENT") return "student";
+
+  if (fromQuery.value === "prof" || fromQuery.value === "teacher") return "prof";
+  if (fromQuery.value === "pro" || fromQuery.value === "professional") return "pro";
   return "student";
 });
 

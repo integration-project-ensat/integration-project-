@@ -102,6 +102,14 @@ const redirectByRole = () => {
   return "/login";
 };
 
+const redirectExploreByRole = () => {
+  const role = localStorage.getItem("role");
+  if (role === "teacher") return "/explore-prof";
+  if (role === "professional") return "/explore-pro";
+  if (role === "student") return "/student/explore";
+  return "/login";
+};
+
 const router = createRouter({
   history: createWebHistory("/"),
   routes: [
@@ -248,6 +256,10 @@ const router = createRouter({
     },
     { path: "/validations", redirect: "/prof/validations" },
     { path: "/ai-analyzer", name: "ai-analyzer", component: AIPortfolioAnalyzerView },
+    { path: "/explore", name: "explore", redirect: redirectExploreByRole, meta: { requiresAuth: true } },
+    { path: "/student/explore", name: "student-explore", component: ExploreView, meta: { requiresAuth: true, requiresRole: "student" } },
+    { path: "/explore-prof", name: "explore-prof", component: ExploreProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
+    { path: "/explore-pro", name: "explore-pro", component: ExploreProView, meta: { requiresAuth: true, requiresRole: "professional" } },
 
     { path: "/dashboard", name: "dashboard", redirect: redirectByRole, meta: { requiresAuth: true } },
 

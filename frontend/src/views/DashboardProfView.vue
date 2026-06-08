@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -104,16 +104,16 @@ const statusClass = (status: ValidationStatus) => ({
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "ValidÃ©") return "Validé";
-  if (status === "Refusé" || status === "RefusÃ©") return "Refusé";
+  if (status === "Validé" || status === "Validé") return "Validé";
+  if (status === "Refusé" || status === "Refusé") return "Refusé";
   return "En attente";
 };
 
 const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
-  if (status === "Acceptée" || status === "AcceptÃ©e") return "Acceptée";
-  if (status === "Refusée" || status === "RefusÃ©e") return "Refusée";
+  if (status === "Acceptée" || status === "Acceptée") return "Acceptée";
+  if (status === "Refusée" || status === "Refusée") return "Refusée";
   return "En attente";
 };
 
@@ -141,9 +141,14 @@ const closeRecommendationDetails = () => {
 
 const updateSelectedStatus = async (status: ValidationStatus) => {
   if (!selectedRequest.value) return;
-  await profApi.updateValidationStatus(selectedRequest.value, status);
-  await loadDashboard();
-  closeDetailsModal();
+  try {
+    await profApi.updateValidationStatus(selectedRequest.value, status);
+    await loadDashboard();
+    closeDetailsModal();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de mettre à jour la demande";
+  }
 };
 
 const openWriteRecommendationModal = (request: RecommendationRequest) => {
@@ -159,25 +164,36 @@ const closeWriteRecommendationModal = () => {
 
 const sendRecommendationLetter = async () => {
   if (!writingRecommendation.value) return;
-  await profApi.updateRecommendationStatus(
-    writingRecommendation.value.id,
-    "Acceptée",
-    {
-      contenu: letterDraft.value.trim(),
-    },
-  );
-  closeWriteRecommendationModal();
-  await loadDashboard();
+  try {
+    await profApi.updateRecommendationStatus(
+      writingRecommendation.value.id,
+      "Acceptée",
+      {
+        contenu: letterDraft.value.trim(),
+      },
+    );
+    closeWriteRecommendationModal();
+    await loadDashboard();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible d'accepter et d'écrire la lettre";
+  }
 };
 
 const refuseSelectedRecommendation = async () => {
   if (!selectedRecommendation.value) return;
-  await profApi.updateRecommendationStatus(
-    selectedRecommendation.value.id,
-    "Refusée",
-  );
-  closeRecommendationDetails();
-  await loadDashboard();
+  try {
+    await profApi.updateRecommendationStatus(
+      selectedRecommendation.value.id,
+      "Refusée",
+    );
+    closeRecommendationDetails();
+    await loadDashboard();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de refuser la demande";
+  }
 };
 
 const openStudentProfile = (
@@ -240,6 +256,8 @@ onMounted(() => {
             <h1>Dashboard</h1>
           </div>
         </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
 
         <div class="stats-grid">
           <article v-for="card in statCards" :key="card.key" class="stat-card">
@@ -449,6 +467,7 @@ onMounted(() => {
             Fermer
           </button>
           <button
+            v-if="selectedRequest.status === 'En attente'"
             type="button"
             class="action-btn primary"
             @click="updateSelectedStatus('Validé')"
@@ -456,6 +475,7 @@ onMounted(() => {
             Valider
           </button>
           <button
+            v-if="selectedRequest.status === 'En attente'"
             type="button"
             class="action-btn danger"
             @click="updateSelectedStatus('Refusé')"
@@ -545,7 +565,7 @@ onMounted(() => {
             class="action-btn danger"
             @click="refuseSelectedRecommendation"
           >
-            Retirer
+            Refuser
           </button>
         </div>
       </section>
@@ -661,6 +681,15 @@ onMounted(() => {
   font-size: 34px;
   font-weight: 800;
   line-height: 1;
+}
+
+.page-error {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  font-weight: 700;
 }
 
 .dashboard-sectionHeader {
@@ -971,3 +1000,4 @@ onMounted(() => {
   color: var(--text-dark);
 }
 </style>
+

@@ -236,16 +236,7 @@ const loadConnections = async () => {
         ? receivedResponse.data.data.map(mapReceivedRequest)
         : [];
 
-      const sentPending = Array.isArray(sentResponse.data?.data)
-        ? sentResponse.data.data
-            .filter(
-              (connexion: any) =>
-                normalizeStatus(connexion.statut) === "EN_ATTENTE",
-            )
-            .map(mapSentRequest)
-        : [];
-
-      pendingRequests.value = [...receivedPending, ...sentPending];
+      pendingRequests.value = receivedPending;
 
       acceptedRequests.value = Array.isArray(acceptedResponse.data?.data)
         ? acceptedResponse.data.data.map((connexion: any) =>
@@ -257,15 +248,12 @@ const loadConnections = async () => {
     }
 
     pendingRequests.value = data
-      .filter(
-        (connexion: any) => normalizeStatus(connexion.statut) === "EN_ATTENTE",
-      )
-      .map((connexion: any) => {
+      .filter((connexion: any) => {
+        if (normalizeStatus(connexion.statut) !== "EN_ATTENTE") return false;
         const demandeurId = String(connexion.demandeur?.id_utilisateur ?? "");
-        return demandeurId === currentUserId
-          ? mapSentRequest(connexion)
-          : mapReceivedRequest(connexion);
-      });
+        return demandeurId !== currentUserId;
+      })
+      .map((connexion: any) => mapReceivedRequest(connexion));
 
     acceptedRequests.value = data
       .filter(
@@ -290,6 +278,7 @@ const loadConnections = async () => {
 const acceptRequest = async (id: string) => {
   await connexionService.accepterConnexion(id);
   await loadConnections();
+  setActiveTab("accepted");
 };
 
 const removeRequest = async (id: string) => {
@@ -396,7 +385,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
                   class="soft-danger"
                   @click="removeConnection(request.id)"
                 >
-                  Retirer
+                  Refuser
                 </button>
                 <button type="button" @click="router.push(request.profilePath)">
                   Voir profil

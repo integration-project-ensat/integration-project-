@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { authentifier } = require('../middlewares/auth.middleware')
+const { authentifier, autoriserRoles } = require('../middlewares/auth.middleware')
 const lettreCtrl = require('../controllers/lettre.controller')
 
 // Liste lettres (connecté) — propriétaire voit tout, autres voient les publiques
@@ -12,6 +12,14 @@ router.get('/lettres/public/:id_etudiant', lettreCtrl.getLettresPublic)
 
 // Modifier visibilité d'une lettre
 router.patch('/lettres/:id_lettre/visibilite', authentifier, lettreCtrl.updateVisibilite)
+
+// Professeur: accepter/refuser/rédiger une lettre
+router.patch(
+  '/lettres/:id_lettre/statut',
+  authentifier,
+  autoriserRoles('PROFESSEUR', 'ADMINISTRATEUR'),
+  lettreCtrl.updateStatut,
+)
 
 // Export
 router.get('/lettres/:id_lettre/export/pdf', authentifier, lettreCtrl.exportPDF)

@@ -47,8 +47,11 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import api from '../services/api.js'
+import authService from '../services/auth.service.js'
+import { useAuthStore } from '@/store/auth.js'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const error = ref('')
 const loading = ref(false)
@@ -86,9 +89,13 @@ async function submit() {
       ...form
     })
 
-    localStorage.setItem('token', data.data.token)
+    const session = authService.persistSession(data?.data?.user, data?.data?.token)
+    auth.login(session.user, session.token, session.role)
 
-    router.push('/explore')
+    if (session.role === 'admin') router.push('/admin')
+    else if (session.role === 'teacher') router.push('/prof/dashboard')
+    else if (session.role === 'professional') router.push('/pro/dashboard')
+    else router.push('/student/dashboard')
   } catch (e: any) {
     error.value =
       e.response?.data?.message || 'Erreur lors de finalisation'

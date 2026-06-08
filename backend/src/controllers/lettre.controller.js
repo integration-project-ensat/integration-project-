@@ -30,6 +30,23 @@ exports.updateVisibilite = async (req, res) => {
   }
 }
 
+exports.updateStatut = async (req, res) => {
+  try {
+    const data = await lettreService.updateStatut(
+      req.params.id_lettre,
+      req.body.statut,
+      getConnectedUserId(req),
+      {
+        contenu: req.body.contenu,
+        motif_refus: req.body.motif_refus,
+      },
+    )
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message })
+  }
+}
+
 exports.exportPDF = async (req, res) => {
   try {
     const lettre = await lettreService.getLettreById(req.params.id_lettre)
