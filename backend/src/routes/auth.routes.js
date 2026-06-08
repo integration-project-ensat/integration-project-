@@ -54,6 +54,37 @@ function requireGithubOAuthConfig(req, res, next) {
   `);
 }
 
+function requireGoogleOAuthConfig(req, res, next) {
+  if (
+    hasOAuthCredentials(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_CALLBACK_URL
+    )
+  ) {
+    return next();
+  }
+
+  return res.status(500).send(`
+    <!doctype html>
+    <html lang="fr">
+      <head>
+        <meta charset="utf-8" />
+        <title>Configuration Google manquante</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 32px; line-height: 1.5; color: #1f2937; }
+          code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        <h1>Configuration Google OAuth manquante</h1>
+        <p>Remplace <code>GOOGLE_CLIENT_ID</code> et <code>GOOGLE_CLIENT_SECRET</code> dans <code>backend/.env</code> par les vraies valeurs d'un client OAuth Google de type <strong>Web application</strong>, puis redemarre le backend.</p>
+        <p>Callback attendu: <code>http://localhost:3000/api/auth/google/callback</code></p>
+      </body>
+    </html>
+  `);
+}
+
 // VALIDATION RÉUTILISABLE (liens admin valider/refuser)
 const validationLienAdmin = [
   param('utilisateurId')
@@ -95,6 +126,7 @@ router.post(
 
 router.get(
   '/google',
+  requireGoogleOAuthConfig,
   passport.authenticate('google', {
     scope: ['profile', 'email']
   })
@@ -102,6 +134,7 @@ router.get(
 
 router.get(
   '/google/callback',
+  requireGoogleOAuthConfig,
   passport.authenticate('google', {
     session: false,
     failureRedirect: '/login'
