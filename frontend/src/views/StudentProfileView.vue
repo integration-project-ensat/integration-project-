@@ -19,6 +19,7 @@
         :force-navigation="true"
       />
 
+<<<<<<< HEAD
       <main class="content" :class="{ shifted: sidebarOpen }">
         <div v-if="profileLoading" class="page-state">
           Chargement du profil...
@@ -35,6 +36,15 @@
           v-model="activeTab"
           @open-recos="showRecosModal = true"
           @open-portfolio="openPortfolio"
+=======
+      <main class="content" :class="{ shifted: sidebarOpen }">
+        <StudentProfileHeader
+          :profile="profile"
+          :recent-recommendations="recommendations"
+          v-model="activeTab"
+          :is-owner="true"
+          @open-recos="showRecosModal = true"
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
         />
 
         <section v-if="userRole === 'teacher'" class="teacher-actions">

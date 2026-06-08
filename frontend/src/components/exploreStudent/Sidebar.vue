@@ -174,6 +174,67 @@ const navItems = [
   { path: "/portfolio", label: "My Portfolio", icon: icons.portfolio },
   { path: "/ai-analyzer", label: "AI Portfolio", icon: icons.ai },
   { path: "/lettres", label: "Lettres de Recos", icon: icons.letter },
+  {
+    path: "/dashboard",
+    label: "Dashboard",
+    icon: icons.dashboard,
+    activeIcon: icons.dashboardFill,
+  },
+  {
+    path: "/explore",
+    label: "Explorer",
+    icon: icons.explore,
+    activeIcon: icons.exploreFill,
+  },
+  {
+    path: "/student/feed",
+    label: "Fil d’actualité",
+    icon: icons.feed,
+    activeIcon: icons.feedFill,
+  },
+  {
+    path: "/student/ai-recommendation",
+    label: "Recommandation IA",
+    icon: icons.ai,
+    activeIcon: icons.aiFill,
+  },
+  {
+    path: "/projets",
+    label: "Projets",
+    icon: icons.projets,
+    activeIcon: icons.projetsFill,
+  },
+  {
+    path: "/stages",
+    label: "Stages",
+    icon: icons.stages,
+    activeIcon: icons.stagesFill,
+  },
+  {
+    path: "/certifications",
+    label: "Diplômes & Certifications",
+    icon: icons.certifications,
+    activeIcon: icons.certificationsFill,
+  },
+  {
+    path: "/activites",
+    label: "Activités",
+    icon: icons.activites,
+    activeIcon: icons.activitesFill,
+  },
+  {
+    path: "/portfolio",
+    label: "My Portfolio",
+    icon: icons.portfolio,
+    activeIcon: icons.portfolioFill,
+  },
+  {
+    path: "/lettres",
+    label: "Lettres de Recos",
+    icon: icons.letter,
+    activeIcon: icons.letterFill,
+  },
+
 ];
 </script>
 
@@ -291,7 +352,6 @@ const navItems = [
 .logout {
   color: #e53e3e;
 }
-
 .logout:hover {
   background: #fff5f5;
   color: #e53e3e;

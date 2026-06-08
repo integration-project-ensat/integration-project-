@@ -32,6 +32,8 @@ import StudentCommentsView from "../views/StudentCommentsView.vue";
 import StudentGithubView from "../views/StudentGithubView.vue";
 import SettingsView from "../views/SettingsView.vue";
 import StudentPortfolioView from "../views/StudentPortfolioView.vue";
+//import ConnexionsProView from "../views/ConnexionsProView.vue";
+//import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
 import FeedView from "../views/FeedView.vue";
 import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
 import ConnexionsProView from "../views/ConnexionsProView.vue";
@@ -39,6 +41,7 @@ import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import EtudiantsProfView from "../views/EtudiantsProfView.vue";
+import ProfileEditView from "../views/ProfileEditView.vue";
 import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
 
 const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
@@ -105,6 +108,8 @@ const router = createRouter({
     { path: "/", name: "welcome", component: WelcomeView },
     { path: "/login", name: "login", component: LoginView },
     { path: "/signup", name: "signup", component: SignupView },
+    { path: "/oauth-success", name: "oauth-success", component: OAuthSuccessView },
+    { path: "/complete-profile", name: "complete-profile", component: CompleteProfileView },
     { path: "/forgot", name: "forgot", component: ForgetPasswordView },
     { path: "/reset-password", name: "reset", component: ResetPasswordView },
     { path: "/verify-code", name: "verify-code", component: VerifyCodeView },
@@ -113,6 +118,136 @@ const router = createRouter({
     { path: "/explore", name: "explore", component: ExploreView },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
     { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
+    {
+      path: "/dashboard",
+      name: "dashboard",
+      redirect: () => {
+        const role = localStorage.getItem('role')
+        if (role === 'student') return '/student/dashboard'
+        if (role === 'teacher') return '/prof/dashboard'
+        if (role === 'professional') return '/pro/dashboard'
+        if (role === 'admin') return '/admin'
+        return '/login'
+      },
+      meta: { requiresAuth: true }
+    },
+    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView, meta: { requiresAuth: true } },
+    { path: "/lettres", name: "letters", component: LettersView, meta: { requiresAuth: true } },
+    { path: '/projets', name: 'projets', component: ProjectsView, meta: { requiresAuth: true } },
+    { path: "/stages", name: "stages", component: StagesView, meta: { requiresAuth: true } },
+    { path: "/certifications", name: "certifications", component: CertificationsView, meta: { requiresAuth: true } },
+    { path: "/activites", name: "activites", component: ActivitesView, meta: { requiresAuth: true } },
+    { path: "/github", component: Placeholder, meta: { requiresAuth: true } },
+    { path: "/recos", component: Placeholder, meta: { requiresAuth: true } },
+    { path: "/commentaires", component: Placeholder, meta: { requiresAuth: true } },
+    { path: '/profile', name: 'profile', component: StudentProfileView },
+    { path: '/profile/edit', name: 'profile-edit', component: ProfileEditView },
+    { path: "/dashboard", name: "dashboard", component: DashboardProView },
+    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
+    { path: "/lettres", name: "letters", component: LettersView },
+    { path: '/projets', name: 'projets', component: ProjectsView },
+    { path: '/settings', name: 'settings', component: SettingsView },
+    { path: "/stages", name: "stages", component: StagesView },
+    { path: "/certifications", name: "certifications", component: CertificationsView },
+    { path: "/activites", name: "activites", component: ActivitesView },
+    { path: "/dashboard", redirect: "/pro/dashboard" },
+    {
+      path: "/pro/dashboard",
+      name: "pro-dashboard",
+      component: DashboardProView,
+      meta: { requiresAuth: true, requiresRole: 'professional' }
+    },
+    {
+      path: "/student/dashboard",
+      name: "student-dashboard",
+      component: DashboardStudentView,
+      meta: { requiresAuth: true, requiresRole: 'student' }
+    },
+    { path: "/feed", name: "feed", component: FeedView },
+    {
+      path: "/student/ai-recommendation",
+      name: "student-ai-recommendation",
+      component: StudentAIRecommendationView,
+    },
+    { path: "/feed", redirect: "/student/feed" },
+    { path: "/student/feed", name: "student-feed", component: FeedView },
+    { path: "/prof/feed", name: "prof-feed", component: FeedView },
+    { path: "/pro/feed", name: "pro-feed", component: FeedView },
+    {
+      path: "/student/connexions",
+      name: "student-connexions",
+      component: ConnexionsProView,
+    },
+    {
+      path: "/prof/connexions",
+      name: "prof-connexions",
+      component: ConnexionsProView,
+    },
+    {
+      path: "/pro/connexions",
+      name: "pro-connexions",
+      component: ConnexionsProView,
+    },
+    {
+      path: "/profile",
+      name: "profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: SettingsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/pro/top-profiles",
+      name: "pro-top-profiles",
+      component: TopProfilesProView,
+    },
+    {
+      path: "/top-profiles",
+      name: "top-profiles",
+      redirect: () => {
+        const role = localStorage.getItem('role')
+        if (role === 'professional') return '/pro/top-profiles'
+        return '/student/dashboard'
+      }
+    },
+    {
+      path: "/projects/:id",
+      name: "feed-project-details",
+      component: FeedProjectDetailsView,
+    },
+    {
+      path: "/prof/dashboard",
+      name: "prof-dashboard",
+      component: DashboardProfView,
+      meta: { requiresAuth: true, requiresRole: 'teacher' }
+    },
+    {
+      path: "/prof/validations",
+      name: "prof-validations",
+      component: ValidationProfView,
+    },
+    {
+      path: "/prof/recommandations",
+      name: "prof-recommandations",
+      component: RecommandationsProfView,
+    },
+    {
+      path: "/prof/etudiants",
+      name: "prof-etudiants",
+      component: EtudiantsProfView,
+    },
+    {
+      path: "/profile/student/:id",
+      name: "prof-student-profile",
+      component: StudentProfileView,
+      props: true,
+    },
+    { path: "/validations", redirect: "/prof/validations" },
+    { path: "/ai-analyzer", name: "ai-analyzer", component: AIPortfolioAnalyzerView },
 
     { path: "/dashboard", name: "dashboard", redirect: redirectByRole, meta: { requiresAuth: true } },
 

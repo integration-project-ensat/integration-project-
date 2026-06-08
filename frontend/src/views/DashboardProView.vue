@@ -51,6 +51,7 @@ interface SavedProfile {
 const router = useRouter();
 const sidebarOpen = ref(true);
 const isStageModalOpen = ref(false);
+<<<<<<< HEAD
 const interns = ref<Intern[]>([]);
 const savedProfiles = ref<SavedProfile[]>([]);
 const pendingRequests = ref(0);
@@ -60,6 +61,56 @@ const publishedOffers = ref(0);
 const profileName = ref("Bienvenue, professionnel");
 const totalSaved = computed(() => savedProfiles.value.length);
 const isSubmittingStage = ref(false);
+=======
+const { savedProfiles, totalSaved } = useProSavedProfiles();
+const { pendingRequests, acceptedRequests, refusedRequests } = useProConnections();
+
+const interns = ref<Intern[]>([
+  {
+    id: "yassine-el-amrani",
+    initials: "YE",
+    name: "Yassine El Amrani",
+    school: "ENSA Tanger",
+    field: "DevOps",
+    city: "Tanger",
+    score: 85,
+    startDate: "12/05/2026",
+    badges: ["🌊 DevOps", "🔐 Security Aware"],
+    status: "Actif",
+    profilePath: "/profile/student/yassine-el-amrani",
+    portfolioPath: "/projects/stage-devops",
+  },
+  {
+    id: "sara-alaoui",
+    initials: "SA",
+    name: "Sara Alaoui",
+    school: "ENSA Tanger",
+    field: "Cloud",
+    city: "Tanger",
+    score: 95,
+    startDate: "02/04/2026",
+    badges: ["🧠 AI / Data", "🌐 Web Developer"],
+    status: "Actif",
+    profilePath: "/profile/student/sara-alaoui",
+    portfolioPath: "/projects/cloud-dashboard",
+  },
+  {
+    id: "nora-tazi",
+    initials: "NT",
+    name: "Nora Tazi",
+    school: "FST Fès",
+    field: "Mobile",
+    city: "Fès",
+    score: 80,
+    startDate: "15/02/2026",
+
+    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
+    status: "Terminé",
+    profilePath: "/profile/student/nora-tazi",
+    portfolioPath: "/projects/mobile-ensa",
+  },
+]);
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 const newStage = ref({
   title: "",
@@ -84,7 +135,11 @@ const stats = computed(() => [
   },
   {
     title: "Demandes de connexion",
+<<<<<<< HEAD
     value: pendingRequests.value,
+=======
+    value: pendingRequests.value.length,
+>>>>>>> origin/Frontend
     info: "À traiter",
     icon: UserPlus,
   },
@@ -133,9 +188,9 @@ const schoolDistribution = computed(() => {
 });
 
 const connectionAnalytics = computed(() => [
-  { label: "Acceptées", value: acceptedRequests.value },
-  { label: "Refusées", value: refusedRequests.value },
-  { label: "En attente", value: pendingRequests.value },
+  { label: "Acceptées", value: acceptedRequests.value.length },
+  { label: "Refusées", value: refusedRequests.value.length },
+  { label: "En attente", value: pendingRequests.value.length },
 ]);
 
 const loadDashboard = async () => {
@@ -441,9 +496,13 @@ const submitStage = async () => {
 
           <div class="modal-actions">
             <button type="button" @click="isStageModalOpen = false">Annuler</button>
+<<<<<<< HEAD
             <button type="submit" :disabled="isSubmittingStage">
               {{ isSubmittingStage ? 'Publication...' : 'Publier l’offre' }}
             </button>
+=======
+            <button type="submit">Publier l?offre</button>
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
           </div>
         </form>
       </section>

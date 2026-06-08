@@ -5,7 +5,18 @@ import { SlidersHorizontal } from "../lib/icons";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
+<<<<<<< HEAD
 import profApi from "@/services/profApi";
+=======
+
+type RequestStatus = "En attente" | "Validée" | "Refusée" | "Aucun";
+type RequestType =
+  | "Projet"
+  | "Stage"
+  | "Attestation"
+  | "Lettre de recommandation"
+  | "Aucune demande";
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 interface ProfStudent {
   id: string;
@@ -28,6 +39,7 @@ interface ProfStudent {
 const router = useRouter();
 const sidebarOpen = ref(true);
 const showFilters = ref(false);
+<<<<<<< HEAD
 const loading = ref(false);
 const error = ref("");
 const success = ref("");
@@ -42,6 +54,128 @@ const importSummary = ref<null | {
   alreadyLinked: string[];
   missing: string[];
 }>(null);
+=======
+
+const professorScope = {
+  schools: ["ENSA", "FST"],
+  fields: ["GINF", "GSEA", "DevOps"],
+};
+
+const students = reactive<ProfStudent[]>([
+  {
+    id: "kb",
+    initials: "KB",
+    name: "Khadija Bennani",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 92,
+    recommendations: 540,
+    portfolioPath: "/projects/portfolio-web",
+    requestType: "Projet",
+    requestTitle: "Portfolio Web",
+    requestDescription: "Validation du projet final avec lien GitHub et démonstration.",
+    requestDate: "Aujourd'hui, 10:20",
+    status: "En attente",
+  },
+  {
+    id: "ye",
+    initials: "YE",
+    name: "Yassine El Amrani",
+    school: "ENSA",
+    field: "DevOps",
+    city: "Tanger",
+    score: 85,
+    recommendations: 310,
+    portfolioPath: "/projects/stage-pfe-devops",
+    requestType: "Stage",
+    requestTitle: "Stage PFE DevOps",
+    requestDescription: "Demande de validation du stage et des missions réalisées.",
+    requestDate: "Il y a 35 min",
+    status: "En attente",
+  },
+  {
+    id: "sa",
+    initials: "SA",
+    name: "Sara Alaoui",
+    school: "FST",
+    field: "GSEA",
+    city: "Fès",
+    score: 95,
+    recommendations: 680,
+    portfolioPath: "/projects/attestation-cloud",
+    requestType: "Attestation",
+    requestTitle: "Attestation de stage Cloud",
+    requestDescription: "Attestation demandée après validation du stage cloud.",
+    requestDate: "Hier, 16:45",
+    status: "Validée",
+  },
+  {
+    id: "al",
+    initials: "AL",
+    name: "Amine Lahlou",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 78,
+    recommendations: 190,
+    portfolioPath: "/projects/suivi-pfe",
+    requestType: "Projet",
+    requestTitle: "Plateforme de suivi PFE",
+    requestDescription: "Validation de la version finale de la plateforme.",
+    requestDate: "Aujourd'hui, 09:05",
+    status: "En attente",
+  },
+  {
+    id: "nt",
+    initials: "NT",
+    name: "Nora Tazi",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 88,
+    recommendations: 260,
+    portfolioPath: "/projects/mobile-ensa",
+    requestType: "Projet",
+    requestTitle: "Application Mobile ENSA",
+    requestDescription: "Demande refusée à cause de documents manquants.",
+    requestDate: "Il y a 3 j",
+    status: "Refusée",
+  },
+  {
+    id: "mb",
+    initials: "MB",
+    name: "Mehdi Berrada",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 81,
+    recommendations: 140,
+    portfolioPath: "/projects/cybersecurity-lab",
+    requestType: "Lettre de recommandation",
+    requestTitle: "Recommandation concours cybersécurité",
+    requestDescription: "Demande de lettre pour un concours technique.",
+    requestDate: "Il y a 3 j",
+    status: "En attente",
+  },
+  {
+    id: "rh",
+    initials: "RH",
+    name: "Rania Haddad",
+    school: "FST",
+    field: "GSEA",
+    city: "Fès",
+    score: 74,
+    recommendations: 95,
+    portfolioPath: "/projects/embedded-sensors",
+    requestType: "Aucune demande",
+    requestTitle: "Aucune demande active",
+    requestDescription: "Aucune demande de validation pour le moment.",
+    requestDate: "-",
+    status: "Aucun",
+  },
+]);
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 const schoolFilter = ref("Toutes");
 const fieldFilter = ref("Toutes");
@@ -79,7 +213,11 @@ const cities = computed(() => [
   "Toutes",
   ...new Set(students.value.map((student) => student.city).filter(Boolean)),
 ]);
+<<<<<<< HEAD
 const sources = ["Toutes", "Manuel", "CSV"];
+=======
+const statuses = ["Toutes", "En attente", "Validées", "Refusées", "Aucune demande"];
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 const filteredStudents = computed(() =>
   students.value.filter((student) => {
@@ -89,15 +227,25 @@ const filteredStudents = computed(() =>
       fieldFilter.value === "Toutes" || student.field === fieldFilter.value;
     const matchesCity =
       cityFilter.value === "Toutes" || student.city === cityFilter.value;
+<<<<<<< HEAD
     const matchesSource =
       sourceFilter.value === "Toutes" ||
       sourceLabel(student.source) === sourceFilter.value;
+=======
+    const matchesStatus =
+      statusFilter.value === "Toutes" ||
+      (statusFilter.value === "Validées" && student.status === "Validée") ||
+      (statusFilter.value === "Refusées" && student.status === "Refusée") ||
+      (statusFilter.value === "Aucune demande" && student.status === "Aucun") ||
+      student.status === statusFilter.value;
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
     return matchesSchool && matchesField && matchesCity && matchesSource;
   }),
 );
 
 const stats = computed(() => ({
+<<<<<<< HEAD
   total: students.value.length,
   manual: students.value.filter((student) => student.source !== "CSV").length,
   csv: students.value.filter((student) => student.source === "CSV").length,
@@ -107,10 +255,20 @@ const stats = computed(() => ({
           students.value.length,
       )
     : 0,
+=======
+  total: scopedStudents.value.length,
+  pending: scopedStudents.value.filter((student) => student.status === "En attente")
+    .length,
+  accepted: scopedStudents.value.filter((student) => student.status === "Validée")
+    .length,
+  refused: scopedStudents.value.filter((student) => student.status === "Refusée")
+    .length,
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 }));
 
 const statCards = computed(() => [
   { label: "Total étudiants", value: stats.value.total },
+<<<<<<< HEAD
   { label: "Ajouts manuels", value: stats.value.manual },
   { label: "Ajouts CSV", value: stats.value.csv },
   { label: "Score moyen", value: `${stats.value.averageScore}+` },
@@ -119,6 +277,23 @@ const statCards = computed(() => [
 const clearFlash = () => {
   success.value = "";
   error.value = "";
+=======
+  { label: "Demandes en attente", value: stats.value.pending },
+  { label: "Validations acceptées", value: stats.value.accepted },
+  { label: "Validations refusées", value: stats.value.refused },
+]);
+
+const statusClass = (status: RequestStatus) => ({
+  "is-pending": status === "En attente",
+  "is-valid": status === "Validée",
+  "is-refused": status === "Refusée",
+  "is-empty": status === "Aucun",
+});
+
+const updateStatus = (student: ProfStudent, status: "Validée" | "Refusée") => {
+  student.status = status;
+  if (selectedStudent.value?.id === student.id) selectedStudent.value.status = status;
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 };
 
 const openStudentProfile = (student: ProfStudent) => {
@@ -208,6 +383,7 @@ onMounted(loadStudents);
           <div>
             <p>Espace professeur</p>
             <h1>Mes étudiants</h1>
+<<<<<<< HEAD
             <span>Ajoutez des étudiants depuis leur profil ou via un fichier CSV d'APOGEE.</span>
           </div>
 
@@ -219,6 +395,9 @@ onMounted(loadStudents);
               <input type="file" accept=".csv,text/csv" @change="handleCsvSelected" />
               {{ importingCsv ? "Import..." : "Attacher fichier CSV" }}
             </label>
+=======
+            <span>Liste des étudiants liés à vos filières et écoles.</span>
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
           </div>
         </div>
 
@@ -264,7 +443,11 @@ onMounted(loadStudents);
 
           <div v-if="showFilters" class="filters-panel">
             <label>
+<<<<<<< HEAD
               Année
+=======
+              École / Faculté
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
               <select v-model="schoolFilter">
                 <option v-for="school in schools" :key="school">{{ school }}</option>
               </select>
@@ -298,7 +481,11 @@ onMounted(loadStudents);
               <thead>
                 <tr>
                   <th>Étudiant</th>
+<<<<<<< HEAD
                   <th>APOGEE</th>
+=======
+                  <th>École / Faculté</th>
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
                   <th>Filière</th>
                   <th>Ville</th>
                   <th>Score</th>
@@ -345,9 +532,33 @@ onMounted(loadStudents);
 
     <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
       <section class="details-modal">
+<<<<<<< HEAD
         <button type="button" class="modal-close" @click="showAddModal = false">×</button>
         <p>Ajout manuel</p>
         <h2>Ajouter un étudiant</h2>
+=======
+        <button type="button" class="modal-close" @click="selectedStudent = null">
+          ×
+        </button>
+        <p>Détails de la demande</p>
+        <h2>{{ selectedStudent.name }}</h2>
+
+        <div class="details-grid">
+          <article>
+            <span>Type</span>
+            <strong>{{ selectedStudent.requestType }}</strong>
+          </article>
+          <article>
+            <span>Date</span>
+            <strong>{{ selectedStudent.requestDate }}</strong>
+          </article>
+          <article>
+            <span>Statut</span>
+            <strong>{{ selectedStudent.status }}</strong>
+          </article>
+        </div>
+
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
         <div class="details-block">
           <span>Numéro APOGEE</span>
           <input v-model="apogeeInput" type="text" placeholder="Ex: ETU001" />
@@ -356,8 +567,26 @@ onMounted(loadStudents);
           <button type="button" class="outline-btn" @click="showAddModal = false">
             Fermer
           </button>
+<<<<<<< HEAD
           <button type="button" class="primary-btn" :disabled="addingStudent" @click="addStudentByApogee">
             {{ addingStudent ? "Ajout..." : "Ajouter" }}
+=======
+          <button
+            v-if="selectedStudent.status === 'En attente'"
+            type="button"
+            class="primary-btn"
+            @click="updateStatus(selectedStudent, 'Validée')"
+          >
+            Valider
+          </button>
+          <button
+            v-if="selectedStudent.status === 'En attente'"
+            type="button"
+            class="danger-btn"
+            @click="updateStatus(selectedStudent, 'Refusée')"
+          >
+            Refuser
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
           </button>
         </div>
       </section>

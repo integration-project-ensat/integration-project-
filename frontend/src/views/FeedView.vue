@@ -9,8 +9,11 @@ import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import PostFormModal from "../components/PostFormModal.vue";
+<<<<<<< HEAD
 import { connexionService } from "../services/connexion.service";
 import { feedService } from "../services/feed.service";
+=======
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 import { useProSavedProfiles } from "../store/proSavedProfiles";
 import { resolveProfileBadges } from "../utils/profileBadges";
 
@@ -50,8 +53,11 @@ interface FeedPost {
   isPopular?: boolean;
   imagePreview?: string | null;
   collaborators?: string[];
+<<<<<<< HEAD
   viewerHasLiked?: boolean;
   viewerHasReposted?: boolean;
+=======
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 }
 
 const route = useRoute();
@@ -60,6 +66,7 @@ const sidebarOpen = ref(true);
 const activeFilter = ref<FeedFilter>("Tous");
 const searchQuery = ref("");
 const openCommentPostId = ref<string | null>(null);
+<<<<<<< HEAD
 const loading = ref(false);
 const error = ref<string | null>(null);
 
@@ -86,6 +93,11 @@ const getCurrentUserName = () => {
 };
 
 const myStudentId = ref(getCurrentUserId());
+=======
+
+// ID de l'utilisateur connecté (pour afficher edit/delete sur ses propres posts)
+const myStudentId = ref("khadija-bennani");
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 
 // Post form modal
 const showPostModal  = ref(false);
@@ -440,6 +452,7 @@ function openEditPost(post: FeedPost) {
   showPostModal.value = true;
 }
 
+<<<<<<< HEAD
 async function deletePost(id: string) {
   if (!confirm("Supprimer ce post définitivement ?")) return;
 
@@ -483,6 +496,40 @@ onMounted(() => {
   loadPosts();
 });
 
+=======
+function deletePost(id: string) {
+  if (!confirm("Supprimer ce post définitivement ?")) return;
+  posts.value = posts.value.filter((p) => p.id !== id);
+}
+
+function handleSavePost(data: Record<string, any>) {
+  if (editingPost.value) {
+    const idx = posts.value.findIndex((p) => p.id === editingPost.value!.id);
+    if (idx !== -1) {
+      posts.value[idx] = { ...posts.value[idx], ...data };
+    }
+  } else {
+    posts.value.unshift({
+      id: `post-${Date.now()}`,
+      studentId:           myStudentId.value,
+      studentName:         "Khadija Bennani",
+      initials:            "KB",
+      school:              "ENSA Tanger · GINF",
+      time:                "À l'instant",
+      badges:              [],
+      repostCount:         0,
+      recommendationCount: 0,
+      likeCount:           0,
+      score:               80,
+      comments:            [],
+      ...data,
+    });
+  }
+  showPostModal.value = false;
+  editingPost.value = null;
+}
+
+>>>>>>> 17e94a3800439359d3ab055de733deaacc378057
 </script>
 
 <template>

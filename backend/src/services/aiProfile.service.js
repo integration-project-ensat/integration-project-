@@ -29,11 +29,23 @@ function getUserIdFromToken(req) {
 async function findStudentForAnalysis(req, requestedStudentId) {
   const tokenUserId = getUserIdFromToken(req)
   const studentId = requestedStudentId || tokenUserId
-
   if (!studentId) return null
 
   const student = await getStudentProfileData(studentId)
   return student || null
+  if (studentId) {
+    const student = await getStudentProfileData(studentId)
+    if (student) return student
+  }
+
+  const firstStudent = await prisma.etudiant.findFirst({
+    select: { id_utilisateur: true },
+    orderBy: { id_utilisateur: 'asc' }
+  })
+
+  if (!firstStudent) return null
+  return getStudentProfileData(firstStudent.id_utilisateur)
+
 }
 
 async function getStudentProfileData(studentId) {
@@ -102,6 +114,7 @@ function buildAiPayloadFromStudent(targetCareer, student) {
       project.role,
       project.resultats
     ]),
+
     ...student.activites.flatMap((activity) => [
       activity.nom,
       activity.type,
@@ -112,6 +125,7 @@ function buildAiPayloadFromStudent(targetCareer, student) {
       diploma.domaine,
       diploma.etablissement
     ]),
+
     ...(student.github_integration?.depots?.map((repo) => repo.nom_depot) ?? [])
   ])
 

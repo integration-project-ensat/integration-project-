@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from 'vue-router'
 
@@ -61,6 +61,7 @@ const toggleDetails = () => {
         <p class="pc-city">
           {{ profile.city }}
           <span class="pc-dot">&bull;</span>
+          <span class="pc-dot">?</span>
           <a href="#" class="pc-contact" @click.prevent="handleContact"
             >Contact info</a
           >
