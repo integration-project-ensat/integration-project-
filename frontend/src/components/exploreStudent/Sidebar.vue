@@ -11,8 +11,8 @@
         <span>{{ initials }}</span>
       </div>
       <div class="user-info">
-        <p class="user-name">Nom Prenom</p>
-        <p class="user-email">Exemple.exemple@univ.etu.ac.ma</p>
+        <p class="user-name">{{ userName }}</p>
+        <p class="user-email">{{ userEmail }}</p>
       </div>
     </component>
 
@@ -69,7 +69,25 @@ const route = useRoute();
 const router = useRouter()
 const auth = useAuthStore()
 
-const initials = computed(() => "NP");
+const userName = computed(() => {
+  const user = auth.user
+  const fullName = user?.name || [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
+  return fullName || 'Etudiant'
+})
+
+const userEmail = computed(() => auth.user?.email || '')
+
+const initials = computed(() => {
+  const words = userName.value.split(/\s+/).filter(Boolean)
+  const letters = words.length > 1
+    ? [words[0], words[words.length - 1]]
+    : [words[0]]
+
+  return letters
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 2) || 'E'
+})
 
 function normalizedPath(path: string) {
   return path.split('?')[0]
