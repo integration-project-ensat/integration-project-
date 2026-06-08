@@ -33,9 +33,6 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=secret
       - AI_SERVICE_URL=http://ai-service:8000
-      - GOOGLE_CLIENT_ID=local-dev-client
-      - GOOGLE_CLIENT_SECRET=local-dev-secret
-      - GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
     depends_on:
       - postgres
       - ai-service

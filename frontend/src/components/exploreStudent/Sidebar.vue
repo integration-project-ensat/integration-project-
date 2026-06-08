@@ -210,18 +210,6 @@ const navItems = [
     icon: icons.letter,
     activeIcon: icons.letterFill,
   },
-  { path: "/student/dashboard", label: "Dashboard", icon: icons.dashboard },
-  { path: "/student/explore", label: "Explorer", icon: icons.explore },
-  { path: "/student/feed", label: "Fil d’actualité", icon: icons.feed },
-  { path: "/student/connexions?tab=pending", label: "Connexions", icon: icons.connexions },
-  { path: "/student/ai-recommendation", label: "Recommandation IA", icon: icons.ai },
-  { path: "/projets", label: "Projets", icon: icons.projets },
-  { path: "/stages", label: "Stages", icon: icons.stages },
-  { path: "/certifications", label: "Diplômes & Certifications", icon: icons.certifications },
-  { path: "/activites", label: "Activités parascolaires", icon: icons.activites },
-  { path: "/portfolio", label: "My Portfolio", icon: icons.portfolio },
-  { path: "/ai-analyzer", label: "AI Portfolio", icon: icons.ai },
-  { path: "/lettres", label: "Lettres de Recos", icon: icons.letter },
 ];
 </script>
 
