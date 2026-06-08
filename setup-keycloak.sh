@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-KEYCLOAK_URL="http://localhost:8081"
+KEYCLOAK_URL="http://localhost:8081/auth"
 ADMIN_USER="admin"
 ADMIN_PASSWORD="admin"
 REALM="portfolio-realm"
