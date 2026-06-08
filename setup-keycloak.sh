@@ -1,8 +1,8 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEYCLOAK_URL="http://localhost:8081/auth"
-ADMIN_USER="admin"
-ADMIN_PASSWORD="admin"
+KEYCLOAK_ADMIN_USER="${KEYCLOAK_ADMIN_USER:-admin}"
+KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}"
 REALM="portfolio-realm"
 
 if [[ -f "$SCRIPT_DIR/.env" ]]; then
@@ -26,8 +26,8 @@ echo "[1/8] Obtention du token admin..."
 
 TOKEN=$(curl -s -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=$ADMIN_USER" \
-  -d "password=$ADMIN_PASSWORD" \
+  -d "username=$KEYCLOAK_ADMIN_USER" \
+  -d "password=$KEYCLOAK_ADMIN_PASSWORD" \
   -d "grant_type=password" \
   -d "client_id=admin-cli" | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
 
