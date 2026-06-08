@@ -61,7 +61,11 @@ import authService from '../services/auth.service.js'
 import { useAuthStore } from '@/store/auth.js'
 
 function startGoogleLogin() {
-  window.location.href = '/api/auth/google'
+  authService.startGoogleAuth()
+}
+
+function startGithubLogin() {
+  authService.startGithubAuth()
 }
 
 const router   = useRouter()
