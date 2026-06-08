@@ -116,6 +116,7 @@ enum MotifLettre {
 enum StatutLettre {
   EN_ATTENTE
   REDIGEE
+  REFUSEE
 }
 
 enum VisibiliteLettre {
