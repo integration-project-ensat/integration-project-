@@ -11,7 +11,7 @@ import type {
   RecommendationStatus,
 } from "./DashboardProfView.vue";
 
-type RecommendationTab = "Tout" | "En attente" | "AcceptÃ©es";
+type RecommendationTab = "Tout" | "En attente" | "Acceptées";
 
 const router = useRouter();
 const sidebarOpen = ref(true);
@@ -20,16 +20,17 @@ const selectedRequest = ref<RecommendationRequest | null>(null);
 const writingRequest = ref<RecommendationRequest | null>(null);
 const letterDraft = ref("");
 const recommendations = ref<RecommendationRequest[]>([]);
-const acceptedStatus = "AcceptÃ©e" as RecommendationStatus;
-const refusedStatus = "RefusÃ©e" as RecommendationStatus;
+const acceptedStatus = "Acceptée" as RecommendationStatus;
+const refusedStatus = "Refusée" as RecommendationStatus;
+const error = ref<string | null>(null);
 
-const tabs: RecommendationTab[] = ["Tout", "En attente", "AcceptÃ©es"];
+const tabs: RecommendationTab[] = ["Tout", "En attente", "Acceptées"];
 
 const filteredRequests = computed(() => {
   if (activeTab.value === "Tout") {
     return recommendations.value;
   }
-  if (activeTab.value === "AcceptÃ©es") {
+  if (activeTab.value === "Acceptées") {
     return recommendations.value.filter(
       (request) => request.status === acceptedStatus,
     );
@@ -43,8 +44,8 @@ const filteredRequests = computed(() => {
 const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
-  if (status === "AcceptÃ©e" || status === "AcceptÃƒÂ©e") return "AcceptÃ©e";
-  if (status === "RefusÃ©e" || status === "RefusÃƒÂ©e") return "RefusÃ©e";
+  if (status === "Acceptée" || status === "AcceptÃ©e" || status === "AcceptÃƒÂ©e") return "Acceptée";
+  if (status === "Refusée" || status === "RefusÃ©e" || status === "RefusÃƒÂ©e") return "Refusée";
   return "En attente";
 };
 
@@ -55,15 +56,22 @@ const statusClass = (status: RecommendationStatus) => ({
 });
 
 const loadRecommendations = async () => {
-  const response = await profApi.getProfDashboard();
-  recommendations.value = Array.isArray(
-    response.data?.data?.recommendationRequests,
-  )
-    ? response.data.data.recommendationRequests.map((request) => ({
-        ...request,
-        status: normalizeRecommendationStatus(request.status),
-      }))
-    : [];
+  error.value = null;
+  try {
+    const response = await profApi.getProfDashboard();
+    recommendations.value = Array.isArray(
+      response.data?.data?.recommendationRequests,
+    )
+      ? response.data.data.recommendationRequests.map((request) => ({
+          ...request,
+          status: normalizeRecommendationStatus(request.status),
+        }))
+      : [];
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible de charger les demandes de lettres.";
+  }
 };
 
 const openStudentProfile = (request: RecommendationRequest) => {
@@ -90,23 +98,35 @@ const closeWriteModal = () => {
 
 const sendLetter = async () => {
   if (!writingRequest.value) return;
-
-  await profApi.updateRecommendationStatus(
-    writingRequest.value.id,
-    acceptedStatus,
-    {
-      contenu: letterDraft.value.trim(),
-    },
-  );
-  closeWriteModal();
-  closeDetailsModal();
-  await loadRecommendations();
+  error.value = null;
+  try {
+    await profApi.updateRecommendationStatus(
+      writingRequest.value.id,
+      acceptedStatus,
+      {
+        contenu: letterDraft.value.trim(),
+      },
+    );
+    closeWriteModal();
+    closeDetailsModal();
+    await loadRecommendations();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible d'accepter et rédiger cette lettre.";
+  }
 };
 
 const refuseRequest = async (request: RecommendationRequest) => {
-  await profApi.updateRecommendationStatus(request.id, refusedStatus);
-  closeDetailsModal();
-  await loadRecommendations();
+  error.value = null;
+  try {
+    await profApi.updateRecommendationStatus(request.id, refusedStatus);
+    closeDetailsModal();
+    await loadRecommendations();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de refuser cette lettre.";
+  }
 };
 
 const studentBadges = (request: RecommendationRequest) => {
@@ -155,6 +175,8 @@ onMounted(() => {
           </button>
         </div>
 
+        <p v-if="error" class="page-error">{{ error }}</p>
+
         <div class="recommendation-list">
           <article
             v-for="request in filteredRequests"
@@ -199,7 +221,7 @@ onMounted(() => {
                   class="action-btn muted"
                   @click.stop="openDetailsModal(request)"
                 >
-                  Voir dÃ©tails
+                  Voir détails
                 </button>
                 <button
                   v-if="request.status === 'En attente'"
@@ -207,7 +229,7 @@ onMounted(() => {
                   class="action-btn primary"
                   @click.stop="openWriteModal(request)"
                 >
-                  Accepter et Ã©crire
+                  Accepter et écrire
                 </button>
                 <button
                   v-if="request.status === 'En attente'"
@@ -232,7 +254,7 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>DÃ©tails de la demande</p>
+            <p>Détails de la demande</p>
             <button
               type="button"
               class="modal-student-link"
@@ -267,12 +289,12 @@ onMounted(() => {
         </div>
 
         <div class="details-section">
-          <span>Message Ã©tudiant</span>
+          <span>Message étudiant</span>
           <p>{{ selectedRequest.message }}</p>
         </div>
 
         <div v-if="selectedRequest.writtenLetter" class="details-section">
-          <span>Lettre Ã©crite</span>
+          <span>Lettre écrite</span>
           <p>{{ selectedRequest.writtenLetter }}</p>
         </div>
 
@@ -290,7 +312,7 @@ onMounted(() => {
             class="action-btn primary"
             @click="openWriteModal(selectedRequest)"
           >
-            Accepter et Ã©crire
+            Accepter et écrire
           </button>
           <button
             v-if="selectedRequest.status === 'En attente'"
@@ -312,7 +334,7 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Ã‰crire la lettre</p>
+            <p>Écrire la lettre</p>
             <h2>{{ writingRequest.studentName }}</h2>
           </div>
           <button type="button" class="modal-close" @click="closeWriteModal">
@@ -331,7 +353,7 @@ onMounted(() => {
           <textarea
             v-model="letterDraft"
             rows="8"
-            placeholder="Ã‰crivez la lettre de recommandation ici..."
+            placeholder="Écrivez la lettre de recommandation ici..."
           ></textarea>
         </label>
 
@@ -417,6 +439,12 @@ onMounted(() => {
   color: var(--purple);
   padding: 10px 16px;
   font-weight: 800;
+}
+
+.page-error {
+  margin: 16px 30px 0;
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .recommendation-summary span {

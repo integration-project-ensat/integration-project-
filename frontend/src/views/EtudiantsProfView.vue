@@ -6,6 +6,7 @@ import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import profApi from "@/services/profApi";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 interface ProfStudent {
   id: string;
@@ -48,6 +49,16 @@ const fieldFilter = ref("Toutes");
 const cityFilter = ref("Toutes");
 const sourceFilter = ref("Toutes");
 
+const withResolvedBadges = (student: ProfStudent) => ({
+  ...student,
+  badges: resolveProfileBadges({
+    badges: student.badges,
+    filiere: student.field,
+    school: student.school,
+    field: student.field,
+  }),
+});
+
 const sourceLabel = (value: string) => (value === "CSV" ? "CSV" : "Manuel");
 const formatDate = (value: string) =>
   value ? new Date(value).toLocaleDateString("fr-FR") : "—";
@@ -58,7 +69,9 @@ const loadStudents = async () => {
 
   try {
     const response = await profApi.getAttachedStudents();
-    students.value = response.data?.data || [];
+    students.value = Array.isArray(response.data?.data)
+      ? response.data.data.map(withResolvedBadges)
+      : [];
   } catch (err: any) {
     error.value =
       err?.response?.data?.message || "Impossible de charger vos étudiants.";
@@ -143,7 +156,7 @@ const addStudentByApogee = async () => {
     const attachedStudent = response.data?.data;
 
     if (attachedStudent && !students.value.some((student) => student.id === attachedStudent.id)) {
-      students.value.unshift(attachedStudent);
+      students.value.unshift(withResolvedBadges(attachedStudent));
     }
 
     success.value = response.data?.created

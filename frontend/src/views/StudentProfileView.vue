@@ -266,7 +266,8 @@ const sidebarOpen = ref(false)
 const profileLoading = ref(true)
 const profileError = ref('')
 const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | null>(() => {
-  const role = String(auth.role || '').trim().toUpperCase()
+  const storedRole = localStorage.getItem('role')
+  const role = String(auth.role || storedRole || '').trim().toUpperCase()
   if (role === 'TEACHER' || role === 'PROFESSEUR') return 'teacher'
   if (role === 'PROFESSIONAL' || role === 'PROFESSIONNEL') return 'professional'
   if (role === 'STUDENT' || role === 'ETUDIANT') return 'student'
@@ -279,7 +280,7 @@ const roleFromRoute = computed<'student' | 'teacher' | 'professional' | null>(()
   if (from === 'student') return 'student'
   return null
 })
-const userRole = computed<'student' | 'teacher' | 'professional'>(() => roleFromRoute.value ?? normalizedAuthRole.value ?? 'student')
+const userRole = computed<'student' | 'teacher' | 'professional'>(() => normalizedAuthRole.value ?? roleFromRoute.value ?? 'student')
 const allowedTabs = new Set(['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager'])
 const getRouteTab = () => {
   const tab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'

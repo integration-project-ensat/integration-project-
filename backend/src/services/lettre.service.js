@@ -54,6 +54,8 @@ const updateStatut = async (id_lettre, statut, validateurId, { contenu = undefin
   if (statut === 'REDIGEE') {
     lettreData.statut = 'REDIGEE'
     if (contenu !== undefined) lettreData.contenu = contenu
+  } else if (statut === 'REFUSEE') {
+    lettreData.statut = 'REFUSEE'
   } else if (statut === 'EN_ATTENTE') {
     lettreData.statut = 'EN_ATTENTE'
   }

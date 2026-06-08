@@ -163,7 +163,7 @@ viewBox="0 0 24 24" fill="currentColor">
 
 const navItems = [
   { path: "/student/dashboard", label: "Dashboard", icon: icons.dashboard },
-  { path: "/explore", label: "Explorer", icon: icons.explore },
+  { path: "/student/explore", label: "Explorer", icon: icons.explore },
   { path: "/student/feed", label: "Fil d’actualité", icon: icons.feed },
   { path: "/student/connexions?tab=pending", label: "Connexions", icon: icons.connexions },
   { path: "/student/ai-recommendation", label: "Recommandation IA", icon: icons.ai },

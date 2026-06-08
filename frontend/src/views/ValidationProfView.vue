@@ -11,15 +11,16 @@ import type {
   ValidationStatus,
 } from "./DashboardProfView.vue";
 
-type ValidationTab = "Tout" | "Projet" | "Stage" | "Attestations";
+type ValidationTab = "Tout" | "Projet" | "Stage";
 
 const router = useRouter();
 const requests = ref<ValidationRequest[]>([]);
 const sidebarOpen = ref(true);
 const activeTab = ref<ValidationTab>("Tout");
 const selectedRequest = ref<ValidationRequest | null>(null);
+const error = ref<string | null>(null);
 
-const tabs: ValidationTab[] = ["Tout", "Projet", "Stage", "Attestations"];
+const tabs: ValidationTab[] = ["Tout", "Projet", "Stage"];
 
 const filteredRequests = computed(() => {
   const activeRequests =
@@ -31,35 +32,48 @@ const filteredRequests = computed(() => {
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "ValidÃ©" || status === "ValidÃƒÂ©") return "ValidÃ©";
-  if (status === "RefusÃ©" || status === "RefusÃƒÂ©") return "RefusÃ©";
+  if (status === "Validé" || status === "ValidÃ©" || status === "ValidÃƒÂ©") return "Validé";
+  if (status === "Refusé" || status === "RefusÃ©" || status === "RefusÃƒÂ©") return "Refusé";
   return "En attente";
 };
 
 const statusClass = (status: ValidationStatus) => ({
   "is-pending": status === "En attente",
-  "is-valid": status === "ValidÃ©",
-  "is-refused": status === "RefusÃ©",
+  "is-valid": status === "Validé",
+  "is-refused": status === "Refusé",
 });
 
 const loadRequests = async () => {
-  const response = await profApi.getProfDashboard();
-  requests.value = Array.isArray(response.data?.data?.validationRequests)
-    ? response.data.data.validationRequests.map(
-        (request: ValidationRequest) => ({
-          ...request,
-          status: normalizeValidationStatus(request.status),
-        }),
-      )
-    : [];
+  error.value = null;
+  try {
+    const response = await profApi.getProfDashboard();
+    requests.value = Array.isArray(response.data?.data?.validationRequests)
+      ? response.data.data.validationRequests.map(
+          (request: ValidationRequest) => ({
+            ...request,
+            status: normalizeValidationStatus(request.status),
+          }),
+        )
+      : [];
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible de charger les demandes de validation.";
+  }
 };
 
 const updateStatus = async (
   request: ValidationRequest,
   status: ValidationStatus,
 ) => {
-  await profApi.updateValidationStatus(request, status);
-  await loadRequests();
+  error.value = null;
+  try {
+    await profApi.updateValidationStatus(request, status);
+    await loadRequests();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de mettre à jour ce statut.";
+  }
 };
 
 const openDetailsModal = (request: ValidationRequest) => {
@@ -108,6 +122,18 @@ onMounted(() => {
           <div>
             <p class="validation-kicker">Espace professeur</p>
             <h1>Validations</h1>
+            <span class="validation-subtitle">
+              Cette page affiche les validations de projets et de stages. Les
+              demandes de lettres sont dans
+              <button
+                type="button"
+                class="inline-link"
+                @click="router.push('/prof/recommandations')"
+              >
+                Lettres de recommandation
+              </button>
+              .
+            </span>
           </div>
           <div class="validation-summary">
             <strong>{{ filteredRequests.length }}</strong>
@@ -127,6 +153,8 @@ onMounted(() => {
             {{ tab }}
           </button>
         </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
 
         <div class="validation-list">
           <article
@@ -171,7 +199,7 @@ onMounted(() => {
                   v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn primary"
-                  @click.stop="updateStatus(request, 'ValidÃ©')"
+                  @click.stop="updateStatus(request, 'Validé')"
                 >
                   Valider
                 </button>
@@ -179,7 +207,7 @@ onMounted(() => {
                   v-if="request.status === 'En attente'"
                   type="button"
                   class="action-btn danger"
-                  @click.stop="updateStatus(request, 'RefusÃ©')"
+                  @click.stop="updateStatus(request, 'Refusé')"
                 >
                   Refuser
                 </button>
@@ -188,7 +216,7 @@ onMounted(() => {
                   class="action-btn muted"
                   @click.stop="openDetailsModal(request)"
                 >
-                  Voir dÃ©tails
+                  Voir détails
                 </button>
               </div>
             </div>
@@ -205,7 +233,7 @@ onMounted(() => {
       <section class="letter-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>DÃ©tails de la demande</p>
+            <p>Détails de la demande</p>
             <button
               type="button"
               class="modal-student-link"
@@ -267,16 +295,18 @@ onMounted(() => {
             Fermer
           </button>
           <button
+            v-if="selectedRequest.status === 'En attente'"
             type="button"
             class="action-btn primary"
-            @click="updateSelectedStatus('ValidÃ©')"
+            @click="updateSelectedStatus('Validé')"
           >
             Valider
           </button>
           <button
+            v-if="selectedRequest.status === 'En attente'"
             type="button"
             class="action-btn danger"
-            @click="updateSelectedStatus('RefusÃ©')"
+            @click="updateSelectedStatus('Refusé')"
           >
             Refuser
           </button>
@@ -342,6 +372,23 @@ onMounted(() => {
   line-height: 1;
 }
 
+.validation-subtitle {
+  display: block;
+  margin-top: 10px;
+  color: var(--text-gray);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.inline-link {
+  display: inline;
+  background: transparent;
+  color: var(--purple);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
 .validation-summary {
   display: flex;
   align-items: baseline;
@@ -351,6 +398,12 @@ onMounted(() => {
   color: var(--purple);
   padding: 10px 16px;
   font-weight: 800;
+}
+
+.page-error {
+  margin: 16px 30px 0;
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .validation-summary span {

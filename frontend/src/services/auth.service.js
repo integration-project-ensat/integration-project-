@@ -31,64 +31,89 @@ const ROLE_FIELDS_MAP = {
   }
 }
 
+function normalizeBackendRole(role) {
+  const normalized = String(role || '').trim().toUpperCase()
+  return BACKEND_TO_FRONT_ROLE[normalized] || null
+}
+
+function persistSession(user, token) {
+  const role = normalizeBackendRole(user?.role)
+
+  if (!role) {
+    throw new Error(`Rôle inconnu : ${user?.role}`)
+  }
+
+  const normalizedUser = {
+    ...user,
+    role
+  }
+
+  localStorage.setItem('token', token)
+  localStorage.setItem('role', role)
+  localStorage.setItem('user', JSON.stringify(normalizedUser))
+
+  return {
+    token,
+    role,
+    user: normalizedUser
+  }
+}
+
 export default {
+  normalizeBackendRole,
+  persistSession,
+
   async login(email, password) {
-    const { data } = await api.post('/auth/seconnecter', { email: email.trim().toLowerCase(), mot_de_passe: password })
+    const { data } = await api.post('/auth/seconnecter', {
+      email: email.trim().toLowerCase(),
+      mot_de_passe: password
+    })
 
     const token = data.data?.token
-    const user  = data.data?.user
-    const role  = BACKEND_TO_FRONT_ROLE[user?.role]
+    const user = data.data?.user
+    const session = persistSession(user, token)
 
-    if (!role) {
-      throw new Error(`Rôle inconnu : ${user?.role}`)
+    if (data.data?.user) {
+      data.data.user = session.user
     }
 
-    if (user) {
-      user.role = role
-    }
-
-    localStorage.setItem('token', token)
-    localStorage.setItem('role', role)
     return data
   },
 
   async signup(payload) {
-  const backendRole = ROLE_MAP[payload.role]
+    const backendRole = ROLE_MAP[payload.role]
 
-  const backendPayload = {
-    nom: payload.lastName,
-    prenom: payload.firstName,
-    email: payload.email,
-    mot_de_passe: payload.password,
-    confirmation_mot_de_passe: payload.confirmPassword,
-    role: backendRole
-  }
+    const backendPayload = {
+      nom: payload.lastName,
+      prenom: payload.firstName,
+      email: payload.email,
+      mot_de_passe: payload.password,
+      confirmation_mot_de_passe: payload.confirmPassword,
+      role: backendRole
+    }
 
-  const fieldsMap = ROLE_FIELDS_MAP[backendRole]
+    const fieldsMap = ROLE_FIELDS_MAP[backendRole]
 
-  if (fieldsMap) {
-    for (const [backendKey, frontendKey] of Object.entries(fieldsMap)) {
-      if (
-        payload[frontendKey] !== undefined &&
-        payload[frontendKey] !== ''
-      ) {
-        backendPayload[backendKey] =
-          payload[frontendKey]
+    if (fieldsMap) {
+      for (const [backendKey, frontendKey] of Object.entries(fieldsMap)) {
+        if (
+          payload[frontendKey] !== undefined &&
+          payload[frontendKey] !== ''
+        ) {
+          backendPayload[backendKey] = payload[frontendKey]
+        }
       }
     }
-  }
 
-  const { data } = await api.post(
-    '/auth/sinscrire',
-    backendPayload
-  )
+    const { data } = await api.post('/auth/sinscrire', backendPayload)
+    return data
+  },
 
-  return data
-},
   startGoogleAuth() {
     const apiRoot = import.meta.env.VITE_API_BASE_URL || '/api'
     window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/google`
   },
+
   async forgotPassword(email) {
     return api.post('/auth/mot-de-passe-oublie', { email })
   },
@@ -108,6 +133,7 @@ export default {
       confirmation_mot_de_passe: payload.confirmPassword
     })
   },
+
   async logout() {
     try {
       await api.post('/auth/deconnecter')
