@@ -40,7 +40,7 @@ watch(() => props.visible, (val) => {
   } else {
     Object.assign(form, {
       projectTitle: '', description: '', technologies: '', github: '', demo: '',
-      imagePreview: null, imageFile: null, isCollaboration: false, collaborators: [], collaboratorInput: '',
+      imagePreview: null, imageFile: null, isCollaboration: false, collaborators: [], collaboratorInput: ''
     })
   }
 })

@@ -69,11 +69,13 @@ const analyzedSkills = computed(() => {
   const values = analyzedProfile.value?.skills;
   return Array.isArray(values) ? values.filter(Boolean) : [];
 });
+
 const scoreStyle = computed(() => ({
   width: `${result.value?.matchScore ?? 0}%`,
 }));
 
 const selectedCareer = computed(() => customCareerInput.value.trim() || targetCareer.value);
+
 const storedUserId = computed(() => {
   try {
     const raw = localStorage.getItem("user");
@@ -87,7 +89,7 @@ const storedUserId = computed(() => {
 
 async function analyzeProfile() {
   if (!profilePreview.value || !storedUserId.value) {
-    error.value = "Impossible de lancer l’analyse sans un vrai profil étudiant chargé depuis le backend.";
+    error.value = "Impossible de lancer l'analyse sans un vrai profil étudiant chargé depuis le backend.";
     result.value = null;
     profileSource.value = null;
     return;
@@ -175,13 +177,13 @@ onMounted(async () => {
   profileError.value = "";
 
   try {
-    const profile = await profileService.getProfile(null);
+    const profile = await profileService.getCurrentUser();
     profilePreview.value = buildProfilePreview(profile);
   } catch (apiError: any) {
     profilePreview.value = null;
     profileError.value =
       apiError?.response?.data?.message ||
-      "Impossible de charger le vrai profil étudiant pour l’analyse IA.";
+      "Impossible de charger le vrai profil étudiant pour l'analyse IA.";
   } finally {
     loadingProfile.value = false;
   }
@@ -295,8 +297,8 @@ onMounted(async () => {
             <p class="summary">{{ result.summary }}</p>
           </template>
           <div v-else class="empty-state">
-            <h2>Prêt pour l’analyse</h2>
-            <p>Le résultat IA apparaîtra ici après l’analyse de votre vrai profil backend.</p>
+            <h2>Prêt pour l'analyse</h2>
+            <p>Le résultat IA apparaîtra ici après l'analyse de votre vrai profil backend.</p>
           </div>
         </article>
       </section>
@@ -328,7 +330,7 @@ onMounted(async () => {
 
       <section v-if="result" class="roadmap-card">
         <div>
-          <p class="eyebrow">Plan d’amélioration</p>
+          <p class="eyebrow">Plan d'amélioration</p>
           <h2>Roadmap personnalisée</h2>
         </div>
 

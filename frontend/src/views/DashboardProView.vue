@@ -51,7 +51,6 @@ interface SavedProfile {
 const router = useRouter();
 const sidebarOpen = ref(true);
 const isStageModalOpen = ref(false);
-const interns = ref<Intern[]>([]);
 const savedProfiles = ref<SavedProfile[]>([]);
 const pendingRequests = ref(0);
 const acceptedRequests = ref(0);
@@ -60,6 +59,52 @@ const publishedOffers = ref(0);
 const profileName = ref("Bienvenue, professionnel");
 const totalSaved = computed(() => savedProfiles.value.length);
 const isSubmittingStage = ref(false);
+
+const interns = ref<Intern[]>([
+  {
+    id: "yassine-el-amrani",
+    initials: "YE",
+    name: "Yassine El Amrani",
+    school: "ENSA Tanger",
+    field: "DevOps",
+    city: "Tanger",
+    score: 85,
+    startDate: "12/05/2026",
+    badges: ["🌊 DevOps", "🔐 Security Aware"],
+    status: "Actif",
+    profilePath: "/profile/student/yassine-el-amrani",
+    portfolioPath: "/projects/stage-devops",
+  },
+  {
+    id: "sara-alaoui",
+    initials: "SA",
+    name: "Sara Alaoui",
+    school: "ENSA Tanger",
+    field: "Cloud",
+    city: "Tanger",
+    score: 95,
+    startDate: "02/04/2026",
+    badges: ["🧠 AI / Data", "🌐 Web Developer"],
+    status: "Actif",
+    profilePath: "/profile/student/sara-alaoui",
+    portfolioPath: "/projects/cloud-dashboard",
+  },
+  {
+    id: "nora-tazi",
+    initials: "NT",
+    name: "Nora Tazi",
+    school: "FST Fès",
+    field: "Mobile",
+    city: "Fès",
+    score: 80,
+    startDate: "15/02/2026",
+
+    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
+    status: "Terminé",
+    profilePath: "/profile/student/nora-tazi",
+    portfolioPath: "/projects/mobile-ensa",
+  },
+]);
 
 const newStage = ref({
   title: "",
@@ -145,7 +190,7 @@ const loadDashboard = async () => {
       const data = response.data.data;
       profileName.value = data.profile?.name ?? profileName.value;
       interns.value = Array.isArray(data.interns)
-        ? data.interns.map((intern) => ({
+        ? data.interns.map((intern: Intern) => ({
             ...intern,
             badges:
               Array.isArray(intern.badges) && intern.badges.length
@@ -444,6 +489,7 @@ const submitStage = async () => {
             <button type="submit" :disabled="isSubmittingStage">
               {{ isSubmittingStage ? 'Publication...' : 'Publier l’offre' }}
             </button>
+            <button type="submit">Publier l?offre</button>
           </div>
         </form>
       </section>

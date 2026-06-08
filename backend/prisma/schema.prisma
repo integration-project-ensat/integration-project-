@@ -245,6 +245,7 @@ model Utilisateur {
   mot_de_passe_hashe String?
   role               RoleUtilisateur
   google_id          String? @unique
+  github_id          String? @unique
   auth_provider      String @default("LOCAL")
   est_actif          Boolean          @default(true)
   est_valide         Boolean          @default(false)

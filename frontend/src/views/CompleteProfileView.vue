@@ -58,6 +58,7 @@ const loading = ref(false)
 
 const params = new URLSearchParams(window.location.search)
 const token = params.get('token')
+const provider = params.get('provider') === 'github' ? 'github' : 'google'
 
 const form = reactive({
   role: '',
@@ -83,7 +84,7 @@ async function submit() {
   loading.value = true
 
   try {
-    const { data } = await api.post('/auth/google/complete-profile', {
+    const { data } = await api.post(`/auth/${provider}/complete-profile`, {
       token,
       ...form
     })

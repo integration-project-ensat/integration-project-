@@ -40,7 +40,7 @@ function persistSession(user, token) {
   const role = normalizeBackendRole(user?.role)
 
   if (!role) {
-    throw new Error(`Rôle inconnu : ${user?.role}`)
+    throw new Error(`Role inconnu : ${user?.role}`)
   }
 
   const normalizedUser = {
@@ -57,6 +57,11 @@ function persistSession(user, token) {
     role,
     user: normalizedUser
   }
+}
+
+function redirectToProvider(provider) {
+  const apiRoot = import.meta.env.VITE_API_BASE_URL || '/api'
+  window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/${provider}`
 }
 
 export default {
@@ -110,8 +115,11 @@ export default {
   },
 
   startGoogleAuth() {
-    const apiRoot = import.meta.env.VITE_API_BASE_URL || '/api'
-    window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/google`
+    redirectToProvider('google')
+  },
+
+  startGithubAuth() {
+    redirectToProvider('github')
   },
 
   async forgotPassword(email) {
