@@ -328,6 +328,7 @@ const props = defineProps<{
   }
   modelValue: string
   recentRecommendations?: Recommendation[]
+  isOwner?: boolean
 }>()
 
 const emit = defineEmits<{
