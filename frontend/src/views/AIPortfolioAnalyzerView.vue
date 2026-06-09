@@ -352,8 +352,8 @@ function buildProfilePreview(profile: any) {
     },
     skills: Array.isArray(profile?.competences) ? profile.competences.filter(Boolean) : [],
     projectsMeta,
-    projects: projectsMeta.flatMap((project) => [project.title, project.description]).filter(Boolean),
-    technologies: projectsMeta.flatMap((project) => project.technologies).filter(Boolean),
+    projects: projectsMeta.flatMap((project: any) => [project.title, project.description]).filter(Boolean),
+    technologies: projectsMeta.flatMap((project: any) => project.technologies).filter(Boolean),
     badges: Array.isArray(profile?.badgesData)
       ? profile.badgesData.map((item: any) => item?.badge?.nom || item?.nom).filter(Boolean)
       : [],

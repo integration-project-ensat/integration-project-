@@ -107,7 +107,7 @@
           <p>Compétences techniques et comportementales liées au profil.</p>
         </div>
 
-        <div class="skills-grid">
+        <div v-if="skills.length" class="skills-grid">
           <article v-for="group in skills" :key="group.title" class="portfolio-card">
             <h3>{{ group.title }}</h3>
             <div class="skill-list">
@@ -115,6 +115,7 @@
             </div>
           </article>
         </div>
+        <div v-else class="section-empty">Aucune competence renseignee pour le moment.</div>
       </section>
 
       <section id="journey" class="portfolio-section" data-section-id="journey">
@@ -123,7 +124,7 @@
           <p>Diplômes et étapes académiques récupérés du backend.</p>
         </div>
 
-        <div class="timeline">
+        <div v-if="diplomas.length" class="timeline">
           <article v-for="diploma in diplomas" :key="`${diploma.title}-${diploma.period}`" class="timeline-card">
             <div class="timeline-dot"></div>
             <div>
@@ -134,6 +135,7 @@
             <span>{{ diploma.period }}</span>
           </article>
         </div>
+        <div v-else class="section-empty">Aucun diplome renseigne pour le moment.</div>
       </section>
 
       <section id="projects" class="portfolio-section" data-section-id="projects">
@@ -142,7 +144,7 @@
           <p>Publications et projets de l’étudiant reliés au backend.</p>
         </div>
 
-        <div class="projects-grid">
+        <div v-if="projects.length" class="projects-grid">
           <article v-for="project in projects" :key="project.id" class="portfolio-card project-card">
             <div class="project-top">
               <span class="project-icon">{{ project.icon }}</span>
@@ -164,6 +166,7 @@
             </div>
           </article>
         </div>
+        <div v-else class="section-empty">Aucun projet valide pour le moment.</div>
 
         <article v-if="selectedProject" class="project-details">
           <div class="details-head">
@@ -190,7 +193,7 @@
           <p>Stages et expériences professionnelles liés au parcours.</p>
         </div>
 
-        <div class="experience-list">
+        <div v-if="experiences.length" class="experience-list">
           <article v-for="experience in experiences" :key="`${experience.role}-${experience.company}`" class="experience-card">
             <div>
               <h3>{{ experience.role }}</h3>
@@ -205,6 +208,7 @@
             </div>
           </article>
         </div>
+        <div v-else class="section-empty">Aucune experience validee pour le moment.</div>
       </section>
 
       <section id="certifications" class="portfolio-section" data-section-id="certifications">
@@ -221,7 +225,7 @@
               <span>{{ certification.date }}</span>
             </div>
 
-            <a :href="certification.link" target="_blank" rel="noopener">Voir</a>
+            <a v-if="certification.link" :href="certification.link" target="_blank" rel="noopener">Voir</a>
           </article>
         </div>
         <div v-else class="page-state">Aucune certification reliée pour le moment.</div>
@@ -284,9 +288,24 @@ const sections: Array<{ id: SectionId; label: string }> = [
   { id: "contact", label: "Contact" },
 ];
 
+function getCurrentUserIdFromStorage() {
+  const rawUser = localStorage.getItem("user");
+  if (!rawUser) return null;
+
+  try {
+    const parsed = JSON.parse(rawUser);
+    const id = parsed?.id ?? parsed?.id_utilisateur;
+    const numericId = Number(id);
+    return Number.isFinite(numericId) && numericId > 0 ? numericId : null;
+  } catch {
+    return null;
+  }
+}
+
 const profileStudentId = computed(() => {
   const id = Number(route.params.id);
-  return Number.isFinite(id) && id > 0 ? id : null;
+  if (Number.isFinite(id) && id > 0) return id;
+  return getCurrentUserIdFromStorage();
 });
 
 const fromQuery = computed(() => {
@@ -377,7 +396,7 @@ function inferGithubUrl(...sources: Array<string | null | undefined>) {
     const match = String(source || "").match(githubPattern);
     if (match?.[1]) return match[1].startsWith("http") ? match[1] : `https://${match[1]}`;
   }
-  return "https://github.com";
+  return "";
 }
 
 function parseStructuredContent(content: string) {
@@ -409,6 +428,69 @@ function formatStagePeriod(start?: string | null, end?: string | null) {
   return `${startLabel} - ${endLabel}`;
 }
 
+function projectTechnologies(project: any) {
+  const relations = Array.isArray(project?.technologies) ? project.technologies : [];
+  const relationNames = relations
+    .map((item: any) => item?.technologie?.nom || item?.nom)
+    .filter(Boolean);
+
+  if (relationNames.length) return relationNames;
+  if (Array.isArray(project?.tech)) return project.tech.filter(Boolean);
+  return [];
+}
+
+function mapBackendProject(project: any, index: number): Project {
+  return {
+    id: Number(project?.id_projet ?? project?.id ?? index + 1),
+    icon: index % 3 === 0 ? "PR" : index % 3 === 1 ? "UX" : "AI",
+    title: project?.titre || project?.title || `Projet ${index + 1}`,
+    type: project?.type || project?.statut || "Projet",
+    description: project?.description || "Aucune description.",
+    details:
+      project?.resultats ||
+      project?.appreciation_professeur ||
+      project?.description ||
+      "Aucun detail supplementaire.",
+    tech: projectTechnologies(project),
+    github: project?.lien_github || inferGithubUrl(project?.description, project?.resultats),
+    images: Array.isArray(project?.captures)
+      ? project.captures.map(resolveBackendAsset).filter(Boolean)
+      : [],
+  };
+}
+
+function mapPostProject(post: any, index: number): Project {
+  const structured = parseStructuredContent(post?.contenu || "");
+  return {
+    id: Number(post?.id_poste ?? 100000 + index),
+    icon: index % 3 === 0 ? "PB" : index % 3 === 1 ? "FE" : "DB",
+    title:
+  structured?.projectTitle ||
+  (String(post?.contenu || "Publication")
+    .split("\n")[0] ?? "Publication")
+      .slice(0, 70),
+    type: post?.visibilite || "Publication",
+    description: structured?.description || post?.contenu || "Aucune description.",
+    details: structured?.details || structured?.description || post?.contenu || "Aucun detail supplementaire.",
+    tech: Array.isArray(structured?.technologies) ? structured.technologies.filter(Boolean) : [],
+    github: inferGithubUrl(structured?.github, post?.contenu),
+    images: post?.image_url ? [resolveBackendAsset(post.image_url)] : [],
+  };
+}
+
+function setSelectedProjectFallback() {
+  if (!projects.value.length) {
+    selectedProjectId.value = null;
+    return;
+  }
+
+  if (!projects.value.some((project) => project.id === selectedProjectId.value)) {
+    selectedProjectId.value = projects.value.length
+  ? projects.value[0]!.id
+  : null;
+  }
+}
+
 function mapProfileData(backendProfile: any, portfolioData: any) {
   const raw = backendProfile?.raw || {};
   const userProfile = raw?.profil || {};
@@ -438,7 +520,12 @@ function mapProfileData(backendProfile: any, portfolioData: any) {
     return groups;
   }, {});
 
-  skills.value = Object.entries(groupedSkills).map(([title, items]) => ({ title, items }));
+ skills.value =
+  Object.entries(groupedSkills)
+    .map(([title, items]) => ({
+      title,
+      items: items as string[]
+    }))
 
   diplomas.value = (student?.diplomes || []).map((diploma: any) => ({
     title: diploma?.titre_diplome || "Diplôme",
@@ -472,7 +559,11 @@ function mapProjects(items: any[]) {
     return {
       id: Number(post?.id_poste ?? index + 1),
       icon: index % 3 === 0 ? "📚" : index % 3 === 1 ? "💼" : "📊",
-      title: structured?.projectTitle || String(post?.contenu || "Projet").split("\n")[0].slice(0, 70),
+      title:
+  structured?.projectTitle ||
+  (String(post?.contenu || "Projet")
+    .split("\n")[0] ?? "Projet")
+      .slice(0, 70),
       type: post?.visibilite || "Projet",
       description: structured?.description || post?.contenu || "Aucune description.",
       details: structured?.details || structured?.description || post?.contenu || "Aucun détail supplémentaire.",
@@ -483,7 +574,9 @@ function mapProjects(items: any[]) {
   });
 
   if (!selectedProjectId.value && projects.value.length) {
-    selectedProjectId.value = projects.value[0].id;
+    selectedProjectId.value = projects.value.length
+  ? projects.value[0]!.id
+  : null;
   }
 }
 

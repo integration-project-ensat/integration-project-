@@ -8,6 +8,14 @@ import Topbar from "../components/exploreStudent/Topbar.vue";
 import profApi from "@/services/profApi";
 import { resolveProfileBadges } from "../utils/profileBadges";
 
+type RequestStatus = "En attente" | "Validée" | "Refusée" | "Aucun";
+type RequestType =
+  | "Projet"
+  | "Stage"
+  | "Attestation"
+  | "Lettre de recommandation"
+  | "Aucune demande";
+
 interface ProfStudent {
   id: string;
   initials: string;
@@ -24,6 +32,11 @@ interface ProfStudent {
   attachedAt: string;
   profilePath: string;
   portfolioPath: string;
+  requestType: RequestType;
+  requestTitle: string;
+  requestDescription: string;
+  requestDate: string;
+  status: RequestStatus;
 }
 
 const router = useRouter();
@@ -32,7 +45,165 @@ const showFilters = ref(false);
 const loading = ref(false);
 const error = ref("");
 const success = ref("");
-const students = ref<ProfStudent[]>([]);
+
+// FIX 1: Single declaration of `students` using ref (removed duplicate reactive)
+const students = ref<ProfStudent[]>([
+  {
+    id: "kb",
+    initials: "KB",
+    name: "Khadija Bennani",
+    email: "k.bennani@ensa.ma",
+    apogee: "ETU001",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 92,
+    recommendations: 540,
+    badges: [],
+    source: "Manuel",
+    attachedAt: "2024-09-01",
+    profilePath: "/students/kb",
+    portfolioPath: "/projects/portfolio-web",
+    requestType: "Projet",
+    requestTitle: "Portfolio Web",
+    requestDescription: "Validation du projet final avec lien GitHub et démonstration.",
+    requestDate: "Aujourd'hui, 10:20",
+    status: "En attente",
+  },
+  {
+    id: "ye",
+    initials: "YE",
+    name: "Yassine El Amrani",
+    email: "y.elamrani@ensa.ma",
+    apogee: "ETU002",
+    school: "ENSA",
+    field: "DevOps",
+    city: "Tanger",
+    score: 85,
+    recommendations: 310,
+    badges: [],
+    source: "Manuel",
+    attachedAt: "2024-09-02",
+    profilePath: "/students/ye",
+    portfolioPath: "/projects/stage-pfe-devops",
+    requestType: "Stage",
+    requestTitle: "Stage PFE DevOps",
+    requestDescription: "Demande de validation du stage et des missions réalisées.",
+    requestDate: "Il y a 35 min",
+    status: "En attente",
+  },
+  {
+    id: "sa",
+    initials: "SA",
+    name: "Sara Alaoui",
+    email: "s.alaoui@fst.ma",
+    apogee: "ETU003",
+    school: "FST",
+    field: "GSEA",
+    city: "Fès",
+    score: 95,
+    recommendations: 680,
+    badges: [],
+    source: "CSV",
+    attachedAt: "2024-08-15",
+    profilePath: "/students/sa",
+    portfolioPath: "/projects/attestation-cloud",
+    requestType: "Attestation",
+    requestTitle: "Attestation de stage Cloud",
+    requestDescription: "Attestation demandée après validation du stage cloud.",
+    requestDate: "Hier, 16:45",
+    status: "Validée",
+  },
+  {
+    id: "al",
+    initials: "AL",
+    name: "Amine Lahlou",
+    email: "a.lahlou@ensa.ma",
+    apogee: "ETU004",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 78,
+    recommendations: 190,
+    badges: [],
+    source: "Manuel",
+    attachedAt: "2024-09-10",
+    profilePath: "/students/al",
+    portfolioPath: "/projects/suivi-pfe",
+    requestType: "Projet",
+    requestTitle: "Plateforme de suivi PFE",
+    requestDescription: "Validation de la version finale de la plateforme.",
+    requestDate: "Aujourd'hui, 09:05",
+    status: "En attente",
+  },
+  {
+    id: "nt",
+    initials: "NT",
+    name: "Nora Tazi",
+    email: "n.tazi@ensa.ma",
+    apogee: "ETU005",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 88,
+    recommendations: 260,
+    badges: [],
+    source: "CSV",
+    attachedAt: "2024-07-20",
+    profilePath: "/students/nt",
+    portfolioPath: "/projects/mobile-ensa",
+    requestType: "Projet",
+    requestTitle: "Application Mobile ENSA",
+    requestDescription: "Demande refusée à cause de documents manquants.",
+    requestDate: "Il y a 3 j",
+    status: "Refusée",
+  },
+  {
+    id: "mb",
+    initials: "MB",
+    name: "Mehdi Berrada",
+    email: "m.berrada@ensa.ma",
+    apogee: "ETU006",
+    school: "ENSA",
+    field: "GINF",
+    city: "Tanger",
+    score: 81,
+    recommendations: 140,
+    badges: [],
+    source: "Manuel",
+    attachedAt: "2024-09-05",
+    profilePath: "/students/mb",
+    portfolioPath: "/projects/cybersecurity-lab",
+    requestType: "Lettre de recommandation",
+    requestTitle: "Recommandation concours cybersécurité",
+    requestDescription: "Demande de lettre pour un concours technique.",
+    requestDate: "Il y a 3 j",
+    status: "En attente",
+  },
+  {
+    id: "rh",
+    initials: "RH",
+    name: "Rania Haddad",
+    email: "r.haddad@fst.ma",
+    apogee: "ETU007",
+    school: "FST",
+    field: "GSEA",
+    city: "Fès",
+    score: 74,
+    recommendations: 95,
+    badges: [],
+    source: "CSV",
+    attachedAt: "2024-08-30",
+    profilePath: "/students/rh",
+    portfolioPath: "/projects/embedded-sensors",
+    requestType: "Aucune demande",
+    requestTitle: "Aucune demande active",
+    requestDescription: "Aucune demande de validation pour le moment.",
+    requestDate: "-",
+    status: "Aucun",
+  },
+]);
+
 const showAddModal = ref(false);
 const apogeeInput = ref("");
 const addingStudent = ref(false);
@@ -44,10 +215,15 @@ const importSummary = ref<null | {
   missing: string[];
 }>(null);
 
+// FIX 2: Added missing `selectedStudent` ref
+const selectedStudent = ref<ProfStudent | null>(null);
+
 const schoolFilter = ref("Toutes");
 const fieldFilter = ref("Toutes");
 const cityFilter = ref("Toutes");
 const sourceFilter = ref("Toutes");
+// FIX 3: Added missing `statusFilter` ref
+const statusFilter = ref("Toutes");
 
 const withResolvedBadges = (student: ProfStudent) => ({
   ...student,
@@ -66,7 +242,6 @@ const formatDate = (value: string) =>
 const loadStudents = async () => {
   loading.value = true;
   error.value = "";
-
   try {
     const response = await profApi.getAttachedStudents();
     students.value = Array.isArray(response.data?.data)
@@ -82,17 +257,18 @@ const loadStudents = async () => {
 
 const schools = computed(() => [
   "Toutes",
-  ...new Set(students.value.map((student) => student.school).filter(Boolean)),
+  ...new Set(students.value.map((s) => s.school).filter(Boolean)),
 ]);
 const fields = computed(() => [
   "Toutes",
-  ...new Set(students.value.map((student) => student.field).filter(Boolean)),
+  ...new Set(students.value.map((s) => s.field).filter(Boolean)),
 ]);
 const cities = computed(() => [
   "Toutes",
-  ...new Set(students.value.map((student) => student.city).filter(Boolean)),
+  ...new Set(students.value.map((s) => s.city).filter(Boolean)),
 ]);
 const sources = ["Toutes", "Manuel", "CSV"];
+const statuses = ["Toutes", "En attente", "Validées", "Refusées", "Aucune demande"];
 
 const filteredStudents = computed(() =>
   students.value.filter((student) => {
@@ -105,33 +281,62 @@ const filteredStudents = computed(() =>
     const matchesSource =
       sourceFilter.value === "Toutes" ||
       sourceLabel(student.source) === sourceFilter.value;
+    // FIX 4: matchesStatus is now included in the return
+    const matchesStatus =
+      statusFilter.value === "Toutes" ||
+      (statusFilter.value === "Validées" && student.status === "Validée") ||
+      (statusFilter.value === "Refusées" && student.status === "Refusée") ||
+      (statusFilter.value === "Aucune demande" && student.status === "Aucun") ||
+      student.status === statusFilter.value;
 
-    return matchesSchool && matchesField && matchesCity && matchesSource;
+    return matchesSchool && matchesField && matchesCity && matchesSource && matchesStatus;
   }),
 );
 
+// FIX 5: Single `stats` computed (removed duplicate), replaced `scopedStudents` with `students`
 const stats = computed(() => ({
   total: students.value.length,
-  manual: students.value.filter((student) => student.source !== "CSV").length,
-  csv: students.value.filter((student) => student.source === "CSV").length,
+  manual: students.value.filter((s) => s.source !== "CSV").length,
+  csv: students.value.filter((s) => s.source === "CSV").length,
   averageScore: students.value.length
     ? Math.round(
-        students.value.reduce((sum, student) => sum + student.score, 0) /
-          students.value.length,
+        students.value.reduce((sum, s) => sum + s.score, 0) / students.value.length,
       )
     : 0,
+  pending: students.value.filter((s) => s.status === "En attente").length,
+  accepted: students.value.filter((s) => s.status === "Validée").length,
+  refused: students.value.filter((s) => s.status === "Refusée").length,
 }));
 
+// FIX 6: `statCards` is now a clean single computed without stray code fragments
 const statCards = computed(() => [
   { label: "Total étudiants", value: stats.value.total },
   { label: "Ajouts manuels", value: stats.value.manual },
   { label: "Ajouts CSV", value: stats.value.csv },
   { label: "Score moyen", value: `${stats.value.averageScore}+` },
+  { label: "Demandes en attente", value: stats.value.pending },
+  { label: "Validations acceptées", value: stats.value.accepted },
+  { label: "Validations refusées", value: stats.value.refused },
 ]);
 
+// FIX 7: `clearFlash` body is now correct (no stray array elements)
 const clearFlash = () => {
   success.value = "";
   error.value = "";
+};
+
+const statusClass = (status: RequestStatus) => ({
+  "is-pending": status === "En attente",
+  "is-valid": status === "Validée",
+  "is-refused": status === "Refusée",
+  "is-empty": status === "Aucun",
+});
+
+const updateStatus = (student: ProfStudent, status: "Validée" | "Refusée") => {
+  student.status = status;
+  if (selectedStudent.value?.id === student.id) {
+    selectedStudent.value.status = status;
+  }
 };
 
 const openStudentProfile = (student: ProfStudent) => {
@@ -150,12 +355,10 @@ const addStudentByApogee = async () => {
   addingStudent.value = true;
 
   try {
-    const response = await profApi.attachStudent({
-      numero_etudiant: numeroEtudiant,
-    });
+    const response = await profApi.attachStudent({ numero_etudiant: numeroEtudiant });
     const attachedStudent = response.data?.data;
 
-    if (attachedStudent && !students.value.some((student) => student.id === attachedStudent.id)) {
+    if (attachedStudent && !students.value.some((s) => s.id === attachedStudent.id)) {
       students.value.unshift(withResolvedBadges(attachedStudent));
     }
 
@@ -196,7 +399,6 @@ const handleCsvSelected = async (event: Event) => {
 
 const removeStudent = async (student: ProfStudent) => {
   clearFlash();
-
   try {
     await profApi.detachStudent(student.id);
     students.value = students.value.filter((item) => item.id !== student.id);
@@ -232,6 +434,7 @@ onMounted(loadStudents);
               <input type="file" accept=".csv,text/csv" @change="handleCsvSelected" />
               {{ importingCsv ? "Import..." : "Attacher fichier CSV" }}
             </label>
+            <span>Liste des étudiants liés à vos filières et écoles.</span>
           </div>
         </div>
 
@@ -277,7 +480,7 @@ onMounted(loadStudents);
 
           <div v-if="showFilters" class="filters-panel">
             <label>
-              Année
+              École / Faculté
               <select v-model="schoolFilter">
                 <option v-for="school in schools" :key="school">{{ school }}</option>
               </select>
@@ -300,6 +503,13 @@ onMounted(loadStudents);
                 <option v-for="source in sources" :key="source">{{ source }}</option>
               </select>
             </label>
+            <!-- FIX 8: Added statusFilter select in filters panel -->
+            <label>
+              Statut
+              <select v-model="statusFilter">
+                <option v-for="status in statuses" :key="status">{{ status }}</option>
+              </select>
+            </label>
           </div>
 
           <div v-if="loading" class="table-empty">Chargement des étudiants...</div>
@@ -312,6 +522,7 @@ onMounted(loadStudents);
                 <tr>
                   <th>Étudiant</th>
                   <th>APOGEE</th>
+                  <th>École / Faculté</th>
                   <th>Filière</th>
                   <th>Ville</th>
                   <th>Score</th>
@@ -334,6 +545,8 @@ onMounted(loadStudents);
                     </button>
                   </td>
                   <td>{{ student.apogee || "—" }}</td>
+                  <!-- FIX 9: Added missing `school` <td> to match the <th> -->
+                  <td>{{ student.school }}</td>
                   <td>{{ student.field }}</td>
                   <td>{{ student.city }}</td>
                   <td><span class="score-pill">{{ student.score }}+</span></td>
@@ -343,6 +556,13 @@ onMounted(loadStudents);
                   <td>
                     <div class="action-row">
                       <button type="button" @click="openPortfolio(student)">Portfolio</button>
+                      <button
+                        type="button"
+                        class="outline-btn"
+                        @click="selectedStudent = student"
+                      >
+                        Détails
+                      </button>
                       <button type="button" class="danger-btn" @click="removeStudent(student)">
                         Retirer
                       </button>
@@ -356,11 +576,13 @@ onMounted(loadStudents);
       </section>
     </main>
 
+    <!-- FIX 10: Modal "Ajouter un étudiant" — cleaned up, removed mixed selectedStudent markup -->
     <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
       <section class="details-modal">
         <button type="button" class="modal-close" @click="showAddModal = false">×</button>
         <p>Ajout manuel</p>
         <h2>Ajouter un étudiant</h2>
+
         <div class="details-block">
           <span>Numéro APOGEE</span>
           <input v-model="apogeeInput" type="text" placeholder="Ex: ETU001" />
@@ -369,8 +591,70 @@ onMounted(loadStudents);
           <button type="button" class="outline-btn" @click="showAddModal = false">
             Fermer
           </button>
-          <button type="button" class="primary-btn" :disabled="addingStudent" @click="addStudentByApogee">
+          <button
+            type="button"
+            class="primary-btn"
+            :disabled="addingStudent"
+            @click="addStudentByApogee"
+          >
             {{ addingStudent ? "Ajout..." : "Ajouter" }}
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- FIX 11: Separate modal for selectedStudent details -->
+    <div
+      v-if="selectedStudent"
+      class="modal-backdrop"
+      @click.self="selectedStudent = null"
+    >
+      <section class="details-modal">
+        <button type="button" class="modal-close" @click="selectedStudent = null">×</button>
+        <p>Détails de la demande</p>
+        <h2>{{ selectedStudent.name }}</h2>
+
+        <div class="details-grid">
+          <article>
+            <span>Type</span>
+            <strong>{{ selectedStudent.requestType }}</strong>
+          </article>
+          <article>
+            <span>Date</span>
+            <strong>{{ selectedStudent.requestDate }}</strong>
+          </article>
+          <article>
+            <span>Statut</span>
+            <strong :class="statusClass(selectedStudent.status)">
+              {{ selectedStudent.status }}
+            </strong>
+          </article>
+        </div>
+
+        <div class="details-block">
+          <span>Description</span>
+          <p>{{ selectedStudent.requestDescription }}</p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="outline-btn" @click="selectedStudent = null">
+            Fermer
+          </button>
+          <button
+            v-if="selectedStudent.status === 'En attente'"
+            type="button"
+            class="primary-btn"
+            @click="updateStatus(selectedStudent, 'Validée')"
+          >
+            Valider
+          </button>
+          <button
+            v-if="selectedStudent.status === 'En attente'"
+            type="button"
+            class="danger-btn"
+            @click="updateStatus(selectedStudent, 'Refusée')"
+          >
+            Refuser
           </button>
         </div>
       </section>
@@ -712,6 +996,20 @@ th {
   font-size: 34px;
 }
 
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.details-grid article {
+  border: 1px solid rgba(122, 127, 136, 0.22);
+  border-radius: var(--radius-md);
+  background: rgba(248, 250, 252, 0.8);
+  padding: 12px;
+}
+
 .details-block {
   display: grid;
   gap: 8px;
@@ -719,7 +1017,13 @@ th {
   border-radius: var(--radius-md);
   background: rgba(248, 250, 252, 0.8);
   padding: 16px;
+  margin-bottom: 16px;
 }
+
+.is-pending { color: #d97706; }
+.is-valid   { color: #047857; }
+.is-refused { color: #b91c1c; }
+.is-empty   { color: var(--text-gray); }
 
 @media (max-width: 960px) {
   .page-heading,

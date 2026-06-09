@@ -123,10 +123,15 @@ export const profileService = {
     return normalizeProfile(data?.data ?? data)
   },
 
+  async getCurrentUser() {
+  const { data } = await api.get('/profil/me')
+  return normalizeProfile(data?.data ?? data)
+},
   async updateProfile(userId, payload) {
     const { data } = await api.put(`/profil/${userId}`, payload)
     return data.data
   },
+  
 
   async uploadAvatar(userId, file) {
     const form = new FormData()

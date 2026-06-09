@@ -10,6 +10,14 @@ import Topbar        from '../components/exploreStudent/Topbar.vue'
 import { explorerProfils, type ProfilExplore } from '../services/profilApi'
 import { mapExploreProfileCard } from '../utils/exploreProfileCard'
 
+type ExploreFilterState = {
+  filiere: string
+  ville: string
+  competences: string[]
+  score: number | undefined
+  recommandations: boolean
+}
+
 // ─── State ────────────────────────────────────
 const searchQuery = ref('')
 const sidebarOpen = ref(true)
@@ -18,7 +26,7 @@ const error       = ref<string | null>(null)
 const profiles    = ref<ProfilExplore[]>([])
 const pagination  = ref({ total: 0, page: 1, limit: 10, pages: 1 })
 
-const filters = ref({
+const filters = ref<ExploreFilterState>({
   filiere:         '',
   ville:           '',
   competences:     [] as string[],
@@ -73,8 +81,24 @@ const changerPage = (page: number) => {
 // ─── Adapter le profil pour ProfileCard ───────
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'student')
 
-const handleUpdateFilters = (next: typeof filters.value) => {
-  filters.value = next
+const toNumberFilter = (value: unknown) => {
+  if (typeof value === 'number') return value
+  const parsed = Number(String(value ?? '').replace('+', ''))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+}
+
+const handleUpdateFilters = (next: Record<string, any>) => {
+  filters.value = {
+    filiere: String(next.filiere ?? next.field ?? ''),
+    ville: String(next.ville ?? next.city ?? ''),
+    competences: Array.isArray(next.competences)
+      ? next.competences
+      : Array.isArray(next.skills)
+        ? next.skills
+        : [],
+    score: toNumberFilter(next.score),
+    recommandations: Boolean(next.recommandations ?? next.recommendations)
+  }
 }
 </script>
 

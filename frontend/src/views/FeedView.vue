@@ -87,6 +87,7 @@ const getCurrentUserName = () => {
 
 const myStudentId = ref(getCurrentUserId());
 
+// ID de l'utilisateur connecté (pour afficher edit/delete sur ses propres posts)
 // Post form modal
 const showPostModal  = ref(false);
 const editingPost    = ref<FeedPost | null>(null);
@@ -439,7 +440,6 @@ function openEditPost(post: FeedPost) {
   editingPost.value = post;
   showPostModal.value = true;
 }
-
 async function deletePost(id: string) {
   if (!confirm("Supprimer ce post définitivement ?")) return;
 
@@ -482,7 +482,6 @@ async function handleSavePost(data: Record<string, any>) {
 onMounted(() => {
   loadPosts();
 });
-
 </script>
 
 <template>

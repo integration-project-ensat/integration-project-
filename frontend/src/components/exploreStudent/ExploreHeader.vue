@@ -17,6 +17,9 @@ type NotificationCategory =
 interface NotificationItem {
   id: number;
   category: Exclude<NotificationCategory, "Tout">;
+  type?: string;
+  targetId?: string;
+  targetType?: string;
   person: string;
   action: string;
   relatedTitle: string;
@@ -345,13 +348,14 @@ const searchQuery = computed({
 });
 
 const apiNotificationCategory = (type?: string | null): Exclude<NotificationCategory, "Tout"> => {
-  if (!type) return "Commentaires";
-  if (type.includes("PROJET")) return "Projets";
-  if (type.includes("ATTESTATION")) return "Attestations";
-  if (type.includes("STAGE")) return "Stages";
-  if (type.includes("CONNEXION")) return "Connexions";
-  if (type.includes("RECOMMANDATION")) return "Recommandations";
-  if (type.includes("COMMENTAIRE")) return "Commentaires";
+  const normalizedType = String(type || "").toUpperCase();
+  if (!normalizedType) return "Commentaires";
+  if (normalizedType.includes("PROJET")) return "Projets";
+  if (normalizedType.includes("ATTESTATION")) return "Attestations";
+  if (normalizedType.includes("STAGE")) return "Stages";
+  if (normalizedType.includes("CONNEXION")) return "Connexions";
+  if (normalizedType.includes("RECOMMANDATION")) return "Recommandations";
+  if (normalizedType.includes("COMMENTAIRE")) return "Commentaires";
   return "Commentaires";
 };
 
@@ -373,24 +377,87 @@ const formatTimeAgo = (value: string | Date | null) => {
   return `Il y a ${Math.ceil(days / 7)} sem`;
 };
 
-const resolveTargetPath = () => {
-  const path = router.currentRoute.value.fullPath || "/";
-  return path;
+const resolveConnexionPath = (type: string) => {
+  const tab = type.includes("ACCEPTEE") ? "accepted" : "pending";
+
+  if (props.userType === "professeur") return `/prof/connexions?tab=${tab}`;
+  if (props.userType === "professionnel") return `/pro/connexions?tab=${tab}`;
+  return `/student/connexions?tab=${tab}`;
+};
+
+const resolveNotificationTargetPath = (notificationRaw: any) => {
+  const type = String(notificationRaw?.type || "").toUpperCase();
+  const targetType = String(
+    notificationRaw?.cible_type ||
+      notificationRaw?.cibleType ||
+      notificationRaw?.targetType ||
+      "",
+  ).toUpperCase();
+
+  if (type.includes("CONNEXION")) {
+    return resolveConnexionPath(type);
+  }
+
+  if (props.userType === "professeur") {
+    if (targetType === "LETTRE" || type.includes("RECOMMANDATION")) {
+      return "/prof/recommandations";
+    }
+    if (
+      targetType === "PROJET" ||
+      targetType === "STAGE" ||
+      targetType === "ATTESTATION" ||
+      type.includes("PROJET") ||
+      type.includes("STAGE") ||
+      type.includes("ATTESTATION")
+    ) {
+      return "/prof/validations";
+    }
+    if (type.includes("COMMENTAIRE")) return "/prof/feed";
+    return "/prof/dashboard";
+  }
+
+  if (props.userType === "professionnel") {
+    if (type.includes("COMMENTAIRE")) return "/pro/feed";
+    return "/pro/dashboard";
+  }
+
+  if (targetType === "LETTRE") return "/lettres";
+  if (targetType === "PROJET" || type.includes("PROJET")) return "/projets";
+  if (targetType === "STAGE" || type.includes("STAGE")) return "/stages";
+  if (targetType === "ACTIVITE") return "/activites";
+  if (
+    targetType === "ATTESTATION" ||
+    targetType === "BADGE" ||
+    type.includes("ATTESTATION") ||
+    type.includes("BADGE")
+  ) {
+    return "/certifications";
+  }
+  if (type.includes("RECOMMANDATION")) return "/recos";
+  if (type.includes("COMMENTAIRE")) return "/commentaires";
+
+  return "/student/dashboard";
 };
 
 const mapNotification = (notificationRaw: any): NotificationItem => {
   const category = apiNotificationCategory(notificationRaw.type);
+  const targetType = String(notificationRaw.cible_type ?? notificationRaw.cibleType ?? "");
+  const targetId = String(notificationRaw.cible_id ?? notificationRaw.cibleId ?? "");
+  const targetPath = resolveNotificationTargetPath(notificationRaw);
 
   return {
     id: Number(notificationRaw.id_notification ?? notificationRaw.id ?? 0),
     category,
+    type: String(notificationRaw.type || ""),
+    targetId,
+    targetType,
     person: "Système",
     action: notificationRaw.message || "Nouvelle notification",
-    relatedTitle: notificationRaw.cibleType ? notificationRaw.cibleType : "",
+    relatedTitle: targetType || "",
     time: formatTimeAgo(notificationRaw.date_reception),
     initials: category.charAt(0).toUpperCase(),
-    profilePath: resolveTargetPath(),
-    targetPath: resolveTargetPath(),
+    profilePath: targetPath,
+    targetPath,
     unread: notificationRaw.lu === false || notificationRaw.lu === 0,
   };
 };

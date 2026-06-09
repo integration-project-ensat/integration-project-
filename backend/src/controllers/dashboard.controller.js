@@ -18,8 +18,8 @@ const toInitials = (nomComplet) => {
 };
 
 const mapValidationStatus = (statut) => {
-  if (statut === "VALIDE") return "ValidÃ©";
-  if (statut === "REFUSE") return "RefusÃ©";
+  if (statut === "VALIDE") return "Validé";
+  if (statut === "REFUSE") return "Refusé";
   return "En attente";
 };
 
@@ -150,8 +150,8 @@ const getProfDashboard = asyncHandler(async (req, res) => {
     })),
   ], {
     "En attente": 0,
-    "ValidÃ©": 1,
-    "RefusÃ©": 2,
+    "Validé": 1,
+    "Refusé": 2,
   });
 
   const recommendationRequests = sortByPriority(lettres
@@ -160,10 +160,10 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         lettre.id_lettre.toString(),
       );
       const status =
-        validationStatut === "REFUSE"
-          ? "RefusÃ©e"
+        lettre.statut === "REFUSEE" || validationStatut === "REFUSE"
+          ? "Refusée"
           : lettre.statut === "REDIGEE" || validationStatut === "VALIDE"
-            ? "AcceptÃ©e"
+            ? "Acceptée"
             : "En attente";
 
       return {
@@ -171,7 +171,7 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         studentId: lettre.etudiant?.id_utilisateur?.toString() ?? "unknown",
         studentName: formatName(lettre.etudiant?.utilisateur),
         initials: toInitials(formatName(lettre.etudiant?.utilisateur)),
-        profileInfo: lettre.etudiant?.filiere || "Ã‰tudiant",
+        profileInfo: lettre.etudiant?.filiere || "Étudiant",
         title: lettre.motif
           ? `Lettre ${lettre.motif.toLowerCase()}`
           : "Lettre de recommandation",
@@ -182,20 +182,19 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         status,
         writtenLetter: lettre.contenu || null,
       };
-    })
-    .filter((item) => item.status !== "RefusÃ©e"), {
+    }), {
     "En attente": 0,
-    "AcceptÃ©e": 1,
-    "RefusÃ©e": 2,
+    "Acceptée": 1,
+    "Refusée": 2,
   });
 
   const stats = {
     total: validationRequests.length,
     pending: validationRequests.filter((item) => item.status === "En attente")
       .length,
-    validated: validationRequests.filter((item) => item.status === "ValidÃ©")
+    validated: validationRequests.filter((item) => item.status === "Validé")
       .length,
-    refused: validationRequests.filter((item) => item.status === "RefusÃ©")
+    refused: validationRequests.filter((item) => item.status === "Refusé")
       .length,
   };
 
@@ -205,9 +204,11 @@ const getProfDashboard = asyncHandler(async (req, res) => {
       (item) => item.status === "En attente",
     ).length,
     accepted: recommendationRequests.filter(
-      (item) => item.status === "AcceptÃ©e",
+      (item) => item.status === "Acceptée",
     ).length,
-    refused: 0,
+    refused: recommendationRequests.filter(
+      (item) => item.status === "Refusée",
+    ).length,
   };
 
   return res.json({
@@ -315,9 +316,9 @@ const getProDashboard = asyncHandler(async (req, res) => {
         id: otherUser.id_utilisateur.toString(),
         initials: toInitials(fullName),
         name: fullName,
-        school: otherUser.etudiant?.filiere || "Ãƒâ€°tudiant",
-        field: otherUser.etudiant?.filiere || "Ã¢â‚¬â€",
-        city: otherUser.profil?.adresse || "Ã¢â‚¬â€",
+        school: otherUser.etudiant?.filiere || "Étudiant",
+        field: otherUser.etudiant?.filiere || "—",
+        city: otherUser.profil?.adresse || "—",
         score: Number(otherUser.etudiant?.score_credibilite?.score_total ?? 0),
         startDate: connexion.date_reponse
           ? connexion.date_reponse.toISOString().split("T")[0]
@@ -336,9 +337,9 @@ const getProDashboard = asyncHandler(async (req, res) => {
     return {
       id: saved.id,
       name: fullName,
-      school: etudiant.etudiant?.filiere || "Ãƒâ€°tudiant",
-      field: etudiant.etudiant?.filiere || "Ã¢â‚¬â€",
-      city: etudiant.profil?.adresse || "Ã¢â‚¬â€",
+      school: etudiant.etudiant?.filiere || "Étudiant",
+      field: etudiant.etudiant?.filiere || "—",
+      city: etudiant.profil?.adresse || "—",
       score: Number(etudiant.etudiant?.score_credibilite?.score_total ?? 0),
       recommendations: 0,
       badges: (etudiant.etudiant?.badges || [])

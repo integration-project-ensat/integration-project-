@@ -1,7 +1,15 @@
-﻿<template>
+
+<template>
   <div class="profile-header">
     <div class="cover-section">
       <div class="cover-img" />
+      <button v-if="isOwner" type="button" class="edit-profile-btn" @click="router.push('/profile/edit')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Modifier le profil
+      </button>
       <div class="avatar-wrap">
         <div class="avatar" :class="avatarColorClass(profile.name)">
           <img v-if="profile.avatar" :src="profile.avatar" alt="avatar" />
@@ -268,6 +276,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 type Recommendation = {
   id: number
@@ -290,6 +299,8 @@ type SelectedSkillState = SkillItem & {
 }
 
 const showCompetances = ref(false)
+const router = useRouter()
+
 const showAbout = ref(false)
 const showContact = ref(false)
 const showShare = ref(false)
@@ -317,6 +328,7 @@ const props = defineProps<{
   }
   modelValue: string
   recentRecommendations?: Recommendation[]
+  isOwner?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -377,7 +389,6 @@ const handleTabClick = (tab: string) => {
   if (tab === 'Compétances' || tab === 'À propos' || tab === 'Partager') {
     return
   }
-
   if (props.modelValue === tab) {
     emit('update:modelValue', 'Portfolio')
   } else {
@@ -1061,6 +1072,35 @@ h1 {
 .avatar-brown { --avatar-bg: #8d6e63; }
 .avatar-purple { --avatar-bg: #5e35b1; }
 .avatar-slate { --avatar-bg: #5c6bc0; }
+.edit-profile-btn {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 18px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 100px;
+  color: var(--purple);
+  font-family: var(--font-head);
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, .14);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.edit-profile-btn:hover {
+  background: white;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .18);
+  transform: translateY(-1px);
+}
 
 @media (max-width: 768px) {
   .profile-header {

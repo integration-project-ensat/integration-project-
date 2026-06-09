@@ -66,14 +66,16 @@ const recommendationStatCards = [
   { label: "Total lettres", key: "total" },
   { label: "En attente", key: "pending" },
   { label: "Acceptées", key: "accepted" },
+  { label: "Refusées", key: "refused" },
 ] as const;
 
 const recommendationSections: Array<{
-  key: "pending" | "accepted";
+  key: "pending" | "accepted" | "refused";
   title: RecommendationStatus;
 }> = [
   { key: "pending", title: "En attente" },
   { key: "accepted", title: "Acceptée" },
+  { key: "refused", title: "Refusée" },
 ];
 
 const groupedRequests = computed(() => ({
@@ -89,12 +91,16 @@ const groupedRecommendations = computed(() => ({
   accepted: recommendations.value.filter(
     (request) => request.status === "Acceptée",
   ),
+  refused: recommendations.value.filter(
+    (request) => request.status === "Refusée",
+  ),
 }));
 
 const recommendationStats = computed(() => ({
   total: recommendations.value.length,
   pending: groupedRecommendations.value.pending.length,
   accepted: groupedRecommendations.value.accepted.length,
+  refused: groupedRecommendations.value.refused.length,
 }));
 
 const statusClass = (status: ValidationStatus) => ({
@@ -104,16 +110,32 @@ const statusClass = (status: ValidationStatus) => ({
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "Validé") return "Validé";
-  if (status === "Refusé" || status === "Refusé") return "Refusé";
+  if (status === "Validé" || status === "ValidÃ©" || status === "ValidÃƒÂ©") {
+    return "Validé";
+  }
+  if (status === "Refusé" || status === "RefusÃ©" || status === "RefusÃƒÂ©") {
+    return "Refusé";
+  }
   return "En attente";
 };
 
 const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
-  if (status === "Acceptée" || status === "Acceptée") return "Acceptée";
-  if (status === "Refusée" || status === "Refusée") return "Refusée";
+  if (
+    status === "Acceptée" ||
+    status === "AcceptÃ©e" ||
+    status === "AcceptÃƒÂ©e"
+  ) {
+    return "Acceptée";
+  }
+  if (
+    status === "Refusée" ||
+    status === "RefusÃ©e" ||
+    status === "RefusÃƒÂ©e"
+  ) {
+    return "Refusée";
+  }
   return "En attente";
 };
 
@@ -212,13 +234,13 @@ const loadDashboard = async () => {
       const data = response.data.data;
       stats.value = data.stats ?? stats.value;
       requests.value = Array.isArray(data.validationRequests)
-        ? data.validationRequests.map((request) => ({
+        ? data.validationRequests.map((request: any) => ({
             ...request,
             status: normalizeValidationStatus(request.status),
           }))
         : [];
       recommendations.value = Array.isArray(data.recommendationRequests)
-        ? data.recommendationRequests.map((request) => ({
+        ? data.recommendationRequests.map((request: any) => ({
             ...request,
             status: normalizeRecommendationStatus(request.status),
           }))
@@ -554,6 +576,7 @@ onMounted(() => {
             Fermer
           </button>
           <button
+            v-if="selectedRecommendation.status === 'En attente'"
             type="button"
             class="action-btn primary"
             @click="openWriteRecommendationModal(selectedRecommendation)"
@@ -561,6 +584,7 @@ onMounted(() => {
             Accepter
           </button>
           <button
+            v-if="selectedRecommendation.status === 'En attente'"
             type="button"
             class="action-btn danger"
             @click="refuseSelectedRecommendation"

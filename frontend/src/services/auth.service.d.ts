@@ -1,4 +1,10 @@
 declare const authService: {
+  normalizeBackendRole(role: unknown): 'admin' | 'student' | 'teacher' | 'professional' | null
+  persistSession(user: Record<string, any>, token: string): {
+    token: string
+    role: 'admin' | 'student' | 'teacher' | 'professional'
+    user: Record<string, any>
+  }
   login(email: string, password: string): Promise<any>
   signup(payload: {
     firstName: string
@@ -9,6 +15,8 @@ declare const authService: {
     role: string
     [key: string]: string
   }): Promise<any>
+  startGoogleAuth(): void
+  startGithubAuth(): void
   forgotPassword(email: string): Promise<any>
   verifyCode(email: string, code: string): Promise<any>
   resendCode(email: string): Promise<any>

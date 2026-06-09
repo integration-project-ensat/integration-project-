@@ -85,6 +85,8 @@ async function getCareerRecommendation(req, res) {
     return res.status(200).json({
       success: true,
       profileSource: payload,
+
+      profileSource: payload.student,
       data: recommendation
     })
   } catch (error) {

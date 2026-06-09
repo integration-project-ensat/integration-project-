@@ -590,6 +590,7 @@ def compute_profile_richness(profile: dict) -> int:
     )
     return min(total_items * 2, 20)
 
+    return items
 
 def load_model():
     if not MODEL_PATH.exists():
@@ -654,6 +655,7 @@ class CareerRecommendationModel:
             )
         )
         match_score = max(0, min(100, match_score))
+        match_score = int(round((model_score * 0.25) + (rules_score * 0.75)))
 
         roadmap = [
             {

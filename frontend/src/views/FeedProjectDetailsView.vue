@@ -118,7 +118,15 @@ async function loadProject() {
   error.value = "";
 
   try {
-    const { data } = await postService.getPost(route.params.id);
+    const id = Array.isArray(route.params.id)
+  ? route.params.id[0]
+  : route.params.id;
+
+if (!id) {
+  throw new Error("ID projet manquant");
+}
+
+const { data } = await postService.getPost(id);
     const backendPost = data?.data || data;
 
     if (!backendPost) {

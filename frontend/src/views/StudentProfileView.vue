@@ -18,7 +18,6 @@
         :isOpen="sidebarOpen"
         :force-navigation="true"
       />
-
       <main class="content" :class="{ shifted: sidebarOpen }">
         <div v-if="profileLoading" class="page-state">
           Chargement du profil...
@@ -29,13 +28,14 @@
         </div>
 
         <template v-else>
-        <StudentProfileHeader
-          :profile="profile"
-          :recent-recommendations="recommendations"
-          v-model="activeTab"
-          @open-recos="showRecosModal = true"
-          @open-portfolio="openPortfolio"
-        />
+          <StudentProfileHeader
+            :profile="profile"
+            :recent-recommendations="recommendations"
+            v-model="activeTab"
+            :is-owner="userRole === 'student' && !profileStudentId"
+            @open-recos="showRecosModal = true"
+            @open-portfolio="openPortfolio"
+          />
 
         <section v-if="userRole === 'teacher'" class="teacher-actions">
           <div class="teacher-actions__content">
@@ -415,7 +415,9 @@ async function loadProfile() {
   profileLoading.value = true
   profileError.value = ''
   try {
-    const backendProfile = await profileService.getProfile(profileStudentId.value)
+    const backendProfile = profileStudentId.value
+      ? await profileService.getProfile(profileStudentId.value)
+      : await profileService.getCurrentUser()
     const rawStudent = backendProfile?.raw?.etudiant || {}
     const rawCompetences = Array.isArray(rawStudent?.competences) ? rawStudent.competences : []
     const technicalSkills = rawCompetences
