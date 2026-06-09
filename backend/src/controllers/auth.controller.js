@@ -349,6 +349,7 @@ if (user.auth_provider !== 'LOCAL') {
     success: true,
     message: 'Connexion réussie',
     data: {
+      token,
       user: sanitizeUser(user)
     }
   });
@@ -412,7 +413,7 @@ const handleOAuthCallback = async (req, res, provider) => {
     setAuthCookie(res, token);
 
     return res.redirect(
-      `${process.env.FRONTEND_URL}/oauth-success`
+      `${process.env.FRONTEND_URL}/oauth-success?token=${encodeURIComponent(token)}`
     );
   }
 
@@ -607,6 +608,7 @@ setAuthCookie(res, finalToken);
     success: true,
     message: `Compte ${provider} créé avec succès`,
     data: {
+      token: finalToken,
       user: sanitizeUser(fullUser)
     }
   });

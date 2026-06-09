@@ -59,52 +59,10 @@ const publishedOffers = ref(0);
 const profileName = ref("Bienvenue, professionnel");
 const totalSaved = computed(() => savedProfiles.value.length);
 const isSubmittingStage = ref(false);
+const isLoadingDashboard = ref(false);
+const dashboardError = ref("");
 
-const interns = ref<Intern[]>([
-  {
-    id: "yassine-el-amrani",
-    initials: "YE",
-    name: "Yassine El Amrani",
-    school: "ENSA Tanger",
-    field: "DevOps",
-    city: "Tanger",
-    score: 85,
-    startDate: "12/05/2026",
-    badges: ["🌊 DevOps", "🔐 Security Aware"],
-    status: "Actif",
-    profilePath: "/profile/student/yassine-el-amrani",
-    portfolioPath: "/projects/stage-devops",
-  },
-  {
-    id: "sara-alaoui",
-    initials: "SA",
-    name: "Sara Alaoui",
-    school: "ENSA Tanger",
-    field: "Cloud",
-    city: "Tanger",
-    score: 95,
-    startDate: "02/04/2026",
-    badges: ["🧠 AI / Data", "🌐 Web Developer"],
-    status: "Actif",
-    profilePath: "/profile/student/sara-alaoui",
-    portfolioPath: "/projects/cloud-dashboard",
-  },
-  {
-    id: "nora-tazi",
-    initials: "NT",
-    name: "Nora Tazi",
-    school: "FST Fès",
-    field: "Mobile",
-    city: "Fès",
-    score: 80,
-    startDate: "15/02/2026",
-
-    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
-    status: "Terminé",
-    profilePath: "/profile/student/nora-tazi",
-    portfolioPath: "/projects/mobile-ensa",
-  },
-]);
+const interns = ref<Intern[]>([]);
 
 const newStage = ref({
   title: "",
@@ -184,6 +142,9 @@ const connectionAnalytics = computed(() => [
 ]);
 
 const loadDashboard = async () => {
+  isLoadingDashboard.value = true;
+  dashboardError.value = "";
+
   try {
     const response = await profApi.getProDashboard();
     if (response.data?.success) {
@@ -209,6 +170,11 @@ const loadDashboard = async () => {
     }
   } catch (err: any) {
     console.error("Erreur chargement dashboard professionnel", err);
+    dashboardError.value =
+      err.response?.data?.message ||
+      "Impossible de charger le dashboard professionnel.";
+  } finally {
+    isLoadingDashboard.value = false;
   }
 };
 
@@ -326,6 +292,17 @@ const submitStage = async () => {
                 </tr>
               </thead>
               <tbody>
+                <tr v-if="isLoadingDashboard">
+                  <td colspan="8" class="table-state">Chargement du dashboard...</td>
+                </tr>
+                <tr v-else-if="dashboardError">
+                  <td colspan="8" class="table-state error-state">{{ dashboardError }}</td>
+                </tr>
+                <tr v-else-if="!interns.length">
+                  <td colspan="8" class="table-state">
+                    Aucun stagiaire lié pour le moment.
+                  </td>
+                </tr>
                 <tr v-for="intern in interns" :key="intern.id">
                   <td>
                     <button
@@ -489,7 +466,6 @@ const submitStage = async () => {
             <button type="submit" :disabled="isSubmittingStage">
               {{ isSubmittingStage ? 'Publication...' : 'Publier l’offre' }}
             </button>
-            <button type="submit">Publier l?offre</button>
           </div>
         </form>
       </section>
@@ -856,6 +832,17 @@ th {
   color: var(--text-gray);
   font-weight: 800;
   padding: 8px;
+}
+
+.table-state {
+  color: var(--text-gray);
+  font-weight: 900;
+  text-align: center;
+  padding: 28px 14px;
+}
+
+.error-state {
+  color: var(--error);
 }
 
 .modal-backdrop {

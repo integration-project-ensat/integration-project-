@@ -110,6 +110,14 @@ const redirectExploreByRole = () => {
   return "/login";
 };
 
+const isUsableToken = (token: string | null) =>
+  Boolean(
+    token &&
+      token.trim() &&
+      token !== "undefined" &&
+      token !== "null",
+  );
+
 const router = createRouter({
   history: createWebHistory("/"),
   routes: [
@@ -297,10 +305,10 @@ const router = createRouter({
     { path: "/prof/recommandations", name: "prof-recommandations", component: RecommandationsProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
     { path: "/prof/etudiants", name: "prof-etudiants", component: EtudiantsProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
 
-    { path: "/pro/dashboard", name: "pro-dashboard", component: DashboardProView },
-    { path: "/pro/feed", name: "pro-feed", component: FeedView },
-    { path: "/pro/connexions", name: "pro-connexions", component: ConnexionsProView },
-    { path: "/pro/top-profiles", name: "pro-top-profiles", component: TopProfilesProView },
+    { path: "/pro/dashboard", name: "pro-dashboard", component: DashboardProView, meta: { requiresAuth: true, requiresRole: "professional" } },
+    { path: "/pro/feed", name: "pro-feed", component: FeedView, meta: { requiresAuth: true, requiresRole: "professional" } },
+    { path: "/pro/connexions", name: "pro-connexions", component: ConnexionsProView, meta: { requiresAuth: true, requiresRole: "professional" } },
+    { path: "/pro/top-profiles", name: "pro-top-profiles", component: TopProfilesProView, meta: { requiresAuth: true, requiresRole: "professional" } },
 
     { path: "/feed", redirect: () => {
       const role = localStorage.getItem("role");
@@ -341,11 +349,11 @@ router.beforeEach((to) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  if (to.meta.requiresAuth && !token) {
+  if (to.meta.requiresAuth && !isUsableToken(token)) {
     return "/login";
   }
 
-  if (token && to.meta.requiresRole && to.meta.requiresRole !== role) {
+  if (isUsableToken(token) && to.meta.requiresRole && to.meta.requiresRole !== role) {
     return redirectByRole();
   }
 });

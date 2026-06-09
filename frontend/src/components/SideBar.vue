@@ -30,11 +30,11 @@
     <div class="sidebar-bottom">
       <RouterLink to="/settings" class="nav-item">
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </RouterLink>
       <button class="nav-item logout" @click="logout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </button>
     </div>
 
@@ -107,7 +107,7 @@ const navByRole = {
   teacher: [
     { path: '/dashboard',      label: 'Dashboard',      icon: icons.dashboard },
     { path: '/explore',        label: 'Explorer',       icon: icons.explore },
-    { path: '/etudiants',      label: 'Mes Etudiants',  icon: icons.etudiants },
+    { path: '/etudiants',      label: 'Mes étudiants',  icon: icons.etudiants },
     { path: '/certifications', label: 'Certifications', icon: icons.certifications },
     { path: '/recos',          label: 'Mes Recos',      icon: icons.recos },
     { path: '/commentaires',   label: 'Commentaires',   icon: icons.commentaires },

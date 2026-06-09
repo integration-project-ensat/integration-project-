@@ -44,11 +44,11 @@
         @click="handleNavigation('/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </component>
       <a href="/login" class="nav-item logout" @click="handleLogout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </a>
     </div>
   </aside>
@@ -75,7 +75,7 @@ const auth = useAuthStore();
 const userName = computed(() => {
   const user = auth.user
   const fullName = user?.name || [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
-  return fullName || 'Etudiant'
+  return fullName || 'Étudiant'
 })
 
 const userEmail = computed(() => auth.user?.email || '')
@@ -212,19 +212,19 @@ const navItems = [
   },
   {
     path: "/portfolio",
-    label: "My Portfolio",
+    label: "Mon portfolio",
     icon: icons.portfolio,
     activeIcon: icons.portfolioFill,
   },
   {
     path: "/ai-analyzer",
-    label: "AI Portfolio",
+    label: "Portfolio IA",
     icon: icons.ai,
     activeIcon: icons.aiFill,
   },
   {
     path: "/lettres",
-    label: "Lettres de Recos",
+    label: "Lettres de recommandation",
     icon: icons.letter,
     activeIcon: icons.letterFill,
   },

@@ -133,10 +133,10 @@ const toInitials = (name: string) =>
     .toUpperCase();
 
 const formatRelativeDate = (dateValue?: string | null) => {
-  if (!dateValue) return "Recemment";
+  if (!dateValue) return "Récemment";
 
   const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return "Recemment";
+  if (Number.isNaN(date.getTime())) return "Récemment";
 
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
@@ -188,7 +188,7 @@ const mapPost = (post: any): FeedPost => {
   const structured = parseStructuredContent(post.contenu);
   const studentName =
     [post.auteur?.prenom, post.auteur?.nom].filter(Boolean).join(" ").trim() ||
-    "Etudiant";
+    "Étudiant";
   const school = [post.auteur?.profil?.adresse, post.auteur?.etudiant?.filiere || post.auteur?.role]
     .filter(Boolean)
     .join(" · ");
@@ -270,7 +270,9 @@ const loadPosts = async () => {
     syncInteractionState(items);
   } catch (err: any) {
     if (err?.response?.status === 401) {
-      router.push('/login');
+      error.value =
+        err?.response?.data?.message ||
+        "Impossible de charger le fil d'actualité pour cette session.";
       return;
     }
     error.value =
@@ -345,7 +347,7 @@ const toggleRepost = async (post: FeedPost) => {
     }
     await loadPosts();
   } catch {
-    error.value = "Impossible de mettre a jour le repost.";
+    error.value = "Impossible de mettre à jour le repost.";
   }
 };
 
@@ -375,7 +377,7 @@ const togglePostLike = async (post: FeedPost) => {
     }
     await loadPosts();
   } catch {
-    error.value = "Impossible de mettre a jour le j’aime.";
+    error.value = "Impossible de mettre à jour le j'aime.";
   }
 };
 
@@ -401,7 +403,7 @@ const addComment = async (post: FeedPost) => {
       authorName: getCurrentUserName(),
       initials: toInitials(getCurrentUserName()),
       text,
-      time: "A l'instant",
+      time: "À l'instant",
       likeCount: 0,
       replies: [],
     });
@@ -421,7 +423,7 @@ const addReply = (comment: FeedComment) => {
     authorName: getCurrentUserName(),
     initials: toInitials(getCurrentUserName()),
     text,
-    time: "A l'instant",
+    time: "À l'instant",
     likeCount: 0,
     replies: [],
   });

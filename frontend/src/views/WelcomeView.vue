@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <main class="welcome-page">
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
@@ -23,12 +23,12 @@
     <section id="accueil" class="hero-section">
       <div class="hero-copy">
         <span class="hero-dot"></span>
-        <p class="eyebrow">Portfolio academique et professionnel</p>
-        <h1>La vitrine moderne des talents etudiants au Maroc.</h1>
+        <p class="eyebrow">Portfolio académique et professionnel</p>
+        <h1>La vitrine moderne des talents étudiants au Maroc.</h1>
         <p class="hero-text">
-          PheraCore connecte les etudiants, les enseignants et les professionnels
-          autour de portfolios fiables, de recommandations qualifiees et
-          d'opportunites concretes.
+          PheraCore connecte les étudiants, les enseignants et les professionnels
+          autour de portfolios fiables, de recommandations qualifiées et
+          d'opportunités concrètes.
         </p>
 
         <div class="hero-actions">
@@ -36,9 +36,9 @@
           <RouterLink to="/login" class="secondary-action">Inscription</RouterLink>
         </div>
 
-        <div class="connect-list" aria-label="Types de profils connectes">
+        <div class="connect-list" aria-label="Types de profils connectés">
           <strong>Connecter entre :</strong>
-          <span>Etudiant</span>
+          <span>Étudiant</span>
           <span>Professeur</span>
           <span>Professionnel</span>
         </div>
@@ -64,7 +64,7 @@
       </div>
     </section>
 
-    <section class="stats-section" aria-label="Chiffres cles">
+    <section class="stats-section" aria-label="Chiffres clés">
       <article v-for="stat in stats" :key="stat.label" class="stat-card">
         <strong>{{ stat.value }}</strong>
         <span>{{ stat.label }}</span>
@@ -73,10 +73,10 @@
 
     <section id="plateforme" class="content-section platform-section">
       <div class="section-heading">
-        <span>Details de la plateforme</span>
+        <span>Détails de la plateforme</span>
         <h2>Un espace clair pour valoriser les parcours.</h2>
         <p>
-          La page d'accueil presente les benefices essentiels de la plateforme
+          La page d'accueil présente les bénéfices essentiels de la plateforme
           avec une lecture rapide, un style professionnel et des actions simples.
         </p>
       </div>
@@ -115,14 +115,14 @@
       <div class="links-panel">
         <div>
           <span class="section-kicker">Liens utiles</span>
-          <h2>Retrouvez PheraCore et sa communaute.</h2>
+          <h2>Retrouvez PheraCore et sa communauté.</h2>
           <p>
-            Tous les points d'entree essentiels sont regroupes ici : comptes
-            officiels, espaces communaute et contact direct.
+            Tous les points d'entrée essentiels sont regroupés ici : comptes
+            officiels, espaces communauté et contact direct.
           </p>
 
           <div class="phone-card">
-            <span>Telephone</span>
+            <span>Téléphone</span>
             <a href="tel:+212600000000">+212 600 000 000</a>
           </div>
         </div>
@@ -137,15 +137,15 @@
           </article>
 
           <article class="links-group">
-            <h3>Communaute</h3>
+            <h3>Communauté</h3>
             <a v-for="link in communityLinks" :key="link.label" :href="link.href" target="_blank" rel="noopener">
               {{ link.label }}
             </a>
           </article>
 
           <article class="links-group">
-            <h3>Acces rapides</h3>
-            <RouterLink to="/signup">Creer un compte</RouterLink>
+            <h3>Accès rapides</h3>
+            <RouterLink to="/signup">Créer un compte</RouterLink>
             <RouterLink to="/login">Se connecter</RouterLink>
             <RouterLink to="/explore">Explorer les profils</RouterLink>
           </article>
@@ -159,7 +159,7 @@
         <span>PheraCore</span>
       </div>
 
-      <p>© {{ currentYear }} PheraCore. Tous droits reserves.</p>
+      <p>© {{ currentYear }} PheraCore. Tous droits réservés.</p>
     </footer>
   </main>
 </template>
@@ -170,7 +170,7 @@ import { RouterLink } from "vue-router";
 const currentYear = new Date().getFullYear();
 
 const stats = [
-  { value: "3", label: "profils connectes" },
+  { value: "3", label: "profils connectés" },
   { value: "500+", label: "recommandations valorisees" },
   { value: "24/7", label: "portfolio consultable" },
 ];
@@ -180,13 +180,13 @@ const features = [
     icon: "01",
     title: "Portfolio vivant",
     description:
-      "Centralisez les projets, stages, certifications et competences dans une interface lisible et moderne.",
+      "Centralisez les projets, stages, certifications et compétences dans une interface lisible et moderne.",
   },
   {
     icon: "02",
     title: "Recommandations fiables",
     description:
-      "Donnez de la valeur au profil grace aux retours des professeurs, encadrants et professionnels.",
+      "Donnez de la valeur au profil grâce aux retours des professeurs, encadrants et professionnels.",
   },
   {
     icon: "03",
@@ -198,17 +198,17 @@ const features = [
 
 const studentPhotos = [
   {
-    alt: "Etudiante souriante tenant un cahier",
+    alt: "Étudiante souriante tenant un cahier",
     className: "photo-top",
     src: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=420&q=85",
   },
   {
-    alt: "Etudiante lisant avec ses camarades",
+    alt: "Étudiante lisant avec ses camarades",
     className: "photo-left",
     src: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=420&q=85",
   },
   {
-    alt: "Etudiant souriant avec un livre",
+    alt: "Étudiant souriant avec un livre",
     className: "photo-right",
     src: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=420&q=85",
   },
@@ -230,7 +230,7 @@ const accountLinks = [
 ];
 
 const communityLinks = [
-  { label: "Forum etudiants", href: "https://community.pheraCore.ma" },
+  { label: "Forum étudiants", href: "https://community.pheraCore.ma" },
   { label: "Espace professeurs", href: "https://community.pheraCore.ma/professeurs" },
   { label: "Club partenaires", href: "https://community.pheraCore.ma/partenaires" },
 ];
@@ -1028,3 +1028,5 @@ const communityLinks = [
   }
 }
 </style>
+
+

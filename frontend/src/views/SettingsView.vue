@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="page">
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
@@ -31,7 +31,7 @@
 
           <div class="settings-panel">
 
-            <!-- ── Compte ────────────────────────────────────────────── -->
+            <!-- â”€â”€ Compte â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
             <div v-if="activeTab === 'account'">
               <h2 class="panel-title">Informations du compte</h2>
 
@@ -140,7 +140,7 @@
               </div>
             </div>
 
-            <!-- ── Activité ──────────────────────────────────────────── -->
+            <!-- â”€â”€ Activité â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
             <div v-if="activeTab === 'activity'">
               <h2 class="panel-title">Activité sur la plateforme</h2>
 
@@ -232,12 +232,12 @@ import { computed, ref, reactive } from 'vue'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
 
-// ── Layout ───────────────────────────────────────────────────────────────────
+// â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const sidebarOpen = ref(true)
 const userRole = 'student'
-const currentUser = reactive({ name: 'Nom Prenom', email: 'exemple.exemple@univ.etu.ac.ma', avatar: '' })
+const currentUser = reactive({ name: 'Nom Prénom', email: 'exemple.exemple@univ.etu.ac.ma', avatar: '' })
 
-// ── Tabs ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const activeTab = ref<'account' | 'activity'>('account')
 
 const tabs = [
@@ -253,7 +253,7 @@ const tabs = [
   },
 ]
 
-// ── Email ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const showEmailForm = ref(false)
 const emailError = ref('')
 const emailSuccess = ref('')
@@ -287,7 +287,7 @@ function cancelEmail() {
   Object.assign(emailForm, { newEmail: '', confirmEmail: '', password: '' })
 }
 
-// ── Password ──────────────────────────────────────────────────────────────────
+// â”€â”€ Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const showPasswordForm = ref(false)
 const passwordError = ref('')
 const passwordSuccess = ref('')
@@ -339,7 +339,7 @@ function cancelPassword() {
   Object.assign(passwordForm, { current: '', newPass: '', confirm: '' })
 }
 
-// ── Activity ──────────────────────────────────────────────────────────────────
+// â”€â”€ Activity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type ActivityKey = 'liked' | 'commented' | 'saved'
 const activeActivityTab = ref<ActivityKey>('liked')
 
@@ -372,32 +372,32 @@ interface ActivityItem {
   comment?: string
 }
 
-// ← Trois refs séparés au lieu d'un Record — élimine le noUncheckedIndexedAccess
+// â† Trois refs sÃ©parÃ©s au lieu d'un Record - Ã©limine le noUncheckedIndexedAccèss
 const likedItems = ref<ActivityItem[]>([
-  { id: 1, title: 'Projet IA — Détection de fraude', author: 'Sara El Amrani', date: '12 mai 2025', type: 'Projet', color: '#ede9fe', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#5b4fcf"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>` },
-  { id: 2, title: 'Stage développeur fullstack — Tanger', author: 'TechMaroc SA', date: '3 mai 2025', type: 'Stage', color: '#e1f5ee', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#0f9e74"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>` },
+  { id: 1, title: 'Projet IA - Détection de fraude', author: 'Sara El Amrani', date: '12 mai 2025', type: 'Projet', color: '#ede9fe', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#5b4fcf"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>` },
+  { id: 2, title: 'Stage développeur fullstack - Tanger', author: 'TechMaroc SA', date: '3 mai 2025', type: 'Stage', color: '#e1f5ee', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#0f9e74"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>` },
   { id: 3, title: 'Certification Vue.js avancé', author: 'Yassine Benali', date: '28 avr. 2025', type: 'Certification', color: '#faeeda', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ba7517"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>` },
 ])
 
 const commentedItems = ref<ActivityItem[]>([
   { id: 1, title: 'Projet PheraCore Platform', author: 'Ferdaous', date: '10 mai 2025', type: 'Projet', color: '#ede9fe', comment: "Très beau projet, félicitations à toute l'équipe !", icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#5b4fcf"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>` },
-  { id: 2, title: 'Portfolio — Yassine Benali', author: 'Yassine Benali', date: '2 mai 2025', type: 'Portfolio', color: '#e6f1fb', comment: 'Design très soigné et bien structuré.', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#185fa5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>` },
+  { id: 2, title: 'Portfolio - Yassine Benali', author: 'Yassine Benali', date: '2 mai 2025', type: 'Portfolio', color: '#e6f1fb', comment: 'Design très soigné et bien structuré.', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#185fa5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>` },
 ])
 
 const savedItems = ref<ActivityItem[]>([
   { id: 1, title: 'Guide Docker pour débutants', author: 'TechAcademy Maroc', date: '15 mai 2025', type: 'Ressource', color: '#faeeda', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ba7517"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` },
-  { id: 2, title: 'Stage data analyst — Casablanca', author: 'DataCorp Maroc', date: '8 mai 2025', type: 'Stage', color: '#e1f5ee', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#0f9e74"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>` },
-  { id: 3, title: 'Algorithme de Dijkstra — Notes de cours', author: 'M. Ghailani', date: '1 avr. 2025', type: 'Cours', color: '#faece7', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#d85a30"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>` },
+  { id: 2, title: 'Stage data analyst - Casablanca', author: 'DataCorp Maroc', date: '8 mai 2025', type: 'Stage', color: '#e1f5ee', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#0f9e74"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>` },
+  { id: 3, title: 'Algorithme de Dijkstra - Notes de cours', author: 'M. Ghailani', date: '1 avr. 2025', type: 'Cours', color: '#faece7', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#d85a30"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>` },
 ])
 
-// ← Fonction helper pour les compteurs dans les tabs — sans accès indexé
+// â† Fonction helper pour les compteurs dans les tabs - sans accÃ¨s indexÃ©
 function getActivityList(key: ActivityKey): ActivityItem[] {
   if (key === 'liked') return likedItems.value
   if (key === 'commented') return commentedItems.value
   return savedItems.value
 }
 
-// ← removeActivity utilise les refs directement — sans accès indexé
+// â† removeActivity utilise les refs directement - sans accÃ¨s indexÃ©
 function removeActivity(key: ActivityKey, id: number) {
   if (key === 'liked') {
     likedItems.value = likedItems.value.filter(i => i.id !== id)
@@ -408,7 +408,7 @@ function removeActivity(key: ActivityKey, id: number) {
   }
 }
 
-// ── Badge colors ──────────────────────────────────────────────────────────────
+// â”€â”€ Badge colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const actTypeColors: Record<string, { bg: string; color: string }> = {
   Projet:       { bg: '#ede9fe', color: '#5b4fcf' },
   Stage:        { bg: '#e1f5ee', color: '#0f9e74' },
@@ -578,3 +578,5 @@ function badgeStyleAct(type: string): { background: string; color: string } {
   .nav-item.active { border-left-color: transparent; border-bottom-color: var(--purple); }
 }
 </style>
+
+

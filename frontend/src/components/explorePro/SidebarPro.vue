@@ -41,7 +41,7 @@
         @click="handleNavigation('/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </component>
       <a
         href="/login"
@@ -49,7 +49,7 @@
         @click="handleLogout"
       >
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </a>
     </div>
   </aside>
@@ -73,13 +73,13 @@ const route = useRoute();
 const router = useRouter()
 const auth = useAuthStore()
 const currentUser = computed(() => ({
-  name: auth.user?.name || 'Nom Prenom',
+  name: auth.user?.name || 'Nom Prénom',
   email: auth.user?.email || 'Exemple.exemple@exemple.pro',
   avatar: auth.user?.avatar || ''
 }))
 
 const initials = computed(() => {
-  const name = currentUser.value.name || 'Nom Prenom'
+  const name = currentUser.value.name || 'Nom Prénom'
   return name
     .split(' ')
     .map((n: string) => n[0])
@@ -130,7 +130,7 @@ const icons = {
 const navItems = [
   { path: "/pro/dashboard", label: "Dashboard", icon: icons.dashboard },
   { path: "/explore-pro", label: "Explorer", icon: icons.explore },
-  { path: "/pro/feed", label: "Fil dâ€™actualitÃ©", icon: icons.feed },
+  { path: "/pro/feed", label: "Fil d'actualité", icon: icons.feed },
   { path: "/pro/top-profiles", label: "Top Profiles", icon: icons.topProfiles },
   { path: "/pro/connexions?tab=pending", label: "Connexions", icon: icons.connexions },
 ];

@@ -25,10 +25,10 @@ const pickRole = (profile: ProfilExplore) =>
   profile.profil?.bio?.split(".")[0]?.trim() ||
   profile.etudiant?.diplomes?.[0]?.titre_diplome ||
   profile.etudiant?.filiere ||
-  "Etudiant en developpement";
+  "Étudiant en développement";
 
 const pickSchool = (profile: ProfilExplore) =>
-  profile.etudiant?.diplomes?.[0]?.etablissement || "Ecole Nationale des Sciences Appliquees";
+  profile.etudiant?.diplomes?.[0]?.etablissement || "École Nationale des Sciences Appliquées";
 
 const pickBadges = (profile: ProfilExplore) =>
   resolveProfileBadges({
