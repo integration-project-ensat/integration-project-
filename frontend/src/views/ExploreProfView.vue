@@ -72,8 +72,13 @@ const changerPage = (page: number) => {
 // ─── Adapter le profil pour ProfileCard ───────
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'prof')
 
-const handleUpdateFilters = (next: typeof filters.value) => {
-  filters.value = next
+const handleUpdateFilters = (
+  next: Record<string, any>
+) => {
+  filters.value = {
+    ...filters.value,
+    ...next
+  }
 }
 </script>
 

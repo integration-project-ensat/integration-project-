@@ -145,7 +145,17 @@ function savePub() {
   const dateStr = new Date(now).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   if (editingPubId.value !== null) {
     const idx = publications.value.findIndex(p => p.id === editingPubId.value)
-    if (idx !== -1) publications.value[idx] = { ...publications.value[idx], text: pubForm.text.trim(), images: [...pubForm.images] }
+    if (idx !== -1 && publications.value[idx]) {
+  const current = publications.value[idx]!
+
+  publications.value[idx] = {
+    id: current.id,
+    date: current.date,
+    timestamp: current.timestamp,
+    text: pubForm.text.trim(),
+    images: [...pubForm.images]
+  }
+}
     showToast('Publication modifiée')
   } else {
     publications.value.unshift({ id: now, text: pubForm.text.trim(), images: [...pubForm.images], date: dateStr, timestamp: now })

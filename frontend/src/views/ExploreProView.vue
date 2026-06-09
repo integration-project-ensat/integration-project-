@@ -172,9 +172,15 @@ const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'pro')
 const profileId = (profile: ProfilExplore) => profile.id_utilisateur
 const isSaved = (id: string) => savedIds.value.has(id)
 
-const handleUpdateFilters = (next: typeof filters.value) => {
-  filters.value = next;
-};
+const handleUpdateFilters = (next: Record<string, any>) => {
+  filters.value = {
+    filiere: next.filiere ?? '',
+    ville: next.ville ?? '',
+    competences: next.competences ?? [],
+    score: next.score,
+    recommandations: next.recommandations ?? false
+  }
+}
 </script>
 
 <template>

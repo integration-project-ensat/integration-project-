@@ -234,13 +234,13 @@ const loadDashboard = async () => {
       const data = response.data.data;
       stats.value = data.stats ?? stats.value;
       requests.value = Array.isArray(data.validationRequests)
-        ? data.validationRequests.map((request) => ({
+        ? data.validationRequests.map((request: any) => ({
             ...request,
             status: normalizeValidationStatus(request.status),
           }))
         : [];
       recommendations.value = Array.isArray(data.recommendationRequests)
-        ? data.recommendationRequests.map((request) => ({
+        ? data.recommendationRequests.map((request: any) => ({
             ...request,
             status: normalizeRecommendationStatus(request.status),
           }))

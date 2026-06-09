@@ -67,7 +67,7 @@ const loadRecommendations = async () => {
     recommendations.value = Array.isArray(
       response.data?.data?.recommendationRequests,
     )
-      ? response.data.data.recommendationRequests.map((request) => ({
+      ? response.data.data.recommendationRequests.map((request: any) => ({
           ...request,
           status: normalizeRecommendationStatus(request.status),
         }))

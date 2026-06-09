@@ -1,4 +1,5 @@
-export declare const profileService: {
-  getProfile(id: number | string): Promise<any>
+export const profileService: {
+  getProfile(id?: number | string | null): Promise<any>
   getCurrentUser(): Promise<any>
+  
 }

@@ -464,7 +464,11 @@ function mapPostProject(post: any, index: number): Project {
   return {
     id: Number(post?.id_poste ?? 100000 + index),
     icon: index % 3 === 0 ? "PB" : index % 3 === 1 ? "FE" : "DB",
-    title: structured?.projectTitle || String(post?.contenu || "Publication").split("\n")[0].slice(0, 70),
+    title:
+  structured?.projectTitle ||
+  (String(post?.contenu || "Publication")
+    .split("\n")[0] ?? "Publication")
+      .slice(0, 70),
     type: post?.visibilite || "Publication",
     description: structured?.description || post?.contenu || "Aucune description.",
     details: structured?.details || structured?.description || post?.contenu || "Aucun detail supplementaire.",
@@ -481,7 +485,9 @@ function setSelectedProjectFallback() {
   }
 
   if (!projects.value.some((project) => project.id === selectedProjectId.value)) {
-    selectedProjectId.value = projects.value[0].id;
+    selectedProjectId.value = projects.value.length
+  ? projects.value[0]!.id
+  : null;
   }
 }
 
@@ -514,7 +520,12 @@ function mapProfileData(backendProfile: any, portfolioData: any) {
     return groups;
   }, {});
 
-  skills.value = Object.entries(groupedSkills).map(([title, items]) => ({ title, items }));
+ skills.value =
+  Object.entries(groupedSkills)
+    .map(([title, items]) => ({
+      title,
+      items: items as string[]
+    }))
 
   diplomas.value = (student?.diplomes || []).map((diploma: any) => ({
     title: diploma?.titre_diplome || "Diplôme",
@@ -548,7 +559,11 @@ function mapProjects(items: any[]) {
     return {
       id: Number(post?.id_poste ?? index + 1),
       icon: index % 3 === 0 ? "📚" : index % 3 === 1 ? "💼" : "📊",
-      title: structured?.projectTitle || String(post?.contenu || "Projet").split("\n")[0].slice(0, 70),
+      title:
+  structured?.projectTitle ||
+  (String(post?.contenu || "Projet")
+    .split("\n")[0] ?? "Projet")
+      .slice(0, 70),
       type: post?.visibilite || "Projet",
       description: structured?.description || post?.contenu || "Aucune description.",
       details: structured?.details || structured?.description || post?.contenu || "Aucun détail supplémentaire.",
@@ -559,7 +574,9 @@ function mapProjects(items: any[]) {
   });
 
   if (!selectedProjectId.value && projects.value.length) {
-    selectedProjectId.value = projects.value[0].id;
+    selectedProjectId.value = projects.value.length
+  ? projects.value[0]!.id
+  : null;
   }
 }
 
