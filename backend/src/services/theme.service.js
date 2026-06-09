@@ -37,6 +37,17 @@ const getAllThemes = async () => {
   return themes.map(formatThemeForFrontend)
 }
 
+const ensureStudentExists = async (id_etudiant) => {
+  const student = await prisma.etudiant.findUnique({
+    where: { id_utilisateur: toBigInt(id_etudiant) },
+    select: { id_utilisateur: true },
+  })
+
+  if (!student) throw { status: 404, message: 'Etudiant introuvable' }
+
+  return student.id_utilisateur
+}
+
 const saveTheme = async (id_etudiant, id_modele) => {
   if (!id_modele) {
     throw { status: 400, message: 'Le modele de portfolio est requis' }
@@ -48,16 +59,17 @@ const saveTheme = async (id_etudiant, id_modele) => {
 
   if (!modele) throw { status: 404, message: 'Modele introuvable' }
 
-  const portfolio = await prisma.portfolio.findUnique({
-    where: { id_etudiant: toBigInt(id_etudiant) },
-    select: { id_portfolio: true },
-  })
+  const studentId = await ensureStudentExists(id_etudiant)
 
-  if (!portfolio) throw { status: 404, message: 'Portfolio non trouve' }
-
-  const updated = await prisma.portfolio.update({
-    where: { id_etudiant: toBigInt(id_etudiant) },
-    data: {
+  const updated = await prisma.portfolio.upsert({
+    where: { id_etudiant: studentId },
+    update: {
+      id_modele: modele.id_modele,
+      theme: modele.theme || null,
+      date_modification: new Date(),
+    },
+    create: {
+      id_etudiant: studentId,
       id_modele: modele.id_modele,
       theme: modele.theme || null,
       date_modification: new Date(),
@@ -72,12 +84,17 @@ const saveTheme = async (id_etudiant, id_modele) => {
 }
 
 const getThemeEtudiant = async (id_etudiant) => {
-  const portfolio = await prisma.portfolio.findUnique({
-    where: { id_etudiant: toBigInt(id_etudiant) },
+  const studentId = await ensureStudentExists(id_etudiant)
+
+  const portfolio = await prisma.portfolio.upsert({
+    where: { id_etudiant: studentId },
+    update: {},
+    create: {
+      id_etudiant: studentId,
+      date_modification: new Date(),
+    },
     include: { modele: true },
   })
-
-  if (!portfolio) throw { status: 404, message: 'Portfolio non trouve' }
 
   return formatThemeForFrontend(portfolio.modele)
 }
