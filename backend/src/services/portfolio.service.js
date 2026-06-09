@@ -18,15 +18,43 @@ const pickPortfolioFields = (data = {}) => ({
   ...(data.id_modele !== undefined && { id_modele: toBigInt(data.id_modele) }),
 })
 
-const getPortfolio = async (id_etudiant, demandeurId) => {
-  const portfolio = await prisma.portfolio.findUnique({
-    where: { id_etudiant: toBigInt(id_etudiant) },
-    include: {
-      modele: true,
-      commentaires: true,
-      recommandations: true,
-    },
+const portfolioInclude = {
+  modele: true,
+  commentaires: true,
+  recommandations: true,
+}
+
+const canCreateMissingPortfolio = (id_etudiant, demandeurId) =>
+  demandeurId && toBigInt(demandeurId) === toBigInt(id_etudiant)
+
+const createEmptyPortfolioForStudent = async (id_etudiant) => {
+  const student = await prisma.etudiant.findUnique({
+    where: { id_utilisateur: toBigInt(id_etudiant) },
+    select: { id_utilisateur: true },
   })
+
+  if (!student) return null
+
+  return prisma.portfolio.upsert({
+    where: { id_etudiant: student.id_utilisateur },
+    update: {},
+    create: {
+      id_etudiant: student.id_utilisateur,
+      date_modification: new Date(),
+    },
+    include: portfolioInclude,
+  })
+}
+
+const getPortfolio = async (id_etudiant, demandeurId) => {
+  let portfolio = await prisma.portfolio.findUnique({
+    where: { id_etudiant: toBigInt(id_etudiant) },
+    include: portfolioInclude,
+  })
+
+  if (!portfolio && canCreateMissingPortfolio(id_etudiant, demandeurId)) {
+    portfolio = await createEmptyPortfolioForStudent(id_etudiant)
+  }
 
   if (!portfolio) throw { status: 404, message: 'Portfolio non trouve' }
 
@@ -55,7 +83,9 @@ const updateVisibilite = async (id_etudiant, est_public) => {
     select: { id_portfolio: true },
   })
 
-  if (!existing) throw { status: 404, message: 'Portfolio non trouve' }
+  if (!existing && !(await createEmptyPortfolioForStudent(id_etudiant))) {
+    throw { status: 404, message: 'Portfolio non trouve' }
+  }
 
   return prisma.portfolio.update({
     where: { id_etudiant: toBigInt(id_etudiant) },
@@ -70,6 +100,10 @@ const getLienPartage = async (id_etudiant) => {
   let portfolio = await prisma.portfolio.findUnique({
     where: { id_etudiant: toBigInt(id_etudiant) },
   })
+
+  if (!portfolio) {
+    portfolio = await createEmptyPortfolioForStudent(id_etudiant)
+  }
 
   if (!portfolio) throw { status: 404, message: 'Portfolio non trouve' }
 
@@ -95,7 +129,9 @@ const updatePortfolio = async (id_etudiant, data) => {
     select: { id_portfolio: true },
   })
 
-  if (!existing) throw { status: 404, message: 'Portfolio non trouve' }
+  if (!existing && !(await createEmptyPortfolioForStudent(id_etudiant))) {
+    throw { status: 404, message: 'Portfolio non trouve' }
+  }
 
   return prisma.portfolio.update({
     where: { id_etudiant: toBigInt(id_etudiant) },

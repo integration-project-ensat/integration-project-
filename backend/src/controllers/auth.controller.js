@@ -124,6 +124,13 @@ if (role === 'PROFESSIONNEL') {
           annee_universitaire: specificData.annee_universitaire,
         }
       });
+
+      await tx.portfolio.create({
+        data: {
+          id_etudiant: newUser.id_utilisateur,
+          date_modification: new Date()
+        }
+      });
       
     }
 // Création du professeur
@@ -545,6 +552,13 @@ const completeOAuthSignup = async (req, res, provider) => {
           numero_etudiant: specificData.numero_etudiant,
           filiere: specificData.filiere,
           annee_universitaire: specificData.annee_universitaire
+        }
+      });
+
+      await tx.portfolio.create({
+        data: {
+          id_etudiant: newUser.id_utilisateur,
+          date_modification: new Date()
         }
       });
     }

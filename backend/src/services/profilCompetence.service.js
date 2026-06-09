@@ -22,6 +22,7 @@ async function getCompetences(userId) {
 /**
  * Ajoute une seule compétence
  */
+/*
 async function addCompetence(userId, data) {
   const categorie = normalizeSkillCategory(data.categorie, data.nom);
   let competence = await prisma.competence.findFirst({
@@ -42,10 +43,24 @@ async function addCompetence(userId, data) {
     include: { competence: true },
   });
 }
+  */
+ async function addCompetence(userId, data) {
+  // Mode : lier une compétence existante par id
+  return prisma.profilCompetence.create({
+    data: {
+      id_etudiant: userId,
+      id_competence: BigInt(data.id_competence),
+      niveau_maitrise: data.niveau_maitrise ?? null,
+      date_ajout: new Date(),
+    },
+    include: { competence: true },
+  });
+}
 
 /**
  * Ajoute plusieurs compétences d'un coup (bulk)
  */
+/*
 async function addBulkCompetences(userId, competences) {
   const toCreate = [];
   for (const c of competences) {
@@ -69,8 +84,21 @@ async function addBulkCompetences(userId, competences) {
     data: toCreate,
     skipDuplicates: true,
   });
-}
+}*/
 
+async function addBulkCompetences(userId, competences) {
+  const toCreate = competences.map(c => ({
+    id_etudiant: userId,
+    id_competence: BigInt(c.id_competence),
+    niveau_maitrise: c.niveau_maitrise ?? null,
+    date_ajout: new Date(),
+  }));
+
+  return prisma.profilCompetence.createMany({
+    data: toCreate,
+    skipDuplicates: true,
+  });
+}
 /**
  * Modifie une compétence (appartient à l'utilisateur)
  */

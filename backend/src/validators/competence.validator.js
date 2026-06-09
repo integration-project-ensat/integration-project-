@@ -1,71 +1,77 @@
-// validators/competenceValidator.js
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
-const addCompetenceRules = [
+// ─── ADMIN : créer une compétence catalogue ───────────────────────────────────
+const createCompetence = [
   body('nom')
-    .trim().escape()
-    .notEmpty().withMessage('Le nom de la compétence est obligatoire').bail()
-    .isLength({ min: 1, max: 100 }).withMessage('Le nom doit contenir entre 1 et 100 caractères'),
-
-  body('niveau')
-    .optional()
-    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
-    .withMessage('Niveau invalide. Choix : DEBUTANT, INTERMEDIAIRE, AVANCE, EXPERT'),
+    .trim().notEmpty().withMessage('Le nom est requis')
+    .isLength({ max: 100 }).withMessage('Max 100 caractères'),
 
   body('categorie')
-    .optional()
-    .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
-    .withMessage('Catégorie invalide. Choix : TECHNIQUE, COMPORTEMENTALE'),
-];
-
-const updateCompetenceRules = [
-  body('nom')
-    .optional()
-    .trim().escape()
-    .isLength({ min: 1, max: 100 }).withMessage('Le nom doit contenir entre 1 et 100 caractères'),
-
-  body('niveau')
-    .optional()
-    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
-    .withMessage('Niveau invalide. Choix : DEBUTANT, INTERMEDIAIRE, AVANCE, EXPERT'),
-
-  body('categorie')
-    .optional()
-    .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
-    .withMessage('Catégorie invalide. Choix : TECHNIQUE, COMPORTEMENTALE'),
-];
-
-const bulkAddRules = [
-  body('competences')
-    .isArray({ min: 1 }).withMessage('Au moins une compétence est requise'),
-  body('competences.*.nom')
-    .trim().escape()
-    .notEmpty().withMessage('Le nom de la compétence est obligatoire')
-    .isLength({ min: 1, max: 100 }).withMessage('Le nom doit contenir entre 1 et 100 caractères'),
-  body('competences.*.niveau')
-    .optional()
-    .isIn(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'])
-    .withMessage('Niveau invalide'),
-  body('competences.*.categorie')
     .optional()
     .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
     .withMessage('Catégorie invalide'),
 ];
 
-function valider(rules) {
-  return async (req, res, next) => {
-    const errors = await Promise.all(rules.map(rule => rule.run(req)));
-    const validationErrors = errors.filter(error => !error.isEmpty()).map(error => error.array());
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ errors: validationErrors.flat() });
-    }
-    next();
-  };
-}
+// ─── ADMIN : modifier une compétence catalogue ───────────────────────────────
+const updateCompetence = [
+  body('nom')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 }).withMessage('Max 100 caractères'),
+
+  body('categorie')
+    .optional()
+    .isIn(['TECHNIQUE', 'COMPORTEMENTALE'])
+    .withMessage('Catégorie invalide'),
+];
+
+// ─── ÉTUDIANT : ajouter une compétence au profil ─────────────────────────────
+const addUserCompetence = [
+  body('id_competence')
+    .notEmpty().withMessage('id_competence est requis')
+    .isInt({ min: 1 }).withMessage('id_competence doit être un entier positif'),
+
+  body('niveau_maitrise')
+    .optional()
+    .isInt({ min: 0, max: 100 })
+    .withMessage('niveau_maitrise doit être entre 0 et 100'),
+];
+
+// ─── ÉTUDIANT : ajout en masse ────────────────────────────────────────────────
+const bulkUserCompetences = [
+  body('competences')
+    .isArray({ min: 1 }).withMessage('competences doit être un tableau non vide'),
+
+  body('competences.*.id_competence')
+    .notEmpty().withMessage('id_competence est requis')
+    .isInt({ min: 1 }).withMessage('id_competence invalide'),
+
+  body('competences.*.niveau_maitrise')
+    .optional()
+    .isInt({ min: 0, max: 100 })
+    .withMessage('niveau_maitrise doit être entre 0 et 100'),
+];
+
+// ─── ÉTUDIANT : modifier niveau d'une compétence ─────────────────────────────
+const updateUserCompetence = [
+  body('niveau_maitrise')
+    .notEmpty().withMessage('niveau_maitrise est requis')
+    .isInt({ min: 0, max: 100 })
+    .withMessage('niveau_maitrise doit être entre 0 et 100'),
+];
+
+// ─── PARAM : etudiantId ───────────────────────────────────────────────────────
+const etudiantIdParam = [
+  param('etudiantId')
+    .notEmpty()
+    .isInt({ min: 1 }).withMessage('etudiantId invalide'),
+];
 
 module.exports = {
-  addCompetenceRules,
-  updateCompetenceRules,
-  bulkAddRules,
-  valider,
+  createCompetence,
+  updateCompetence,
+  addUserCompetence,
+  bulkUserCompetences,
+  updateUserCompetence,
+  etudiantIdParam,
 };
