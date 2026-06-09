@@ -9,7 +9,6 @@ jobs:
   deploy:
     name: Deploy to VM2-DevSecOps
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,8 +31,7 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/integration-app:$IMAGE_TAG .
           docker push $ECR_REGISTRY/integration-app:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/integration-app:$IMAGE_TAG \
-                     $ECR_REGISTRY/integration-app:latest
+          docker tag $ECR_REGISTRY/integration-app:$IMAGE_TAG $ECR_REGISTRY/integration-app:latest
           docker push $ECR_REGISTRY/integration-app:latest
 
       - name: Deploy to VM2 via Bastion
@@ -43,8 +41,4 @@ jobs:
           username: ${{ secrets.BASTION_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.PROD_HOST }} "
-              cd /opt/app &&
-              docker pull ${{ secrets.ECR_REGISTRY }}/integration-app:latest &&
-              docker-compose -f docker-compose.prod.yml up -d --force-recreate
-            "
+            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.PROD_HOST }} "cd /opt/app && docker pull ${{ secrets.ECR_REGISTRY }}/integration-app:latest && docker-compose -f docker-compose.prod.yml up -d --force-recreate"
