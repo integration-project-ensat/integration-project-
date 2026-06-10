@@ -31,6 +31,8 @@ import StudentRecommendationsView from "../views/StudentRecommendationsView.vue"
 import StudentCommentsView from "../views/StudentCommentsView.vue";
 import StudentGithubView from "../views/StudentGithubView.vue";
 import SettingsView from "../views/SettingsView.vue";
+import SettingsProfessionalView from "../views/SettingsProfessionalView.vue";
+import SettingsProfessorView from "../views/SettingsProfessorView.vue";
 import StudentPortfolioView from "../views/StudentPortfolioView.vue";
 //import ConnexionsProView from "../views/ConnexionsProView.vue";
 //import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
@@ -110,6 +112,14 @@ const redirectExploreByRole = () => {
   return "/login";
 };
 
+const redirectSettingsByRole = () => {
+  const role = localStorage.getItem("role");
+  if (role === "teacher") return "/prof/settings";
+  if (role === "professional") return "/pro/settings";
+  if (role === "student") return "/student/settings";
+  return "/login";
+};
+
 const router = createRouter({
   history: createWebHistory("/"),
   routes: [
@@ -154,7 +164,10 @@ const router = createRouter({
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
     { path: '/projets', name: 'projets', component: ProjectsView },
-    { path: '/settings', name: 'settings', component: SettingsView },
+    { path: '/settings', name: 'settings', redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
+    { path: '/student/settings', name: 'student-settings', component: SettingsView, meta: { requiresAuth: true, requiresRole: 'student' } },
+    { path: '/prof/settings', name: 'prof-settings', component: SettingsProfessorView, meta: { requiresAuth: true, requiresRole: 'teacher' } },
+    { path: '/pro/settings', name: 'pro-settings', component: SettingsProfessionalView, meta: { requiresAuth: true, requiresRole: 'professional' } },
     { path: "/stages", name: "stages", component: StagesView },
     { path: "/certifications", name: "certifications", component: CertificationsView },
     { path: "/activites", name: "activites", component: ActivitesView },
@@ -204,8 +217,7 @@ const router = createRouter({
     },
     {
       path: "/settings",
-      name: "settings",
-      component: SettingsView,
+      redirect: redirectSettingsByRole,
       meta: { requiresAuth: true }
     },
     {
@@ -272,7 +284,7 @@ const router = createRouter({
     { path: "/admin/parametres", component: Placeholder, meta: { requiresAuth: true, requiresRole: "admin" } },
 
     { path: "/profile", name: "profile", component: StudentProfileView, meta: { requiresAuth: true } },
-    { path: "/settings", name: "settings", component: SettingsView, meta: { requiresAuth: true } },
+    { path: "/settings", redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/portfolio/:id(\\d+)", name: "portfolio-by-id", component: StudentPortfolioView, props: true },
     { path: "/lettres", name: "letters", component: LettersView, meta: { requiresAuth: true, requiresRole: "student" } },

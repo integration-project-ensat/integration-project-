@@ -35,10 +35,10 @@
     <div class="sidebar-bottom">
       <component
         :is="forceNavigation ? 'a' : RouterLink"
-        :to="forceNavigation ? undefined : '/settings'"
-        :href="forceNavigation ? '/settings' : undefined"
+        :to="forceNavigation ? undefined : '/prof/settings'"
+        :href="forceNavigation ? '/prof/settings' : undefined"
         class="nav-item"
-        @click="handleNavigation('/settings', $event)"
+        @click="handleNavigation('/prof/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
         <span>Parametres</span>
@@ -261,4 +261,3 @@ const navItems = [
   text-align: left;
 }
 </style>
-

@@ -3,14 +3,25 @@
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
     <div class="body-area">
-      <SideBar :role="userRole" :user="currentUser" :isOpen="sidebarOpen" />
+      <SidebarStudent
+        v-if="settingsRole === 'student'"
+        :isOpen="sidebarOpen"
+      />
+      <SidebarProf
+        v-else-if="settingsRole === 'teacher'"
+        :isOpen="sidebarOpen"
+      />
+      <SidebarPro
+        v-else
+        :isOpen="sidebarOpen"
+      />
 
       <main class="content" :class="{ shifted: sidebarOpen }">
 
         <section class="page-head">
           <div>
             <h1>Paramètres</h1>
-            <p>Gérez votre compte et votre activité sur la plateforme.</p>
+            <p>{{ pageDescription }}</p>
           </div>
         </section>
 
@@ -141,7 +152,7 @@
             </div>
 
             <!-- ── Activité ──────────────────────────────────────────── -->
-            <div v-if="activeTab === 'activity'">
+            <div v-if="!isAccountOnly && activeTab === 'activity'">
               <h2 class="panel-title">Activité sur la plateforme</h2>
 
               <div class="activity-tabs">
@@ -228,30 +239,58 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, watchEffect } from 'vue'
 import TopBar from '../components/TopBar.vue'
-import SideBar from '../components/exploreStudent/Sidebar.vue'
+import SidebarStudent from '../components/exploreStudent/Sidebar.vue'
+import SidebarProf from '../components/exploreProf/SidebarProf.vue'
+import SidebarPro from '../components/explorePro/SidebarPro.vue'
+
+type SettingsRole = 'student' | 'teacher' | 'professional'
+
+const props = withDefaults(
+  defineProps<{
+    roleVariant?: SettingsRole
+    accountOnly?: boolean
+  }>(),
+  {
+    roleVariant: 'student',
+    accountOnly: false,
+  },
+)
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 const sidebarOpen = ref(true)
-const userRole = 'student'
 const currentUser = reactive({ name: 'Nom Prenom', email: 'exemple.exemple@univ.etu.ac.ma', avatar: '' })
+const settingsRole = computed(() => props.roleVariant)
+const isAccountOnly = computed(() => props.accountOnly)
+const pageDescription = computed(() =>
+  isAccountOnly.value
+    ? "Gérez l'adresse e-mail et le mot de passe de votre compte."
+    : 'Gérez votre compte et votre activité sur la plateforme.',
+)
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 const activeTab = ref<'account' | 'activity'>('account')
 
-const tabs = [
-  {
-    value: 'account' as const,
-    label: 'Compte',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>`,
-  },
-  {
-    value: 'activity' as const,
-    label: 'Activité',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
-  },
-]
+const accountTab = {
+  value: 'account' as const,
+  label: 'Compte',
+  icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>`,
+}
+
+const activityTab = {
+  value: 'activity' as const,
+  label: 'Activité',
+  icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+}
+
+const tabs = computed(() => (isAccountOnly.value ? [accountTab] : [accountTab, activityTab]))
+
+watchEffect(() => {
+  if (isAccountOnly.value && activeTab.value !== 'account') {
+    activeTab.value = 'account'
+  }
+})
 
 // ── Email ─────────────────────────────────────────────────────────────────────
 const showEmailForm = ref(false)

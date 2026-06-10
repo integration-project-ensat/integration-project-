@@ -35,10 +35,10 @@
     <div class="sidebar-bottom">
       <component
         :is="forceNavigation ? 'a' : RouterLink"
-        :to="forceNavigation ? undefined : '/settings'"
-        :href="forceNavigation ? '/settings' : undefined"
+        :to="forceNavigation ? undefined : '/pro/settings'"
+        :href="forceNavigation ? '/pro/settings' : undefined"
         class="nav-item"
-        @click="handleNavigation('/settings', $event)"
+        @click="handleNavigation('/pro/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
         <span>Parametres</span>
@@ -252,5 +252,4 @@ const navItems = [
   color: #e53e3e;
 }
 </style>
-
 
