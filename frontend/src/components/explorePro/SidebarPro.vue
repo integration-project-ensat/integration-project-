@@ -130,7 +130,7 @@ const icons = {
 const navItems = [
   { path: "/pro/dashboard", label: "Dashboard", icon: icons.dashboard },
   { path: "/explore-pro", label: "Explorer", icon: icons.explore },
-  { path: "/pro/feed", label: "Fil dâ€™actualitÃ©", icon: icons.feed },
+  { path: "/pro/feed", label: "Fil d’actualité", icon: icons.feed },
   { path: "/pro/top-profiles", label: "Top Profiles", icon: icons.topProfiles },
   { path: "/pro/connexions?tab=pending", label: "Connexions", icon: icons.connexions },
 ];
@@ -252,4 +252,3 @@ const navItems = [
   color: #e53e3e;
 }
 </style>
-

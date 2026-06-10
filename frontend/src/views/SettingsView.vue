@@ -239,11 +239,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, watchEffect } from 'vue'
+import { computed, onMounted, ref, reactive, watchEffect } from 'vue'
 import TopBar from '../components/TopBar.vue'
 import SidebarStudent from '../components/exploreStudent/Sidebar.vue'
 import SidebarProf from '../components/exploreProf/SidebarProf.vue'
 import SidebarPro from '../components/explorePro/SidebarPro.vue'
+import accountService from '../services/account.service'
 
 type SettingsRole = 'student' | 'teacher' | 'professional'
 
@@ -298,7 +299,23 @@ const emailError = ref('')
 const emailSuccess = ref('')
 const emailForm = reactive({ newEmail: '', confirmEmail: '', password: '' })
 
-function saveEmail() {
+async function loadAccount() {
+  try {
+    const account = await accountService.getMe()
+    currentUser.name = account.name || [account.prenom, account.nom].filter(Boolean).join(' ').trim() || currentUser.name
+    currentUser.email = account.email || currentUser.email
+  } catch {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+      currentUser.name = storedUser.name || [storedUser.prenom, storedUser.nom].filter(Boolean).join(' ').trim() || currentUser.name
+      currentUser.email = storedUser.email || currentUser.email
+    } catch {
+      // keep defaults
+    }
+  }
+}
+
+async function saveEmail() {
   emailError.value = ''
   emailSuccess.value = ''
   if (!emailForm.newEmail || !emailForm.confirmEmail || !emailForm.password) {
@@ -313,10 +330,20 @@ function saveEmail() {
     emailError.value = 'Adresse e-mail invalide.'
     return
   }
-  currentUser.email = emailForm.newEmail
-  emailSuccess.value = 'Adresse e-mail mise à jour avec succès.'
-  Object.assign(emailForm, { newEmail: '', confirmEmail: '', password: '' })
-  setTimeout(() => { showEmailForm.value = false; emailSuccess.value = '' }, 2000)
+  try {
+    const response = await accountService.updateEmail({
+      newEmail: emailForm.newEmail,
+      currentPassword: emailForm.password,
+    })
+    currentUser.email = response.data.email
+    emailSuccess.value = response.message || 'Adresse e-mail mise a jour avec succes.'
+    Object.assign(emailForm, { newEmail: '', confirmEmail: '', password: '' })
+    setTimeout(() => { showEmailForm.value = false; emailSuccess.value = '' }, 2000)
+  } catch (error: any) {
+    emailError.value =
+      error?.response?.data?.message ||
+      "Impossible de mettre a jour l'adresse e-mail."
+  }
 }
 
 function cancelEmail() {
@@ -351,7 +378,7 @@ const strength = computed<{ pct: number; color: string; label: string }>(() => {
   return levels[score - 1] ?? { pct: 25, color: '#dc2626', label: 'Très faible' }
 })
 
-function savePassword() {
+async function savePassword() {
   passwordError.value = ''
   passwordSuccess.value = ''
   if (!passwordForm.current || !passwordForm.newPass || !passwordForm.confirm) {
@@ -359,16 +386,27 @@ function savePassword() {
     return
   }
   if (passwordForm.newPass.length < 8) {
-    passwordError.value = 'Le mot de passe doit contenir au moins 8 caractères.'
+    passwordError.value = 'Le mot de passe doit contenir au moins 8 caracteres.'
     return
   }
   if (passwordForm.newPass !== passwordForm.confirm) {
     passwordError.value = 'Les mots de passe ne correspondent pas.'
     return
   }
-  passwordSuccess.value = 'Mot de passe mis à jour avec succès.'
-  Object.assign(passwordForm, { current: '', newPass: '', confirm: '' })
-  setTimeout(() => { showPasswordForm.value = false; passwordSuccess.value = '' }, 2000)
+  try {
+    const response = await accountService.updatePassword({
+      currentPassword: passwordForm.current,
+      newPassword: passwordForm.newPass,
+      confirmPassword: passwordForm.confirm,
+    })
+    passwordSuccess.value = response.message || 'Mot de passe mis a jour avec succes.'
+    Object.assign(passwordForm, { current: '', newPass: '', confirm: '' })
+    setTimeout(() => { showPasswordForm.value = false; passwordSuccess.value = '' }, 2000)
+  } catch (error: any) {
+    passwordError.value =
+      error?.response?.data?.message ||
+      'Impossible de mettre a jour le mot de passe.'
+  }
 }
 
 function cancelPassword() {
@@ -462,6 +500,8 @@ function badgeStyleAct(type: string): { background: string; color: string } {
   if (!s) return { background: '#f3f4f6', color: '#6b7280' }
   return { background: s.bg, color: s.color }
 }
+
+onMounted(loadAccount)
 </script>
 
 <style scoped>

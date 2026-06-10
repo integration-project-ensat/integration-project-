@@ -28,7 +28,11 @@
  
     <!-- Bottom -->
     <div class="sidebar-bottom">
-      <RouterLink to="/settings" class="nav-item">
+      <RouterLink
+        :to="settingsPath"
+        class="nav-item"
+        :class="{ active: route.path === settingsPath }"
+      >
         <span class="nav-icon" v-html="icons.settings" />
         <span>Parametres</span>
       </RouterLink>
@@ -122,7 +126,12 @@ const navByRole = {
 }
  
 const navItems = computed(() => navByRole[props.role] ?? navByRole.student)
- 
+const settingsPath = computed(() => {
+  if (props.role === 'teacher') return '/prof/settings'
+  if (props.role === 'professional') return '/pro/settings'
+  return '/student/settings'
+})
+
 async function logout() {
   await authService.logout()
   router.push('/login')

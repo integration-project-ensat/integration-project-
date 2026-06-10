@@ -11,15 +11,15 @@
         <div class="page-header">
           <div>
             <h1>Lettres de recommandation</h1>
-            <p>Toutes vos lettres reÃ§ues</p>
+            <p>Toutes vos lettres reçues</p>
           </div>
           <div class="header-badge">{{ letters.length }} lettres</div>
         </div>
 
         <!-- Empty state -->
         <div v-if="letters.length === 0" class="empty-state">
-          <div class="empty-icon">âœ‰ï¸</div>
-          <p>Aucune lettre de recommandation reÃ§ue pour le moment.</p>
+          <div class="empty-icon">✉️</div>
+          <p>Aucune lettre de recommandation reçue pour le moment.</p>
         </div>
 
         <!-- Letters list -->
@@ -37,7 +37,7 @@
 
             <div class="letter-info">
               <div class="author-name">{{ letter.author.name }}</div>
-              <div class="author-role">{{ letter.author.role }} Â· {{ letter.author.institution }}</div>
+              <div class="author-role">{{ letter.author.role }} · {{ letter.author.institution }}</div>
               <div class="letter-preview">{{ letter.preview }}</div>
             </div>
 
@@ -77,11 +77,11 @@
               </div>
               <div>
                 <div class="author-name">{{ selectedLetter.author.name }}</div>
-                <div class="author-role">{{ selectedLetter.author.role }} Â· {{ selectedLetter.author.institution }}</div>
-                <div class="letter-date-modal">ReÃ§ue le {{ formatDate(selectedLetter.receivedAt) }}</div>
+                <div class="author-role">{{ selectedLetter.author.role }} · {{ selectedLetter.author.institution }}</div>
+                <div class="letter-date-modal">Reçue le {{ formatDate(selectedLetter.receivedAt) }}</div>
               </div>
             </div>
-            <button class="btn-close" @click="closeModal">âœ•</button>
+            <button class="btn-close" @click="closeModal">×</button>
           </div>
 
           <div class="modal-body">
@@ -94,7 +94,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
               </svg>
-              TÃ©lÃ©charger en PDF
+              Télécharger en PDF
             </button>
             <button class="btn-secondary" @click="closeModal">Fermer</button>
           </div>
