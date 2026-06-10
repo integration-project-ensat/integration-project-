@@ -121,4 +121,4 @@ router.delete(
   competenceController.deleteCompetence
 );
 
-module.exports = router;git 
+module.exports = router;
