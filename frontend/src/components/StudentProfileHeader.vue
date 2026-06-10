@@ -451,7 +451,7 @@ const handleTabClick = (tab: string) => {
   }
 
   if (tab === 'Modifier bio') {
-    emit('update:modelValue', 'Modifier bio')
+    emit('update:modelValue', props.modelValue === 'Modifier bio' ? '' : 'Modifier bio')
     return
   }
 
