@@ -20,16 +20,258 @@
           @banner-changed="profile.banner = $event"
         />
 
-        <!-- Modifier bio -->
-        <section v-if="activeTab === 'Modifier bio'" class="bio-edit-tab">
-          <div class="bio-edit-card">
-            <h3>Modifier votre biographie</h3>
-            <textarea v-model="bioForm" class="bio-textarea" placeholder="Décrivez-vous en quelques mots..." />
-            <div class="bio-actions">
-              <button type="button" class="send-btn" @click="saveBio">Enregistrer</button>
-              <button type="button" class="cancel-btn" @click="cancelBio">Annuler</button>
+        <!-- Modifier bio (profil complet) -->
+        <section v-if="activeTab === 'Modifier bio'" class="profile-edit-sections">
+
+          <!-- À propos -->
+          <div class="pedit-card">
+            <div class="pedit-head">
+              <h3>À propos</h3>
+              <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Modifier
+              </button>
+            </div>
+            <template v-if="!editingAbout">
+              <p class="pedit-bio-text">{{ profile.bio || 'Aucune biographie renseignée.' }}</p>
+            </template>
+            <template v-else>
+              <textarea v-model="bioForm" class="bio-textarea" placeholder="Décrivez-vous en quelques mots..." />
+              <div class="pedit-row-actions">
+                <button type="button" class="send-btn" @click="saveBio">Enregistrer</button>
+                <button type="button" class="cancel-btn" @click="cancelBio">Annuler</button>
+              </div>
+            </template>
+          </div>
+
+          <!-- Contact et liens -->
+          <div class="pedit-card">
+            <div class="pedit-head">
+              <h3>Contact et liens</h3>
+              <button v-if="!editingContact" type="button" class="btn-modifier" @click="openEditContact">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Modifier
+              </button>
+            </div>
+            <template v-if="!editingContact">
+              <div class="contact-display">
+                <div v-if="profile.email" class="contact-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <span>{{ profile.email }}</span>
+                </div>
+                <div v-if="profile.phone" class="contact-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56A16 16 0 0 0 16 16.59l.84-.84a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <span>{{ profile.phone }}</span>
+                </div>
+                <div v-if="profile.website" class="contact-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span>{{ profile.website }}</span>
+                </div>
+                <div v-if="profile.linkedin" class="contact-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                  <span class="contact-link linkedin-color">LinkedIn</span>
+                </div>
+                <div v-if="profile.github" class="contact-row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                  <span>GitHub</span>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="contact-form">
+                <div class="form-field"><label>Email</label><input v-model="contactForm.email" type="email" placeholder="exemple@univ.ac.ma" /></div>
+                <div class="form-field"><label>Téléphone</label><input v-model="contactForm.phone" type="tel" placeholder="+212 6 00 00 00 00" /></div>
+                <div class="form-field"><label>Site web</label><input v-model="contactForm.website" type="url" placeholder="https://portfolio.example.com" /></div>
+                <div class="form-field"><label>LinkedIn</label><input v-model="contactForm.linkedin" type="url" placeholder="https://linkedin.com/in/..." /></div>
+                <div class="form-field"><label>GitHub</label><input v-model="contactForm.github" type="url" placeholder="https://github.com/..." /></div>
+              </div>
+              <div class="pedit-row-actions">
+                <button type="button" class="send-btn" @click="saveContact">Enregistrer</button>
+                <button type="button" class="cancel-btn" @click="editingContact = false">Annuler</button>
+              </div>
+            </template>
+          </div>
+
+          <!-- Compétences -->
+          <div class="pedit-card">
+            <div class="pedit-head">
+              <h3>Compétences</h3>
+              <button v-if="!editingSkills" type="button" class="btn-modifier" @click="openEditSkills">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Modifier
+              </button>
+            </div>
+            <template v-if="!editingSkills">
+              <div v-if="technicalSkills.length" class="skills-group">
+                <p class="skills-label">Techniques</p>
+                <div class="skills-chips"><span v-for="s in technicalSkills" :key="s" class="skill-chip tech">{{ s }}</span></div>
+              </div>
+              <div v-if="softSkills.length" class="skills-group">
+                <p class="skills-label">Comportementales</p>
+                <div class="skills-chips"><span v-for="s in softSkills" :key="s" class="skill-chip soft">{{ s }}</span></div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="skills-edit-group">
+                <p class="skills-label">Techniques</p>
+                <div class="skills-chips editable">
+                  <span v-for="(s, i) in skillForms.tech" :key="i" class="skill-chip tech editable">
+                    {{ s }}<button type="button" @click="skillForms.tech.splice(i, 1)">×</button>
+                  </span>
+                </div>
+                <div class="skill-add-row">
+                  <input v-model="skillForms.newTech" placeholder="Ajouter une compétence..." @keyup.enter="addTechSkill" />
+                  <button type="button" class="btn-add-skill" @click="addTechSkill">+</button>
+                </div>
+              </div>
+              <div class="skills-edit-group">
+                <p class="skills-label">Comportementales</p>
+                <div class="skills-chips editable">
+                  <span v-for="(s, i) in skillForms.soft" :key="i" class="skill-chip soft editable">
+                    {{ s }}<button type="button" @click="skillForms.soft.splice(i, 1)">×</button>
+                  </span>
+                </div>
+                <div class="skill-add-row">
+                  <input v-model="skillForms.newSoft" placeholder="Ajouter une compétence..." @keyup.enter="addSoftSkill" />
+                  <button type="button" class="btn-add-skill" @click="addSoftSkill">+</button>
+                </div>
+              </div>
+              <div class="pedit-row-actions">
+                <button type="button" class="send-btn" @click="saveSkills">Enregistrer</button>
+                <button type="button" class="cancel-btn" @click="editingSkills = false">Annuler</button>
+              </div>
+            </template>
+          </div>
+
+          <!-- Expériences professionnelles -->
+          <div class="pedit-card">
+            <div class="pedit-head">
+              <h3>Expériences professionnelles</h3>
+              <button type="button" class="btn-add-entry" @click="openAddEntry('exp')">+ Ajouter</button>
+            </div>
+            <div v-for="exp in experiences" :key="exp.id" class="entry-item">
+              <span class="entry-dot blue" />
+              <div class="entry-body">
+                <div class="entry-top">
+                  <div>
+                    <strong>{{ exp.poste }}</strong>
+                    <p class="entry-sub">{{ exp.entreprise }}</p>
+                    <p class="entry-date">{{ exp.debut }} — {{ exp.fin }}</p>
+                    <p v-if="exp.description" class="entry-desc">{{ exp.description }}</p>
+                  </div>
+                  <div class="entry-actions">
+                    <button type="button" class="icon-btn" @click="openEditEntry('exp', exp.id)" title="Modifier">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button type="button" class="icon-btn delete" @click="deleteEntry('exp', exp.id)" title="Supprimer">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- Formations -->
+          <div class="pedit-card">
+            <div class="pedit-head">
+              <h3>Formations</h3>
+              <button type="button" class="btn-add-entry" @click="openAddEntry('form')">+ Ajouter</button>
+            </div>
+            <div v-for="f in formations" :key="f.id" class="entry-item">
+              <span class="entry-dot blue" />
+              <div class="entry-body">
+                <div class="entry-top">
+                  <div>
+                    <strong>{{ f.diplome }}</strong>
+                    <p class="entry-sub">{{ f.etablissement }}</p>
+                    <p class="entry-date">{{ f.debut }} — {{ f.fin }}</p>
+                  </div>
+                  <div class="entry-actions">
+                    <button type="button" class="icon-btn" @click="openEditEntry('form', f.id)" title="Modifier">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button type="button" class="icon-btn delete" @click="deleteEntry('form', f.id)" title="Supprimer">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Certifications -->
+          <div class="pedit-card">
+            <div class="pedit-head">
+              <h3>Certifications</h3>
+              <button type="button" class="btn-add-entry" @click="openAddEntry('cert')">+ Ajouter</button>
+            </div>
+            <div v-for="c in certifications" :key="c.id" class="entry-item">
+              <span class="entry-dot green" />
+              <div class="entry-body">
+                <div class="entry-top">
+                  <div>
+                    <strong>{{ c.titre }}</strong>
+                    <p class="entry-sub">{{ c.organisme }}</p>
+                    <p class="entry-date">{{ c.date }}</p>
+                  </div>
+                  <div class="entry-actions">
+                    <button type="button" class="icon-btn" @click="openEditEntry('cert', c.id)" title="Modifier">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button type="button" class="icon-btn delete" @click="deleteEntry('cert', c.id)" title="Supprimer">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Langues -->
+          <div class="pedit-card">
+            <div class="pedit-head">
+              <h3>Langues</h3>
+              <button type="button" class="btn-add-entry" @click="openAddEntry('langue')">+ Ajouter</button>
+            </div>
+            <div class="langues-grid">
+              <div v-for="l in langues" :key="l.id" class="langue-chip">
+                <div class="langue-info">
+                  <strong>{{ l.nom }}</strong>
+                  <span>{{ l.niveau }}</span>
+                </div>
+                <div class="entry-actions">
+                  <button type="button" class="icon-btn" @click="openEditEntry('langue', l.id)" title="Modifier">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button type="button" class="icon-btn delete" @click="deleteEntry('langue', l.id)" title="Supprimer">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommandations (lecture seule) -->
+          <div class="pedit-card">
+            <div class="pedit-head"><h3>Recommandations</h3></div>
+            <div class="recommendations-list">
+              <article v-for="r in recommendations" :key="r.id" class="recommendation-card">
+                <div class="mini-avatar">
+                  <img v-if="r.avatar" :src="r.avatar" alt="" />
+                  <span v-else>{{ getInitials(r.author) }}</span>
+                </div>
+                <div class="recommendation-content">
+                  <div class="recommendation-head">
+                    <div><h4>{{ r.author }}</h4><p>{{ r.role === 'teacher' ? 'Professeur' : 'Professionnel' }}</p></div>
+                    <span>{{ r.date }}</span>
+                  </div>
+                  <p class="recommendation-message">{{ r.message || 'Recommandation sans commentaire.' }}</p>
+                </div>
+              </article>
+            </div>
+          </div>
+
         </section>
 
         <!-- Posts (toujours visibles) -->
@@ -60,6 +302,57 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <!-- Modal CRUD entrées (exp, form, cert, langue) -->
+    <div v-if="activeEntryModal" class="modal-backdrop" @click.self="activeEntryModal = null">
+      <div class="entry-modal">
+        <div class="modal-head">
+          <h3>{{ editingEntryId !== null ? 'Modifier' : 'Ajouter' }} {{ entryModalTitle }}</h3>
+          <button type="button" @click="activeEntryModal = null">×</button>
+        </div>
+        <div class="entry-modal-body">
+          <template v-if="activeEntryModal === 'exp'">
+            <div class="form-field"><label>Poste</label><input v-model="expForm.poste" placeholder="Développeur Full Stack" /></div>
+            <div class="form-field"><label>Entreprise</label><input v-model="expForm.entreprise" placeholder="Nom de l'entreprise" /></div>
+            <div class="form-field-row">
+              <div class="form-field"><label>Début</label><input v-model="expForm.debut" placeholder="2024-01" /></div>
+              <div class="form-field"><label>Fin</label><input v-model="expForm.fin" placeholder="2024-06 ou En cours" /></div>
+            </div>
+            <div class="form-field"><label>Description</label><textarea v-model="expForm.description" placeholder="Description du poste..." /></div>
+          </template>
+          <template v-if="activeEntryModal === 'form'">
+            <div class="form-field"><label>Diplôme</label><input v-model="formForm.diplome" placeholder="Ingénierie Informatique" /></div>
+            <div class="form-field"><label>Établissement</label><input v-model="formForm.etablissement" placeholder="Nom de l'école" /></div>
+            <div class="form-field-row">
+              <div class="form-field"><label>Début</label><input v-model="formForm.debut" placeholder="2022" /></div>
+              <div class="form-field"><label>Fin</label><input v-model="formForm.fin" placeholder="2025" /></div>
+            </div>
+          </template>
+          <template v-if="activeEntryModal === 'cert'">
+            <div class="form-field"><label>Titre</label><input v-model="certForm.titre" placeholder="AWS Cloud Practitioner" /></div>
+            <div class="form-field"><label>Organisme</label><input v-model="certForm.organisme" placeholder="Amazon Web Services" /></div>
+            <div class="form-field"><label>Date</label><input v-model="certForm.date" placeholder="Jan 2025" /></div>
+          </template>
+          <template v-if="activeEntryModal === 'langue'">
+            <div class="form-field"><label>Langue</label><input v-model="langueForm.nom" placeholder="Français" /></div>
+            <div class="form-field">
+              <label>Niveau</label>
+              <select v-model="langueForm.niveau">
+                <option>Natif</option>
+                <option>Courant</option>
+                <option>Professionnel</option>
+                <option>Intermédiaire</option>
+                <option>Débutant</option>
+              </select>
+            </div>
+          </template>
+        </div>
+        <div class="entry-modal-footer">
+          <button type="button" class="send-btn" @click="saveEntry">Enregistrer</button>
+          <button type="button" class="cancel-btn" @click="activeEntryModal = null">Annuler</button>
+        </div>
+      </div>
     </div>
 
     <!-- Modal modification post -->
@@ -179,8 +472,10 @@ const profile = reactive({
   banner: '',
   bio: 'Étudiant motivé, intéressé par le développement web, les projets académiques et la collaboration avec des enseignants et professionnels.',
   email: 'exemple.exemple@univ.etu.ac.ma',
+  phone: '+212 6 00 00 00 00',
   website: 'https://portfolio.example.com',
-  linkedin: 'https://linkedin.com/in/example'
+  linkedin: 'https://linkedin.com/in/example',
+  github: 'https://github.com/example'
 })
 
 const recommendations = ref<Recommendation[]>([
@@ -325,14 +620,117 @@ function onEditImageChange(e: Event) {
   reader.readAsDataURL(file)
 }
 
-function saveBio() {
-  profile.bio = bioForm.value
-  activeTab.value = ''
+// --- À propos ---
+const editingAbout = ref(false)
+function openEditAbout() { bioForm.value = profile.bio; editingAbout.value = true }
+function saveBio() { profile.bio = bioForm.value; editingAbout.value = false }
+function cancelBio() { bioForm.value = profile.bio; editingAbout.value = false }
+
+// --- Contact ---
+const editingContact = ref(false)
+const contactForm = reactive({ email: '', phone: '', website: '', linkedin: '', github: '' })
+function openEditContact() {
+  Object.assign(contactForm, { email: profile.email || '', phone: profile.phone || '', website: profile.website || '', linkedin: profile.linkedin || '', github: profile.github || '' })
+  editingContact.value = true
+}
+function saveContact() {
+  Object.assign(profile, { email: contactForm.email, phone: contactForm.phone, website: contactForm.website, linkedin: contactForm.linkedin, github: contactForm.github })
+  editingContact.value = false
 }
 
-function cancelBio() {
-  bioForm.value = profile.bio
-  activeTab.value = ''
+// --- Compétences ---
+const editingSkills = ref(false)
+const technicalSkills = ref(['Vue.js', 'TypeScript', 'Node.js', 'Docker', 'PostgreSQL'])
+const softSkills = ref(['Travail en équipe', 'Communication', 'Autonomie'])
+const skillForms = reactive({ tech: [] as string[], soft: [] as string[], newTech: '', newSoft: '' })
+function openEditSkills() { skillForms.tech = [...technicalSkills.value]; skillForms.soft = [...softSkills.value]; skillForms.newTech = ''; skillForms.newSoft = ''; editingSkills.value = true }
+function addTechSkill() { const s = skillForms.newTech.trim(); if (s && !skillForms.tech.includes(s)) skillForms.tech.push(s); skillForms.newTech = '' }
+function addSoftSkill() { const s = skillForms.newSoft.trim(); if (s && !skillForms.soft.includes(s)) skillForms.soft.push(s); skillForms.newSoft = '' }
+function saveSkills() { technicalSkills.value = [...skillForms.tech]; softSkills.value = [...skillForms.soft]; editingSkills.value = false }
+
+// --- Listes (Exp, Form, Cert, Langue) ---
+interface Experience { id: number; poste: string; entreprise: string; debut: string; fin: string; description: string }
+interface Formation { id: number; diplome: string; etablissement: string; debut: string; fin: string }
+interface Certification { id: number; titre: string; organisme: string; date: string }
+interface Langue { id: number; nom: string; niveau: string }
+
+const experiences = ref<Experience[]>([
+  { id: 1, poste: 'Développeur Full Stack', entreprise: 'OCP Group', debut: '2025-07', fin: '2025-09', description: 'Développement d\'une application interne de gestion RH.' }
+])
+const formations = ref<Formation[]>([
+  { id: 1, diplome: 'Ingénierie Informatique et Réseaux', etablissement: 'ENSA Tanger', debut: '2023', fin: '2026' }
+])
+const certifications = ref<Certification[]>([
+  { id: 1, titre: 'AWS Cloud Practitioner', organisme: 'Amazon Web Services', date: 'Jan 2025' }
+])
+const langues = ref<Langue[]>([
+  { id: 1, nom: 'Arabe', niveau: 'Natif' },
+  { id: 2, nom: 'Français', niveau: 'Courant' },
+  { id: 3, nom: 'Anglais', niveau: 'Professionnel' }
+])
+
+type EntrySection = 'exp' | 'form' | 'cert' | 'langue'
+const activeEntryModal = ref<EntrySection | null>(null)
+const editingEntryId = ref<number | null>(null)
+const expForm = reactive({ poste: '', entreprise: '', debut: '', fin: '', description: '' })
+const formForm = reactive({ diplome: '', etablissement: '', debut: '', fin: '' })
+const certForm = reactive({ titre: '', organisme: '', date: '' })
+const langueForm = reactive({ nom: '', niveau: 'Courant' })
+
+const entryModalTitle = computed(() => {
+  const labels: Record<string, string> = { exp: 'une expérience', form: 'une formation', cert: 'une certification', langue: 'une langue' }
+  return activeEntryModal.value ? labels[activeEntryModal.value] : ''
+})
+
+function openAddEntry(section: EntrySection) {
+  editingEntryId.value = null
+  if (section === 'exp') Object.assign(expForm, { poste: '', entreprise: '', debut: '', fin: '', description: '' })
+  if (section === 'form') Object.assign(formForm, { diplome: '', etablissement: '', debut: '', fin: '' })
+  if (section === 'cert') Object.assign(certForm, { titre: '', organisme: '', date: '' })
+  if (section === 'langue') Object.assign(langueForm, { nom: '', niveau: 'Courant' })
+  activeEntryModal.value = section
+}
+
+function openEditEntry(section: EntrySection, id: number) {
+  editingEntryId.value = id
+  if (section === 'exp') { const e = experiences.value.find(x => x.id === id)!; Object.assign(expForm, { ...e }) }
+  if (section === 'form') { const f = formations.value.find(x => x.id === id)!; Object.assign(formForm, { ...f }) }
+  if (section === 'cert') { const c = certifications.value.find(x => x.id === id)!; Object.assign(certForm, { ...c }) }
+  if (section === 'langue') { const l = langues.value.find(x => x.id === id)!; Object.assign(langueForm, { ...l }) }
+  activeEntryModal.value = section
+}
+
+function saveEntry() {
+  const s = activeEntryModal.value; if (!s) return
+  const newId = Date.now()
+  if (s === 'exp') {
+    editingEntryId.value !== null
+      ? (experiences.value = experiences.value.map(x => x.id === editingEntryId.value ? { ...x, ...expForm } : x))
+      : experiences.value.push({ id: newId, ...expForm })
+  }
+  if (s === 'form') {
+    editingEntryId.value !== null
+      ? (formations.value = formations.value.map(x => x.id === editingEntryId.value ? { ...x, ...formForm } : x))
+      : formations.value.push({ id: newId, ...formForm })
+  }
+  if (s === 'cert') {
+    editingEntryId.value !== null
+      ? (certifications.value = certifications.value.map(x => x.id === editingEntryId.value ? { ...x, ...certForm } : x))
+      : certifications.value.push({ id: newId, ...certForm })
+  }
+  if (s === 'langue') {
+    editingEntryId.value !== null
+      ? (langues.value = langues.value.map(x => x.id === editingEntryId.value ? { ...x, ...langueForm } : x))
+      : langues.value.push({ id: newId, ...langueForm })
+  }
+  activeEntryModal.value = null
+}
+
+function deleteEntry(section: EntrySection, id: number) {
+  if (section === 'exp') experiences.value = experiences.value.filter(x => x.id !== id)
+  if (section === 'form') formations.value = formations.value.filter(x => x.id !== id)
+  if (section === 'cert') certifications.value = certifications.value.filter(x => x.id !== id)
+  if (section === 'langue') langues.value = langues.value.filter(x => x.id !== id)
 }
 </script>
 
@@ -695,7 +1093,337 @@ function cancelBio() {
   background: #111827;
 }
 
-/* --- Bio edit --- */
+/* ==============================
+   Profile edit sections
+   ============================== */
+.profile-edit-sections {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.pedit-card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+.pedit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.pedit-head h3 {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+/* Bouton "Modifier" (outline pill) */
+.btn-modifier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border: 1.5px solid #d1d5db;
+  border-radius: var(--radius-pill);
+  background: white;
+  color: var(--text-dark);
+  font-family: var(--font-head);
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--ease);
+}
+
+.btn-modifier:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+
+/* Bouton "+ Ajouter" (purple pill) */
+.btn-add-entry {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--purple);
+  color: white;
+  font-family: var(--font-head);
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--ease);
+}
+
+.btn-add-entry:hover { opacity: .88; }
+
+.pedit-bio-text {
+  font-size: .9rem;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+
+.pedit-row-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+/* Contact */
+.contact-display { display: flex; flex-direction: column; gap: 8px; }
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .86rem;
+  color: var(--text-dark);
+}
+
+.contact-row svg { flex-shrink: 0; color: var(--text-muted); }
+.contact-link.linkedin-color { color: #0a66c2; font-weight: 600; }
+
+/* Formulaires */
+.contact-form { display: grid; gap: 10px; }
+
+.form-field { display: flex; flex-direction: column; gap: 4px; }
+
+.form-field label {
+  font-family: var(--font-head);
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.form-field input,
+.form-field select {
+  height: 40px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: .88rem;
+  color: var(--text-dark);
+  background: white;
+  transition: var(--ease);
+}
+
+.form-field textarea {
+  min-height: 80px;
+  resize: vertical;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: .88rem;
+  color: var(--text-dark);
+  width: 100%;
+  box-sizing: border-box;
+  transition: var(--ease);
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, .1);
+  outline: none;
+}
+
+.form-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Compétences */
+.skills-group,
+.skills-edit-group { margin-bottom: 12px; }
+.skills-group:last-child,
+.skills-edit-group:last-child { margin-bottom: 0; }
+
+.skills-label {
+  font-family: var(--font-head);
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.skills-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  border-radius: var(--radius-pill);
+  font-size: .78rem;
+  font-weight: 600;
+  font-family: var(--font-head);
+}
+
+.skill-chip.tech { background: #eeecff; color: var(--purple); }
+.skill-chip.soft { background: #f0fdf4; color: #16a34a; }
+
+.skill-chip.editable button {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.13);
+  color: inherit;
+  font-size: .68rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.skill-add-row { display: flex; gap: 6px; margin-top: 8px; }
+
+.skill-add-row input {
+  flex: 1;
+  height: 36px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: .82rem;
+  font-family: var(--font-body);
+  color: var(--text-dark);
+  outline: none;
+  transition: var(--ease);
+}
+
+.skill-add-row input:focus { border-color: var(--purple); }
+
+.btn-add-skill {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--purple);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--ease);
+}
+
+.btn-add-skill:hover { opacity: .88; }
+
+/* Entrées (Exp, Form, Cert) */
+.entry-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #f0f2f8;
+}
+
+.entry-item:first-of-type { border-top: none; }
+
+.entry-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.entry-dot.blue { background: #3b82f6; }
+.entry-dot.green { background: #22c55e; }
+
+.entry-body { flex: 1; min-width: 0; }
+
+.entry-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.entry-body strong {
+  font-family: var(--font-head);
+  font-size: .9rem;
+  color: var(--text-dark);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.entry-sub { font-size: .82rem; color: var(--text-muted); margin-bottom: 2px; }
+.entry-date { font-size: .78rem; color: var(--text-muted); margin-bottom: 2px; }
+.entry-desc { font-size: .82rem; color: var(--text-dark); line-height: 1.5; margin-top: 4px; }
+
+.entry-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: #f5f5f5;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: var(--ease);
+}
+
+.icon-btn:hover { background: #eeecff; color: var(--purple); }
+.icon-btn.delete:hover { background: #fff0f0; color: var(--error); }
+
+/* Langues */
+.langues-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.langue-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.langue-info strong {
+  display: block;
+  font-family: var(--font-head);
+  font-size: .82rem;
+  color: var(--text-dark);
+}
+
+.langue-info span { font-size: .72rem; color: var(--text-muted); }
+
+/* Modal CRUD entrées */
+.entry-modal {
+  width: min(460px, 92vw);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .16);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+
+.entry-modal-body {
+  padding: 6px 20px 8px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entry-modal-footer {
+  padding: 14px 20px 20px;
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* --- Bio edit (legacy) --- */
 .bio-edit-tab { margin-top: 14px; }
 
 .bio-edit-card {
