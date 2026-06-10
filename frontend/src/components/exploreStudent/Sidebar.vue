@@ -2,17 +2,17 @@
   <aside class="sidebar" :class="{ open: isOpen }">
     <component
       :is="forceNavigation ? 'a' : RouterLink"
-      :to="forceNavigation ? undefined : '/profile'"
-      :href="forceNavigation ? '/profile' : undefined"
+      :to="forceNavigation ? undefined : profileLink"
+      :href="forceNavigation ? profileLink : undefined"
       class="sidebar-user"
-      @click="handleNavigation('/profile', $event)"
+      @click="handleNavigation(profileLink, $event)"
     >
       <div class="avatar-sm">
         <span>{{ initials }}</span>
       </div>
       <div class="user-info">
-        <p class="user-name">Nom Prenom</p>
-        <p class="user-email">Exemple.exemple@univ.etu.ac.ma</p>
+        <p class="user-name">{{ currentUser.name }}</p>
+        <p class="user-email">{{ currentUser.email }}</p>
       </div>
     </component>
 
@@ -72,7 +72,20 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
-const initials = computed(() => "NP");
+const currentUser = computed(() => ({
+  name: auth.user?.name || 'Nom Prenom',
+  email: auth.user?.email || 'Exemple.exemple@univ.etu.ac.ma',
+}));
+
+const initials = computed(() => currentUser.value.name
+  .split(' ')
+  .map((part: string) => part[0] || '')
+  .join('')
+  .slice(0, 2)
+  .toUpperCase()
+);
+
+const profileLink = computed(() => '/student/profile');
 
 function normalizedPath(path: string) {
   return path.split("?")[0];
@@ -85,7 +98,7 @@ function isActive(path: string) {
 function handleNavigation(path: string, event?: Event) {
   if (!props.forceNavigation) return;
   event?.preventDefault();
-  window.location.assign(path);
+  router.push(path);
 }
 
 async function handleLogout(event: Event) {

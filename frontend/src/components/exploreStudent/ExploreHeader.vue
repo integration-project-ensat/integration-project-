@@ -385,6 +385,18 @@ const resolveConnexionPath = (type: string) => {
   return `/student/connexions?tab=${tab}`;
 };
 
+const appendQuery = (path: string, query: Record<string, string | number | null | undefined>) => {
+  const params = new URLSearchParams();
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === "") return;
+    params.set(key, String(value));
+  });
+
+  const suffix = params.toString();
+  return suffix ? `${path}?${suffix}` : path;
+};
+
 const resolveNotificationTargetPath = (notificationRaw: any) => {
   const type = String(notificationRaw?.type || "").toUpperCase();
   const targetType = String(
@@ -393,6 +405,12 @@ const resolveNotificationTargetPath = (notificationRaw: any) => {
       notificationRaw?.targetType ||
       "",
   ).toUpperCase();
+  const targetId = String(
+    notificationRaw?.cible_id ||
+      notificationRaw?.cibleId ||
+      notificationRaw?.targetId ||
+      "",
+  ).trim();
 
   if (type.includes("CONNEXION")) {
     return resolveConnexionPath(type);
@@ -400,17 +418,19 @@ const resolveNotificationTargetPath = (notificationRaw: any) => {
 
   if (props.userType === "professeur") {
     if (targetType === "LETTRE" || type.includes("RECOMMANDATION")) {
-      return "/prof/recommandations";
+      return appendQuery("/prof/recommandations", { highlight: targetId || null });
     }
-    if (
-      targetType === "PROJET" ||
-      targetType === "STAGE" ||
-      targetType === "ATTESTATION" ||
-      type.includes("PROJET") ||
-      type.includes("STAGE") ||
-      type.includes("ATTESTATION")
-    ) {
-      return "/prof/validations";
+    if (targetType === "PROJET" || type.includes("PROJET")) {
+      return appendQuery("/prof/validations", {
+        tab: "Projet",
+        highlight: targetId || null,
+      });
+    }
+    if (targetType === "STAGE" || type.includes("STAGE") || targetType === "ATTESTATION" || type.includes("ATTESTATION")) {
+      return appendQuery("/prof/validations", {
+        tab: "Stage",
+        highlight: targetId || null,
+      });
     }
     if (type.includes("COMMENTAIRE")) return "/prof/feed";
     return "/prof/dashboard";
@@ -421,22 +441,70 @@ const resolveNotificationTargetPath = (notificationRaw: any) => {
     return "/pro/dashboard";
   }
 
-  if (targetType === "LETTRE") return "/lettres";
-  if (targetType === "PROJET" || type.includes("PROJET")) return "/projets";
-  if (targetType === "STAGE" || type.includes("STAGE")) return "/stages";
-  if (targetType === "ACTIVITE") return "/activites";
+  if (targetType === "LETTRE") return appendQuery("/lettres", { highlight: targetId || null });
+  if (targetType === "PROJET" || type.includes("PROJET")) return appendQuery("/projets", { highlight: targetId || null });
+  if (targetType === "STAGE" || type.includes("STAGE")) return appendQuery("/stages", { highlight: targetId || null });
+  if (targetType === "ACTIVITE") return appendQuery("/activites", { highlight: targetId || null });
   if (
     targetType === "ATTESTATION" ||
     targetType === "BADGE" ||
     type.includes("ATTESTATION") ||
     type.includes("BADGE")
   ) {
-    return "/certifications";
+    return appendQuery("/certifications", { highlight: targetId || null });
   }
-  if (type.includes("RECOMMANDATION")) return "/recos";
+  if (type.includes("RECOMMANDATION")) return appendQuery("/recos", { highlight: targetId || null });
   if (type.includes("COMMENTAIRE")) return "/commentaires";
 
   return "/student/dashboard";
+};
+
+const extractNotificationMeta = (messageRaw: any) => {
+  const message = String(messageRaw || "").trim();
+
+  if (!message) {
+    return {
+      person: "Système",
+      action: "Nouvelle notification",
+    };
+  }
+
+  const nameMatch = message.match(
+    /^([A-ZÀ-Ý][\p{L}'’.-]+(?:\s+[A-ZÀ-Ý][\p{L}'’.-]+)*)\s+((?:a|vous a)\s+.+)$/u,
+  );
+
+  if (nameMatch) {
+    return {
+      person: nameMatch[1],
+      action: nameMatch[2],
+    };
+  }
+
+  if (/^Un étudiant\b/i.test(message)) {
+    return {
+      person: "Étudiant",
+      action: message.replace(/^Un étudiant\s+/i, ""),
+    };
+  }
+
+  if (/^Le professeur\b/i.test(message)) {
+    return {
+      person: "Professeur",
+      action: message.replace(/^Le professeur\s+/i, ""),
+    };
+  }
+
+  if (/^Votre\b/i.test(message)) {
+    return {
+      person: "Système",
+      action: message,
+    };
+  }
+
+  return {
+    person: "Système",
+    action: message,
+  };
 };
 
 const mapNotification = (notificationRaw: any): NotificationItem => {
@@ -444,6 +512,7 @@ const mapNotification = (notificationRaw: any): NotificationItem => {
   const targetType = String(notificationRaw.cible_type ?? notificationRaw.cibleType ?? "");
   const targetId = String(notificationRaw.cible_id ?? notificationRaw.cibleId ?? "");
   const targetPath = resolveNotificationTargetPath(notificationRaw);
+  const { person, action } = extractNotificationMeta(notificationRaw.message);
 
   return {
     id: Number(notificationRaw.id_notification ?? notificationRaw.id ?? 0),
@@ -451,8 +520,8 @@ const mapNotification = (notificationRaw: any): NotificationItem => {
     type: String(notificationRaw.type || ""),
     targetId,
     targetType,
-    person: "Système",
-    action: notificationRaw.message || "Nouvelle notification",
+    person,
+    action,
     relatedTitle: targetType || "",
     time: formatTimeAgo(notificationRaw.date_reception),
     initials: category.charAt(0).toUpperCase(),
@@ -664,24 +733,30 @@ onMounted(() => {
                 {{ notification.initials }}
               </button>
 
-              <span class="explore-notif-copy">
-                <span class="explore-notif-text">
-                  <button
-                    type="button"
-                    class="explore-person-link"
-                    @click.stop="navigateToProfile(notification)"
-                  >
-                    {{ notification.person }}
-                  </button>
-                  {{ notification.action }}
-                  <span class="explore-related">{{
-                    notification.relatedTitle
-                  }}</span>
+                <span class="explore-notif-copy">
+                  <span class="explore-notif-text">
+                    <button
+                      v-if="notification.person !== 'Système'"
+                      type="button"
+                      class="explore-person-link"
+                      @click.stop="navigateToProfile(notification)"
+                    >
+                      {{ notification.person }}
+                    </button>
+                    {{ notification.action }}
+                    <button
+                      v-if="notification.relatedTitle"
+                      type="button"
+                      class="explore-related"
+                      @click.stop="navigateToNotificationTarget(notification)"
+                    >{{
+                      notification.relatedTitle
+                    }}</button>
+                  </span>
+                  <span class="explore-notif-meta">
+                    {{ notification.time }}
+                  </span>
                 </span>
-                <span class="explore-notif-meta">
-                  {{ notification.time }}
-                </span>
-              </span>
 
               <span v-if="notification.unread" class="explore-item-dot" />
             </div>
@@ -1059,9 +1134,18 @@ onMounted(() => {
 }
 
 .explore-related {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   color: var(--purple);
   font-weight: 800;
   overflow-wrap: anywhere;
+}
+
+.explore-related:hover {
+  text-decoration: underline;
 }
 
 .explore-notif-meta {

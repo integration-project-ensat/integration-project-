@@ -213,7 +213,7 @@ const router = createRouter({
       component: Placeholder,
       meta: { requiresAuth: true },
     },
-    { path: "/profile", name: "profile", component: StudentProfileView },
+    { path: "/profile", name: "profile", component: StudentProfileView, meta: { requiresAuth: true } },
     { path: "/profile/edit", name: "profile-edit", component: ProfileEditView },
     { path: "/dashboard", name: "dashboard", component: DashboardProView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
@@ -482,6 +482,12 @@ const router = createRouter({
       path: "/student/dashboard",
       name: "student-dashboard",
       component: DashboardStudentView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/student/profile",
+      name: "student-profile",
+      component: StudentProfileView,
       meta: { requiresAuth: true, requiresRole: "student" },
     },
     {

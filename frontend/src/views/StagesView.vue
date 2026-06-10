@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { stageService } from "../services/stage.service";
@@ -16,8 +17,10 @@ interface Stage {
 }
 
 const sidebarOpen = ref(true);
+const route = useRoute();
 const showForm = ref(false);
 const stages = ref<Stage[]>([]);
+const highlightedStageId = ref<number | null>(null);
 
 const newStage = ref({
   entreprise: "",
@@ -47,10 +50,28 @@ async function loadStages() {
     const { data } = await stageService.getMesStages();
     const raw = Array.isArray(data?.data) ? data.data : [];
     stages.value = raw.map(mapStage);
+    await scrollToHighlightedStage();
   } catch (error) {
     console.warn("Chargement des stages impossible", error);
     stages.value = [];
   }
+}
+
+const syncHighlightedStage = () => {
+  const rawHighlight = route.query.highlight ?? route.query.id;
+  const value = Array.isArray(rawHighlight) ? rawHighlight[0] : rawHighlight;
+  const parsed = Number(String(value || ""));
+  highlightedStageId.value = Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+async function scrollToHighlightedStage() {
+  await nextTick();
+  const id = highlightedStageId.value;
+  if (!id) return;
+  document.getElementById(`stage-${id}`)?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 }
 
 async function ajouterStage() {
@@ -97,8 +118,17 @@ function formatDate(d: string) {
 }
 
 onMounted(() => {
+  syncHighlightedStage();
   loadStages();
 });
+
+watch(
+  () => route.query.highlight,
+  async () => {
+    syncHighlightedStage();
+    await scrollToHighlightedStage();
+  },
+);
 </script>
 
 <template>
@@ -181,7 +211,13 @@ onMounted(() => {
         </div>
 
         <div class="stages-list">
-          <div v-for="stage in stages" :key="stage.id" class="stage-card">
+          <div
+            v-for="stage in stages"
+            :key="stage.id"
+            class="stage-card"
+            :id="`stage-${stage.id}`"
+            :class="{ 'is-highlighted': highlightedStageId === stage.id }"
+          >
             <div class="card-left">
               <div class="company-logo">{{ stage.entreprise.charAt(0) }}</div>
             </div>
@@ -337,6 +373,10 @@ onMounted(() => {
   border: 1px solid var(--input-bg);
   border-radius: var(--radius-card);
   transition: var(--ease);
+}
+.stage-card.is-highlighted {
+  border-color: var(--purple);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.14);
 }
 .stage-card:hover { box-shadow: 0 4px 16px rgba(79,70,229,0.12); border-color: rgba(79,70,229,0.2); }
 

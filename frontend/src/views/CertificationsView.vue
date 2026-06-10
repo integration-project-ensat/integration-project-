@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { attestationService } from "../services/attestation.service";
@@ -18,9 +19,11 @@ interface Certification {
 }
 
 const sidebarOpen = ref(true);
+const route = useRoute();
 const showForm = ref(false);
 const activeTab = ref<"tous" | "diplome" | "certification" | "formation">("tous");
 const certifications = ref<Certification[]>([]);
+const highlightedCertificationId = ref<number | null>(null);
 
 const newCert = ref({
   titre: "",
@@ -90,10 +93,28 @@ async function loadCertifications() {
       : [];
 
     certifications.value = [...diplomes, ...attestations];
+    await scrollToHighlightedCertification();
   } catch (error) {
     console.warn("Chargement des dipl�mes/certifications impossible", error);
     certifications.value = [];
   }
+}
+
+const syncHighlightedCertification = () => {
+  const rawHighlight = route.query.highlight ?? route.query.id;
+  const value = Array.isArray(rawHighlight) ? rawHighlight[0] : rawHighlight;
+  const parsed = Number(String(value || ""));
+  highlightedCertificationId.value = Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+async function scrollToHighlightedCertification() {
+  await nextTick();
+  const id = highlightedCertificationId.value;
+  if (!id) return;
+  document.getElementById(`certification-${id}`)?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 }
 
 async function ajouterCertification() {
@@ -154,8 +175,17 @@ const filtered = computed(() => {
 });
 
 onMounted(() => {
+  syncHighlightedCertification();
   loadCertifications();
 });
+
+watch(
+  () => route.query.highlight,
+  async () => {
+    syncHighlightedCertification();
+    await scrollToHighlightedCertification();
+  },
+);
 </script>
 
 <template>
@@ -255,7 +285,13 @@ onMounted(() => {
 
         <!-- Liste -->
         <div class="cert-list">
-          <div v-for="cert in filtered" :key="`${cert.source}-${cert.id}`" class="cert-card">
+          <div
+            v-for="cert in filtered"
+            :key="`${cert.source}-${cert.id}`"
+            class="cert-card"
+            :id="`certification-${cert.id}`"
+            :class="{ 'is-highlighted': highlightedCertificationId === cert.id }"
+          >
             <div class="cert-left" :style="{ background: typeColors[cert.type] + '18', borderColor: typeColors[cert.type] + '33' }">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" :stroke="typeColors[cert.type]" stroke-width="2">
                 <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
@@ -338,6 +374,7 @@ onMounted(() => {
 
 .cert-list { padding: 16px 28px 28px; display: flex; flex-direction: column; gap: 14px; }
 .cert-card { display: flex; gap: 16px; padding: 18px; border: 1px solid var(--input-bg); border-radius: var(--radius-card); transition: var(--ease); }
+.cert-card.is-highlighted { box-shadow: 0 10px 24px rgba(79, 70, 229, 0.14); border-color: var(--purple); }
 .cert-card:hover { box-shadow: 0 4px 16px rgba(79,70,229,0.12); border-color: rgba(79,70,229,0.2); }
 .cert-left { width: 48px; height: 48px; border-radius: 12px; border: 1px solid; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cert-body { flex: 1; min-width: 0; }

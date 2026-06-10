@@ -43,6 +43,13 @@
             @banner-changed="profile.banner = $event"
           />
 
+          <p v-if="profileSuccess" class="profile-feedback profile-feedback--success">
+            {{ profileSuccess }}
+          </p>
+          <p v-if="profileSaveError" class="profile-feedback profile-feedback--error">
+            {{ profileSaveError }}
+          </p>
+
           <!-- Action enseignant : attacher l'étudiant -->
           <section v-if="userRole === 'teacher'" class="teacher-actions">
             <div class="teacher-actions__content">
@@ -99,7 +106,9 @@
               <template v-else>
                 <textarea v-model="bioForm" class="bio-textarea" placeholder="Décrivez-vous en quelques mots..." />
                 <div class="pedit-row-actions">
-                  <button type="button" class="send-btn" @click="saveBio">Enregistrer</button>
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveBio">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
                   <button type="button" class="cancel-btn" @click="cancelBio">Annuler</button>
                 </div>
               </template>
@@ -147,7 +156,9 @@
                   <div class="form-field"><label>GitHub</label><input v-model="contactForm.github" type="url" placeholder="https://github.com/..." /></div>
                 </div>
                 <div class="pedit-row-actions">
-                  <button type="button" class="send-btn" @click="saveContact">Enregistrer</button>
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveContact">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
                   <button type="button" class="cancel-btn" @click="editingContact = false">Annuler</button>
                 </div>
               </template>
@@ -589,6 +600,9 @@ const sidebarOpen = ref(false)
 const showRecosModal = ref(false)
 const showEditModal = ref(false)
 const copied = ref(false)
+const savingProfile = ref(false)
+const profileSuccess = ref('')
+const profileSaveError = ref('')
 
 // ─── Role ─────────────────────────────────────────────────────────────────────
 
@@ -834,8 +848,49 @@ async function copyProfileLink() {
 const editingAbout = ref(false)
 const bioForm = ref('')
 
+function applySavedProfile(savedProfile: any) {
+  profile.value = {
+    ...profile.value,
+    bio: savedProfile?.bio ?? profile.value.bio,
+    email: savedProfile?.email ?? profile.value.email,
+    phone: savedProfile?.phone ?? profile.value.phone,
+    location: savedProfile?.location ?? profile.value.location,
+    linkedin: savedProfile?.linkedin ?? profile.value.linkedin,
+    avatar: savedProfile?.avatar ?? profile.value.avatar,
+    banner: savedProfile?.banner ?? profile.value.banner,
+  }
+}
+
+async function saveProfileChanges(payload: Record<string, string>, successMessage: string) {
+  if (savingProfile.value) return false
+  savingProfile.value = true
+  profileSuccess.value = ''
+  profileSaveError.value = ''
+
+  try {
+    const savedProfile = await profileService.updateProfile(null, payload)
+    applySavedProfile(savedProfile)
+    profileSuccess.value = successMessage
+    window.setTimeout(() => { profileSuccess.value = '' }, 3000)
+    return true
+  } catch (error: any) {
+    profileSaveError.value =
+      error?.response?.data?.message ||
+      "Impossible d'enregistrer le profil pour le moment."
+    return false
+  } finally {
+    savingProfile.value = false
+  }
+}
+
 function openEditAbout() { bioForm.value = profile.value.bio; editingAbout.value = true }
-function saveBio() { profile.value.bio = bioForm.value; editingAbout.value = false }
+async function saveBio() {
+  const saved = await saveProfileChanges(
+    { bio: bioForm.value },
+    'Bio mise a jour avec succes.'
+  )
+  if (saved) editingAbout.value = false
+}
 function cancelBio() { bioForm.value = profile.value.bio; editingAbout.value = false }
 
 // ─── Profile edit – contact ───────────────────────────────────────────────────
@@ -854,9 +909,19 @@ function openEditContact() {
   editingContact.value = true
 }
 
-function saveContact() {
-  Object.assign(profile.value, { ...contactForm })
-  editingContact.value = false
+async function saveContact() {
+  const payload: Record<string, string> = {}
+  if (contactForm.email.trim()) payload.email_professionnel = contactForm.email.trim()
+  if (contactForm.phone.trim()) payload.telephone = contactForm.phone.trim()
+  if (contactForm.linkedin.trim()) payload.linkedin_url = contactForm.linkedin.trim()
+
+  const saved = await saveProfileChanges(
+    payload,
+    'Informations de contact mises a jour avec succes.'
+  )
+  if (saved) {
+    editingContact.value = false
+  }
 }
 
 // ─── Profile edit – skills ────────────────────────────────────────────────────
@@ -1105,6 +1170,7 @@ async function loadProfile() {
       location: backendProfile.location,
       recos: backendProfile.recos,
       avatar: backendProfile.avatar,
+      banner: backendProfile.banner,
       bio: backendProfile.bio,
       email: backendProfile.email,
       phone: backendProfile.phone || '',
@@ -1268,6 +1334,27 @@ watch(profileId, () => {
 }
 
 .page-state--error { color: #dc2626; }
+
+.profile-feedback {
+  margin: 10px 0 0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: var(--font-head);
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+.profile-feedback--success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.profile-feedback--error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
 
 .body-area {
   position: relative;
@@ -1893,6 +1980,11 @@ watch(profileId, () => {
   color: white;
   font-family: var(--font-head);
   font-weight: 700;
+}
+
+.send-btn:disabled {
+  opacity: .65;
+  cursor: not-allowed;
 }
 
 .cancel-btn {

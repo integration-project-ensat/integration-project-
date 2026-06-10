@@ -323,8 +323,10 @@ const props = defineProps<{
     location: string
     recos: string
     avatar?: string
+    banner?: string
     bio?: string
     email?: string
+    phone?: string
     website?: string
     linkedin?: string
     technicalSkills?: SkillItem[]
@@ -355,6 +357,9 @@ const tabList = computed(() =>
 const localBannerStyle = computed(() => {
   if (localBanner.value) {
     return { backgroundImage: `url(${localBanner.value})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  }
+  if ((props.profile as any).banner) {
+    return { backgroundImage: `url(${(props.profile as any).banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
   }
   return {}
 })
@@ -459,12 +464,17 @@ const handleTabClick = (tab: string) => {
 
 function avatarColorClass(name: string) {
   const colors = ['avatar-blue', 'avatar-orange', 'avatar-indigo', 'avatar-green', 'avatar-deep-blue', 'avatar-brown', 'avatar-purple', 'avatar-slate']
-  const sum = name.split('').reduce((total, char) => total + char.charCodeAt(0), 0)
+  const sum = String(name || 'Profil').split('').reduce((total, char) => total + char.charCodeAt(0), 0)
   return colors[sum % colors.length]
 }
 
 function getInitials(name: string) {
-  return name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+  return String(name || 'Profil')
+    .split(' ')
+    .map((part) => part[0] || '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 }
 </script>
 

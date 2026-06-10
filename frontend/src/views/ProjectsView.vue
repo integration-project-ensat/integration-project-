@@ -49,6 +49,8 @@
             v-for="project in filteredProjects"
             :key="project.id"
             class="project-card"
+            :id="`project-${project.id}`"
+            :class="{ 'is-highlighted': highlightedProjectId === project.id }"
           >
             <!-- Card top color bar -->
             <div class="card-bar" :style="{ background: categoryColor(project.category) }"></div>
@@ -238,12 +240,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
 import { projetService } from '../services/projet.service'
 
 const sidebarOpen = ref(true)
+const route = useRoute()
 const userRole = 'student'
 const currentUser = { name: 'Nom Prenom', email: 'Exemple.exemple@univ.etu.ac.ma', avatar: '' }
 
@@ -321,6 +325,7 @@ function mapProject(item: any): Project {
 const projects = ref([] as Project[])
 const activeCategory = ref('all')
 const searchQuery = ref('')
+const highlightedProjectId = ref<number | null>(null)
 const showModal = ref(false)
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
@@ -340,10 +345,28 @@ async function loadProjects() {
     const { data } = await projetService.getMesProjets()
     const raw = Array.isArray(data?.data) ? data.data : []
     projects.value = raw.map(mapProject)
+    await scrollToHighlightedProject()
   } catch (error) {
     console.warn('Chargement des projets impossible', error)
     projects.value = []
   }
+}
+
+const syncHighlightedProject = () => {
+  const rawHighlight = route.query.highlight ?? route.query.id
+  const value = Array.isArray(rawHighlight) ? rawHighlight[0] : rawHighlight
+  const parsed = Number(String(value || ''))
+  highlightedProjectId.value = Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+async function scrollToHighlightedProject() {
+  await nextTick()
+  const id = highlightedProjectId.value
+  if (!id) return
+  document.getElementById(`project-${id}`)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  })
 }
 
 const filteredProjects = computed(() => {
@@ -454,8 +477,17 @@ function getInitials(name: string) {
 }
 
 onMounted(() => {
+  syncHighlightedProject()
   loadProjects()
 })
+
+watch(
+  () => route.query.highlight,
+  async () => {
+    syncHighlightedProject()
+    await scrollToHighlightedProject()
+  },
+)
 </script>
 
 <style scoped>
@@ -643,6 +675,11 @@ onMounted(() => {
   transition: box-shadow .25s ease, transform .25s ease;
   display: flex;
   flex-direction: column;
+}
+
+.project-card.is-highlighted {
+  box-shadow: 0 10px 30px rgba(91, 79, 207, 0.2);
+  outline: 2px solid rgba(91, 79, 207, 0.35);
 }
 
 .project-card:hover {
