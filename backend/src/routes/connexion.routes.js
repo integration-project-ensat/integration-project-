@@ -8,7 +8,7 @@ const router = express.Router()
 
 router.use(authentifier)
 
-router.post('/:userId', connexionController.envoyerDemande)
+router.post('/:userId', validate(connexionValidator.userId), connexionController.envoyerDemande)
 router.patch('/:id/accepter', validate(connexionValidator.idParamRules), connexionController.accepter)
 router.patch('/:id/refuser', validate(connexionValidator.idParamRules), connexionController.refuser)
 router.get('/', connexionController.getMine)

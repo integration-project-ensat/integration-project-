@@ -13,11 +13,13 @@ const connexionController = {
         .json(ApiResponse.created(connexion, "Demande de connexion envoyée"));
     } catch (e) {
       if (e.statusCode === 400)
-        return res.status(400).json(ApiResponse.error(e.message));
+        return res.status(400).json(ApiResponse.validationError({}, e.message));
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
+      if (e.statusCode === 404)
+        return res.status(404).json(ApiResponse.notFound("Utilisateur"));
       if (e.statusCode === 409)
-        return res.status(409).json(ApiResponse.error(e.message));
+        return res.status(409).json(ApiResponse.conflict(e.message));
       return res.status(500).json(ApiResponse.serverError());
     }
   },
@@ -34,9 +36,9 @@ const connexionController = {
       return res.json(ApiResponse.success(connexion, "Connexion acceptée"));
     } catch (e) {
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
       if (e.statusCode === 400)
-        return res.status(400).json(ApiResponse.error(e.message));
+        return res.status(400).json(ApiResponse.validationError({}, e.message));
       return res.status(500).json(ApiResponse.serverError());
     }
   },
@@ -53,9 +55,9 @@ const connexionController = {
       return res.json(ApiResponse.success(connexion, "Connexion refusée"));
     } catch (e) {
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
       if (e.statusCode === 400)
-        return res.status(400).json(ApiResponse.error(e.message));
+        return res.status(400).json(ApiResponse.validationError({}, e.message));
       return res.status(500).json(ApiResponse.serverError());
     }
   },
@@ -121,11 +123,11 @@ const connexionController = {
       );
     } catch (e) {
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
       if (e.statusCode === 404)
         return res.status(404).json(ApiResponse.notFound("Connexion"));
       if (e.statusCode === 422)
-        return res.status(422).json(ApiResponse.error(e.message));
+        return res.status(422).json(ApiResponse.unprocessable(e.message));
       return res.status(500).json(ApiResponse.serverError());
     }
   },

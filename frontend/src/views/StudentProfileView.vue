@@ -134,6 +134,7 @@
       <p>
         Envoyez une demande de connexion à {{ profile.name }} pour rester en contact.
       </p>
+      <p v-if="connectionMessage" class="connect-message">{{ connectionMessage }}</p>
     </div>
 
     <button
@@ -340,6 +341,7 @@ const profile = ref({
 const recommendations = ref<Recommendation[]>([])
 
 const connectionSent = ref(false)
+const connectionMessage = ref('')
 
 async function sendConnectionRequest() {
   try {
@@ -348,8 +350,14 @@ async function sendConnectionRequest() {
       message: `Demande de connexion vers ${profile.value.name}`
     })
     connectionSent.value = true
-  } catch (error) {
-    console.error('Erreur demande de connexion', error)
+    connectionMessage.value = 'Demande de connexion envoyée.'
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "Impossible d'envoyer la demande de connexion."
+    if (error?.response?.status === 409) {
+      connectionSent.value = true
+    }
+    connectionMessage.value = message
   }
 }
 
@@ -934,6 +942,12 @@ watch(profileId, () => {
 .connect-card p {
   font-size: .85rem;
   color: var(--text-muted);
+}
+
+.connect-message {
+  color: var(--purple) !important;
+  font-weight: 800;
+  margin-top: 8px;
 }
 
 .connect-btn {

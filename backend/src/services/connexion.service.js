@@ -64,25 +64,32 @@ const connexionService = {
       };
     }
 
-    const existe = await prisma.connexion.findFirst({
+    const demandeExistante = await prisma.connexion.findFirst({
       where: {
-        OR: [
-          {
-            demandeur_id: BigInt(demandeurId),
-            destinataire_id: BigInt(destinataireId),
-          },
-          {
-            demandeur_id: BigInt(destinataireId),
-            destinataire_id: BigInt(demandeurId),
-          },
-        ],
+        demandeur_id: BigInt(demandeurId),
+        destinataire_id: BigInt(destinataireId),
       },
     });
 
-    if (existe) {
+    if (demandeExistante) {
       throw {
         statusCode: 409,
         message: "Une demande ou connexion existe déjà",
+      };
+    }
+
+    const connexionAccepteeInverse = await prisma.connexion.findFirst({
+      where: {
+        demandeur_id: BigInt(destinataireId),
+        destinataire_id: BigInt(demandeurId),
+        statut: "ACCEPTEE",
+      },
+    });
+
+    if (connexionAccepteeInverse) {
+      throw {
+        statusCode: 409,
+        message: "Vous etes deja connectes",
       };
     }
 

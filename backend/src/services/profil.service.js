@@ -154,6 +154,11 @@ class ProfilService {
   // ─── ÉCRITURE ─────────────────────────────
 
   async mettreAJourProfil(idUtilisateur, data) {
+    const utilisateur = await prisma.utilisateur.findUnique({
+      where: { id_utilisateur: BigInt(idUtilisateur) },
+      select: { role: true }
+    });
+
     const champsCommuns = {
       ...(data.photo_profil        !== undefined && { photo_profil:        data.photo_profil }),
       ...(data.telephone           !== undefined && { telephone:           data.telephone }),
@@ -178,6 +183,16 @@ class ProfilService {
         visibilite:          data.visibilite          ?? 'PUBLIC'
       }
     });
+
+    if (
+      utilisateur?.role === ROLES.ETUDIANT &&
+      data.etablissement !== undefined
+    ) {
+      await prisma.etudiant.update({
+        where: { id_utilisateur: BigInt(idUtilisateur) },
+        data: { etablissement: data.etablissement || null }
+      });
+    }
 
     await recalculerScore(idUtilisateur);
     return profil;
@@ -311,6 +326,7 @@ class ProfilService {
           etudiant: {
             select: {
               filiere:             true,
+              etablissement:       true,
               annee_universitaire: true,
               score_credibilite: {
                 select: { score_total: true, niveau: true }
@@ -424,6 +440,7 @@ class ProfilService {
             etudiant: {
               select: {
                 filiere: true,
+                etablissement: true,
                 score_credibilite: {
                   select: { score_total: true, niveau: true }
                 },

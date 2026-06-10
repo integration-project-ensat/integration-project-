@@ -41,6 +41,7 @@ async function seedAdministrateurs(hashAdmin) {
       email: process.env.ADMIN_EMAIL || "admin1@plateforme.ma",
       nom: "Admin",
       prenom: "Principal",
+      ville: "Rabat",
       niveau_acces: "SUPER_ADMIN",
       droits_admin: {
         utilisateurs: true,
@@ -52,6 +53,7 @@ async function seedAdministrateurs(hashAdmin) {
       email: "admin2@plateforme.ma",
       nom: "Admin",
       prenom: "Secondaire",
+      ville: "Casablanca",
       niveau_acces: "STANDARD",
       droits_admin: {
         utilisateurs: true,
@@ -77,10 +79,10 @@ async function seedAdministrateurs(hashAdmin) {
 
     await prisma.profil.upsert({
       where: { id_utilisateur: utilisateur.id_utilisateur },
-      update: { adresse: "Maroc", visibilite: "PRIVE" },
+      update: { adresse: admin.ville, visibilite: "PRIVE" },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
-        adresse: "Maroc",
+        adresse: admin.ville,
         visibilite: "PRIVE",
       },
     });
@@ -117,6 +119,7 @@ async function seedProfesseurs(hashProfesseur) {
       specialite: "Genie logiciel",
       titre: "Dr.",
       telephone: "0600000001",
+      ville: "Tanger",
     },
     {
       email: "prof2@plateforme.ma",
@@ -127,6 +130,7 @@ async function seedProfesseurs(hashProfesseur) {
       specialite: "Cybersecurite",
       titre: "Pr.",
       telephone: "0600000002",
+      ville: "Casablanca",
     },
     {
       email: "prof3@plateforme.ma",
@@ -137,6 +141,7 @@ async function seedProfesseurs(hashProfesseur) {
       specialite: "Intelligence artificielle",
       titre: "Dr.",
       telephone: "0600000003",
+      ville: "Rabat",
     },
   ];
 
@@ -175,14 +180,14 @@ async function seedProfesseurs(hashProfesseur) {
       where: { id_utilisateur: utilisateur.id_utilisateur },
       update: {
         telephone: prof.telephone,
-        adresse: "Maroc",
+        adresse: prof.ville,
         email_professionnel: prof.email,
         visibilite: "PUBLIC",
       },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
         telephone: prof.telephone,
-        adresse: "Maroc",
+        adresse: prof.ville,
         email_professionnel: prof.email,
         visibilite: "PUBLIC",
       },
@@ -202,8 +207,10 @@ async function seedEtudiants(hashEtudiant) {
       prenom: "Omar",
       numero_etudiant: "ETU001",
       filiere: "Genie Informatique",
+      etablissement: "ENSA Tanger",
       objectif_pro: "DEV_WEB",
       telephone: "0611111111",
+      ville: "Tanger",
       linkedin_url: "https://linkedin.com/in/omar-mansouri",
     },
     {
@@ -212,8 +219,10 @@ async function seedEtudiants(hashEtudiant) {
       prenom: "Imane",
       numero_etudiant: "ETU002",
       filiere: "Reseaux et Telecoms",
+      etablissement: "FST Tanger",
       objectif_pro: "CYBERSECURITE",
       telephone: "0611111112",
+      ville: "Tanger",
       linkedin_url: "https://linkedin.com/in/imane-tazi",
     },
     {
@@ -222,8 +231,10 @@ async function seedEtudiants(hashEtudiant) {
       prenom: "Mehdi",
       numero_etudiant: "ETU003",
       filiere: "Data Science",
+      etablissement: "ENSIAS Rabat",
       objectif_pro: "DATA_SCIENCE",
       telephone: "0611111113",
+      ville: "Rabat",
       linkedin_url: "https://linkedin.com/in/mehdi-rifai",
     },
     {
@@ -232,8 +243,10 @@ async function seedEtudiants(hashEtudiant) {
       prenom: "Salma",
       numero_etudiant: "ETU004",
       filiere: "Genie Informatique",
+      etablissement: "EMI Rabat",
       objectif_pro: "DEVOPS",
       telephone: "0611111114",
+      ville: "Rabat",
       linkedin_url: "https://linkedin.com/in/salma-elfassi",
     },
     {
@@ -242,8 +255,10 @@ async function seedEtudiants(hashEtudiant) {
       prenom: "Yassine",
       numero_etudiant: "ETU005",
       filiere: "Cybersecurite",
+      etablissement: "ENSA Marrakech",
       objectif_pro: "CYBERSECURITE",
       telephone: "0611111115",
+      ville: "Marrakech",
       linkedin_url: "https://linkedin.com/in/yassine-naciri",
     },
   ];
@@ -267,12 +282,14 @@ async function seedEtudiants(hashEtudiant) {
       update: {
         numero_etudiant: etudiant.numero_etudiant,
         filiere: etudiant.filiere,
+        etablissement: etudiant.etablissement,
         annee_universitaire: "2025-2026",
       },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
         numero_etudiant: etudiant.numero_etudiant,
         filiere: etudiant.filiere,
+        etablissement: etudiant.etablissement,
         annee_universitaire: "2025-2026",
       },
     });
@@ -281,7 +298,7 @@ async function seedEtudiants(hashEtudiant) {
       where: { id_utilisateur: utilisateur.id_utilisateur },
       update: {
         telephone: etudiant.telephone,
-        adresse: "Maroc",
+        adresse: etudiant.ville,
         linkedin_url: etudiant.linkedin_url,
         bio: `Profil de ${etudiant.prenom} ${etudiant.nom}, etudiant en ${etudiant.filiere}.`,
         visibilite: "PUBLIC",
@@ -289,14 +306,19 @@ async function seedEtudiants(hashEtudiant) {
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
         telephone: etudiant.telephone,
-        adresse: "Maroc",
+        adresse: etudiant.ville,
         linkedin_url: etudiant.linkedin_url,
         bio: `Profil de ${etudiant.prenom} ${etudiant.nom}, etudiant en ${etudiant.filiere}.`,
         visibilite: "PUBLIC",
       },
     });
 
-    result.push({ ...utilisateur, objectif_pro: etudiant.objectif_pro });
+    result.push({
+      ...utilisateur,
+      objectif_pro: etudiant.objectif_pro,
+      filiere: etudiant.filiere,
+      etablissement: etudiant.etablissement,
+    });
   }
 
   return result;
@@ -311,6 +333,7 @@ async function seedProfessionnels(hashProfessionnel) {
       entreprise: "Entreprise Alpha",
       poste: "Directrice technique",
       secteur: "Tech",
+      ville: "Tanger",
       est_valide: true,
       statut_validation: "VALIDE",
     },
@@ -321,6 +344,7 @@ async function seedProfessionnels(hashProfessionnel) {
       entreprise: "Entreprise Beta",
       poste: "Responsable RH",
       secteur: "Finance",
+      ville: "Casablanca",
       est_valide: false,
       statut_validation: "EN_ATTENTE",
     },
@@ -331,6 +355,7 @@ async function seedProfessionnels(hashProfessionnel) {
       entreprise: "Startup Gamma",
       poste: "CEO",
       secteur: "Startup",
+      ville: "Rabat",
       est_valide: true,
       statut_validation: "VALIDE",
     },
@@ -374,19 +399,26 @@ async function seedProfessionnels(hashProfessionnel) {
     await prisma.profil.upsert({
       where: { id_utilisateur: utilisateur.id_utilisateur },
       update: {
-        adresse: "Maroc",
+        adresse: pro.ville,
         email_professionnel: pro.email,
         visibilite: "PUBLIC",
       },
       create: {
         id_utilisateur: utilisateur.id_utilisateur,
-        adresse: "Maroc",
+        adresse: pro.ville,
         email_professionnel: pro.email,
         visibilite: "PUBLIC",
       },
     });
 
-    result.push(utilisateur);
+    result.push({
+      ...utilisateur,
+      professionnel: {
+        entreprise: pro.entreprise,
+        poste: pro.poste,
+        secteur: pro.secteur,
+      },
+    });
   }
 
   return result;
@@ -637,61 +669,85 @@ async function seedProjets(etudiants, professeurs, technologies) {
   return result;
 }
 
-async function seedStages(etudiants, professeurs) {
+async function seedStages(etudiants, professeurs, professionnels) {
   const stagesData = [
     {
       entreprise: "Entreprise Alpha",
+      proIdx: 0,
+      etablissement: "ENSA Tanger",
       poste: "Developpeur Front-end",
       duree_semaines: 8,
       statut: "VALIDE",
       etudiantIdx: 0,
       profIdx: 0,
       technologies: "React, TypeScript",
+      date_debut: "2026-03-01",
+      date_fin: "2026-08-31",
     },
     {
-      entreprise: "Startup Beta",
+      entreprise: "Entreprise Alpha",
+      proIdx: 0,
+      etablissement: "FST Tanger",
       poste: "Data Analyst",
       duree_semaines: 6,
       statut: "EN_ATTENTE",
       etudiantIdx: 1,
       profIdx: 1,
       technologies: "Python, PostgreSQL",
+      date_debut: "2026-06-01",
+      date_fin: null,
     },
     {
-      entreprise: "Grande Entreprise C",
+      entreprise: "Startup Gamma",
+      proIdx: 2,
+      etablissement: "ENSIAS Rabat",
       poste: "DevOps Engineer",
       duree_semaines: 12,
       statut: "VALIDE",
       etudiantIdx: 2,
       profIdx: 2,
       technologies: "Docker, Linux",
+      date_debut: "2026-01-15",
+      date_fin: "2026-05-30",
     },
     {
-      entreprise: "Agence Digitale D",
+      entreprise: "Startup Gamma",
+      proIdx: 2,
+      etablissement: "EMI Rabat",
       poste: "Consultant Cloud",
       duree_semaines: 10,
       statut: "VALIDE",
       etudiantIdx: 3,
       profIdx: 1,
       technologies: "Docker, AWS",
+      date_debut: "2026-05-01",
+      date_fin: "2026-09-30",
     },
     {
-      entreprise: "Institut E",
+      entreprise: "Entreprise Alpha",
+      proIdx: 0,
+      etablissement: "ENSA Marrakech",
       poste: "Assistant Data Scientist",
       duree_semaines: 8,
       statut: "REFUSE",
       etudiantIdx: 4,
       profIdx: 2,
       technologies: "Python, SQL",
+      date_debut: "2026-02-01",
+      date_fin: "2026-04-30",
     },
     {
-      entreprise: "Collectif F",
+      entreprise: "Startup Gamma",
+      proIdx: 2,
+      etablissement: "ENSA Tanger",
       poste: "Developpeur Backend",
       duree_semaines: 9,
       statut: "EN_ATTENTE",
       etudiantIdx: 0,
       profIdx: 0,
       technologies: "Node.js, Prisma",
+      date_debut: "2026-07-01",
+      date_fin: null,
     },
   ];
 
@@ -701,14 +757,16 @@ async function seedStages(etudiants, professeurs) {
     const data = {
       id_etudiant: etudiants[stage.etudiantIdx].id_utilisateur,
       id_encadrant: professeurs[stage.profIdx].id_utilisateur,
-      entreprise: stage.entreprise,
+      id_professionnel: professionnels[stage.proIdx].id_utilisateur,
+      entreprise: professionnels[stage.proIdx].professionnel?.entreprise || stage.entreprise,
+      etablissement: stage.etablissement,
       poste: stage.poste,
       duree_semaines: stage.duree_semaines,
       missions: "Developpement, tests et deploiement.",
       technologies: stage.technologies,
       statut: stage.statut,
-      date_debut: toDate("2025-07-01"),
-      date_fin: toDate("2025-09-30"),
+      date_debut: toDate(stage.date_debut),
+      date_fin: stage.date_fin ? toDate(stage.date_fin) : null,
       commentaire_prof:
         stage.statut === "VALIDE" ? "Stage effectue avec serieux." : null,
     };
@@ -800,7 +858,7 @@ async function seedDiplomes(etudiants) {
       id_etudiant: etudiants[diplome.etudiantIdx].id_utilisateur,
       titre_diplome: diplome.titre_diplome,
       domaine: diplome.domaine,
-      etablissement: "Universite Mohammed V",
+      etablissement: etudiants[diplome.etudiantIdx].etablissement || "Universite Mohammed V",
       annee_debut: 2022,
       annee_fin: 2025,
     };
@@ -1216,6 +1274,33 @@ async function seedConnexions(etudiants, professeurs, professionnels) {
   }
 }
 
+async function seedProfilsSauvegardes(etudiants, professionnels) {
+  const sauvegardes = [
+    { proIdx: 0, etudiantIdx: 0 },
+    { proIdx: 0, etudiantIdx: 2 },
+    { proIdx: 0, etudiantIdx: 3 },
+    { proIdx: 2, etudiantIdx: 1 },
+    { proIdx: 2, etudiantIdx: 4 },
+  ];
+
+  for (const sauvegarde of sauvegardes) {
+    await prisma.profilSauvegarde.upsert({
+      where: {
+        id_sauvegardeur_id_etudiant: {
+          id_sauvegardeur: professionnels[sauvegarde.proIdx].id_utilisateur,
+          id_etudiant: etudiants[sauvegarde.etudiantIdx].id_utilisateur,
+        },
+      },
+      update: { date_sauvegarde: new Date() },
+      create: {
+        id_sauvegardeur: professionnels[sauvegarde.proIdx].id_utilisateur,
+        id_etudiant: etudiants[sauvegarde.etudiantIdx].id_utilisateur,
+        date_sauvegarde: new Date(),
+      },
+    });
+  }
+}
+
 async function seedPostes(etudiants) {
   const result = [];
   const postsData = [
@@ -1582,7 +1667,7 @@ async function main() {
 
   await seedProfilCompetences(etudiants, competences);
   const projets = await seedProjets(etudiants, professeurs, technologies);
-  const stages = await seedStages(etudiants, professeurs);
+  const stages = await seedStages(etudiants, professeurs, professionnels);
   const activites = await seedActivites(etudiants, professeurs);
   const diplomes = await seedDiplomes(etudiants);
   const badges = await seedBadges(etudiants);
@@ -1598,6 +1683,7 @@ async function main() {
 
   const postes = await seedPostes(etudiants);
   await seedConnexions(etudiants, professeurs, professionnels);
+  await seedProfilsSauvegardes(etudiants, professionnels);
 
   await seedCommentairesReactionsRecommandations(
     postes,

@@ -62,6 +62,8 @@ const searchQuery = ref("");
 const openCommentPostId = ref<string | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const actionMessage = ref<string | null>(null);
+let actionMessageTimer: number | undefined;
 
 const getCurrentUser = () => {
   const rawUser = localStorage.getItem("user");
@@ -86,6 +88,14 @@ const getCurrentUserName = () => {
 };
 
 const myStudentId = ref(getCurrentUserId());
+
+const showActionMessage = (message: string) => {
+  actionMessage.value = message;
+  if (actionMessageTimer) window.clearTimeout(actionMessageTimer);
+  actionMessageTimer = window.setTimeout(() => {
+    actionMessage.value = null;
+  }, 2500);
+};
 
 // ID de l'utilisateur connecté (pour afficher edit/delete sur ses propres posts)
 // Post form modal
@@ -362,9 +372,14 @@ const toggleConnect = async (post: FeedPost) => {
       message: `Demande de connexion vers ${post.studentName}`,
     });
     connectedPosts[post.id] = true;
+    showActionMessage("Demande de connexion envoyée.");
   } catch (err: any) {
-    error.value =
+    const message =
       err?.response?.data?.message || "Impossible d’envoyer la demande de connexion.";
+    if (err?.response?.status === 409) {
+      connectedPosts[post.id] = true;
+    }
+    showActionMessage(message);
   }
 };
 
@@ -522,7 +537,8 @@ onMounted(() => {
 
         <div v-if="loading" class="feed-state">Chargement...</div>
         <div v-else-if="error" class="feed-state feed-state--error">{{ error }}</div>
-        <div v-else-if="!visiblePosts.length" class="feed-state">Aucun post trouvé.</div>
+        <div v-if="actionMessage" class="feed-action-message">{{ actionMessage }}</div>
+        <div v-if="!loading && !error && !actionMessage && !visiblePosts.length" class="feed-state">Aucun post trouvé.</div>
 
         <article v-for="post in !loading && !error ? visiblePosts : []" :key="post.id" class="feed-card">
           <div v-if="post.repostedBy" class="repost-line">
@@ -1109,6 +1125,16 @@ onMounted(() => {
 
 .feed-state--error {
   color: var(--error);
+}
+
+.feed-action-message {
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  border-radius: var(--radius-card);
+  color: #166534;
+  font-weight: 800;
+  padding: 12px 16px;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
 }
 
 .feed-filter,

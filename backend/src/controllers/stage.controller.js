@@ -24,6 +24,7 @@ const stageController = {
       if (!stage) return res.status(404).json(ApiResponse.notFound('Stage'))
       return res.json(ApiResponse.success(stage))
     } catch (e) {
+      if (e.statusCode === 400) return res.status(400).json(ApiResponse.validationError({ professionnel: [e.message] }))
       return res.status(500).json(ApiResponse.serverError())
     }
   },
@@ -43,6 +44,7 @@ const stageController = {
       if (!stage) return res.status(404).json(ApiResponse.notFound('Stage'))
       return res.json(ApiResponse.success(stage, 'Stage mis à jour'))
     } catch (e) {
+      if (e.statusCode === 400) return res.status(400).json(ApiResponse.validationError({ professionnel: [e.message] }))
       if (e.statusCode === 403) return res.status(403).json(ApiResponse.forbidden())
       return res.status(500).json(ApiResponse.serverError())
     }

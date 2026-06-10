@@ -3,10 +3,13 @@ import { onMounted, ref } from "vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { stageService } from "../services/stage.service";
+import studentApi from "../services/studentApi";
+import { profileService } from "../services/profile.service";
 
 interface Stage {
   id: number;
   entreprise: string;
+  etablissement: string;
   poste: string;
   lieu: string;
   dateDebut: string;
@@ -15,12 +18,23 @@ interface Stage {
   competences: string[];
 }
 
+interface Professional {
+  id: string;
+  nom: string;
+  entreprise: string;
+  poste?: string;
+}
+
 const sidebarOpen = ref(true);
 const showForm = ref(false);
 const stages = ref<Stage[]>([]);
+const professionals = ref<Professional[]>([]);
+const profileSchool = ref("");
 
 const newStage = ref({
+  id_professionnel: "",
   entreprise: "",
+  etablissement: "",
   poste: "",
   lieu: "",
   dateDebut: "",
@@ -33,6 +47,7 @@ function mapStage(item: any): Stage {
   return {
     id: Number(item?.id_stage),
     entreprise: item?.entreprise || "Entreprise",
+    etablissement: item?.etablissement || "",
     poste: item?.poste || "Stage",
     lieu: "",
     dateDebut: item?.date_debut ? String(item.date_debut).slice(0, 7) : "",
@@ -53,11 +68,44 @@ async function loadStages() {
   }
 }
 
+async function loadProfileSchool() {
+  try {
+    const profile = await profileService.getCurrentUser();
+    profileSchool.value = profile.school || "";
+    if (!newStage.value.etablissement) {
+      newStage.value.etablissement = profileSchool.value;
+    }
+  } catch (error) {
+    console.warn("Chargement de l'etablissement du profil impossible", error);
+  }
+}
+
+async function loadProfessionals() {
+  try {
+    const { data } = await studentApi.getProfessionnels();
+    professionals.value = Array.isArray(data?.data) ? data.data : [];
+  } catch (error) {
+    console.warn("Chargement des professionnels impossible", error);
+    professionals.value = [];
+  }
+}
+
+function syncSelectedProfessional() {
+  const selected = professionals.value.find(
+    (professional) => professional.id === newStage.value.id_professionnel,
+  );
+  if (selected?.entreprise) {
+    newStage.value.entreprise = selected.entreprise;
+  }
+}
+
 async function ajouterStage() {
-  if (!newStage.value.entreprise || !newStage.value.poste) return;
+  if (!newStage.value.id_professionnel || !newStage.value.entreprise || !newStage.value.poste) return;
   try {
     await stageService.createStage({
+      id_professionnel: newStage.value.id_professionnel,
       entreprise: newStage.value.entreprise,
+      etablissement: newStage.value.etablissement,
       poste: newStage.value.poste,
       missions: newStage.value.description,
       technologies: newStage.value.competences,
@@ -65,7 +113,9 @@ async function ajouterStage() {
       date_fin: newStage.value.dateFin ? `${newStage.value.dateFin}-01` : undefined,
     });
     newStage.value = {
+      id_professionnel: "",
       entreprise: "",
+      etablissement: profileSchool.value,
       poste: "",
       lieu: "",
       dateDebut: "",
@@ -98,6 +148,8 @@ function formatDate(d: string) {
 
 onMounted(() => {
   loadStages();
+  loadProfessionals();
+  loadProfileSchool();
 });
 </script>
 
@@ -136,12 +188,25 @@ onMounted(() => {
           <h2 class="form-title">Nouveau stage</h2>
           <div class="form-grid">
             <div class="form-group">
-              <label>Entreprise *</label>
-              <input v-model="newStage.entreprise" placeholder="Ex: Google, OCP, Maroc Telecom..." />
+              <label>Professionnel / entreprise *</label>
+              <select v-model="newStage.id_professionnel" @change="syncSelectedProfessional">
+                <option value="">Choisir un professionnel</option>
+                <option
+                  v-for="professional in professionals"
+                  :key="professional.id"
+                  :value="professional.id"
+                >
+                  {{ professional.entreprise }} - {{ professional.nom }}
+                </option>
+              </select>
             </div>
             <div class="form-group">
               <label>Poste *</label>
               <input v-model="newStage.poste" placeholder="Ex: Développeur Full Stack" />
+            </div>
+            <div class="form-group">
+              <label>Établissement</label>
+              <input v-model="newStage.etablissement" placeholder="Ex: ENSA Tanger" />
             </div>
             <div class="form-group">
               <label>Lieu</label>
@@ -198,6 +263,9 @@ onMounted(() => {
                 </button>
               </div>
               <div class="card-meta">
+                <span v-if="stage.etablissement" class="meta-chip">
+                  {{ stage.etablissement }}
+                </span>
                 <span v-if="stage.lieu" class="meta-chip">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   {{ stage.lieu }}
@@ -296,6 +364,7 @@ onMounted(() => {
 .form-group.full { margin: 12px 0 0; }
 .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--text-gray); font-family: var(--font-head); }
 .form-group input,
+.form-group select,
 .form-group textarea {
   border: 1px solid var(--input-bg);
   border-radius: 8px;
@@ -309,6 +378,7 @@ onMounted(() => {
   transition: var(--ease);
 }
 .form-group input:focus,
+.form-group select:focus,
 .form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 .btn-cancel {

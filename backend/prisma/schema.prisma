@@ -288,6 +288,7 @@ model Etudiant {
   id_utilisateur      BigInt  @id
   numero_etudiant     String? @unique @db.VarChar(20)
   filiere             String? @db.VarChar(100)
+  etablissement       String? @db.VarChar(200)
   annee_universitaire String? @db.VarChar(9) 
   date_naissance      DateTime? @db.Date    
   
@@ -367,6 +368,7 @@ model Professionnel {
   justificatifs_url String?
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  stages_accueillis Stage[]
 
   @@map("professionnels")
 }
@@ -491,7 +493,9 @@ model Stage {
   id_stage         BigInt           @id @default(autoincrement())
   id_etudiant      BigInt
   id_encadrant     BigInt?
+  id_professionnel BigInt?
   entreprise       String           @db.VarChar(200)
+  etablissement    String?          @db.VarChar(200)
   poste            String?          @db.VarChar(150)
   duree_semaines   Int?
   missions         String?
@@ -504,6 +508,7 @@ model Stage {
 
   etudiant  Etudiant     @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
   encadrant Professeur?  @relation(fields: [id_encadrant], references: [id_utilisateur], onDelete: SetNull)
+  professionnel Professionnel? @relation(fields: [id_professionnel], references: [id_utilisateur], onDelete: SetNull)
 
   @@map("stages")
 }
