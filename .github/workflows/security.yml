@@ -63,6 +63,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: "Liberer espace disque"
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          docker system prune -af --volumes || true
+          df -h
+
       - name: "Demarrer Staging"
         run: |
           echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
@@ -74,10 +80,33 @@ jobs:
 
       - name: "Attendre SonarQube"
         run: |
-          timeout 180 bash -c \
-            'until curl -sf http://127.0.0.1:9000/api/system/status \
-            | grep -q UP; do sleep 10; done'
-          echo "SonarQube pret"
+          for i in $(seq 1 60); do
+            STATUS=$(curl -s http://127.0.0.1:9000/api/system/status \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status',''))" 2>/dev/null || echo "")
+            echo "Attempt $i/60 - Status: $STATUS"
+            if [ "$STATUS" = "UP" ]; then
+              echo "SonarQube pret"
+              exit 0
+            fi
+            if [ $((i % 10)) -eq 0 ]; then
+              docker logs portfolio_sonarqube --tail 20 2>&1 || true
+            fi
+            sleep 10
+          done
+          echo "SonarQube n'a pas demarré - logs finaux:"
+          docker logs portfolio_sonarqube --tail 50 2>&1 || true
+          exit 1
+
+      - name: "Generer Token SonarQube"
+        id: sonar_token
+        run: |
+          TOKEN=$(curl -s -X POST \
+            "http://127.0.0.1:9000/api/user_tokens/generate" \
+            -u "admin:admin" \
+            -d "name=pipeline-${{ github.run_number }}" \
+            | grep -o '"token":"[^"]*"' \
+            | cut -d'"' -f4)
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
       - name: "Attendre Backend"
         run: |
@@ -109,25 +138,14 @@ jobs:
               --severity HIGH,CRITICAL \
               $IMAGE || true
           done
- 
+
       - name: "Publier rapports Trivy"
         uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: trivy-report-${{ github.run_number }}
           path: reports/trivy/*
-          retention-days: 30    
-
-      - name: "Generer Token SonarQube"
-        id: sonar_token
-        run: |
-          TOKEN=$(curl -s -X POST \
-            "http://127.0.0.1:9000/api/user_tokens/generate" \
-            -u "admin:admin" \
-            -d "name=pipeline-${{ github.run_number }}" \
-            | grep -o '"token":"[^"]*"' \
-            | cut -d'"' -f4)
-          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          retention-days: 30
 
       - name: "SonarQube Scan"
         uses: SonarSource/sonarqube-scan-action@v5.2.0
@@ -138,7 +156,7 @@ jobs:
       - name: "Attendre analyse SonarQube"
         run: |
           echo "Waiting for SonarQube analysis..."
-          timeout 180 bash -c '
+          timeout 600 bash -c '
             until curl -s -u "admin:admin" \
               "http://127.0.0.1:9000/api/ce/activity?component=integration-project" \
               | python3 -c "
@@ -178,19 +196,17 @@ jobs:
         with:
           name: sonarqube-report-${{ github.run_number }}
           path: reports/sonarqube/sonarqube-report.json
-          retention-days: 30  
+          retention-days: 30
 
       - name: "Preparer dossier ZAP"
         run: |
           sudo mkdir -p reports/zap
           sudo chmod 777 reports/zap
-          docker exec --user root portfolio_zap chmod 777 /zap/wrk || true
 
       - name: "Scan OWASP ZAP"
         run: |
-          docker stop portfolio_zap || true
-
           if curl -sf http://127.0.0.1:3000/api-docs > /dev/null; then
+            echo "Swagger détecté - Scan API complet"
             docker run --rm \
               --network host \
               -v $(pwd)/reports/zap:/zap/wrk:rw \
@@ -202,6 +218,7 @@ jobs:
               -J zap_report.json \
               -I || true
           else
+            echo "Swagger non détecté - Scan baseline uniquement"
             docker run --rm \
               --network host \
               -v $(pwd)/reports/zap:/zap/wrk:rw \
@@ -246,6 +263,6 @@ jobs:
           | Outil           | Statut                                      |
           |-----------------|---------------------------------------------|
           | npm audit       | ${{ needs.appsec-dependency-audit.result }} |
-          |Trivy           | ${{ needs.appsec-scan.result }}              |
+          | Trivy           | ${{ needs.appsec-scan.result }}             |
           | SonarQube + ZAP | ${{ needs.appsec-scan.result }}             |
           EOF
