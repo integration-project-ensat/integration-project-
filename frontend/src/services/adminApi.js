@@ -53,7 +53,7 @@ export default {
 
   createTemplate(data) {
   return api.post('/admin/templates', data)
-}
+},
 
   deleteTemplate(id) {
     return api.delete(`/admin/templates/${id}`)
