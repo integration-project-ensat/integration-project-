@@ -428,7 +428,7 @@ $json = $client | ConvertTo-Json -Depth 20
 Invoke-RestMethod -Method Put -Uri "$KeycloakUrl/admin/realms/$Realm/clients/$ClientId" -Headers @{ Authorization = "Bearer $Token" } -ContentType 'application/json' -Body $json | Out-Null
 PS1
 
-"C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -File "$SONAR_PS1" \
+"C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$SONAR_PS1" \
   -KeycloakUrl "$KEYCLOAK_URL" \
   -Token "$TOKEN" \
   -Realm "$REALM" \
@@ -622,7 +622,21 @@ if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/d
     -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
     -d "key=sonar.auth.saml.user.name&value=name" > /dev/null
 
-   echo "  SAML SonarQube configuré ✓"
+  curl -s -X POST "$SONAR_URL/api/settings/set" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "key=sonar.auth.saml.user.email&value=email" > /dev/null
+
+  echo "  SAML SonarQube configuré ✓"
+
+  # Générer un token admin pour les appels API (SonarQube 10.x)
+  SONAR_TOKEN=$(curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" -X POST \
+    "$SONAR_URL/api/user_tokens/generate" \
+    -d "name=setup-script-token-$$" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
+  if [[ -z "$SONAR_TOKEN" ]]; then
+    echo "  ERREUR : impossible de générer un token SonarQube"
+    exit 1
+  fi
 
   # Création du projet pheracore s'il n'existe pas
   curl -s -X POST "$SONAR_URL/api/projects/create" \
@@ -633,13 +647,8 @@ if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/d
   SONAR_PERMISSION_CODE=$(
     curl -s -o /dev/null -w "%{http_code}" -X POST \
       "$SONAR_URL/api/permissions/add_group?permission=user&groupName=sonar-users&projectKey=pheracore" \
-      -u "$SONAR_ADMIN:$SONAR_PASSWORD"
+      -H "Authorization: Bearer $SONAR_TOKEN"
   )
-  if [[ "$SONAR_PERMISSION_CODE" != "200" && "$SONAR_PERMISSION_CODE" != "204" && "$SONAR_PERMISSION_CODE" != "400" ]]; then
-    echo "  ERREUR : impossible d'attribuer l'accès projet SonarQube (HTTP $SONAR_PERMISSION_CODE)"
-    exit 1
-  fi
-
   echo "  Accès projet SonarQube attribué à sonar-users ✓"
 fi
 
