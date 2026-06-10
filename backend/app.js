@@ -4,6 +4,9 @@ const passport = require('./src/config/passport');
 const path = require('path')
 const express = require('express')
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./src/config/swagger.config');
+
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
@@ -63,6 +66,13 @@ app.use(passport.initialize());
 // Body parser
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
 
 app.use(
   "/api/ai",
