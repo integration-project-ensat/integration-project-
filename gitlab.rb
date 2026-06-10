@@ -5,6 +5,8 @@ gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
 gitlab_rails['omniauth_sync_email_from_provider'] = 'openid_connect'
 gitlab_rails['omniauth_sync_profile_from_provider'] = ['openid_connect']
 gitlab_rails['omniauth_block_auto_created_users'] = false
+keycloak_internal = 'http://keycloak:8080/auth'
+gitlab_oidc_secret = ENV.fetch('GITLAB_OAUTH_SECRET', 'hJrGe88aqHUaAZNb0nPHPCGLzAQSHqjD')
 gitlab_rails['omniauth_providers'] = [
   {
     name: "openid_connect",
@@ -20,12 +22,12 @@ gitlab_rails['omniauth_providers'] = [
       pkce: true,
       client_options: {
         identifier: "gitlab",
-        secret: "hJrGe88aqHUaAZNb0nPHPCGLzAQSHqjD",
+        secret: gitlab_oidc_secret,
         redirect_uri: "http://localhost:9080/users/auth/openid_connect/callback",
         authorization_endpoint: "http://localhost:8081/auth/realms/portfolio-realm/protocol/openid-connect/auth",
-        token_endpoint: "http://172.18.0.1:8081/auth/realms/portfolio-realm/protocol/openid-connect/token",
-        userinfo_endpoint: "http://172.18.0.1:8081/auth/realms/portfolio-realm/protocol/openid-connect/userinfo",
-        jwks_uri: "http://172.18.0.1:8081/auth/realms/portfolio-realm/protocol/openid-connect/certs"
+        token_endpoint: "#{keycloak_internal}/realms/portfolio-realm/protocol/openid-connect/token",
+        userinfo_endpoint: "#{keycloak_internal}/realms/portfolio-realm/protocol/openid-connect/userinfo",
+        jwks_uri: "#{keycloak_internal}/realms/portfolio-realm/protocol/openid-connect/certs"
       }
     }
   }

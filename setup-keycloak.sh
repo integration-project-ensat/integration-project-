@@ -13,6 +13,22 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
 fi
 
 SONAR_PASSWORD="${SONAR_PASSWORD:-PheraCore2025!}"
+GRAFANA_OAUTH_SECRET="${GRAFANA_OAUTH_SECRET:-grafana-secret}"
+PGADMIN_OAUTH_SECRET="${PGADMIN_OAUTH_SECRET:-pgadmin-secret}"
+GITLAB_OAUTH_SECRET="${GITLAB_OAUTH_SECRET:-hJrGe88aqHUaAZNb0nPHPCGLzAQSHqjD}"
+
+delete_client_if_exists() {
+  local CLIENT_ID="$1"
+  local EXISTING_ID
+
+  EXISTING_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=$CLIENT_ID" \
+    -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+  if [[ -n "$EXISTING_ID" ]]; then
+    curl -s -X DELETE "$KEYCLOAK_URL/admin/realms/$REALM/clients/$EXISTING_ID" \
+      -H "Authorization: Bearer $TOKEN" > /dev/null
+  fi
+}
 
 echo "=================================================="
 echo " PheraCore - Configuration Keycloak"
@@ -37,6 +53,10 @@ if [ -z "$TOKEN" ]; then
 fi
 
 echo "Token obtenu ✓"
+delete_client_if_exists "grafana"
+delete_client_if_exists "pgadmin"
+delete_client_if_exists "gitlab"
+delete_client_if_exists "sonarqube"
 
 # ----------------------------------------------------------
 # 2. Créer le realm portfolio-realm avec hardening
@@ -166,7 +186,7 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
     "protocol": "openid-connect",
     "publicClient": false,
     "clientAuthenticatorType": "client-secret",
-    "secret": "grafana-secret",
+    "secret": "'"$GRAFANA_OAUTH_SECRET"'",
     "redirectUris": ["http://localhost:3001/*"],
     "webOrigins": ["http://localhost:3001"],
     "standardFlowEnabled": true,
@@ -216,7 +236,7 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
     "protocol": "openid-connect",
     "publicClient": false,
     "clientAuthenticatorType": "client-secret",
-    "secret": "pgadmin-secret",
+    "secret": "'"$PGADMIN_OAUTH_SECRET"'",
     "redirectUris": ["http://localhost:5050/*"],
     "webOrigins": ["http://localhost:5050"],
     "standardFlowEnabled": true,
@@ -286,7 +306,7 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
     "protocol": "openid-connect",
     "publicClient": false,
     "clientAuthenticatorType": "client-secret",
-    "secret": "hJrGe88aqHUaAZNb0nPHPCGLzAQSHqjD",
+    "secret": "'"$GITLAB_OAUTH_SECRET"'",
     "redirectUris": ["http://localhost:9080/users/auth/openid_connect/callback"],
     "webOrigins": ["http://localhost:9080"],
     "standardFlowEnabled": true,
@@ -579,9 +599,9 @@ echo ""
 echo " Realm    : portfolio-realm"
 echo " Rôles    : chef-equipe, adjoint, developpeur, devops, qa, securite"
 echo " Users    : 10 utilisateurs créés"
-echo " Clients  : grafana    (OIDC - secret: grafana-secret)"
-echo "          : pgadmin    (OIDC - secret: pgadmin-secret)"
-echo "          : gitlab     (OIDC - secret: hJrGe88aqHUaAZNb0nPHPCGLzAQSHqjD)"
+echo " Clients  : grafana    (OIDC - secret: $GRAFANA_OAUTH_SECRET)"
+echo "          : pgadmin    (OIDC - secret: $PGADMIN_OAUTH_SECRET)"
+echo "          : gitlab     (OIDC - secret: $GITLAB_OAUTH_SECRET)"
 echo "          : sonarqube  (SAML)"
 echo " Password : PheraCore2025! (pour tous les utilisateurs)"
 echo ""
