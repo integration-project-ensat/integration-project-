@@ -2,19 +2,30 @@
 <template>
   <div class="profile-header">
     <div class="cover-section">
-      <div class="cover-img" />
-      <button v-if="isOwner" type="button" class="edit-profile-btn" @click="router.push('/profile/edit')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-        </svg>
-        Modifier le profil
-      </button>
+      <div class="cover-img" :style="localBannerStyle">
+        <template v-if="isOwner">
+          <label class="banner-edit-overlay" for="banner-file-input">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Modifier la bannière
+          </label>
+          <input id="banner-file-input" type="file" accept="image/*" class="sr-only" @change="onBannerChange" />
+        </template>
+      </div>
       <div class="avatar-wrap">
         <div class="avatar" :class="avatarColorClass(profile.name)">
-          <img v-if="profile.avatar" :src="profile.avatar" alt="avatar" />
+          <img v-if="localAvatar || profile.avatar" :src="(localAvatar || profile.avatar) as string" alt="avatar" />
           <span v-else>{{ initials }}</span>
+          <label v-if="isOwner" class="avatar-edit-overlay" for="avatar-file-input">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </label>
         </div>
+        <input v-if="isOwner" id="avatar-file-input" type="file" accept="image/*" class="sr-only" @change="onAvatarChange" />
       </div>
     </div>
 
@@ -52,21 +63,14 @@
 
       <div class="tabs">
         <button
-          v-for="tab in tabs"
+          v-for="tab in tabList"
           :key="tab"
           type="button"
           class="tab"
-          :class="{
-            portfolio: tab === 'Portfolio',
-            recommendation: tab === 'Recommander',
-            connect: tab === 'Connecter',
-            competances: tab === 'Compétances',
-            about: tab === 'À propos',
-            share: tab === 'Partager'
-          }"
+          :class="tabClass(tab)"
           @click="handleTabClick(tab)"
         >
-          {{ tab }}
+          {{ tab === 'Connecter' ? connectionLabel : tab }}
         </button>
       </div>
 
@@ -329,15 +333,65 @@ const props = defineProps<{
   modelValue: string
   recentRecommendations?: Recommendation[]
   isOwner?: boolean
+  connectionLabel?: string
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'open-recos'): void
-  (e: 'open-portfolio'): void
+  (e: 'avatar-changed', value: string): void
+  (e: 'banner-changed', value: string): void
 }>()
 
-const tabs = ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
+const localAvatar = ref<string | null>(null)
+const localBanner = ref<string | null>(null)
+
+const tabList = computed(() =>
+  props.isOwner
+    ? ['Modifier bio', 'Partager']
+    : ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
+)
+
+const localBannerStyle = computed(() => {
+  if (localBanner.value) {
+    return { backgroundImage: `url(${localBanner.value})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  }
+  return {}
+})
+
+function tabClass(tab: string) {
+  return {
+    portfolio: tab === 'Portfolio',
+    recommendation: tab === 'Recommander',
+    connect: tab === 'Connecter',
+    competances: tab === 'Compétances',
+    about: tab === 'À propos',
+    share: tab === 'Partager',
+    'modifier-bio': tab === 'Modifier bio',
+  }
+}
+
+function onAvatarChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    localAvatar.value = reader.result as string
+    emit('avatar-changed', reader.result as string)
+  }
+  reader.readAsDataURL(file)
+}
+
+function onBannerChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    localBanner.value = reader.result as string
+    emit('banner-changed', reader.result as string)
+  }
+  reader.readAsDataURL(file)
+}
 
 const technicalSkills = computed(() => props.profile.technicalSkills ?? [])
 const softSkills = computed(() => props.profile.softSkills ?? [])
@@ -359,6 +413,7 @@ const latestTeacherReco = computed(() => props.recentRecommendations?.find((reco
 const latestProfessionalReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'professional'))
 const latestStudentReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'student'))
 const initials = computed(() => getInitials(props.profile.name))
+const connectionLabel = computed(() => props.connectionLabel || 'Connecter')
 
 function openSkillPopup(skill: SkillItem, type: 'tech' | 'soft') {
   selectedSkill.value = { ...skill, type }
@@ -382,7 +437,13 @@ const handleTabClick = (tab: string) => {
   if (tab === 'Portfolio') {
     showCompetances.value = false
     showAbout.value = false
-    emit('open-portfolio')
+    emit('update:modelValue', 'Portfolio')
+    router.push('/portfolio')
+    return
+  }
+
+  if (tab === 'Modifier bio') {
+    emit('update:modelValue', props.modelValue === 'Modifier bio' ? '' : 'Modifier bio')
     return
   }
 
@@ -508,6 +569,7 @@ function getInitials(name: string) {
   font-size: 1.5rem;
   font-weight: 700;
   overflow: hidden;
+  position: relative;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
 }
 
@@ -1072,34 +1134,69 @@ h1 {
 .avatar-brown { --avatar-bg: #8d6e63; }
 .avatar-purple { --avatar-bg: #5e35b1; }
 .avatar-slate { --avatar-bg: #5c6bc0; }
-.edit-profile-btn {
+
+.sr-only {
   position: absolute;
-  top: 14px;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.banner-edit-overlay {
+  position: absolute;
+  bottom: 12px;
   right: 16px;
-  z-index: 10;
+  z-index: 5;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 36px;
-  padding: 0 18px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
   border-radius: 100px;
   color: var(--purple);
   font-family: var(--font-head);
-  font-size: .82rem;
+  font-size: .78rem;
   font-weight: 700;
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 2px 10px rgba(15, 23, 42, .14);
-  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .12);
+  transition: background 0.2s, transform 0.15s;
 }
 
-.edit-profile-btn:hover {
+.banner-edit-overlay:hover {
   background: white;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, .18);
   transform: translateY(-1px);
+}
+
+.avatar-edit-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.46);
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 50%;
+}
+
+.avatar:hover .avatar-edit-overlay {
+  opacity: 1;
+}
+
+.tab.modifier-bio {
+  border-radius: 180px 100px 100px 0;
+  min-width: 160px;
 }
 
 @media (max-width: 768px) {

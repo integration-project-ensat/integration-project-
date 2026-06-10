@@ -1,28 +1,18 @@
 const { prisma } = require("../models/prisma");
 
+const userSelect = {
+  id_utilisateur: true,
+  nom: true,
+  prenom: true,
+  email: true,
+  role: true,
+  profil: true,
+  etudiant: { select: { filiere: true } },
+};
+
 const includeUsers = {
-  demandeur: {
-    select: {
-      id_utilisateur: true,
-      nom: true,
-      prenom: true,
-      email: true,
-      role: true,
-      profil: true,
-      etudiant: { select: { filiere: true } },
-    },
-  },
-  destinataire: {
-    select: {
-      id_utilisateur: true,
-      nom: true,
-      prenom: true,
-      email: true,
-      role: true,
-      profil: true,
-      etudiant: { select: { filiere: true } },
-    },
-  },
+  demandeur: { select: userSelect },
+  destinataire: { select: userSelect },
 };
 
 const verifierUtilisateur = async (id) => {
@@ -36,10 +26,63 @@ const verifierUtilisateur = async (id) => {
       est_actif: true,
     },
   });
+
   if (!utilisateur || !utilisateur.est_actif) {
     throw { statusCode: 404, message: "Utilisateur introuvable" };
   }
+
   return utilisateur;
+};
+
+const pairWhere = (userAId, userBId) => ({
+  OR: [
+    {
+      demandeur_id: BigInt(userAId),
+      destinataire_id: BigInt(userBId),
+    },
+    {
+      demandeur_id: BigInt(userBId),
+      destinataire_id: BigInt(userAId),
+    },
+  ],
+});
+
+const pairLockKey = (userAId, userBId) => {
+  const first = BigInt(userAId) < BigInt(userBId) ? BigInt(userAId) : BigInt(userBId);
+  const second = BigInt(userAId) < BigInt(userBId) ? BigInt(userBId) : BigInt(userAId);
+  return `${first}:${second}`;
+};
+
+const lockPair = async (tx, userAId, userBId) => {
+  const lockKey = pairLockKey(userAId, userBId);
+  await tx.$executeRaw`
+    SELECT pg_advisory_xact_lock(
+      ('x' || substr(md5(${lockKey}), 1, 16))::bit(64)::bigint
+    )
+  `;
+};
+
+const assertNotAdminConnection = (userA, userB) => {
+  if (userA.role === "ADMINISTRATEUR" || userB.role === "ADMINISTRATEUR") {
+    throw {
+      statusCode: 403,
+      message: "Les administrateurs ne participent pas aux connexions",
+    };
+  }
+};
+
+const mapStatus = (connexion, utilisateurId) => {
+  const isRequester = connexion
+    ? BigInt(connexion.demandeur_id) === BigInt(utilisateurId)
+    : false;
+
+  return {
+    isConnected: connexion?.statut === "ACCEPTEE",
+    requestSent: connexion?.statut === "EN_ATTENTE" && isRequester,
+    requestReceived: connexion?.statut === "EN_ATTENTE" && !isRequester,
+    status: connexion?.statut ?? "NONE",
+    connexionId: connexion?.id_connexion?.toString() ?? null,
+  };
 };
 
 const connexionService = {
@@ -53,40 +96,40 @@ const connexionService = {
 
     const demandeur = await verifierUtilisateur(demandeurId);
     const destinataire = await verifierUtilisateur(destinataireId);
-
-    if (
-      demandeur.role === "ADMINISTRATEUR" ||
-      destinataire.role === "ADMINISTRATEUR"
-    ) {
-      throw {
-        statusCode: 403,
-        message: "Les administrateurs ne participent pas aux connexions",
-      };
-    }
-
-    const existe = await prisma.connexion.findFirst({
-      where: {
-        OR: [
-          {
-            demandeur_id: BigInt(demandeurId),
-            destinataire_id: BigInt(destinataireId),
-          },
-          {
-            demandeur_id: BigInt(destinataireId),
-            destinataire_id: BigInt(demandeurId),
-          },
-        ],
-      },
-    });
-
-    if (existe) {
-      throw {
-        statusCode: 409,
-        message: "Une demande ou connexion existe déjà",
-      };
-    }
+    assertNotAdminConnection(demandeur, destinataire);
 
     return prisma.$transaction(async (tx) => {
+      await lockPair(tx, demandeurId, destinataireId);
+
+      await tx.connexion.deleteMany({
+        where: {
+          ...pairWhere(demandeurId, destinataireId),
+          statut: "REFUSEE",
+        },
+      });
+
+      const alreadyConnected = await tx.connexion.findFirst({
+        where: {
+          ...pairWhere(demandeurId, destinataireId),
+          statut: "ACCEPTEE",
+        },
+      });
+
+      if (alreadyConnected) {
+        throw { statusCode: 409, message: "Users are already connected" };
+      }
+
+      const pendingRequest = await tx.connexion.findFirst({
+        where: {
+          ...pairWhere(demandeurId, destinataireId),
+          statut: "EN_ATTENTE",
+        },
+      });
+
+      if (pendingRequest) {
+        throw { statusCode: 409, message: "Request already exists" };
+      }
+
       const connexion = await tx.connexion.create({
         data: {
           demandeur_id: BigInt(demandeurId),
@@ -119,15 +162,7 @@ const connexionService = {
 
     if (!connexion) return null;
 
-    if (
-      connexion.demandeur.role === "ADMINISTRATEUR" ||
-      connexion.destinataire.role === "ADMINISTRATEUR"
-    ) {
-      throw {
-        statusCode: 403,
-        message: "Les administrateurs ne participent pas aux connexions",
-      };
-    }
+    assertNotAdminConnection(connexion.demandeur, connexion.destinataire);
 
     if (BigInt(connexion.destinataire_id) !== BigInt(utilisateurId)) {
       throw {
@@ -141,24 +176,23 @@ const connexionService = {
     }
 
     return prisma.$transaction(async (tx) => {
-      const updated = await tx.connexion.update({
-        where: { id_connexion: BigInt(connexionId) },
-        data: { statut, date_reponse: new Date() },
-        include: includeUsers,
-      });
+      await lockPair(tx, connexion.demandeur_id, connexion.destinataire_id);
 
       if (statut === "ACCEPTEE") {
-        await tx.notification.create({
-          data: {
-            utilisateur_id: connexion.demandeur_id,
-            type: "CONNEXION_ACCEPTEE",
-            message: `${connexion.destinataire.prenom} ${connexion.destinataire.nom} a accepté votre demande de connexion`,
-            cible_id: connexion.id_connexion,
-            cible_type: "CONNEXION",
-            date_reception: new Date(),
+        const alreadyConnected = await tx.connexion.findFirst({
+          where: {
+            ...pairWhere(connexion.demandeur_id, connexion.destinataire_id),
+            statut: "ACCEPTEE",
+            NOT: { id_connexion: connexion.id_connexion },
           },
         });
-      } else if (statut === "REFUSEE") {
+
+        if (alreadyConnected) {
+          throw { statusCode: 409, message: "Users are already connected" };
+        }
+      }
+
+      if (statut === "REFUSEE") {
         await tx.notification.create({
           data: {
             utilisateur_id: connexion.demandeur_id,
@@ -169,7 +203,40 @@ const connexionService = {
             date_reception: new Date(),
           },
         });
+
+        await tx.connexion.deleteMany({
+          where: {
+            ...pairWhere(connexion.demandeur_id, connexion.destinataire_id),
+            statut: "EN_ATTENTE",
+          },
+        });
+
+        return connexion;
       }
+
+      const updated = await tx.connexion.update({
+        where: { id_connexion: BigInt(connexionId) },
+        data: { statut, date_reponse: new Date() },
+        include: includeUsers,
+      });
+
+      await tx.connexion.deleteMany({
+        where: {
+          ...pairWhere(connexion.demandeur_id, connexion.destinataire_id),
+          id_connexion: { not: connexion.id_connexion },
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          utilisateur_id: connexion.demandeur_id,
+          type: "CONNEXION_ACCEPTEE",
+          message: `${connexion.destinataire.prenom} ${connexion.destinataire.nom} a accepté votre demande de connexion`,
+          cible_id: connexion.id_connexion,
+          cible_type: "CONNEXION",
+          date_reception: new Date(),
+        },
+      });
 
       return updated;
     });
@@ -192,22 +259,11 @@ const connexionService = {
     return prisma.connexion.findMany({
       where: {
         demandeur_id: BigInt(utilisateurId),
+        statut: "EN_ATTENTE",
         demandeur: { role: { not: "ADMINISTRATEUR" } },
         destinataire: { role: { not: "ADMINISTRATEUR" } },
       },
-      include: {
-        destinataire: {
-          select: {
-            id_utilisateur: true,
-            nom: true,
-            prenom: true,
-            email: true,
-            role: true,
-            profil: true,
-            etudiant: { select: { filiere: true } },
-          },
-        },
-      },
+      include: { destinataire: { select: userSelect } },
       orderBy: { date_demande: "desc" },
     });
   },
@@ -220,19 +276,7 @@ const connexionService = {
         demandeur: { role: { not: "ADMINISTRATEUR" } },
         destinataire: { role: { not: "ADMINISTRATEUR" } },
       },
-      include: {
-        demandeur: {
-          select: {
-            id_utilisateur: true,
-            nom: true,
-            prenom: true,
-            email: true,
-            role: true,
-            profil: true,
-            etudiant: { select: { filiere: true } },
-          },
-        },
-      },
+      include: { demandeur: { select: userSelect } },
       orderBy: { date_demande: "desc" },
     });
   },
@@ -264,22 +308,73 @@ const connexionService = {
       BigInt(connexion.demandeur_id) === BigInt(utilisateurId) ||
       BigInt(connexion.destinataire_id) === BigInt(utilisateurId);
 
-    if (!estParticipant)
+    if (!estParticipant) {
       throw { statusCode: 403, message: "Action non autorisée" };
+    }
 
-    if (connexion.statut !== "ACCEPTEE") {
+    if (
+      connexion.statut === "EN_ATTENTE" &&
+      BigInt(connexion.demandeur_id) !== BigInt(utilisateurId)
+    ) {
       throw {
-        statusCode: 422,
-        message: "Seule une connexion acceptée peut être supprimée",
+        statusCode: 403,
+        message: "Seul le demandeur peut annuler une demande en attente",
       };
     }
 
-    await prisma.connexion.delete({
-      where: { id_connexion: BigInt(connexionId) },
+    if (!["ACCEPTEE", "EN_ATTENTE"].includes(connexion.statut)) {
+      throw {
+        statusCode: 422,
+        message: "Cette relation ne peut pas être supprimée",
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await lockPair(tx, connexion.demandeur_id, connexion.destinataire_id);
+
+      await tx.connexion.deleteMany({
+        where: {
+          ...pairWhere(connexion.demandeur_id, connexion.destinataire_id),
+          statut: { in: ["ACCEPTEE", "EN_ATTENTE"] },
+        },
+      });
     });
+
     return true;
+  },
+
+  async getStatus(utilisateurId, targetUserId) {
+    if (BigInt(utilisateurId) === BigInt(targetUserId)) {
+      return {
+        isConnected: false,
+        requestSent: false,
+        requestReceived: false,
+        status: "SELF",
+        connexionId: null,
+      };
+    }
+
+    await verifierUtilisateur(targetUserId);
+
+    const connected = await prisma.connexion.findFirst({
+      where: {
+        ...pairWhere(utilisateurId, targetUserId),
+        statut: "ACCEPTEE",
+      },
+    });
+
+    if (connected) return mapStatus(connected, utilisateurId);
+
+    const pending = await prisma.connexion.findFirst({
+      where: {
+        ...pairWhere(utilisateurId, targetUserId),
+        statut: "EN_ATTENTE",
+      },
+      orderBy: { date_demande: "desc" },
+    });
+
+    return mapStatus(pending, utilisateurId);
   },
 };
 
 module.exports = connexionService;
-

@@ -101,6 +101,20 @@ const openReplyCommentId = ref<number | null>(null);
 const savedFeedbackId = ref<string | null>(null);
 const { isSaved, saveProfile } = useProSavedProfiles();
 
+type ConnectionState = {
+  isConnected: boolean;
+  requestSent: boolean;
+  requestReceived: boolean;
+  connexionId: string | null;
+};
+
+const defaultConnectionState = (): ConnectionState => ({
+  isConnected: false,
+  requestSent: false,
+  requestReceived: false,
+  connexionId: null,
+});
+
 const filters: FeedFilter[] = ["Tous", "Projets", "Reposts", "Populaires", "Récents"];
 
 const role = computed<FeedRole>(() => {
@@ -122,6 +136,7 @@ const profileContextQuery = computed(() => {
 });
 
 const posts = ref<FeedPost[]>([]);
+const connectionStates = reactive<Record<string, ConnectionState>>({});
 
 const toInitials = (name: string) =>
   name
@@ -257,6 +272,38 @@ const syncInteractionState = (items: FeedPost[]) => {
   });
 };
 
+const syncConnectionStates = async (items: FeedPost[]) => {
+  Object.keys(connectionStates).forEach((key) => delete connectionStates[key]);
+
+  const entries = await Promise.all(
+    items.map(async (post) => {
+      if (!post.studentId || post.studentId === myStudentId.value) {
+        return [post.id, defaultConnectionState()] as const;
+      }
+
+      try {
+        const { data } = await connexionService.getConnectionStatus(post.studentId);
+        const status = data?.data || data;
+        return [
+          post.id,
+          {
+            isConnected: Boolean(status?.isConnected),
+            requestSent: Boolean(status?.requestSent),
+            requestReceived: Boolean(status?.requestReceived),
+            connexionId: status?.connexionId ? String(status.connexionId) : null,
+          },
+        ] as const;
+      } catch {
+        return [post.id, defaultConnectionState()] as const;
+      }
+    }),
+  );
+
+  entries.forEach(([postId, state]) => {
+    connectionStates[postId] = state;
+  });
+};
+
 const loadPosts = async () => {
   loading.value = true;
   error.value = null;
@@ -268,6 +315,7 @@ const loadPosts = async () => {
       : [];
     posts.value = items;
     syncInteractionState(items);
+    await syncConnectionStates(items);
   } catch (err: any) {
     if (err?.response?.status === 401) {
       router.push('/login');
@@ -351,7 +399,8 @@ const toggleRepost = async (post: FeedPost) => {
 
 const toggleConnect = async (post: FeedPost) => {
   if (!post.studentId || post.studentId === myStudentId.value) return;
-  if (connectedPosts[post.id]) return;
+  const state = connectionStates[post.id] ?? defaultConnectionState();
+  if (state.isConnected || state.requestSent || state.requestReceived) return;
 
   try {
     await connexionService.createConnexion({
@@ -359,11 +408,31 @@ const toggleConnect = async (post: FeedPost) => {
       id_destinataire: post.studentId,
       message: `Demande de connexion vers ${post.studentName}`,
     });
-    connectedPosts[post.id] = true;
+    connectionStates[post.id] = {
+      ...state,
+      requestSent: true,
+    };
   } catch (err: any) {
     error.value =
       err?.response?.data?.message || "Impossible d’envoyer la demande de connexion.";
   }
+};
+
+const getConnectionState = (post: FeedPost) =>
+  connectionStates[post.id] ?? defaultConnectionState();
+
+const connectionButtonLabel = (post: FeedPost) => {
+  const state = getConnectionState(post);
+  if (post.studentId === myStudentId.value) return "Mon profil";
+  if (state.isConnected) return "Déjà connecté";
+  if (state.requestSent) return "Demande envoyée";
+  if (state.requestReceived) return "Demande reçue";
+  return "Connecter";
+};
+
+const isConnectionDisabled = (post: FeedPost) => {
+  const state = getConnectionState(post);
+  return post.studentId === myStudentId.value || state.isConnected || state.requestSent || state.requestReceived;
 };
 
 const togglePostLike = async (post: FeedPost) => {
@@ -568,17 +637,11 @@ onMounted(() => {
                   <button
                     type="button"
                     class="connect-button"
-                    :class="{ active: connectedPosts[post.id] }"
-                    :disabled="post.studentId === myStudentId || connectedPosts[post.id]"
+                    :class="{ active: getConnectionState(post).isConnected || getConnectionState(post).requestSent }"
+                    :disabled="isConnectionDisabled(post)"
                     @click="toggleConnect(post)"
                   >
-                    {{
-                      post.studentId === myStudentId
-                        ? "Mon profil"
-                        : connectedPosts[post.id]
-                          ? "Demande envoyée"
-                          : "Connecter"
-                    }}
+                    {{ connectionButtonLabel(post) }}
                   </button>
                   <button
                     v-if="role === 'pro'"

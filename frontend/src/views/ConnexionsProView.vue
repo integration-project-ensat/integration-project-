@@ -125,45 +125,29 @@ const getFieldLabel = (user: any) =>
 
 const getSchoolLabel = (user: any) => user?.profil?.adresse || "Étudiant";
 
-const mapReceivedRequest = (connexion: any): ProConnectionRequest => {
-  const demandeur = connexion.demandeur ?? {};
+const mapPendingRequest = (
+  connexion: any,
+  currentUserId: string | null,
+): ProConnectionRequest => {
+  const demandeurId = String(connexion.demandeur?.id_utilisateur ?? "");
+  const isSentByCurrentUser = Boolean(currentUserId && demandeurId === currentUserId);
+  const sourceUser = isSentByCurrentUser ? connexion.destinataire ?? {} : connexion.demandeur ?? {};
   const name =
-    [demandeur.prenom, demandeur.nom].filter(Boolean).join(" ").trim() ||
-    "Étudiant";
-
-  return {
-    id: String(connexion.id_connexion),
-    initials: toInitials(name),
-    name,
-    school: getSchoolLabel(demandeur),
-    field: getFieldLabel(demandeur),
-    message: "Demande de connexion étudiant",
-    time: formatRelativeDate(connexion.date_demande),
-    status: "pending",
-    canAccept: true,
-    canCancel: true,
-    profilePath: `/profile/student/${demandeur.id_utilisateur}${profileContextQuery.value}`,
-  };
-};
-
-const mapSentRequest = (connexion: any): ProConnectionRequest => {
-  const destinataire = connexion.destinataire ?? {};
-  const name =
-    [destinataire.prenom, destinataire.nom].filter(Boolean).join(" ").trim() ||
+    [sourceUser.prenom, sourceUser.nom].filter(Boolean).join(" ").trim() ||
     "Connexion";
 
   return {
     id: String(connexion.id_connexion),
     initials: toInitials(name),
     name,
-    school: getSchoolLabel(destinataire),
-    field: getFieldLabel(destinataire),
-    message: "Demande envoyée",
+    school: getSchoolLabel(sourceUser),
+    field: getFieldLabel(sourceUser),
+    message: isSentByCurrentUser ? "Demande envoyée" : "Demande de connexion étudiant",
     time: formatRelativeDate(connexion.date_demande),
-    status: "sent",
-    canAccept: false,
+    status: isSentByCurrentUser ? "sent" : "pending",
+    canAccept: !isSentByCurrentUser,
     canCancel: true,
-    profilePath: `/profile/student/${destinataire.id_utilisateur}${profileContextQuery.value}`,
+    profilePath: `/profile/student/${sourceUser.id_utilisateur}${profileContextQuery.value}`,
   };
 };
 
@@ -233,10 +217,18 @@ const loadConnections = async () => {
       };
 
       const receivedPending = Array.isArray(receivedResponse.data?.data)
-        ? receivedResponse.data.data.map(mapReceivedRequest)
+        ? receivedResponse.data.data.map((connexion: any) =>
+            mapPendingRequest(connexion, null),
+          )
         : [];
 
-      pendingRequests.value = receivedPending;
+      const sentPending = Array.isArray(sentResponse.data?.data)
+        ? sentResponse.data.data.map((connexion: any) =>
+            mapPendingRequest(connexion, currentUserId),
+          )
+        : [];
+
+      pendingRequests.value = [...receivedPending, ...sentPending];
 
       acceptedRequests.value = Array.isArray(acceptedResponse.data?.data)
         ? acceptedResponse.data.data.map((connexion: any) =>
@@ -248,12 +240,8 @@ const loadConnections = async () => {
     }
 
     pendingRequests.value = data
-      .filter((connexion: any) => {
-        if (normalizeStatus(connexion.statut) !== "EN_ATTENTE") return false;
-        const demandeurId = String(connexion.demandeur?.id_utilisateur ?? "");
-        return demandeurId !== currentUserId;
-      })
-      .map((connexion: any) => mapReceivedRequest(connexion));
+      .filter((connexion: any) => normalizeStatus(connexion.statut) === "EN_ATTENTE")
+      .map((connexion: any) => mapPendingRequest(connexion, currentUserId));
 
     acceptedRequests.value = data
       .filter(
@@ -281,8 +269,12 @@ const acceptRequest = async (id: string) => {
   setActiveTab("accepted");
 };
 
-const removeRequest = async (id: string) => {
-  await connexionService.refuserConnexion(id);
+const removeRequest = async (request: ProConnectionRequest) => {
+  if (request.status === "sent") {
+    await connexionService.supprimerConnexion(request.id);
+  } else {
+    await connexionService.refuserConnexion(request.id);
+  }
   await loadConnections();
 };
 
@@ -375,9 +367,9 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
                   v-if="request.canCancel"
                   type="button"
                   class="soft-danger"
-                  @click="removeRequest(request.id)"
+                  @click="removeRequest(request)"
                 >
-                  Refuser
+                  {{ request.status === 'sent' ? 'Annuler la demande' : 'Refuser' }}
                 </button>
                 <button
                   v-if="request.canRemove"

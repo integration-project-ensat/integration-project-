@@ -18,8 +18,18 @@
           <section class="dashboard-head">
             <div>
               <p class="dashboard-kicker">Espace étudiant</p>
-              <h1>Dashboard</h1>
-              <p>Vue globale de votre progression, activité récente et opportunités.</p>
+              <h1>Bonjour{{ profileName ? `, ${profileName}` : '' }}</h1>
+              <p>
+                {{ profileFiliere || 'Vue globale de votre progression, activité récente et opportunités.' }}
+              </p>
+            </div>
+            <div class="dashboard-actions">
+              <button type="button" class="ghost-action" :disabled="isLoading" @click="loadDashboard">
+                Actualiser
+              </button>
+              <button type="button" class="primary-action" @click="goTo('/profile/edit')">
+                Compléter mon profil
+              </button>
             </div>
           </section>
 
@@ -82,16 +92,20 @@
                 <div class="progress-fill" :style="{ width: profileProgress + '%' }"></div>
               </div>
               <ul>
-                <li>Informations personnelles complétées</li>
-                <li>GitHub connecté</li>
-                <li>Ajouter un CV</li>
+                <li
+                  v-for="section in progressChecklist"
+                  :key="section.label"
+                  :class="{ completed: section.completed }"
+                >
+                  {{ section.label }}
+                </li>
               </ul>
             </article>
 
             <article class="panel">
               <h2>Activité récente</h2>
               <div class="activity-list">
-                <p v-for="(activity, index) in activities" :key="activity">
+                <p v-for="(activity, index) in activities" :key="`${activity}-${index}`">
                   <span :class="`dot-${index}`"></span>
                   {{ activity }}
                 </p>
@@ -104,9 +118,9 @@
               <div class="opportunity">
                 <strong>
                   <span class="opp-badge green">{{ studentStats.find(s => s.label === 'Stages postulés')?.value || '0' }} stages</span>
-                  postulés
+                  enregistrés
                 </strong>
-                <p>Basés sur vos candidatures et votre activité récente.</p>
+                <p>Issus de vos données backend étudiant.</p>
               </div>
               <div class="opportunity">
                 <strong>
@@ -126,8 +140,12 @@
             <div class="profile-grid">
               <article
                 v-for="profile in filteredProfiles"
-                :key="profile.name"
+                :key="profile.id"
                 class="profile-card"
+                role="button"
+                tabindex="0"
+                @click="goTo(`/profile/user/${profile.id}`)"
+                @keyup.enter="goTo(`/profile/user/${profile.id}`)"
               >
                 <div class="avatar" :class="avatarColorClass(profile.name)">
                   <img v-if="profile.photo" :src="profile.photo" :alt="profile.name" />
@@ -136,7 +154,7 @@
                 <div>
                   <h3>{{ profile.name }}</h3>
                   <p>{{ profile.role }} • {{ profile.city }}</p>
-                  <p>{{ profile.level }} • {{ profile.skill }}</p>
+                  <p>{{ profile.company }} • {{ profile.skill }}</p>
                 </div>
               </article>
             </div>
@@ -149,6 +167,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import TopBar from "../components/TopBar.vue";
 import SideBar from "../components/exploreStudent/Sidebar.vue";
 import studentApi from "@/services/studentApi";
@@ -156,12 +175,16 @@ import studentApi from "@/services/studentApi";
 type FilterKey = "category" | "sector" | "role" | "city";
 
 const sidebarOpen = ref(true);
+const router = useRouter();
 const openFilter = ref<FilterKey | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const profileProgress = ref(0);
+const profileName = ref("");
+const profileFiliere = ref("");
 const activities = ref<string[]>([]);
-const profiles = ref<Array<{ name: string; role: string; city: string; level: string; skill: string; sector: string; photo?: string }>>([]);
+const progressSections = ref<Record<string, { completed: boolean; percentage: number }>>({});
+const profiles = ref<Array<{ id: string; name: string; role: string; city: string; company: string; skill: string; sector: string; photo?: string }>>([]);
 
 const filters = reactive<Record<FilterKey, string>>({
   category: "Tous",
@@ -186,6 +209,31 @@ const studentStats = ref([
   { label: "Compétences", value: "0", color: "#d4537e" },
 ]);
 
+const progressLabels: Record<string, string> = {
+  personalInfo: "Informations personnelles",
+  education: "Parcours académique",
+  skills: "Compétences",
+  projects: "Projets",
+  portfolio: "Portfolio",
+};
+
+const progressChecklist = computed(() => {
+  const entries = Object.entries(progressSections.value);
+
+  if (!entries.length) {
+    return [
+      { label: "Informations personnelles", completed: profileProgress.value >= 15 },
+      { label: "Compétences et projets", completed: profileProgress.value >= 50 },
+      { label: "Portfolio", completed: profileProgress.value >= 80 },
+    ];
+  }
+
+  return entries.map(([key, section]) => ({
+    label: progressLabels[key] || key,
+    completed: section.completed,
+  }));
+});
+
 const filteredProfiles = computed(() =>
   profiles.value.filter((profile) => {
     const matchCategory = filters.category === "Tous" || profile.role.includes(filters.category);
@@ -202,14 +250,17 @@ const loadDashboard = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const [dashboardResponse, opportunitiesResponse] = await Promise.all([
+    const [dashboardResponse, opportunitiesResponse, profileProgressResponse] = await Promise.all([
       studentApi.getStudentDashboard(),
       studentApi.getOpportunities(),
+      studentApi.getProfileProgress().catch(() => null),
     ]);
 
     if (dashboardResponse.data.success) {
       const data = dashboardResponse.data.data;
       profileProgress.value = data.profileProgress ?? 0;
+      profileName.value = data.profile?.nom || "";
+      profileFiliere.value = data.profile?.filiere || "";
 
       studentStats.value = [
         { label: "Score profil", value: String(data.stats.scoreProfile ?? 0), color: "#5b4fcf" },
@@ -227,14 +278,20 @@ const loadDashboard = async () => {
 
     if (opportunitiesResponse.data.success) {
       profiles.value = (opportunitiesResponse.data.data.professionnels || []).map((pro: any) => ({
+        id: String(pro.id),
         name: pro.nom || "Professionnel",
         role: "Professionnel",
-        city: pro.profil?.adresse || "—",
-        level: pro.secteur || "Autre",
+        city: pro.adresse || "—",
+        company: pro.entreprise || "Entreprise non renseignée",
         skill: pro.poste || "Autre",
         sector: pro.secteur || "Autre",
         photo: pro.photo || undefined,
       }));
+    }
+
+    if (profileProgressResponse?.data.success) {
+      profileProgress.value = Math.round(profileProgressResponse.data.data.totalScore ?? profileProgress.value);
+      progressSections.value = profileProgressResponse.data.data.sections || {};
     }
   } catch (err: any) {
     console.error("Erreur lors du chargement du dashboard:", err);
@@ -268,6 +325,10 @@ function avatarColorClass(name: string) {
   ];
   const sum = name.split("").reduce((t, c) => t + c.charCodeAt(0), 0);
   return colors[sum % colors.length];
+}
+
+function goTo(path: string) {
+  router.push(path);
 }
 </script>
 
@@ -349,6 +410,47 @@ function avatarColorClass(name: string) {
 .dashboard-head p {
   font-size: .9rem;
   color: var(--text-dark);
+}
+
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ghost-action,
+.primary-action {
+  min-height: 42px;
+  border-radius: var(--radius-pill);
+  padding: 0 18px;
+  font-family: var(--font-body);
+  font-size: .86rem;
+  font-weight: 700;
+  transition: var(--ease);
+}
+
+.ghost-action {
+  background: #ffffff;
+  color: var(--text-dark);
+  border: 1px solid #e5e7eb;
+}
+
+.ghost-action:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.primary-action {
+  background: var(--purple);
+  color: #ffffff;
+  border: 1px solid var(--purple);
+}
+
+.ghost-action:not(:disabled):hover,
+.primary-action:hover {
+  box-shadow: 0 8px 22px rgba(91, 79, 207, 0.16);
+  transform: translateY(-1px);
 }
 
 .stats-grid {
@@ -543,6 +645,11 @@ function avatarColorClass(name: string) {
   font-size: .88rem;
 }
 
+.progress-panel li.completed {
+  color: #0f9e74;
+  font-weight: 700;
+}
+
 .activity-list {
   display: grid;
   gap: 20px;
@@ -638,11 +745,14 @@ function avatarColorClass(name: string) {
   align-items: center;
   gap: 14px;
   transition: box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
 }
 
-.profile-card:hover {
+.profile-card:hover,
+.profile-card:focus-visible {
   background: #ffffff;
   box-shadow: 0 4px 16px rgba(91, 79, 207, 0.10);
+  outline: none;
   transform: translateY(-1px);
 }
 

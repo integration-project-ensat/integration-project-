@@ -79,7 +79,7 @@ async function loadCertifications() {
   try {
     const [diplomesResponse, attestationsResponse] = await Promise.all([
       diplomeService.getMesDiplomes(),
-      attestationService.getAttestations({ statut: "VALIDE" }),
+      attestationService.getAttestations(),
     ]);
 
     const diplomes = Array.isArray(diplomesResponse?.data?.data)

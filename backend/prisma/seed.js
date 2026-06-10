@@ -974,21 +974,28 @@ async function seedScoresCredibilite(etudiants) {
 
 async function seedModelesPortfolio(admin) {
   const modelesData = [
-    {
-      nom: "Modele1 - Classique",
-      structure: { sections: ["projets", "stages", "competences", "badges"] },
-      theme: "light",
-      sections: "projets,stages,competences,badges",
-    },
-    {
-      nom: "Modele2 - Moderne",
-      structure: {
-        sections: ["badges", "github", "projets", "recommandations"],
-      },
-      theme: "dark",
-      sections: "badges,github,projets,recommandations",
-    },
-  ];
+  {
+    nom: "Modern",
+    description: "Template par défaut",
+    structure: {},
+    theme: "modern",
+    sections: "all"
+  },
+  {
+    nom: "Creative",
+    description: "Template créatif",
+    structure: {},
+    theme: "creative",
+    sections: "all"
+  },
+  {
+    nom: "Professional",
+    description: "Template professionnel",
+    structure: {},
+    theme: "professional",
+    sections: "all"
+  }
+];
 
   const result = [];
 
@@ -1013,15 +1020,7 @@ async function seedPortfolios(etudiants, modeles) {
     result.push(
       await prisma.portfolio.upsert({
         where: { id_etudiant: etudiants[i].id_utilisateur },
-        update: {
-          id_modele: modeles[i % modeles.length].id_modele,
-          titre: `Portfolio de ${etudiants[i].prenom} ${etudiants[i].nom}`,
-          objectif_pro: etudiants[i].objectif_pro,
-          theme: i % 2 === 0 ? "light" : "dark",
-          est_public: true,
-          url_public: `etudiant${i + 1}-portfolio`,
-          date_modification: new Date(),
-        },
+        update: {},
         create: {
           id_etudiant: etudiants[i].id_utilisateur,
           id_modele: modeles[i % modeles.length].id_modele,
