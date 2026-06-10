@@ -244,7 +244,62 @@ function _statutAction(action) {
 //   scoreMin      score_total minimum (0-100)
 //   statut        verifie | en_attente | non_verifie
 //   page / limit
+const getTemplates = async (req, res) => {
+  const templates = await prisma.modelePortfolio.findMany({
+    orderBy: {
+      id_modele: 'asc'
+    }
+  })
 
+  res.json({
+    success: true,
+    data: templates
+  })
+}
+
+const createTemplate = async (req, res) => {
+  const { nom, description } = req.body
+
+  const template = await prisma.modelePortfolio.create({
+    data: {
+      nom,
+      description
+    }
+  })
+
+  res.status(201).json({
+    success: true,
+    data: template
+  })
+}
+
+const deleteTemplate = async (req, res) => {
+  const id = Number(req.params.id)
+
+  const template = await prisma.modelePortfolio.findUnique({
+    where: { id_modele: id }
+  })
+
+  if (!template) {
+    return res.status(404).json({
+      message: 'Template introuvable'
+    })
+  }
+
+  if (template.nom === 'Modern') {
+    return res.status(400).json({
+      message: 'Le template Modern ne peut pas être supprimé'
+    })
+  }
+
+  await prisma.modelePortfolio.delete({
+    where: { id_modele: id }
+  })
+
+  res.json({
+    success: true
+  })
+}
 const getEtudiants = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPaginationParams(req);
   const { recherche, ville, etablissement, scoreMin, statut } = req.query;
@@ -984,5 +1039,8 @@ module.exports = {
   getProfesseurs,
   deleteEtudiant,
   deleteProfesseur,
-  deleteProfessionnel
+  deleteProfessionnel,
+  getTemplates,
+  deleteTemplate,
+  createTemplate
 };

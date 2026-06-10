@@ -974,21 +974,28 @@ async function seedScoresCredibilite(etudiants) {
 
 async function seedModelesPortfolio(admin) {
   const modelesData = [
-    {
-      nom: "Modele1 - Classique",
-      structure: { sections: ["projets", "stages", "competences", "badges"] },
-      theme: "light",
-      sections: "projets,stages,competences,badges",
-    },
-    {
-      nom: "Modele2 - Moderne",
-      structure: {
-        sections: ["badges", "github", "projets", "recommandations"],
-      },
-      theme: "dark",
-      sections: "badges,github,projets,recommandations",
-    },
-  ];
+  {
+    nom: "Modern",
+    description: "Template par défaut",
+    structure: {},
+    theme: "modern",
+    sections: "all"
+  },
+  {
+    nom: "Creative",
+    description: "Template créatif",
+    structure: {},
+    theme: "creative",
+    sections: "all"
+  },
+  {
+    nom: "Professional",
+    description: "Template professionnel",
+    structure: {},
+    theme: "professional",
+    sections: "all"
+  }
+];
 
   const result = [];
 

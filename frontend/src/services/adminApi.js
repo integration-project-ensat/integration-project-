@@ -9,17 +9,17 @@ export default {
     return api.get('/admin/etudiants', { params })
   },
 
-getProfessionnels() {
-  return api.get('/admin/professionnels')
-},
+  getProfessionnels() {
+    return api.get('/admin/professionnels')
+  },
 
-validateProfessionnel(id) {
-  return api.patch(`/admin/professionnels/${id}/valider`)
-},
+  validateProfessionnel(id) {
+    return api.patch(`/admin/professionnels/${id}/valider`)
+  },
 
-rejectProfessionnel(id) {
-  return api.patch(`/admin/professionnels/${id}/refuser`)
-},
+  rejectProfessionnel(id) {
+    return api.patch(`/admin/professionnels/${id}/refuser`)
+  },
 
   exportAdminStudentsCSV(params) {
     return api.get('/admin/etudiants/export-csv', { params })
@@ -38,14 +38,25 @@ rejectProfessionnel(id) {
   },
 
   getAdminPortfolios() {
-  return api.get('/admin/portfolios')
-},
-getAdmins() {
-  return api.get('/admin/admins')
-},
+    return api.get('/admin/portfolios')
+  },
+  getAdmins() {
+    return api.get('/admin/admins')
+  },
 
-deleteAdmin(id) {
-  return api.delete(`/admin/admins/${id}`)
+  deleteAdmin(id) {
+    return api.delete(`/admin/admins/${id}`)
+  },
+  getTemplates() {
+    return api.get('/admin/templates')
+  },
+
+  createTemplate(data) {
+  return api.post('/admin/templates', data)
 }
+
+  deleteTemplate(id) {
+    return api.delete(`/admin/templates/${id}`)
+  }
 }
 
