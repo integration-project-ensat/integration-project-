@@ -1,7 +1,7 @@
 const portfolioService = require('../services/portfolio.service')
 const themeService = require('../services/theme.service')
 const exportService = require('../services/portfolioExport.service')
-
+const prisma = require('../../prisma/client')
 const getConnectedUserId = (req) => req.utilisateur?.id_utilisateur
 
 exports.getPortfolio = async (req, res) => {
@@ -16,7 +16,30 @@ exports.getPortfolio = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message })
   }
 }
+exports.changeTemplate = async (req, res) => {
+  try {
+    const userId = getConnectedUserId(req)
+    const { id_modele } = req.body
 
+    await prisma.portfolio.update({
+      where: {
+        id_etudiant: BigInt(userId)
+      },
+      data: {
+        id_modele: BigInt(id_modele)
+      }
+    })
+
+    res.status(200).json({
+      success: true,
+      id_modele: Number(id_modele)
+    })
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
+    })
+  }
+}
 exports.getPortfolioPublic = async (req, res) => {
   try {
     const data = await portfolioService.getPortfolioByLien(req.params.lien)
@@ -107,7 +130,22 @@ exports.exportPDF = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message })
   }
 }
+exports.getTemplates = async (req, res) => {
+  try {
+    const templates = await prisma.modelePortfolio.findMany({
+      select: {
+        id_modele: true,
+        nom: true
+      }
+    })
 
+    res.status(200).json(templates)
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
+    })
+  }
+}
 exports.exportHTML = async (req, res) => {
   try {
     await portfolioService.getPortfolio(

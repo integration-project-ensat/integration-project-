@@ -45,8 +45,11 @@ import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import EtudiantsProfView from "../views/EtudiantsProfView.vue";
 import ProfileEditView from "../views/ProfileEditView.vue";
 import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
-
-const Placeholder = { template: '<div style="padding:2rem">Page en construction</div>' };
+import PortfolioCreativeView from "../views/PortfolioCreativeView.vue";
+import PortfolioProfessionalView from "../views/PortfolioProfessionalView.vue";
+const Placeholder = {
+  template: '<div style="padding:2rem">Page en construction</div>',
+};
 
 const legacyProfileTargets: Record<string, string> = {
   "student-1": "/profile/student/7",
@@ -90,7 +93,9 @@ const resolveLegacyProfileTarget = (
   key: string,
   query: Record<string, unknown> = {},
 ) => {
-  const normalizedKey = String(key ?? "").trim().toLowerCase();
+  const normalizedKey = String(key ?? "")
+    .trim()
+    .toLowerCase();
   const target = legacyProfileTargets[normalizedKey] ?? "/profile";
   return appendQuery(target, serializeQuery(query));
 };
@@ -126,13 +131,29 @@ const router = createRouter({
     { path: "/", name: "welcome", component: WelcomeView },
     { path: "/login", name: "login", component: LoginView },
     { path: "/signup", name: "signup", component: SignupView },
-    { path: "/oauth-success", name: "oauth-success", component: OAuthSuccessView },
-    { path: "/complete-profile", name: "complete-profile", component: CompleteProfileView },
+    {
+      path: "/oauth-success",
+      name: "oauth-success",
+      component: OAuthSuccessView,
+    },
+    {
+      path: "/complete-profile",
+      name: "complete-profile",
+      component: CompleteProfileView,
+    },
     { path: "/forgot", name: "forgot", component: ForgetPasswordView },
     { path: "/reset-password", name: "reset", component: ResetPasswordView },
     { path: "/verify-code", name: "verify-code", component: VerifyCodeView },
-    { path: "/oauth-success", name: "oauth-success", component: OAuthSuccessView },
-    { path: "/complete-profile", name: "complete-profile", component: CompleteProfileView },
+    {
+      path: "/oauth-success",
+      name: "oauth-success",
+      component: OAuthSuccessView,
+    },
+    {
+      path: "/complete-profile",
+      name: "complete-profile",
+      component: CompleteProfileView,
+    },
     { path: "/explore", name: "explore", component: ExploreView },
     { path: "/explore-prof", name: "explore-prof", component: ExploreProfView },
     { path: "/explore-pro", name: "explore-pro", component: ExploreProView },
@@ -140,49 +161,89 @@ const router = createRouter({
       path: "/dashboard",
       name: "dashboard",
       redirect: () => {
-        const role = localStorage.getItem('role')
-        if (role === 'student') return '/student/dashboard'
-        if (role === 'teacher') return '/prof/dashboard'
-        if (role === 'professional') return '/pro/dashboard'
-        if (role === 'admin') return '/admin'
-        return '/login'
+        const role = localStorage.getItem("role");
+        if (role === "student") return "/student/dashboard";
+        if (role === "teacher") return "/prof/dashboard";
+        if (role === "professional") return "/pro/dashboard";
+        if (role === "admin") return "/admin";
+        return "/login";
       },
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
-    { path: "/portfolio", name: "portfolio", component: StudentPortfolioView, meta: { requiresAuth: true } },
-    { path: "/lettres", name: "letters", component: LettersView, meta: { requiresAuth: true } },
-    { path: '/projets', name: 'projets', component: ProjectsView, meta: { requiresAuth: true } },
-    { path: "/stages", name: "stages", component: StagesView, meta: { requiresAuth: true } },
-    { path: "/certifications", name: "certifications", component: CertificationsView, meta: { requiresAuth: true } },
-    { path: "/activites", name: "activites", component: ActivitesView, meta: { requiresAuth: true } },
+    {
+      path: "/portfolio",
+      name: "portfolio",
+      component: StudentPortfolioView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/lettres",
+      name: "letters",
+      component: LettersView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/projets",
+      name: "projets",
+      component: ProjectsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/stages",
+      name: "stages",
+      component: StagesView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/certifications",
+      name: "certifications",
+      component: CertificationsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/activites",
+      name: "activites",
+      component: ActivitesView,
+      meta: { requiresAuth: true },
+    },
     { path: "/github", component: Placeholder, meta: { requiresAuth: true } },
     { path: "/recos", component: Placeholder, meta: { requiresAuth: true } },
-    { path: "/commentaires", component: Placeholder, meta: { requiresAuth: true } },
-    { path: '/profile', name: 'profile', component: StudentProfileView },
-    { path: '/profile/edit', name: 'profile-edit', component: ProfileEditView },
+    {
+      path: "/commentaires",
+      component: Placeholder,
+      meta: { requiresAuth: true },
+    },
+    { path: "/profile", name: "profile", component: StudentProfileView },
+    { path: "/profile/edit", name: "profile-edit", component: ProfileEditView },
     { path: "/dashboard", name: "dashboard", component: DashboardProView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
+    { path: "/projets", name: "projets", component: ProjectsView },
+    { path: "/settings", name: "settings", component: SettingsView },
     { path: '/projets', name: 'projets', component: ProjectsView },
     { path: '/settings', name: 'settings', redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
     { path: '/student/settings', name: 'student-settings', component: SettingsView, meta: { requiresAuth: true, requiresRole: 'student' } },
     { path: '/prof/settings', name: 'prof-settings', component: SettingsProfessorView, meta: { requiresAuth: true, requiresRole: 'teacher' } },
     { path: '/pro/settings', name: 'pro-settings', component: SettingsProfessionalView, meta: { requiresAuth: true, requiresRole: 'professional' } },
     { path: "/stages", name: "stages", component: StagesView },
-    { path: "/certifications", name: "certifications", component: CertificationsView },
+    {
+      path: "/certifications",
+      name: "certifications",
+      component: CertificationsView,
+    },
     { path: "/activites", name: "activites", component: ActivitesView },
     { path: "/dashboard", redirect: "/pro/dashboard" },
     {
       path: "/pro/dashboard",
       name: "pro-dashboard",
       component: DashboardProView,
-      meta: { requiresAuth: true, requiresRole: 'professional' }
+      meta: { requiresAuth: true, requiresRole: "professional" },
     },
     {
       path: "/student/dashboard",
       name: "student-dashboard",
       component: DashboardStudentView,
-      meta: { requiresAuth: true, requiresRole: 'student' }
+      meta: { requiresAuth: true, requiresRole: "student" },
     },
     { path: "/feed", name: "feed", component: FeedView },
     {
@@ -213,12 +274,14 @@ const router = createRouter({
       path: "/profile",
       name: "profile",
       component: StudentProfileView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/settings",
-      redirect: redirectSettingsByRole,
-      meta: { requiresAuth: true }
+      name: "settings",
+      component: SettingsView,
+      meta: { requiresAuth: true },
+
     },
     {
       path: "/pro/top-profiles",
@@ -229,10 +292,10 @@ const router = createRouter({
       path: "/top-profiles",
       name: "top-profiles",
       redirect: () => {
-        const role = localStorage.getItem('role')
-        if (role === 'professional') return '/pro/top-profiles'
-        return '/student/dashboard'
-      }
+        const role = localStorage.getItem("role");
+        if (role === "professional") return "/pro/top-profiles";
+        return "/student/dashboard";
+      },
     },
     {
       path: "/projects/:id",
@@ -243,7 +306,7 @@ const router = createRouter({
       path: "/prof/dashboard",
       name: "prof-dashboard",
       component: DashboardProfView,
-      meta: { requiresAuth: true, requiresRole: 'teacher' }
+      meta: { requiresAuth: true, requiresRole: "teacher" },
     },
     {
       path: "/prof/validations",
@@ -267,84 +330,308 @@ const router = createRouter({
       props: true,
     },
     { path: "/validations", redirect: "/prof/validations" },
-    { path: "/ai-analyzer", name: "ai-analyzer", component: AIPortfolioAnalyzerView },
-    { path: "/explore", name: "explore", redirect: redirectExploreByRole, meta: { requiresAuth: true } },
-    { path: "/student/explore", name: "student-explore", component: ExploreView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/explore-prof", name: "explore-prof", component: ExploreProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
-    { path: "/explore-pro", name: "explore-pro", component: ExploreProView, meta: { requiresAuth: true, requiresRole: "professional" } },
+    {
+      path: "/ai-analyzer",
+      name: "ai-analyzer",
+      component: AIPortfolioAnalyzerView,
+    },
+    {
+      path: "/explore",
+      name: "explore",
+      redirect: redirectExploreByRole,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/student/explore",
+      name: "student-explore",
+      component: ExploreView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/explore-prof",
+      name: "explore-prof",
+      component: ExploreProfView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/explore-pro",
+      name: "explore-pro",
+      component: ExploreProView,
+      meta: { requiresAuth: true, requiresRole: "professional" },
+    },
 
-    { path: "/dashboard", name: "dashboard", redirect: redirectByRole, meta: { requiresAuth: true } },
+    {
+      path: "/dashboard",
+      name: "dashboard",
+      redirect: redirectByRole,
+      meta: { requiresAuth: true },
+    },
 
-    { path: "/admin", component: AdminDashboardView, meta: { requiresAuth: true, requiresRole: "admin" } },
-    { path: "/admin/profils", component: AdminProfilesView, meta: { requiresAuth: true, requiresRole: "admin" } },
-    { path: "/admin/portfolios", component: AdminPortfoliosView, meta: { requiresAuth: true, requiresRole: "admin" } },
-    { path: "/admin/activites", component: AdminActivitiesView, meta: { requiresAuth: true, requiresRole: "admin" } },
-    { path: "/admin/projets", component: AdminProjetsView, meta: { requiresAuth: true, requiresRole: "admin" } },
-    { path: "/admin/certifications", component: AdminCertificationsView, meta: { requiresAuth: true, requiresRole: "admin" } },
-    { path: "/admin/parametres", component: Placeholder, meta: { requiresAuth: true, requiresRole: "admin" } },
-
+    {
+      path: "/admin",
+      component: AdminDashboardView,
+      meta: { requiresAuth: true, requiresRole: "admin" },
+    },
+    {
+      path: "/admin/profils",
+      component: AdminProfilesView,
+      meta: { requiresAuth: true, requiresRole: "admin" },
+    },
+    {
+      path: "/admin/portfolios",
+      component: AdminPortfoliosView,
+      meta: { requiresAuth: true, requiresRole: "admin" },
+    },
+    {
+      path: "/admin/activites",
+      component: AdminActivitiesView,
+      meta: { requiresAuth: true, requiresRole: "admin" },
+    },
+    {
+      path: "/admin/projets",
+      component: AdminProjetsView,
+      meta: { requiresAuth: true, requiresRole: "admin" },
+    },
+    {
+      path: "/admin/certifications",
+      component: AdminCertificationsView,
+      meta: { requiresAuth: true, requiresRole: "admin" },
+    },
+    {
+      path: "/admin/parametres",
+      component: Placeholder,
+      meta: { requiresAuth: true, requiresRole: "admin" },
+    },
+    {
+      path: "/profile",
+      name: "profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: SettingsView,
+      meta: { requiresAuth: true },
+    },
     { path: "/profile", name: "profile", component: StudentProfileView, meta: { requiresAuth: true } },
     { path: "/settings", redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
-    { path: "/portfolio/:id(\\d+)", name: "portfolio-by-id", component: StudentPortfolioView, props: true },
-    { path: "/lettres", name: "letters", component: LettersView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/projets", name: "projets", component: ProjectsView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/stages", name: "stages", component: StagesView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/certifications", name: "certifications", component: CertificationsView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/activites", name: "activites", component: ActivitesView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/recos", name: "student-recos", component: StudentRecommendationsView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/commentaires", name: "student-commentaires", component: StudentCommentsView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/github", name: "student-github", component: StudentGithubView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/ai-analyzer", name: "ai-analyzer", component: AIPortfolioAnalyzerView, meta: { requiresAuth: true, requiresRole: "student" } },
+    {
+      path: "/portfolio/:id(\\d+)",
+      name: "portfolio-by-id",
+      component: StudentPortfolioView,
+      props: true,
+    },
+    {
+      path: "/lettres",
+      name: "letters",
+      component: LettersView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/projets",
+      name: "projets",
+      component: ProjectsView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/stages",
+      name: "stages",
+      component: StagesView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/certifications",
+      name: "certifications",
+      component: CertificationsView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/activites",
+      name: "activites",
+      component: ActivitesView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/recos",
+      name: "student-recos",
+      component: StudentRecommendationsView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/commentaires",
+      name: "student-commentaires",
+      component: StudentCommentsView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/github",
+      name: "student-github",
+      component: StudentGithubView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/ai-analyzer",
+      name: "ai-analyzer",
+      component: AIPortfolioAnalyzerView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
 
-    { path: "/student/dashboard", name: "student-dashboard", component: DashboardStudentView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/student/ai-recommendation", name: "student-ai-recommendation", component: StudentAIRecommendationView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/student/feed", name: "student-feed", component: FeedView, meta: { requiresAuth: true, requiresRole: "student" } },
-    { path: "/student/connexions", name: "student-connexions", component: ConnexionsProView, meta: { requiresAuth: true, requiresRole: "student" } },
+    {
+      path: "/student/dashboard",
+      name: "student-dashboard",
+      component: DashboardStudentView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/student/ai-recommendation",
+      name: "student-ai-recommendation",
+      component: StudentAIRecommendationView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/student/feed",
+      name: "student-feed",
+      component: FeedView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/student/connexions",
+      name: "student-connexions",
+      component: ConnexionsProView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
 
-    { path: "/prof/dashboard", name: "prof-dashboard", component: DashboardProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
-    { path: "/prof/feed", name: "prof-feed", component: FeedView, meta: { requiresAuth: true, requiresRole: "teacher" } },
-    { path: "/prof/connexions", name: "prof-connexions", component: ConnexionsProView, meta: { requiresAuth: true, requiresRole: "teacher" } },
-    { path: "/prof/validations", name: "prof-validations", component: ValidationProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
-    { path: "/prof/recommandations", name: "prof-recommandations", component: RecommandationsProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
-    { path: "/prof/etudiants", name: "prof-etudiants", component: EtudiantsProfView, meta: { requiresAuth: true, requiresRole: "teacher" } },
+    {
+      path: "/prof/dashboard",
+      name: "prof-dashboard",
+      component: DashboardProfView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/prof/feed",
+      name: "prof-feed",
+      component: FeedView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/prof/connexions",
+      name: "prof-connexions",
+      component: ConnexionsProView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/prof/validations",
+      name: "prof-validations",
+      component: ValidationProfView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/prof/recommandations",
+      name: "prof-recommandations",
+      component: RecommandationsProfView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/prof/etudiants",
+      name: "prof-etudiants",
+      component: EtudiantsProfView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
 
-    { path: "/pro/dashboard", name: "pro-dashboard", component: DashboardProView },
+    {
+      path: "/pro/dashboard",
+      name: "pro-dashboard",
+      component: DashboardProView,
+    },
     { path: "/pro/feed", name: "pro-feed", component: FeedView },
-    { path: "/pro/connexions", name: "pro-connexions", component: ConnexionsProView },
-    { path: "/pro/top-profiles", name: "pro-top-profiles", component: TopProfilesProView },
+    {
+      path: "/pro/connexions",
+      name: "pro-connexions",
+      component: ConnexionsProView,
+    },
+    {
+      path: "/pro/top-profiles",
+      name: "pro-top-profiles",
+      component: TopProfilesProView,
+    },
 
-    { path: "/feed", redirect: () => {
-      const role = localStorage.getItem("role");
-      if (role === "teacher") return "/prof/feed";
-      if (role === "professional") return "/pro/feed";
-      if (role === "student") return "/student/feed";
-      return "/login";
-    } },
-    { path: "/top-profiles", redirect: () => {
-      const role = localStorage.getItem("role");
-      if (role === "professional") return "/pro/top-profiles";
-      return "/student/dashboard";
-    } },
+    {
+      path: "/feed",
+      redirect: () => {
+        const role = localStorage.getItem("role");
+        if (role === "teacher") return "/prof/feed";
+        if (role === "professional") return "/pro/feed";
+        if (role === "student") return "/student/feed";
+        return "/login";
+      },
+    },
+    {
+      path: "/top-profiles",
+      redirect: () => {
+        const role = localStorage.getItem("role");
+        if (role === "professional") return "/pro/top-profiles";
+        return "/student/dashboard";
+      },
+    },
     { path: "/validations", redirect: "/prof/validations" },
-    { path: "/projects/:id", name: "feed-project-details", component: FeedProjectDetailsView },
-    { path: "/profile/user/:id(\\d+)", name: "user-profile-by-id", component: StudentProfileView, props: true },
-    { path: "/profile/student/:id(\\d+)", name: "student-profile-by-id", component: StudentProfileView, props: true },
+    {
+      path: "/projects/:id",
+      name: "feed-project-details",
+      component: FeedProjectDetailsView,
+    },
+    {
+      path: "/profile/user/:id(\\d+)",
+      name: "user-profile-by-id",
+      component: StudentProfileView,
+      props: true,
+    },
+    {
+      path: "/profile/student/:id(\\d+)",
+      name: "student-profile-by-id",
+      component: StudentProfileView,
+      props: true,
+    },
     {
       path: "/profile/student-:legacyId",
-      redirect: (to) => resolveLegacyProfileTarget(`student-${to.params.legacyId}`, to.query as Record<string, unknown>),
+      redirect: (to) =>
+        resolveLegacyProfileTarget(
+          `student-${to.params.legacyId}`,
+          to.query as Record<string, unknown>,
+        ),
     },
     {
       path: "/profile/prof-:legacyId",
-      redirect: (to) => resolveLegacyProfileTarget(`prof-${to.params.legacyId}`, to.query as Record<string, unknown>),
+      redirect: (to) =>
+        resolveLegacyProfileTarget(
+          `prof-${to.params.legacyId}`,
+          to.query as Record<string, unknown>,
+        ),
+    },
+    {
+      path: "/portfolio-creative/:id",
+      component: PortfolioCreativeView,
+    },
+    {
+      path: "/portfolio-professional/:id",
+      component: PortfolioProfessionalView,
     },
     {
       path: "/profile/professional-:legacyId",
-      redirect: (to) => resolveLegacyProfileTarget(`professional-${to.params.legacyId}`, to.query as Record<string, unknown>),
+      redirect: (to) =>
+        resolveLegacyProfileTarget(
+          `professional-${to.params.legacyId}`,
+          to.query as Record<string, unknown>,
+        ),
     },
     {
       path: "/profile/student/:slug",
-      redirect: (to) => resolveLegacyProfileTarget(String(to.params.slug), to.query as Record<string, unknown>),
+      redirect: (to) =>
+        resolveLegacyProfileTarget(
+          String(to.params.slug),
+          to.query as Record<string, unknown>,
+        ),
     },
   ],
 });

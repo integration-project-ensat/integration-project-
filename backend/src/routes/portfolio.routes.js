@@ -14,5 +14,14 @@ router.get('/portfolio/:id_etudiant/export/html', authentifier, portfolioCtrl.ex
 router.get('/portfolio/:id_etudiant', authentifier, portfolioCtrl.getPortfolio)
 router.patch('/portfolio/visibilite', authentifier, portfolioCtrl.updateVisibilite)
 router.patch('/portfolio', authentifier, portfolioCtrl.updatePortfolio)
-
+router.get(
+    '/templates',
+    authentifier,
+    portfolioCtrl.getTemplates
+)
+router.patch(
+    '/template',
+    authentifier,
+    portfolioCtrl.changeTemplate
+)
 module.exports = router

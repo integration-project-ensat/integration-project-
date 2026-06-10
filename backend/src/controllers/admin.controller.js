@@ -211,7 +211,34 @@ const getDashboard = asyncHandler(async (req, res) => {
     },
   });
 });
+const getPortfolioStats = async (req, res) => {
+  try {
+    const total = await prisma.portfolio.count()
 
+    const verifies = await prisma.portfolio.count({
+      where: {
+        est_public: true
+      }
+    })
+
+    const attente = await prisma.portfolio.count({
+      where: {
+        est_public: false
+      }
+    })
+
+    res.json({
+      total,
+      verifies,
+      attente,
+      signale: 0
+    })
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
+    })
+  }
+}
 // Helpers dashboard
 function _labelAction(action, raison) {
   if (action === 'LOGIN_REUSSI')  return 'Connexion réussie';
@@ -244,7 +271,62 @@ function _statutAction(action) {
 //   scoreMin      score_total minimum (0-100)
 //   statut        verifie | en_attente | non_verifie
 //   page / limit
+const getTemplates = async (req, res) => {
+  const templates = await prisma.modelePortfolio.findMany({
+    orderBy: {
+      id_modele: 'asc'
+    }
+  })
 
+  res.json({
+    success: true,
+    data: templates
+  })
+}
+
+const createTemplate = async (req, res) => {
+  const { nom, description } = req.body
+
+  const template = await prisma.modelePortfolio.create({
+    data: {
+      nom,
+      description
+    }
+  })
+
+  res.status(201).json({
+    success: true,
+    data: template
+  })
+}
+
+const deleteTemplate = async (req, res) => {
+  const id = Number(req.params.id)
+
+  const template = await prisma.modelePortfolio.findUnique({
+    where: { id_modele: id }
+  })
+
+  if (!template) {
+    return res.status(404).json({
+      message: 'Template introuvable'
+    })
+  }
+
+  if (template.nom === 'Modern') {
+    return res.status(400).json({
+      message: 'Le template Modern ne peut pas être supprimé'
+    })
+  }
+
+  await prisma.modelePortfolio.delete({
+    where: { id_modele: id }
+  })
+
+  res.json({
+    success: true
+  })
+}
 const getEtudiants = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPaginationParams(req);
   const { recherche, ville, etablissement, scoreMin, statut } = req.query;
@@ -964,7 +1046,6 @@ const deletePortfolio = asyncHandler(async (req, res) => {
   await prisma.portfolio.delete({ where: { id_portfolio: id } });
   res.json({ success: true, message: 'Portfolio supprimé' });
 });
-
 module.exports = {
   getDashboard,
   getEtudiants,
@@ -984,5 +1065,9 @@ module.exports = {
   getProfesseurs,
   deleteEtudiant,
   deleteProfesseur,
-  deleteProfessionnel
+  deleteProfessionnel,
+  getTemplates,
+  deleteTemplate,
+  createTemplate,
+  getPortfolioStats
 };

@@ -13,6 +13,7 @@ services:
 
   backend:
     build: ./backend
+    command: sh -c "npm run seed && node server.js"
     ports:
       - "3000:3000"
     env_file:
