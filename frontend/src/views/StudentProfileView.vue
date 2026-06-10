@@ -33,6 +33,7 @@
             :recent-recommendations="recommendations"
             v-model="activeTab"
             :is-owner="userRole === 'student' && !profileStudentId"
+            :connection-label="connectionTabLabel"
             @open-recos="showRecosModal = true"
             @open-portfolio="openPortfolio"
           />
@@ -128,24 +129,75 @@
         </section>
 
         <section v-if="activeTab === 'Connecter'" class="connect-tab">
-  <div class="connect-card">
-    <div>
-      <h3>Demande de connexion</h3>
-      <p>
-        Envoyez une demande de connexion à {{ profile.name }} pour rester en contact.
-      </p>
-    </div>
+          <div class="connect-card">
+            <div>
+              <h3>{{ connectionPanelTitle }}</h3>
+              <p>{{ connectionPanelDescription }}</p>
+              <p v-if="connectionActionMessage" class="connection-message">
+                {{ connectionActionMessage }}
+              </p>
+            </div>
 
-    <button
-      type="button"
-      class="connect-btn"
-      :disabled="connectionSent"
-      @click="sendConnectionRequest"
-    >
-      {{ connectionSent ? 'Demande envoyée' : 'Se connecter' }}
-    </button>
-  </div>
-</section>
+            <div class="connection-actions">
+              <template v-if="connectionStatus.isConnected">
+                <button type="button" class="connect-btn connected" disabled>
+                  Déjà connecté
+                </button>
+                <button
+                  type="button"
+                  class="connect-btn danger"
+                  :disabled="connectionLoading"
+                  @click="removeConnection"
+                >
+                  Retirer la connexion
+                </button>
+              </template>
+
+              <template v-else-if="connectionStatus.requestSent">
+                <button type="button" class="connect-btn pending" disabled>
+                  Demande envoyée
+                </button>
+                <button
+                  type="button"
+                  class="connect-btn danger"
+                  :disabled="connectionLoading"
+                  @click="cancelConnectionRequest"
+                >
+                  Annuler la demande
+                </button>
+              </template>
+
+              <template v-else-if="connectionStatus.requestReceived">
+                <button
+                  type="button"
+                  class="connect-btn"
+                  :disabled="connectionLoading"
+                  @click="acceptConnectionRequest"
+                >
+                  Accepter
+                </button>
+                <button
+                  type="button"
+                  class="connect-btn danger"
+                  :disabled="connectionLoading"
+                  @click="rejectConnectionRequest"
+                >
+                  Refuser
+                </button>
+              </template>
+
+              <button
+                v-else
+                type="button"
+                class="connect-btn"
+                :disabled="connectionLoading || isOwnProfile"
+                @click="sendConnectionRequest"
+              >
+                {{ connectionLoading ? 'Traitement...' : 'Se connecter' }}
+              </button>
+            </div>
+          </div>
+        </section>
 
         <section v-if="activeTab === 'Partager'" class="share-tab">
   <div class="share-card">
@@ -339,18 +391,163 @@ const profile = ref({
 
 const recommendations = ref<Recommendation[]>([])
 
-const connectionSent = ref(false)
+type ConnectionStatus = {
+  isConnected: boolean
+  requestSent: boolean
+  requestReceived: boolean
+  status: string
+  connexionId: string | null
+}
+
+const defaultConnectionStatus = (): ConnectionStatus => ({
+  isConnected: false,
+  requestSent: false,
+  requestReceived: false,
+  status: 'NONE',
+  connexionId: null
+})
+
+const connectionStatus = ref<ConnectionStatus>(defaultConnectionStatus())
+const connectionLoading = ref(false)
+const connectionActionMessage = ref('')
+
+const currentUserId = computed(() => {
+  const rawUser = localStorage.getItem('user')
+  if (!rawUser) return null
+
+  try {
+    const parsed = JSON.parse(rawUser)
+    const id = parsed?.id_utilisateur ?? parsed?.id
+    return id == null ? null : Number(id)
+  } catch {
+    return null
+  }
+})
+
+const isOwnProfile = computed(() =>
+  Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
+)
+
+const connectionTabLabel = computed(() => {
+  if (isOwnProfile.value) return 'Connecter'
+  if (connectionStatus.value.isConnected) return 'Déjà connecté'
+  if (connectionStatus.value.requestSent) return 'Demande envoyée'
+  if (connectionStatus.value.requestReceived) return 'Répondre'
+  return 'Connecter'
+})
+
+const connectionPanelTitle = computed(() => {
+  if (connectionStatus.value.isConnected) return 'Déjà connecté'
+  if (connectionStatus.value.requestSent) return 'Demande envoyée'
+  if (connectionStatus.value.requestReceived) return 'Demande reçue'
+  return 'Demande de connexion'
+})
+
+const connectionPanelDescription = computed(() => {
+  if (isOwnProfile.value) return 'Vous consultez votre propre profil.'
+  if (connectionStatus.value.isConnected) return `Vous êtes connecté avec ${profile.value.name}.`
+  if (connectionStatus.value.requestSent) return `Votre demande à ${profile.value.name} est en attente.`
+  if (connectionStatus.value.requestReceived) return `${profile.value.name} vous a envoyé une demande de connexion.`
+  return `Envoyez une demande de connexion à ${profile.value.name} pour rester en contact.`
+})
+
+function applyConnectionStatus(status: any) {
+  connectionStatus.value = {
+    isConnected: Boolean(status?.isConnected),
+    requestSent: Boolean(status?.requestSent),
+    requestReceived: Boolean(status?.requestReceived),
+    status: status?.status ?? 'NONE',
+    connexionId: status?.connexionId == null ? null : String(status.connexionId)
+  }
+}
+
+async function loadConnectionStatus() {
+  if (!profileId.value || isOwnProfile.value || !localStorage.getItem('token')) {
+    connectionStatus.value = defaultConnectionStatus()
+    return
+  }
+
+  try {
+    const { data } = await connexionService.getConnectionStatus(profileId.value)
+    applyConnectionStatus(data?.data || data)
+  } catch (error) {
+    console.warn('Chargement statut connexion impossible', error)
+    connectionStatus.value = defaultConnectionStatus()
+  }
+}
+
+async function runConnectionAction(action: () => Promise<unknown>, successMessage: string, fallbackMessage: string) {
+  if (connectionLoading.value) return
+
+  connectionLoading.value = true
+  connectionActionMessage.value = ''
+
+  try {
+    await action()
+    connectionActionMessage.value = successMessage
+  } catch (error: any) {
+    connectionActionMessage.value = error?.response?.data?.message || fallbackMessage
+  } finally {
+    await loadConnectionStatus()
+    connectionLoading.value = false
+  }
+}
 
 async function sendConnectionRequest() {
-  try {
-    await connexionService.createConnexion({
+  if (!profileId.value || isOwnProfile.value) return
+
+  await runConnectionAction(
+    () => connexionService.createConnexion({
       id_destinataire: profileId.value,
       message: `Demande de connexion vers ${profile.value.name}`
-    })
-    connectionSent.value = true
-  } catch (error) {
-    console.error('Erreur demande de connexion', error)
-  }
+    }),
+    'Demande envoyée.',
+    'Impossible d’envoyer la demande.'
+  )
+}
+
+async function cancelConnectionRequest() {
+  const connexionId = connectionStatus.value.connexionId
+  if (!connexionId) return
+
+  await runConnectionAction(
+    () => connexionService.supprimerConnexion(connexionId),
+    'Demande annulée.',
+    'Impossible d’annuler la demande.'
+  )
+}
+
+async function acceptConnectionRequest() {
+  const connexionId = connectionStatus.value.connexionId
+  if (!connexionId) return
+
+  await runConnectionAction(
+    () => connexionService.accepterConnexion(connexionId),
+    'Connexion acceptée.',
+    'Impossible d’accepter la demande.'
+  )
+}
+
+async function rejectConnectionRequest() {
+  const connexionId = connectionStatus.value.connexionId
+  if (!connexionId) return
+
+  await runConnectionAction(
+    () => connexionService.refuserConnexion(connexionId),
+    'Demande refusée.',
+    'Impossible de refuser la demande.'
+  )
+}
+
+async function removeConnection() {
+  const connexionId = connectionStatus.value.connexionId
+  if (!connexionId) return
+
+  await runConnectionAction(
+    () => connexionService.supprimerConnexion(connexionId),
+    'Connexion retirée.',
+    'Impossible de retirer la connexion.'
+  )
 }
 
 const posts = ref<ProfilePost[]>([])
@@ -647,6 +844,7 @@ function resolveBackendAsset(path: string) {
 
 onMounted(async () => {
   await loadProfile()
+  await loadConnectionStatus()
   await loadPosts()
   await loadRecommendations()
   await loadAttachedStatus()
@@ -661,7 +859,9 @@ watch(
 
 watch(profileId, () => {
   loadAttachedStatus()
-  connectionSent.value = false
+  connectionActionMessage.value = ''
+  connectionStatus.value = defaultConnectionStatus()
+  loadConnectionStatus()
   loadProfile()
   loadPosts()
   loadRecommendations()
@@ -936,6 +1136,19 @@ watch(profileId, () => {
   color: var(--text-muted);
 }
 
+.connection-message {
+  margin-top: 8px;
+  color: var(--purple) !important;
+  font-weight: 700;
+}
+
+.connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .connect-btn {
   min-height: 42px;
   padding: 0 22px;
@@ -945,6 +1158,17 @@ watch(profileId, () => {
   font-family: var(--font-head);
   font-weight: 700;
   white-space: nowrap;
+}
+
+.connect-btn.connected,
+.connect-btn.pending {
+  background: #eef2ff;
+  color: var(--purple);
+}
+
+.connect-btn.danger {
+  background: rgba(220, 38, 38, .09);
+  color: #dc2626;
 }
 
 .connect-btn:disabled {

@@ -64,7 +64,11 @@ const careers: Career[] = [
 ];
 
 const analyzedProfile = computed(() => profileSource.value || profilePreview.value || null);
-const analyzedStudent = computed(() => analyzedProfile.value?.student || null);
+const analyzedStudent = computed(() => {
+  if (analyzedProfile.value?.student) return analyzedProfile.value.student;
+  if (analyzedProfile.value?.source) return analyzedProfile.value;
+  return null;
+});
 const analyzedSkills = computed(() => {
   const values = analyzedProfile.value?.skills;
   return Array.isArray(values) ? values.filter(Boolean) : [];
@@ -88,8 +92,8 @@ const storedUserId = computed(() => {
 });
 
 async function analyzeProfile() {
-  if (!profilePreview.value || !storedUserId.value) {
-    error.value = "Impossible de lancer l'analyse sans un vrai profil étudiant chargé depuis le backend.";
+  if (!profilePreview.value && !storedUserId.value) {
+    error.value = "Impossible de lancer l'analyse sans un profil étudiant connecté.";
     result.value = null;
     profileSource.value = null;
     return;
@@ -99,16 +103,18 @@ async function analyzeProfile() {
   error.value = "";
 
   try {
-    const response = await getCareerRecommendation({
+    const payload = {
       targetCareer: selectedCareer.value,
       studentId: storedUserId.value,
-      skills: profilePreview.value.skills,
-      projects: profilePreview.value.projects,
-      technologies: profilePreview.value.technologies,
-      badges: profilePreview.value.badges,
-      stages: profilePreview.value.stages,
-      student: profilePreview.value.student,
-    });
+      skills: profilePreview.value?.skills ?? [],
+      projects: profilePreview.value?.projects ?? [],
+      technologies: profilePreview.value?.technologies ?? [],
+      badges: profilePreview.value?.badges ?? [],
+      stages: profilePreview.value?.stages ?? [],
+      student: profilePreview.value?.student,
+    };
+
+    const response = await getCareerRecommendation(payload);
     result.value = response.data.data;
     profileSource.value = response.data.profileSource || profilePreview.value;
   } catch (apiError: any) {
@@ -125,9 +131,18 @@ async function analyzeProfile() {
 function buildProfilePreview(profile: any) {
   const raw = profile?.raw || {};
   const student = raw?.etudiant || {};
+  const skills = [
+    ...(Array.isArray(profile?.competences) ? profile.competences : []),
+    student?.filiere,
+    profile?.title,
+    raw?.portfolio?.objectif_pro,
+  ]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .filter((item, index, list) => list.indexOf(item) === index);
 
   return {
-    skills: Array.isArray(profile?.competences) ? profile.competences : [],
+    skills,
     projects: Array.isArray(profile?.projectsData)
       ? profile.projectsData
           .flatMap((project: any) => [
@@ -253,7 +268,7 @@ onMounted(async () => {
             <small>Si vous écrivez un métier ici, il remplace le choix sélectionné.</small>
           </label>
 
-          <button class="primary-btn" :disabled="loading || loadingProfile || !profilePreview" @click="analyzeProfile">
+          <button class="primary-btn" :disabled="loading || loadingProfile || (!profilePreview && !storedUserId)" @click="analyzeProfile">
             <span v-if="loading" class="loader" />
             {{ loading ? "Analyse en cours..." : "Analyser mon profil" }}
           </button>

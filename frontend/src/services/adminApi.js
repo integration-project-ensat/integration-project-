@@ -57,6 +57,9 @@ export default {
 
   deleteTemplate(id) {
     return api.delete(`/admin/templates/${id}`)
-  }
+  },
+  getPortfolioStats() {
+  return api.get('/admin/portfolio-stats')
+}
 }
 

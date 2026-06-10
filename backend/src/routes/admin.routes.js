@@ -18,6 +18,10 @@ router.delete(
   '/templates/:id',
   adminController.deleteTemplate
 )
+router.get(
+  '/portfolio-stats',
+  adminController.getPortfolioStats
+)
 router.post(
   '/templates',
   adminController.createTemplate

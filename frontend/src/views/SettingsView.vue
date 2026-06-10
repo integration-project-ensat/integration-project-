@@ -3,14 +3,25 @@
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
     <div class="body-area">
-      <SideBar :role="userRole" :user="currentUser" :isOpen="sidebarOpen" />
+      <SidebarStudent
+        v-if="settingsRole === 'student'"
+        :isOpen="sidebarOpen"
+      />
+      <SidebarProf
+        v-else-if="settingsRole === 'teacher'"
+        :isOpen="sidebarOpen"
+      />
+      <SidebarPro
+        v-else
+        :isOpen="sidebarOpen"
+      />
 
       <main class="content" :class="{ shifted: sidebarOpen }">
 
         <section class="page-head">
           <div>
             <h1>Paramètres</h1>
-            <p>Gérez votre compte et votre activité sur la plateforme.</p>
+            <p>{{ pageDescription }}</p>
           </div>
         </section>
 
@@ -141,7 +152,7 @@
             </div>
 
             <!-- ── Activité ──────────────────────────────────────────── -->
-            <div v-if="activeTab === 'activity'">
+            <div v-if="!isAccountOnly && activeTab === 'activity'">
               <h2 class="panel-title">Activité sur la plateforme</h2>
 
               <div class="activity-tabs">
@@ -228,30 +239,59 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue'
+import { computed, onMounted, ref, reactive, watchEffect } from 'vue'
 import TopBar from '../components/TopBar.vue'
-import SideBar from '../components/exploreStudent/Sidebar.vue'
+import SidebarStudent from '../components/exploreStudent/Sidebar.vue'
+import SidebarProf from '../components/exploreProf/SidebarProf.vue'
+import SidebarPro from '../components/explorePro/SidebarPro.vue'
+import accountService from '../services/account.service'
+
+type SettingsRole = 'student' | 'teacher' | 'professional'
+
+const props = withDefaults(
+  defineProps<{
+    roleVariant?: SettingsRole
+    accountOnly?: boolean
+  }>(),
+  {
+    roleVariant: 'student',
+    accountOnly: false,
+  },
+)
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 const sidebarOpen = ref(true)
-const userRole = 'student'
 const currentUser = reactive({ name: 'Nom Prenom', email: 'exemple.exemple@univ.etu.ac.ma', avatar: '' })
+const settingsRole = computed(() => props.roleVariant)
+const isAccountOnly = computed(() => props.accountOnly)
+const pageDescription = computed(() =>
+  isAccountOnly.value
+    ? "Gérez l'adresse e-mail et le mot de passe de votre compte."
+    : 'Gérez votre compte et votre activité sur la plateforme.',
+)
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 const activeTab = ref<'account' | 'activity'>('account')
 
-const tabs = [
-  {
-    value: 'account' as const,
-    label: 'Compte',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>`,
-  },
-  {
-    value: 'activity' as const,
-    label: 'Activité',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
-  },
-]
+const accountTab = {
+  value: 'account' as const,
+  label: 'Compte',
+  icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>`,
+}
+
+const activityTab = {
+  value: 'activity' as const,
+  label: 'Activité',
+  icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+}
+
+const tabs = computed(() => (isAccountOnly.value ? [accountTab] : [accountTab, activityTab]))
+
+watchEffect(() => {
+  if (isAccountOnly.value && activeTab.value !== 'account') {
+    activeTab.value = 'account'
+  }
+})
 
 // ── Email ─────────────────────────────────────────────────────────────────────
 const showEmailForm = ref(false)
@@ -259,7 +299,23 @@ const emailError = ref('')
 const emailSuccess = ref('')
 const emailForm = reactive({ newEmail: '', confirmEmail: '', password: '' })
 
-function saveEmail() {
+async function loadAccount() {
+  try {
+    const account = await accountService.getMe()
+    currentUser.name = account.name || [account.prenom, account.nom].filter(Boolean).join(' ').trim() || currentUser.name
+    currentUser.email = account.email || currentUser.email
+  } catch {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+      currentUser.name = storedUser.name || [storedUser.prenom, storedUser.nom].filter(Boolean).join(' ').trim() || currentUser.name
+      currentUser.email = storedUser.email || currentUser.email
+    } catch {
+      // keep defaults
+    }
+  }
+}
+
+async function saveEmail() {
   emailError.value = ''
   emailSuccess.value = ''
   if (!emailForm.newEmail || !emailForm.confirmEmail || !emailForm.password) {
@@ -274,10 +330,20 @@ function saveEmail() {
     emailError.value = 'Adresse e-mail invalide.'
     return
   }
-  currentUser.email = emailForm.newEmail
-  emailSuccess.value = 'Adresse e-mail mise à jour avec succès.'
-  Object.assign(emailForm, { newEmail: '', confirmEmail: '', password: '' })
-  setTimeout(() => { showEmailForm.value = false; emailSuccess.value = '' }, 2000)
+  try {
+    const response = await accountService.updateEmail({
+      newEmail: emailForm.newEmail,
+      currentPassword: emailForm.password,
+    })
+    currentUser.email = response.data.email
+    emailSuccess.value = response.message || 'Adresse e-mail mise a jour avec succes.'
+    Object.assign(emailForm, { newEmail: '', confirmEmail: '', password: '' })
+    setTimeout(() => { showEmailForm.value = false; emailSuccess.value = '' }, 2000)
+  } catch (error: any) {
+    emailError.value =
+      error?.response?.data?.message ||
+      "Impossible de mettre a jour l'adresse e-mail."
+  }
 }
 
 function cancelEmail() {
@@ -312,7 +378,7 @@ const strength = computed<{ pct: number; color: string; label: string }>(() => {
   return levels[score - 1] ?? { pct: 25, color: '#dc2626', label: 'Très faible' }
 })
 
-function savePassword() {
+async function savePassword() {
   passwordError.value = ''
   passwordSuccess.value = ''
   if (!passwordForm.current || !passwordForm.newPass || !passwordForm.confirm) {
@@ -320,16 +386,27 @@ function savePassword() {
     return
   }
   if (passwordForm.newPass.length < 8) {
-    passwordError.value = 'Le mot de passe doit contenir au moins 8 caractères.'
+    passwordError.value = 'Le mot de passe doit contenir au moins 8 caracteres.'
     return
   }
   if (passwordForm.newPass !== passwordForm.confirm) {
     passwordError.value = 'Les mots de passe ne correspondent pas.'
     return
   }
-  passwordSuccess.value = 'Mot de passe mis à jour avec succès.'
-  Object.assign(passwordForm, { current: '', newPass: '', confirm: '' })
-  setTimeout(() => { showPasswordForm.value = false; passwordSuccess.value = '' }, 2000)
+  try {
+    const response = await accountService.updatePassword({
+      currentPassword: passwordForm.current,
+      newPassword: passwordForm.newPass,
+      confirmPassword: passwordForm.confirm,
+    })
+    passwordSuccess.value = response.message || 'Mot de passe mis a jour avec succes.'
+    Object.assign(passwordForm, { current: '', newPass: '', confirm: '' })
+    setTimeout(() => { showPasswordForm.value = false; passwordSuccess.value = '' }, 2000)
+  } catch (error: any) {
+    passwordError.value =
+      error?.response?.data?.message ||
+      'Impossible de mettre a jour le mot de passe.'
+  }
 }
 
 function cancelPassword() {
@@ -423,6 +500,8 @@ function badgeStyleAct(type: string): { background: string; color: string } {
   if (!s) return { background: '#f3f4f6', color: '#6b7280' }
   return { background: s.bg, color: s.color }
 }
+
+onMounted(loadAccount)
 </script>
 
 <style scoped>

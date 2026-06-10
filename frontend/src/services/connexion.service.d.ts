@@ -3,6 +3,7 @@ export declare const connexionService: {
   getDemandesRecues(): Promise<any>
   getMesDemandes(): Promise<any>
   getMesConnexions(): Promise<any>
+  getConnectionStatus(userId: number | string): Promise<any>
   createConnexion(payload: Record<string, unknown>): Promise<any>
   accepterConnexion(id: number | string): Promise<any>
   refuserConnexion(id: number | string): Promise<any>

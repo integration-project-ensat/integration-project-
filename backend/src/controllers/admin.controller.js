@@ -211,7 +211,34 @@ const getDashboard = asyncHandler(async (req, res) => {
     },
   });
 });
+const getPortfolioStats = async (req, res) => {
+  try {
+    const total = await prisma.portfolio.count()
 
+    const verifies = await prisma.portfolio.count({
+      where: {
+        est_public: true
+      }
+    })
+
+    const attente = await prisma.portfolio.count({
+      where: {
+        est_public: false
+      }
+    })
+
+    res.json({
+      total,
+      verifies,
+      attente,
+      signale: 0
+    })
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
+    })
+  }
+}
 // Helpers dashboard
 function _labelAction(action, raison) {
   if (action === 'LOGIN_REUSSI')  return 'Connexion réussie';
@@ -1019,7 +1046,6 @@ const deletePortfolio = asyncHandler(async (req, res) => {
   await prisma.portfolio.delete({ where: { id_portfolio: id } });
   res.json({ success: true, message: 'Portfolio supprimé' });
 });
-
 module.exports = {
   getDashboard,
   getEtudiants,
@@ -1042,5 +1068,6 @@ module.exports = {
   deleteProfessionnel,
   getTemplates,
   deleteTemplate,
-  createTemplate
+  createTemplate,
+  getPortfolioStats
 };

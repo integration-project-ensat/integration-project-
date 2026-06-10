@@ -58,7 +58,13 @@ async function getCareerRecommendation(req, res) {
   try {
     let payload = null
 
-    if (hasProfileData(requestedPayload)) {
+    payload = await buildStudentAiProfile(
+      req,
+      requestedPayload.targetCareer,
+      req.body.studentId
+    )
+
+    if (!payload && hasProfileData(requestedPayload)) {
       payload = {
         ...requestedPayload,
         student: {
@@ -66,12 +72,6 @@ async function getCareerRecommendation(req, res) {
           source: req.body.student?.source || 'mock'
         }
       }
-    } else {
-      payload = await buildStudentAiProfile(
-        req,
-        requestedPayload.targetCareer,
-        req.body.studentId
-      )
     }
 
     if (!payload) {
@@ -85,8 +85,6 @@ async function getCareerRecommendation(req, res) {
     return res.status(200).json({
       success: true,
       profileSource: payload,
-
-      profileSource: payload.student,
       data: recommendation
     })
   } catch (error) {

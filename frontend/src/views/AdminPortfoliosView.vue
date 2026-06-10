@@ -299,17 +299,47 @@ const categories = [
 ];
 
 /* ── KPIs ────────────────────────────── */
-const kpis = [
+const kpis = ref([
   {
     label: "Total Portfolios",
-    value: 1284,
+    value: 0,
     color: "#6366f1",
     icon: ExternalLink,
   },
-  { label: "Vérifiés", value: 956, color: "#16a34a", icon: CheckCircle },
-  { label: "En attente", value: 48, color: "#f59e0b", icon: Clock },
-  { label: "Signalé", value: 12, color: "#ef4444", icon: AlertCircle },
-];
+  {
+    label: "Vérifiés",
+    value: 0,
+    color: "#16a34a",
+    icon: CheckCircle,
+  },
+  {
+    label: "En attente",
+    value: 0,
+    color: "#f59e0b",
+    icon: Clock,
+  },
+  {
+    label: "Signalé",
+    value: 0,
+    color: "#ef4444",
+    icon: AlertCircle,
+  },
+])
+const loadStats = async () => {
+  const response = await adminApi.getPortfolioStats()
+
+  kpis.value[0].value = response.data.total
+  kpis.value[1].value = response.data.verifies
+  kpis.value[2].value = response.data.attente
+  kpis.value[3].value = response.data.signale
+}
+onMounted(() => {
+  document.addEventListener("click", closeMenu)
+
+  loadPortfolios()
+  loadTemplates()
+  loadStats()
+})
 const loadTemplates = async () => {
   const response = await adminApi.getTemplates();
 
