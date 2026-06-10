@@ -202,6 +202,9 @@ import { postService }           from "../services/post.service";
 import { profileService }        from "../services/profile.service";
 import { recommendationService } from "../services/recommendation.service";
 import { attestationService }    from "../services/attestation.service";
+import { projetService }         from "../services/projet.service";
+import { activiteService }       from "../services/activite.service";
+import { stageService }          from "../services/stage.service";
 
 const showTemplateModal = ref(false);
 const templates = ref<Array<{ id_modele: number; nom: string }>>([]);
@@ -332,6 +335,21 @@ function inferGithubUrl(...sources: Array<string|null|undefined>) {
 function parseStructuredContent(content: string) {
   try { const p = JSON.parse(content); return typeof p==="object"&&p?p:null; } catch { return null; }
 }
+function responseList(response: any) {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  return [];
+}
+function templateRoute(idModele: number, studentId: number) {
+  const routes: Record<number, string> = {
+    1: `/portfolio/${studentId}`,
+    2: `/portfolio-creative/${studentId}`,
+    3: `/portfolio-professional/${studentId}`,
+  };
+  return routes[idModele] ?? `/portfolio/${studentId}`;
+}
 function categoryLabel(category: string) {
   const n = String(category||"").toUpperCase();
   if (n.includes("COMPORT")) return "Soft Skills";
@@ -416,27 +434,124 @@ function mapProjects(items: any[]) {
   });
 }
 
+function projectTechnologies(project: any) {
+  const relations = Array.isArray(project?.technologies) ? project.technologies : [];
+  const names = relations
+    .map((relation: any) => relation?.technologie?.nom || relation?.nom)
+    .filter(Boolean);
+  return names.length ? names : project?.type ? [String(project.type)] : [];
+}
+
+function mapBackendProject(project: any, index: number): Project {
+  return {
+    id: Number(project?.id_projet ?? project?.id ?? index + 1),
+    icon: index % 3 === 0 ? "PR" : index % 3 === 1 ? "UX" : "AI",
+    title: project?.titre || project?.title || `Projet ${index + 1}`,
+    type: project?.type || project?.statut || "Projet",
+    description: project?.description || "Aucune description.",
+    details: project?.resultats || project?.appreciation_professeur || project?.description || "Aucun detail supplementaire.",
+    tech: projectTechnologies(project),
+    github: project?.lien_github || inferGithubUrl(project?.description, project?.resultats),
+    images: Array.isArray(project?.captures)
+      ? project.captures.map(resolveBackendAsset).filter(Boolean)
+      : [],
+  };
+}
+
+function mapBackendActivity(activity: any, index: number): Project {
+  const rawId = Number(activity?.id_activite ?? activity?.id ?? index + 1);
+  return {
+    id: 900000 + (Number.isFinite(rawId) ? rawId : index + 1),
+    icon: "AC",
+    title: activity?.nom || activity?.title || `Activite ${index + 1}`,
+    type: activity?.type || "Activite",
+    description: activity?.description || "Aucune description.",
+    details: activity?.description || "Aucun detail supplementaire.",
+    tech: [],
+    github: "",
+    images: activity?.justificatif_url ? [resolveBackendAsset(activity.justificatif_url)] : [],
+  };
+}
+
 async function loadPortfolio() {
   if (!profileStudentId.value) return;
   loading.value=true; error.value=null;
   try {
-    const [att,port,prof,posts,recos] = await Promise.all([
+    const [att,port,prof,posts,recos,projetsResponse,activitesResponse,stagesResponse] = await Promise.all([
       attestationService.getAttestations({etudiantId:profileStudentId.value,statut:"VALIDE"}),
       portfolioService.getPortfolio(profileStudentId.value),
       profileService.getProfile(profileStudentId.value),
       postService.getPosts(),
       recommendationService.getRecommendations({id_etudiant_cible:profileStudentId.value,statut:"VALIDE"}),
+      projetService.getMesProjets({etudiantId:profileStudentId.value,statut:"VALIDE"}),
+      activiteService.getMesActivites({etudiantId:profileStudentId.value,statut:"ATTESTEE_INSTITUTION"}),
+      stageService.getMesStages({etudiantId:profileStudentId.value,statut:"VALIDE"}),
     ]);
     mapProfileData(prof,port?.data??{});
-    currentTemplate.value = port?.data?.modele?.id_modele||port?.data?.id_modele||3;
-    if (currentTemplate.value===1&&!route.path.includes("/portfolio-professional")) { router.replace(`/portfolio/${profileStudentId.value}`); return; }
-    if (currentTemplate.value===2&&!route.path.includes("/portfolio-professional")) { router.replace(`/portfolio-creative/${profileStudentId.value}`); return; }
+    currentTemplate.value = Number(port?.data?.modele?.id_modele||port?.data?.id_modele||3);
+    if (currentTemplate.value !== 3) {
+      await router.replace(templateRoute(currentTemplate.value, profileStudentId.value));
+      return;
+    }
     const p = Array.isArray(posts?.data?.data)
       ? posts.data.data.filter((p: any)=>Number(p?.auteur?.id_utilisateur??p?.id_auteur??0)===Number(profileStudentId.value))
       : [];
-    mapProjects(p);
+    const projets = responseList(projetsResponse);
+    const activites = responseList(activitesResponse);
+    const stages = responseList(stagesResponse);
+
+    projects.value = [
+  ...projets.map(mapBackendProject),
+  ...(projets.length ? [] : posts.map((post: any, index: number) => {
+    const structured = parseStructuredContent(post?.contenu || "");
+
+    return {
+      id: Number(post?.id_poste ?? index + 1),
+      icon: index % 3 === 0 ? "PR" : index % 3 === 1 ? "UX" : "AI",
+      title:
+        structured?.projectTitle ||
+        (String(post?.contenu || "Projet").split("\n")[0] ?? "Projet").slice(0, 70),
+      type: post?.visibilite || "Projet",
+      description:
+        structured?.description || post?.contenu || "Aucune description.",
+      details:
+        structured?.details ||
+        structured?.description ||
+        post?.contenu ||
+        "Aucun detail supplementaire.",
+      tech: Array.isArray(structured?.technologies)
+        ? structured.technologies.filter(Boolean)
+        : [],
+      github: inferGithubUrl(structured?.github, post?.contenu),
+      images: post?.image_url
+        ? [resolveBackendAsset(post.image_url)]
+        : [],
+    };
+  })),
+];
+    selectedProjectId.value = projects.value[0]?.id ?? null;
+
+    experiences.value = [
+  ...stages.map((stage: any) => ({
+    role: stage?.poste || "Stage",
+    company: stage?.entreprise || "",
+    period: formatStagePeriod(stage?.date_debut, stage?.date_fin),
+    location: stage?.lieu || "",
+    mode: stage?.mode || "",
+    description: stage?.missions || stage?.description || "",
+  })),
+
+  ...activites.map((activite: any) => ({
+    role: activite.nom || "Activité",
+    company: activite.type || "Activité parascolaire",
+    period: "",
+    location: "",
+    mode: "",
+    description: activite.description || "",
+  })),
+];
     mapRecommendations(Array.isArray(recos?.data?.data)?recos.data.data:[]);
-    const a = Array.isArray(att?.data?.data)?att.data.data:[];
+    const a = responseList(att);
     certifications.value = a.map((x: any,i: number)=>({
       name: x?.titre||x?.type||`Certification ${i+1}`,
       organization: x?.organisme||"Organisme non renseigné",

@@ -7,6 +7,11 @@ function parsePositiveInteger(value, fallback) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function parseNonNegativeInteger(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
 
 /**
  * Extrait et valide les paramètres de pagination depuis la requête Express.
@@ -19,8 +24,8 @@ function parsePositiveInteger(value, fallback) {
 
 function getPaginationParams(req) {
   const page = parsePositiveInteger(req.query?.page, DEFAULT_PAGE);
-  const requestedLimit = parsePositiveInteger(req.query?.limit, DEFAULT_LIMIT);
-  const limit = Math.min(requestedLimit, MAX_LIMIT);
+  const requestedLimit = parseNonNegativeInteger(req.query?.limit, DEFAULT_LIMIT);
+  const limit = requestedLimit === 0 ? 1 : Math.min(requestedLimit, MAX_LIMIT);
 
   return {
     page,

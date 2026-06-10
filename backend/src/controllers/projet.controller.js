@@ -4,12 +4,18 @@ const { ApiResponse } = require('../utils/apiResponse')
 const projetController = {
   async getAll(req, res) {
     try {
-      const { statut } = req.query
+      const { statut, etudiantId } = req.query
       const user = req.utilisateur
 
       const filters = {}
-      if (user.role === 'ETUDIANT') filters.etudiantId = user.id_utilisateur
-      if (user.role === 'PROFESSEUR') filters.professeurId = user.id_utilisateur
+      if (user.role === 'ETUDIANT') {
+        filters.etudiantId = user.id_utilisateur
+      } else if (etudiantId) {
+        filters.etudiantId = etudiantId
+      }
+      if (user.role === 'PROFESSEUR' && !filters.etudiantId) {
+        filters.professeurId = user.id_utilisateur
+      }
       if (statut) filters.statut = statut
 
       const projets = await projetService.findAll(filters)

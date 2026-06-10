@@ -45,15 +45,48 @@
 
                 <line v-for="y in [40, 80, 120, 160, 200]" :key="y" x1="0" :y1="y" x2="540" :y2="y" stroke="#f1f5f9" stroke-width="1" />
 
+                <!-- Y-axis labels -->
+                <text v-for="(label, i) in yLabels" :key="i" x="4" :y="yLabelPositions[i] - 4" font-size="9" fill="#cbd5e1">{{ label }}</text>
+
                 <path :d="blueArea" fill="url(#gradBlue)" />
                 <path :d="blueLine" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
 
                 <path :d="cyanArea" fill="url(#gradCyan)" />
                 <path :d="cyanLine" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+                <!-- Data points -->
+                <circle
+                  v-for="(pt, i) in bluePoints"
+                  :key="'b' + i"
+                  :cx="pt.x"
+                  :cy="pt.y"
+                  r="3.5"
+                  fill="#fff"
+                  stroke="#6366f1"
+                  stroke-width="2"
+                />
+                <circle
+                  v-for="(pt, i) in cyanPoints"
+                  :key="'c' + i"
+                  :cx="pt.x"
+                  :cy="pt.y"
+                  r="3.5"
+                  fill="#fff"
+                  stroke="#06b6d4"
+                  stroke-width="2"
+                />
               </svg>
 
               <div class="chart-x-labels">
                 <span v-for="m in months" :key="m">{{ m }}</span>
+              </div>
+
+              <!-- Legend -->
+              <div class="chart-legend">
+                <span class="legend-line blue"></span>
+                <span class="legend-text">Inscriptions</span>
+                <span class="legend-line cyan"></span>
+                <span class="legend-text">Portfolios</span>
               </div>
             </div>
           </div>
@@ -198,21 +231,45 @@ const search = ref('')
 const sidebarOpen = ref(true)
 
 const months = ref(['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'])
-
 const stats = ref([])
 
-// SVG datasets normalized to 200px height
-const blueRaw = ref([180, 162, 145, 110, 60, 10])
-const cyanRaw = ref([190, 175, 158, 130, 90, 40])
-const xs = [0, 108, 216, 324, 432, 540]
+// xs est maintenant réactif pour s'adapter au nombre de mois réels
+const xs = ref([0, 108, 216, 324, 432, 540])
 
-const toPath = (ys) => ys.map((y, i) => `${i === 0 ? 'M' : 'L'} ${xs[i]} ${y}`).join(' ')
-const toArea = (ys) => toPath(ys) + ` L ${xs[xs.length - 1]} 200 L 0 200 Z`
+// Y values normalisés pour le SVG (0 = haut, 200 = bas)
+const blueRaw = ref([180, 170, 160, 145, 120, 80])
+const cyanRaw = ref([185, 175, 165, 150, 130, 95])
+
+// Valeurs réelles pour les labels Y
+const chartMax = ref(1)
+
+const toPath = (ys) =>
+  ys.map((y, i) => `${i === 0 ? 'M' : 'L'} ${xs.value[i]} ${y}`).join(' ')
+
+const toArea = (ys) =>
+  toPath(ys) + ` L ${xs.value[xs.value.length - 1]} 200 L 0 200 Z`
 
 const blueLine = computed(() => toPath(blueRaw.value))
 const blueArea = computed(() => toArea(blueRaw.value))
 const cyanLine = computed(() => toPath(cyanRaw.value))
 const cyanArea = computed(() => toArea(cyanRaw.value))
+
+// Points pour les cercles sur chaque mois
+const bluePoints = computed(() =>
+  blueRaw.value.map((y, i) => ({ x: xs.value[i], y }))
+)
+const cyanPoints = computed(() =>
+  cyanRaw.value.map((y, i) => ({ x: xs.value[i], y }))
+)
+
+// Labels de l'axe Y (valeurs réelles)
+const yLabelPositions = [40, 80, 120, 160, 200]
+const yLabels = computed(() => {
+  const max = chartMax.value
+  return yLabelPositions.map((pos) =>
+    Math.round(max - (pos / 200) * max)
+  )
+})
 
 const donutSegments = ref([
   { label: 'Design', count: 0, color: '#6366f1', dash: 0, offset: 0 },
@@ -243,12 +300,14 @@ const filteredLogs = computed(() => {
 const suspectCount = computed(() => connLogs.value.filter((l) => l.suspect).length)
 
 const refreshConn = () => {
-  // en attendant un endpoint dédié, on recharge dashboard
   loadDashboard().catch(() => {})
 }
 
 const exportConnCSV = () => {
-  const rows = [['Utilisateur', 'IP', 'User-Agent', 'Date & Heure', 'Statut'], ...filteredLogs.value.map((l) => [l.userName, l.ip, l.agent, l.datetime, l.status])]
+  const rows = [
+    ['Utilisateur', 'IP', 'User-Agent', 'Date & Heure', 'Statut'],
+    ...filteredLogs.value.map((l) => [l.userName, l.ip, l.agent, l.datetime, l.status]),
+  ]
   const csv = rows.map((r) => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
@@ -256,66 +315,77 @@ const exportConnCSV = () => {
   a.click()
   URL.revokeObjectURL(url)
 }
+
 const mapDashboardToUI = (d) => {
   if (!d) return
 
+  // ── Stats KPI ──────────────────────────────────────────────
   if (d.stats) {
     stats.value = [
-      { label: 'Profils Totaux', value: d.stats.totalProfils ?? 0, trend: 0, icon: Users },
+      { label: 'Profils Totaux',    value: d.stats.totalProfils   ?? 0, trend: 0, icon: Users },
       { label: 'Portfolios Soumis', value: d.stats.totalPortfolios ?? 0, trend: 0, icon: Briefcase },
-      { label: 'Vérifiés', value: d.stats.totalVerifies ?? 0, trend: 0, icon: CheckCircle },
-      { label: 'En Attente', value: d.stats.enAttente ?? 0, trend: 0, icon: Clock },
+      { label: 'Vérifiés',          value: d.stats.totalVerifies   ?? 0, trend: 0, icon: CheckCircle },
+      { label: 'En Attente',        value: d.stats.enAttente        ?? 0, trend: 0, icon: Clock },
     ]
   }
 
+  // ── Graphique croissance ───────────────────────────────────
   if (d.croissance) {
-    let insRaw = (d.croissance.inscriptions || [])
-  .slice(0, 6)
-  .map((x) => Number(x.valeur ?? x.value ?? 0))
+    const insData = d.croissance.inscriptions || []
+    const porData = d.croissance.portfolios   || []
 
-while (insRaw.length < 6) {
-  insRaw.unshift(0)
-}
-    let porRaw = (d.croissance.portfolios || [])
-  .slice(0, 6)
-  .map((x) => Number(x.valeur ?? x.value ?? 0))
+    // Construire un tableau ordonné des mois présents dans l'API
+    // L'API retourne les mois dans l'ordre ASC (ORDER BY mois_date ASC)
+    const allMois = [
+      ...new Set([
+        ...insData.map((x) => x.mois),
+        ...porData.map((x) => x.mois),
+      ]),
+    ]
 
-while (porRaw.length < 6) {
-  porRaw.unshift(0)
-}
+    if (allMois.length > 0) {
+      months.value = allMois
 
-    if (insRaw.length === 1) {
-  insRaw.unshift(0)
-}
+      // Dictionnaires mois → valeur
+      const insMap = Object.fromEntries(insData.map((x) => [x.mois, Number(x.valeur ?? 0)]))
+      const porMap = Object.fromEntries(porData.map((x) => [x.mois, Number(x.valeur ?? 0)]))
 
-if (porRaw.length === 1) {
-  porRaw.unshift(0)
-}
-    const max = Math.max(1, ...insRaw, ...porRaw)
-    const norm = (arr) => {
-  const out = new Array(6).fill(180)
+      const insRaw = allMois.map((m) => insMap[m] ?? 0)
+      const porRaw = allMois.map((m) => porMap[m] ?? 0)
 
-  for (let i = 0; i < Math.min(6, arr.length); i++) {
-    out[i] = 180 - Math.round((arr[i] / max) * 180)
+      const max = Math.max(1, ...insRaw, ...porRaw)
+      chartMax.value = max
+
+      // Positions X dynamiques selon le nombre de mois
+      const n = allMois.length
+      const xsLocal =
+        n === 1
+          ? [270] // un seul point → centre
+          : allMois.map((_, i) => Math.round((i / (n - 1)) * 540))
+
+      xs.value = xsLocal
+
+      // Normalisation : valeur → position Y dans le SVG (0=haut, 200=bas)
+      // On laisse une marge de 10px en haut pour que la courbe ne soit pas coupée
+      const norm = (arr) =>
+        arr.map((v) => Math.round(190 - (v / max) * 170))
+
+      blueRaw.value = norm(insRaw)
+      cyanRaw.value = norm(porRaw)
+    }
+    // Si pas de données du tout, les valeurs par défaut restent
   }
 
-  return out
-}
-
-    blueRaw.value = norm(insRaw)
-    cyanRaw.value = norm(porRaw)
-
-    months.value = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun']
-  }
-
+  // ── Donut filières ─────────────────────────────────────────
   if (Array.isArray(d.repartitionFilieres)) {
     const palette = ['#6366f1', '#06b6d4', '#f59e0b', '#8b5cf6', '#f43f5e', '#14b8a6']
-    const totalCount = d.repartitionFilieres.reduce((acc, x) => acc + Number(x.count ?? 0), 0) || 1
+    const totalCount =
+      d.repartitionFilieres.reduce((acc, x) => acc + Number(x.count ?? 0), 0) || 1
 
     const C = 376.99
     let cumulative = 0
 
-    const mapped = d.repartitionFilieres.slice(0, 4).map((f, idx) => {
+    donutSegments.value = d.repartitionFilieres.slice(0, 4).map((f, idx) => {
       const count = Number(f.count ?? 0)
       const dash = (count / totalCount) * C
       const offset = -cumulative
@@ -328,106 +398,80 @@ if (porRaw.length === 1) {
         offset,
       }
     })
-
-    donutSegments.value = mapped
   }
 
+  // ── Historique connexions ──────────────────────────────────
   if (Array.isArray(d.activiteRecente)) {
+    connLogs.value = d.activiteRecente.map((log, idx) => {
+      const u = log.utilisateur || {}
+      const uiStatus = String(log.statut || '').toLowerCase()
+      const status =
+        uiStatus === 'complete' ? 'SUCCESS' : uiStatus === 'annule' ? 'ERREUR' : 'SUCCESS'
 
-  connLogs.value = d.activiteRecente.map((log, idx) => {
+      return {
+        id: log.id ?? idx,
+        userName: u.nom_complet || u.email || 'Inconnu',
+        userInitials: (
+          u.nom_complet
+            ? u.nom_complet.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('')
+            : '??'
+        ).toUpperCase(),
+        userRole: log.action || 'Activité',
+        avatarColor: '#c7d2fe',
+        ip: log.adresse_ip || '—',
+        agent: log.user_agent || '—',
+        datetime: log.date ? String(log.date).replace('T', ' ').slice(0, 16) : '—',
+        status,
+        suspect: false,
+      }
+    })
+  }
 
-    const u = log.utilisateur || {}
-
-    const uiStatus =
-      String(log.statut || '').toLowerCase()
-
-    const status =
-      uiStatus === 'complete'
-        ? 'SUCCESS'
-        : uiStatus === 'annule'
-          ? 'ERREUR'
-          : 'SUCCESS'
-
-    return {
-
-      id: log.id ?? idx,
-
-      userName:
-        u.nom_complet ||
-        u.email ||
-        'Inconnu',
-
-      userInitials: (
-        u.nom_complet
-          ? u.nom_complet
-              .split(' ')
-              .filter(Boolean)
-              .slice(0, 2)
-              .map(w => w[0])
-              .join('')
-          : '??'
-      ).toUpperCase(),
-
-      userRole: log.action || 'Activité',
-
-      avatarColor: '#c7d2fe',
-
-      ip: log.adresse_ip || '—',
-
-      agent: log.user_agent || '—',
-
-      datetime: log.date
-        ? String(log.date)
-            .replace('T', ' ')
-            .slice(0, 16)
-        : '—',
-
-      status,
-
-      suspect: false
-    }
-  })
-}
-
+  // ── Activités plateforme ───────────────────────────────────
   if (Array.isArray(d.activitesPlateforme)) {
     plateformeActivities.value = d.activitesPlateforme.map((act) => {
       const u = act.utilisateur || {}
       const status =
-  String(act.statut).toLowerCase() === 'complete'
-    ? 'completed'
-    : String(act.statut).toLowerCase() === 'annule'
-      ? 'cancelled'
-      : 'pending'
+        String(act.statut).toLowerCase() === 'complete'
+          ? 'completed'
+          : String(act.statut).toLowerCase() === 'annule'
+          ? 'cancelled'
+          : 'pending'
 
-return {
-  id: act.id,
-  name: u.nom_complet || u.email || 'Inconnu',
-  email: u.email || '',
-  action: act.action,
-  date: act.date
-    ? new Date(act.date).toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    : '—',
-  status, // ← utiliser la variable
-  avatarColor: '#c7d2fe'
-}
+      return {
+        id: act.id,
+        name: u.nom_complet || u.email || 'Inconnu',
+        email: u.email || '',
+        action: act.action,
+        date: act.date
+          ? new Date(act.date).toLocaleString('fr-FR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '—',
+        status,
+        avatarColor: '#c7d2fe',
+      }
     })
   }
 }
 
 const loadDashboard = async () => {
-  const resp = await adminApi.getAdminDashboard()
-  if (resp?.data?.success && resp.data.data) mapDashboardToUI(resp.data.data)
+  try {
+    const resp = await adminApi.getAdminDashboard()
+    if (resp?.data?.success && resp.data.data) {
+      mapDashboardToUI(resp.data.data)
+    }
+  } catch (err) {
+    console.error('Dashboard load error:', err)
+  }
 }
 
 onMounted(() => {
-  loadDashboard().catch(() => {})
-  // reload when other admin pages emit an update
+  loadDashboard()
   window.addEventListener('admin-dashboard-refresh', loadDashboard)
 })
 
@@ -547,6 +591,28 @@ onBeforeUnmount(() => {
   color: #94a3b8;
 }
 
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+}
+.legend-line.blue { background: #6366f1; }
+.legend-line.cyan  { background: #06b6d4; }
+
+.legend-text {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-right: 8px;
+}
+
 .donut-card {
   gap: 14px;
 }
@@ -609,6 +675,7 @@ onBeforeUnmount(() => {
   }
 }
 
+/* ── Connexions ─────────────────────────────────────────── */
 .conn-card {
   background: #fff;
   border: 1px solid #e8eaf0;
@@ -736,17 +803,12 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   background: #ef4444;
-  border-radius: 50;
+  border-radius: 50%;
   animation: pulse 1.5s infinite;
 }
 @keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
 .conn-table-wrap {
@@ -778,18 +840,10 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid #f8fafc;
   transition: background 0.12s;
 }
-.conn-row:last-child {
-  border-bottom: none;
-}
-.conn-row:hover {
-  background: #fafbff;
-}
-.conn-row.suspect {
-  background: #fff5f5;
-}
-.conn-row.suspect:hover {
-  background: #fee2e2;
-}
+.conn-row:last-child { border-bottom: none; }
+.conn-row:hover { background: #fafbff; }
+.conn-row.suspect { background: #fff5f5; }
+.conn-row.suspect:hover { background: #fee2e2; }
 
 .conn-table td {
   padding: 13px 16px;
@@ -842,10 +896,7 @@ onBeforeUnmount(() => {
   color: #ef4444;
 }
 
-.conn-agent {
-  font-size: 12.5px;
-  color: #64748b;
-}
+.conn-agent { font-size: 12.5px; color: #64748b; }
 .conn-date {
   font-size: 12.5px;
   color: #94a3b8;
@@ -862,17 +913,7 @@ onBeforeUnmount(() => {
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
-.conn-badge.success {
-  background: #ecfdf5;
-  color: #16a34a;
-}
-.conn-badge.erreur {
-  background: #fef2f2;
-  color: #dc2626;
-}
-.conn-badge.termine {
-  background: #eff6ff;
-  color: #2563eb;
-}
+.conn-badge.success  { background: #ecfdf5; color: #16a34a; }
+.conn-badge.erreur   { background: #fef2f2; color: #dc2626; }
+.conn-badge.termine  { background: #eff6ff; color: #2563eb; }
 </style>
-

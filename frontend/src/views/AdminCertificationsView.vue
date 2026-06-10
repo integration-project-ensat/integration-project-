@@ -259,6 +259,13 @@ const statusLabel = { pending: 'En attente', validated: 'Validé', refused: 'Ref
 /* â•â•â• DONNÃ‰ES â€” chargÃ©es depuis le backend â•â•â• */
 const items = ref([])
 
+const responseList = (response) => {
+  const payload = response?.data ?? response
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.data?.data)) return payload.data.data
+  return []
+}
 
 const mapAttestationForUI = (a) => {
   // Backend: attestationController renvoie un objet attestation.
@@ -308,7 +315,7 @@ const mapAttestationForUI = (a) => {
 const loadCertifications = async () => {
   try {
     const resp = await api.get('/attestations')
-    const list = resp?.data?.data ?? resp?.data?.data?.data ?? []
+    const list = responseList(resp)
     items.value = Array.isArray(list) ? list.map(mapAttestationForUI) : []
   } catch (e) {
     items.value = []
@@ -321,7 +328,7 @@ onMounted(loadCertifications)
 const stats        = computed(() => [
   { label: 'Total',      value: items.value.length,                                       type: 'total' },
   { label: 'En attente', value: items.value.filter(i => i.status === 'pending').length,   type: 'pending' },
-  { label: 'Validées',   value: items.value.filter(i => i.status === 'validated').length, type: 'validated' },
+  { label: 'Valides',   value: items.value.filter(i => i.status === 'validated').length, type: 'validated' },
   { label: 'Refusées',   value: items.value.filter(i => i.status === 'refused').length,   type: 'refused' },
 ])
 const pendingItems   = computed(() => items.value.filter(i => i.status === 'pending'))

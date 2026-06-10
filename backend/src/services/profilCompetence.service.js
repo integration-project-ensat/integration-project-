@@ -23,7 +23,8 @@ async function getCompetences(userId) {
 /**
  * Ajoute une seule compétence
  */
- async function addCompetence(userId, data) {
+
+async function addCompetence(userId, data) {
   // Mode : lier une compétence existante par id
   const competence = await prisma.profilCompetence.create({
     data: {
@@ -39,7 +40,6 @@ async function getCompetences(userId) {
 
   return competence;
 }
-
 /**
  * Ajoute plusieurs compétences d'un coup (bulk)
  */
@@ -60,6 +60,7 @@ async function addBulkCompetences(userId, competences) {
 
   return result;
 }
+
 /**
  * Modifie une compétence (appartient à l'utilisateur)
  */

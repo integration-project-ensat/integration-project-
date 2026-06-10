@@ -1,4 +1,4 @@
-const {validationResult} = require('express-validator');
+const { validationResult, matchedData } = require('express-validator');
 
 const validate=(validations)=>{
     const validateArray=Array.isArray(validations)?validations:[validations];
@@ -7,6 +7,7 @@ const validate=(validations)=>{
     
         const errors=validationResult(req);
         if(errors.isEmpty()){
+            req.validatedData = matchedData(req, { locations: ['body', 'params', 'query'], includeOptionals: true });
             return next();
         }  
         
