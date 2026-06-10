@@ -156,6 +156,12 @@ create_gitlab_user() {
     return 1
   else
     echo "Error creating user: HTTP $http_code" >&2
+    local existing_user
+    existing_user=$(find_gitlab_user "$username" || true)
+    if [[ -n "$existing_user" ]]; then
+      echo "$existing_user"
+      return 0
+    fi
     return 1
   fi
 }
