@@ -218,16 +218,13 @@ const router = createRouter({
     { path: "/dashboard", name: "dashboard", component: DashboardProView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
-<<<<<<< HEAD
     { path: "/projets", name: "projets", component: ProjectsView },
     { path: "/settings", name: "settings", component: SettingsView },
-=======
     { path: '/projets', name: 'projets', component: ProjectsView },
     { path: '/settings', name: 'settings', redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
     { path: '/student/settings', name: 'student-settings', component: SettingsView, meta: { requiresAuth: true, requiresRole: 'student' } },
     { path: '/prof/settings', name: 'prof-settings', component: SettingsProfessorView, meta: { requiresAuth: true, requiresRole: 'teacher' } },
     { path: '/pro/settings', name: 'pro-settings', component: SettingsProfessionalView, meta: { requiresAuth: true, requiresRole: 'professional' } },
->>>>>>> 593db4a7c8abb4c58d5d22a3e05aa47f657dcdef
     { path: "/stages", name: "stages", component: StagesView },
     {
       path: "/certifications",
@@ -281,14 +278,10 @@ const router = createRouter({
     },
     {
       path: "/settings",
-<<<<<<< HEAD
       name: "settings",
       component: SettingsView,
       meta: { requiresAuth: true },
-=======
-      redirect: redirectSettingsByRole,
-      meta: { requiresAuth: true }
->>>>>>> 593db4a7c8abb4c58d5d22a3e05aa47f657dcdef
+
     },
     {
       path: "/pro/top-profiles",
@@ -409,8 +402,6 @@ const router = createRouter({
       component: Placeholder,
       meta: { requiresAuth: true, requiresRole: "admin" },
     },
-
-<<<<<<< HEAD
     {
       path: "/profile",
       name: "profile",
@@ -423,10 +414,8 @@ const router = createRouter({
       component: SettingsView,
       meta: { requiresAuth: true },
     },
-=======
     { path: "/profile", name: "profile", component: StudentProfileView, meta: { requiresAuth: true } },
     { path: "/settings", redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
->>>>>>> 593db4a7c8abb4c58d5d22a3e05aa47f657dcdef
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     {
       path: "/portfolio/:id(\\d+)",

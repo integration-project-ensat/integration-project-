@@ -74,10 +74,7 @@
           >
             <!-- Thumbnail -->
             <div class="card-thumb" :style="{ background: p.thumbColor }">
-              <span class="status-chip" :class="p.status">
-                <component :is="statusIcon(p.status)" :size="11" />
-                {{ statusLabel[p.status] }}
-              </span>
+              <!-- supprimé -->
               <!-- Decorative shapes -->
               <div
                 class="thumb-deco"
@@ -119,7 +116,6 @@
                   {{ initials(p.author) }}
                 </div>
                 <div>
-                  <p class="author-name">{{ p.author }}</p>
                   <p class="author-date">Publié le {{ p.date }}</p>
                 </div>
               </div>
@@ -187,9 +183,6 @@
         <div class="templates-section">
           <h2>Templates disponibles</h2>
 
-          <input v-model="newTemplateName" placeholder="Nom du template" />
-
-          <button @click="createTemplate">Ajouter</button>
 
           <div class="templates-grid">
             <div
@@ -229,7 +222,7 @@
         </div>
 
         <!-- End of list hint (when there are results) -->
-        <div
+        <!-- <div
           v-if="
             filteredPortfolios.length > 0 &&
             filteredPortfolios.length === portfolios.length
@@ -246,7 +239,7 @@
           <button class="btn-refresh" @click="refresh">
             Rafraîchir la liste
           </button>
-        </div>
+        </div> -->
 
         <!-- Footer -->
         <footer class="page-footer">
@@ -306,40 +299,19 @@ const kpis = ref([
     color: "#6366f1",
     icon: ExternalLink,
   },
-  {
-    label: "Vérifiés",
-    value: 0,
-    color: "#16a34a",
-    icon: CheckCircle,
-  },
-  {
-    label: "En attente",
-    value: 0,
-    color: "#f59e0b",
-    icon: Clock,
-  },
-  {
-    label: "Signalé",
-    value: 0,
-    color: "#ef4444",
-    icon: AlertCircle,
-  },
-])
+]);
 const loadStats = async () => {
-  const response = await adminApi.getPortfolioStats()
+  const response = await adminApi.getPortfolioStats();
 
-  kpis.value[0].value = response.data.total
-  kpis.value[1].value = response.data.verifies
-  kpis.value[2].value = response.data.attente
-  kpis.value[3].value = response.data.signale
-}
+  kpis.value[0].value = response.data.total;
+};
 onMounted(() => {
-  document.addEventListener("click", closeMenu)
+  document.addEventListener("click", closeMenu);
 
-  loadPortfolios()
-  loadTemplates()
-  loadStats()
-})
+  loadPortfolios();
+  loadTemplates();
+  loadStats();
+});
 const loadTemplates = async () => {
   const response = await adminApi.getTemplates();
 
@@ -386,13 +358,9 @@ const loadPortfolios = async () => {
     portfolios.value = response.data.data.map((portfolio) => ({
       id: Number(portfolio.id_portfolio),
 
-      title: portfolio.titre || "Portfolio sans titre",
+      title: portfolio.etudiant?.nom_complet || "Étudiant",
 
-      category: portfolio.theme || "Non défini",
-
-      author: portfolio.etudiant?.utilisateur
-        ? `${portfolio.etudiant.utilisateur.prenom} ${portfolio.etudiant.utilisateur.nom}`
-        : "Étudiant",
+      author: portfolio.etudiant?.nom_complet || "Étudiant",
 
       date: portfolio.date_modification
         ? new Date(portfolio.date_modification).toLocaleDateString("fr-FR")

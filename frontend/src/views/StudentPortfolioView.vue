@@ -882,25 +882,22 @@ async function loadPortfolio() {
 
     mapProfileData(profileResponse, portfolioResponse?.data ?? {});
 
-    currentTemplate.value =
-      portfolioResponse?.data?.modele?.id_modele ||
-      portfolioResponse?.data?.id_modele ||
-      1;
-    if (
-      currentTemplate.value === 2 &&
-      !route.path.includes("/portfolio-creative")
-    ) {
-      router.replace(`/portfolio-creative/${profileStudentId.value}`);
-      return;
-    }
+    currentTemplate.value = Number(
+  portfolioResponse?.data?.id_modele ?? 1
+);
+    if (currentTemplate.value === 2) {
+  await router.replace(
+    `/portfolio-creative/${profileStudentId.value}`
+  )
+  return
+}
 
-    if (
-      currentTemplate.value === 3 &&
-      !route.path.includes("/portfolio-professional")
-    ) {
-      router.replace(`/portfolio-professional/${profileStudentId.value}`);
-      return;
-    }
+if (currentTemplate.value === 3) {
+  await router.replace(
+    `/portfolio-professional/${profileStudentId.value}`
+  )
+  return
+}
     console.log("Template actuel :", currentTemplate.value);
 
     const posts = Array.isArray(postsResponse?.data?.data)
