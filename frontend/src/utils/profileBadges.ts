@@ -9,7 +9,7 @@ type BadgeSource = {
 
 const normalizeBadge = (value: string) => value.trim().toLowerCase();
 
-export const toStyledBadge = (value: string) => {
+const toDisplayBadge = (value: string) => {
   const normalized = normalizeBadge(value);
 
   if (normalized.includes("devops")) return "🌊 DevOps";
@@ -39,68 +39,19 @@ export const toStyledBadge = (value: string) => {
   }
   if (normalized.includes("hackathon")) return "🏆 Hackathon Participant";
 
-  return "";
+  return value.trim();
 };
 
-const uniqueOrdered = (badges: string[]) => {
-  const order = [
-    "🌊 DevOps",
-    "🧠 AI / Data",
-    "🌐 Web Developer",
-    "🔐 Security Aware",
-    "🏆 Hackathon Participant",
-  ];
-
-  return [...new Set(badges)].sort(
-    (left, right) => order.indexOf(left) - order.indexOf(right),
-  );
-};
+const uniqueOrdered = (badges: string[]) => [...new Set(badges)];
 
 export const resolveProfileBadges = (source: BadgeSource) => {
   const apiBadges = (source.badges ?? [])
     .map((item: any) =>
-      typeof item === "string" ? toStyledBadge(item) : toStyledBadge(item?.badge?.nom || ""),
+      typeof item === "string"
+        ? toDisplayBadge(item)
+        : toDisplayBadge(item?.badge?.nom || ""),
     )
     .filter(Boolean);
 
-  if (apiBadges.length) {
-    return uniqueOrdered(apiBadges).slice(0, 3);
-  }
-
-  const skillBadges = (source.competences ?? [])
-    .map((item: any) =>
-      typeof item === "string" ? toStyledBadge(item) : toStyledBadge(item?.competence?.nom || ""),
-    )
-    .filter(Boolean);
-
-  if (skillBadges.length) {
-    return uniqueOrdered(skillBadges).slice(0, 3);
-  }
-
-  const fallbackText = [
-    source.filiere || "",
-    source.field || "",
-    source.school || "",
-    source.bio || "",
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  if (fallbackText.includes("devops")) {
-    return ["🌊 DevOps", "🔐 Security Aware"];
-  }
-  if (fallbackText.includes("data") || fallbackText.includes("ai")) {
-    return ["🧠 AI / Data"];
-  }
-  if (fallbackText.includes("cyber") || fallbackText.includes("security")) {
-    return ["🔐 Security Aware"];
-  }
-  if (fallbackText.includes("mobile")) {
-    return ["🌐 Web Developer", "🏆 Hackathon Participant"];
-  }
-  if (fallbackText.includes("cloud") || fallbackText.includes("web")) {
-    return ["🌐 Web Developer"];
-  }
-
-  return ["🌐 Web Developer"];
+  return apiBadges.length ? uniqueOrdered(apiBadges).slice(0, 3) : [];
 };

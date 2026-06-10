@@ -279,6 +279,16 @@ const getProDashboard = asyncHandler(async (req, res) => {
             select: {
               filiere: true,
               score_credibilite: { select: { score_total: true } },
+              badges: {
+                select: {
+                  badge: {
+                    select: {
+                      nom: true,
+                      icone_url: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -294,6 +304,16 @@ const getProDashboard = asyncHandler(async (req, res) => {
             select: {
               filiere: true,
               score_credibilite: { select: { score_total: true } },
+              badges: {
+                select: {
+                  badge: {
+                    select: {
+                      nom: true,
+                      icone_url: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -323,7 +343,9 @@ const getProDashboard = asyncHandler(async (req, res) => {
         startDate: connexion.date_reponse
           ? connexion.date_reponse.toISOString().split("T")[0]
           : connexion.date_demande.toISOString().split("T")[0],
-        badges: [],
+        badges: (otherUser.etudiant?.badges || [])
+          .map((item) => item.badge?.nom)
+          .filter(Boolean),
         status: "Actif",
         profilePath: `/profile/student/${otherUser.id_utilisateur}?from=pro`,
         portfolioPath: `/portfolio/${otherUser.id_utilisateur}?from=pro`,

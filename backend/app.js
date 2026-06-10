@@ -44,6 +44,7 @@ const accountRoutes = require('./src/routes/account.routes')
 // const attestationRoutes = require('./src/routes/attestation.routes')
 
 const app = express()
+app.set('trust proxy', 1)
 const projetRoutes = require('./src/routes/projet.routes')
 const stageRoutes = require('./src/routes/stage.routes')
 const activiteRoutes = require('./src/routes/activite.routes')

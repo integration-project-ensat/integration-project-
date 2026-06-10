@@ -24,7 +24,7 @@ const savedProfiles = ref<SavedProfile[]>([
     city: "Tanger",
     score: 90,
     recommendations: 500,
-    badges: ["🌐 Web Developer", "🔐 Security Aware"],
+    badges: [],
     hasPortfolio: true,
     savedAt: "Aujourd'hui",
     profilePath: "/profile/student/7?from=pro",
