@@ -4,11 +4,17 @@ const { ApiResponse } = require('../utils/apiResponse')
 const attestationController = {
   async getAll(req, res) {
     try {
-      const { statut } = req.query
+      const { statut, etudiantId } = req.query
       const user = req.utilisateur
       const filters = {}
-      if (user.role === 'ETUDIANT') filters.etudiantId = user.id_utilisateur
-      if (user.role === 'PROFESSEUR') filters.validateurId = user.id_utilisateur
+      if (user.role === 'ETUDIANT') {
+        filters.etudiantId = user.id_utilisateur
+      } else if (etudiantId) {
+        filters.etudiantId = etudiantId
+      }
+      if (user.role === 'PROFESSEUR' && !filters.etudiantId) {
+        filters.validateurId = user.id_utilisateur
+      }
       if (statut) filters.statut = statut
 
       const attestations = await attestationService.findAll(filters)
@@ -31,7 +37,6 @@ const attestationController = {
   async create(req, res) {
     try {
       const fichierUrl = req.file ? `/uploads/attestations/${req.file.filename}` : null
-      if (!fichierUrl) return res.status(400).json(ApiResponse.validationError({ fichier: ['Fichier requis'] }))
       const attestation = await attestationService.create(req.body, req.utilisateur.id_utilisateur, fichierUrl)
       return res.status(201).json(ApiResponse.created(attestation, 'Attestation créée avec succès'))
     } catch (e) {

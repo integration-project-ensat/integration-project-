@@ -36,6 +36,7 @@ import SettingsProfessorView from "../views/SettingsProfessorView.vue";
 import StudentPortfolioView from "../views/StudentPortfolioView.vue";
 //import ConnexionsProView from "../views/ConnexionsProView.vue";
 //import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
+import AdminSettingsView from "../views/AdminSettingsView.vue";
 import FeedView from "../views/FeedView.vue";
 import FeedProjectDetailsView from "../views/FeedProjectDetailsView.vue";
 import ConnexionsProView from "../views/ConnexionsProView.vue";
@@ -220,11 +221,31 @@ const router = createRouter({
     { path: "/lettres", name: "letters", component: LettersView },
     { path: "/projets", name: "projets", component: ProjectsView },
     { path: "/settings", name: "settings", component: SettingsView },
-    { path: '/projets', name: 'projets', component: ProjectsView },
-    { path: '/settings', name: 'settings', redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
-    { path: '/student/settings', name: 'student-settings', component: SettingsView, meta: { requiresAuth: true, requiresRole: 'student' } },
-    { path: '/prof/settings', name: 'prof-settings', component: SettingsProfessorView, meta: { requiresAuth: true, requiresRole: 'teacher' } },
-    { path: '/pro/settings', name: 'pro-settings', component: SettingsProfessionalView, meta: { requiresAuth: true, requiresRole: 'professional' } },
+    { path: "/projets", name: "projets", component: ProjectsView },
+    {
+      path: "/settings",
+      name: "settings",
+      redirect: redirectSettingsByRole,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/student/settings",
+      name: "student-settings",
+      component: SettingsView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
+      path: "/prof/settings",
+      name: "prof-settings",
+      component: SettingsProfessorView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/pro/settings",
+      name: "pro-settings",
+      component: SettingsProfessionalView,
+      meta: { requiresAuth: true, requiresRole: "professional" },
+    },
     { path: "/stages", name: "stages", component: StagesView },
     {
       path: "/certifications",
@@ -281,7 +302,6 @@ const router = createRouter({
       name: "settings",
       component: SettingsView,
       meta: { requiresAuth: true },
-
     },
     {
       path: "/pro/top-profiles",
@@ -399,7 +419,7 @@ const router = createRouter({
     },
     {
       path: "/admin/parametres",
-      component: Placeholder,
+      component: AdminSettingsView,
       meta: { requiresAuth: true, requiresRole: "admin" },
     },
     {
@@ -414,8 +434,17 @@ const router = createRouter({
       component: SettingsView,
       meta: { requiresAuth: true },
     },
-    { path: "/profile", name: "profile", component: StudentProfileView, meta: { requiresAuth: true } },
-    { path: "/settings", redirect: redirectSettingsByRole, meta: { requiresAuth: true } },
+    {
+      path: "/profile",
+      name: "profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/settings",
+      redirect: redirectSettingsByRole,
+      meta: { requiresAuth: true },
+    },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     {
       path: "/portfolio/:id(\\d+)",
