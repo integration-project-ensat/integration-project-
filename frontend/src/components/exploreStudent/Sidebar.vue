@@ -38,10 +38,10 @@
     <div class="sidebar-bottom">
       <component
         :is="forceNavigation ? 'a' : RouterLink"
-        :to="forceNavigation ? undefined : '/settings'"
-        :href="forceNavigation ? '/settings' : undefined"
+        :to="forceNavigation ? undefined : '/student/settings'"
+        :href="forceNavigation ? '/student/settings' : undefined"
         class="nav-item"
-        @click="handleNavigation('/settings', $event)"
+        @click="handleNavigation('/student/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
         <span>Paramètres</span>

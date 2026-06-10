@@ -184,6 +184,7 @@ const getOpportunities = asyncHandler(async (req, res) => {
         poste:      p.professionnel?.poste,
         entreprise: p.professionnel?.entreprise,
         secteur:    p.professionnel?.secteur,
+        adresse:    p.profil?.adresse ?? null,
         photo:      p.profil?.photo_profil ?? null
       }))
     }

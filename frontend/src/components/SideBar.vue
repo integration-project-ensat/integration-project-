@@ -28,13 +28,17 @@
  
     <!-- Bottom -->
     <div class="sidebar-bottom">
-      <RouterLink to="/settings" class="nav-item">
+      <RouterLink
+        :to="settingsPath"
+        class="nav-item"
+        :class="{ active: route.path === settingsPath }"
+      >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Paramètres</span>
+        <span>Parametres</span>
       </RouterLink>
       <button class="nav-item logout" @click="logout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Déconnexion</span>
+        <span>Deconnexion</span>
       </button>
     </div>
 
@@ -107,7 +111,7 @@ const navByRole = {
   teacher: [
     { path: '/dashboard',      label: 'Dashboard',      icon: icons.dashboard },
     { path: '/explore',        label: 'Explorer',       icon: icons.explore },
-    { path: '/etudiants',      label: 'Mes étudiants',  icon: icons.etudiants },
+    { path: '/etudiants',      label: 'Mes Etudiants',  icon: icons.etudiants },
     { path: '/certifications', label: 'Certifications', icon: icons.certifications },
     { path: '/recos',          label: 'Mes Recos',      icon: icons.recos },
     { path: '/commentaires',   label: 'Commentaires',   icon: icons.commentaires },
@@ -122,7 +126,12 @@ const navByRole = {
 }
  
 const navItems = computed(() => navByRole[props.role] ?? navByRole.student)
- 
+const settingsPath = computed(() => {
+  if (props.role === 'teacher') return '/prof/settings'
+  if (props.role === 'professional') return '/pro/settings'
+  return '/student/settings'
+})
+
 async function logout() {
   await authService.logout()
   router.push('/login')

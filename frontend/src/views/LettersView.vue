@@ -11,15 +11,15 @@
         <div class="page-header">
           <div>
             <h1>Lettres de recommandation</h1>
-            <p>Toutes vos lettres refusées</p>
+            <p>Toutes vos lettres reçues</p>
           </div>
           <div class="header-badge">{{ letters.length }} lettres</div>
         </div>
 
         <!-- Empty state -->
         <div v-if="letters.length === 0" class="empty-state">
-          <div class="empty-icon">âœ‰ï¸</div>
-          <p>Aucune lettre de recommandation refusée pour le moment.</p>
+          <div class="empty-icon">✉️</div>
+          <p>Aucune lettre de recommandation reçue pour le moment.</p>
         </div>
 
         <!-- Letters list -->
@@ -37,7 +37,7 @@
 
             <div class="letter-info">
               <div class="author-name">{{ letter.author.name }}</div>
-              <div class="author-role">{{ letter.author.role }} Â· {{ letter.author.institution }}</div>
+              <div class="author-role">{{ letter.author.role }} · {{ letter.author.institution }}</div>
               <div class="letter-preview">{{ letter.preview }}</div>
             </div>
 
@@ -77,11 +77,11 @@
               </div>
               <div>
                 <div class="author-name">{{ selectedLetter.author.name }}</div>
-                <div class="author-role">{{ selectedLetter.author.role }} Â· {{ selectedLetter.author.institution }}</div>
-                <div class="letter-date-modal">ReÃ§ue le {{ formatDate(selectedLetter.receivedAt) }}</div>
+                <div class="author-role">{{ selectedLetter.author.role }} · {{ selectedLetter.author.institution }}</div>
+                <div class="letter-date-modal">Reçue le {{ formatDate(selectedLetter.receivedAt) }}</div>
               </div>
             </div>
-            <button class="btn-close" @click="closeModal">âœ•</button>
+            <button class="btn-close" @click="closeModal">×</button>
           </div>
 
           <div class="modal-body">
@@ -271,6 +271,7 @@ onMounted(() => {
   border-radius: 999px;
 }
 
+/* â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .letters-list {
   display: flex;
   flex-direction: column;
@@ -294,6 +295,7 @@ onMounted(() => {
   box-shadow: 0 6px 20px rgba(91, 63, 212, 0.12);
 }
 
+/* â”€â”€ Avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .author-avatar {
   width: 48px;
   height: 48px;
@@ -324,6 +326,7 @@ onMounted(() => {
   font-family: var(--font-head);
 }
 
+/* â”€â”€ Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .letter-info {
   flex: 1;
   min-width: 0;
@@ -350,6 +353,8 @@ onMounted(() => {
   text-overflow: ellipsis;
   max-width: 420px;
 }
+
+/* â”€â”€ Meta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .letter-meta {
   display: flex;
   flex-direction: column;
@@ -396,6 +401,7 @@ onMounted(() => {
 
 .btn-download:hover { background: #e5e7eb; }
 
+/* â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -511,6 +517,7 @@ onMounted(() => {
 
 .btn-secondary:hover { background: #e5e7eb; }
 
+/* â”€â”€ Empty â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -523,4 +530,3 @@ onMounted(() => {
 
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
 </style>
-

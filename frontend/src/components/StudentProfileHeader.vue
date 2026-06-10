@@ -66,7 +66,7 @@
           }"
           @click="handleTabClick(tab)"
         >
-          {{ tab }}
+          {{ tab === 'Connecter' ? connectionLabel : tab }}
         </button>
       </div>
 
@@ -329,6 +329,7 @@ const props = defineProps<{
   modelValue: string
   recentRecommendations?: Recommendation[]
   isOwner?: boolean
+  connectionLabel?: string
 }>()
 
 const emit = defineEmits<{
@@ -359,6 +360,7 @@ const latestTeacherReco = computed(() => props.recentRecommendations?.find((reco
 const latestProfessionalReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'professional'))
 const latestStudentReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'student'))
 const initials = computed(() => getInitials(props.profile.name))
+const connectionLabel = computed(() => props.connectionLabel || 'Connecter')
 
 function openSkillPopup(skill: SkillItem, type: 'tech' | 'soft') {
   selectedSkill.value = { ...skill, type }

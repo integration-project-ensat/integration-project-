@@ -35,13 +35,13 @@
     <div class="sidebar-bottom">
       <component
         :is="forceNavigation ? 'a' : RouterLink"
-        :to="forceNavigation ? undefined : '/settings'"
-        :href="forceNavigation ? '/settings' : undefined"
+        :to="forceNavigation ? undefined : '/pro/settings'"
+        :href="forceNavigation ? '/pro/settings' : undefined"
         class="nav-item"
-        @click="handleNavigation('/settings', $event)"
+        @click="handleNavigation('/pro/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Paramètres</span>
+        <span>Parametres</span>
       </component>
       <a
         href="/login"
@@ -49,7 +49,7 @@
         @click="handleLogout"
       >
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Déconnexion</span>
+        <span>Deconnexion</span>
       </a>
     </div>
   </aside>
@@ -73,13 +73,13 @@ const route = useRoute();
 const router = useRouter()
 const auth = useAuthStore()
 const currentUser = computed(() => ({
-  name: auth.user?.name || 'Nom Prénom',
+  name: auth.user?.name || 'Nom Prenom',
   email: auth.user?.email || 'Exemple.exemple@exemple.pro',
   avatar: auth.user?.avatar || ''
 }))
 
 const initials = computed(() => {
-  const name = currentUser.value.name || 'Nom Prénom'
+  const name = currentUser.value.name || 'Nom Prenom'
   return name
     .split(' ')
     .map((n: string) => n[0])
@@ -130,7 +130,7 @@ const icons = {
 const navItems = [
   { path: "/pro/dashboard", label: "Dashboard", icon: icons.dashboard },
   { path: "/explore-pro", label: "Explorer", icon: icons.explore },
-  { path: "/pro/feed", label: "Fil d'actualité", icon: icons.feed },
+  { path: "/pro/feed", label: "Fil d’actualité", icon: icons.feed },
   { path: "/pro/top-profiles", label: "Top Profiles", icon: icons.topProfiles },
   { path: "/pro/connexions?tab=pending", label: "Connexions", icon: icons.connexions },
 ];
@@ -252,5 +252,3 @@ const navItems = [
   color: #e53e3e;
 }
 </style>
-
-

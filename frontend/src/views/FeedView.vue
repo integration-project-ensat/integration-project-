@@ -62,8 +62,6 @@ const searchQuery = ref("");
 const openCommentPostId = ref<string | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
-const actionMessage = ref<string | null>(null);
-let actionMessageTimer: number | undefined;
 
 const getCurrentUser = () => {
   const rawUser = localStorage.getItem("user");
@@ -89,14 +87,6 @@ const getCurrentUserName = () => {
 
 const myStudentId = ref(getCurrentUserId());
 
-const showActionMessage = (message: string) => {
-  actionMessage.value = message;
-  if (actionMessageTimer) window.clearTimeout(actionMessageTimer);
-  actionMessageTimer = window.setTimeout(() => {
-    actionMessage.value = null;
-  }, 2500);
-};
-
 // ID de l'utilisateur connecté (pour afficher edit/delete sur ses propres posts)
 // Post form modal
 const showPostModal  = ref(false);
@@ -110,6 +100,20 @@ const likedComments = reactive<Record<number, boolean>>({});
 const openReplyCommentId = ref<number | null>(null);
 const savedFeedbackId = ref<string | null>(null);
 const { isSaved, saveProfile } = useProSavedProfiles();
+
+type ConnectionState = {
+  isConnected: boolean;
+  requestSent: boolean;
+  requestReceived: boolean;
+  connexionId: string | null;
+};
+
+const defaultConnectionState = (): ConnectionState => ({
+  isConnected: false,
+  requestSent: false,
+  requestReceived: false,
+  connexionId: null,
+});
 
 const filters: FeedFilter[] = ["Tous", "Projets", "Reposts", "Populaires", "Récents"];
 
@@ -132,6 +136,7 @@ const profileContextQuery = computed(() => {
 });
 
 const posts = ref<FeedPost[]>([]);
+const connectionStates = reactive<Record<string, ConnectionState>>({});
 
 const toInitials = (name: string) =>
   name
@@ -143,10 +148,10 @@ const toInitials = (name: string) =>
     .toUpperCase();
 
 const formatRelativeDate = (dateValue?: string | null) => {
-  if (!dateValue) return "Récemment";
+  if (!dateValue) return "Recemment";
 
   const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return "Récemment";
+  if (Number.isNaN(date.getTime())) return "Recemment";
 
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
@@ -198,7 +203,7 @@ const mapPost = (post: any): FeedPost => {
   const structured = parseStructuredContent(post.contenu);
   const studentName =
     [post.auteur?.prenom, post.auteur?.nom].filter(Boolean).join(" ").trim() ||
-    "Étudiant";
+    "Etudiant";
   const school = [post.auteur?.profil?.adresse, post.auteur?.etudiant?.filiere || post.auteur?.role]
     .filter(Boolean)
     .join(" · ");
@@ -267,6 +272,38 @@ const syncInteractionState = (items: FeedPost[]) => {
   });
 };
 
+const syncConnectionStates = async (items: FeedPost[]) => {
+  Object.keys(connectionStates).forEach((key) => delete connectionStates[key]);
+
+  const entries = await Promise.all(
+    items.map(async (post) => {
+      if (!post.studentId || post.studentId === myStudentId.value) {
+        return [post.id, defaultConnectionState()] as const;
+      }
+
+      try {
+        const { data } = await connexionService.getConnectionStatus(post.studentId);
+        const status = data?.data || data;
+        return [
+          post.id,
+          {
+            isConnected: Boolean(status?.isConnected),
+            requestSent: Boolean(status?.requestSent),
+            requestReceived: Boolean(status?.requestReceived),
+            connexionId: status?.connexionId ? String(status.connexionId) : null,
+          },
+        ] as const;
+      } catch {
+        return [post.id, defaultConnectionState()] as const;
+      }
+    }),
+  );
+
+  entries.forEach(([postId, state]) => {
+    connectionStates[postId] = state;
+  });
+};
+
 const loadPosts = async () => {
   loading.value = true;
   error.value = null;
@@ -278,11 +315,10 @@ const loadPosts = async () => {
       : [];
     posts.value = items;
     syncInteractionState(items);
+    await syncConnectionStates(items);
   } catch (err: any) {
     if (err?.response?.status === 401) {
-      error.value =
-        err?.response?.data?.message ||
-        "Impossible de charger le fil d'actualité pour cette session.";
+      router.push('/login');
       return;
     }
     error.value =
@@ -357,13 +393,14 @@ const toggleRepost = async (post: FeedPost) => {
     }
     await loadPosts();
   } catch {
-    error.value = "Impossible de mettre à jour le repost.";
+    error.value = "Impossible de mettre a jour le repost.";
   }
 };
 
 const toggleConnect = async (post: FeedPost) => {
   if (!post.studentId || post.studentId === myStudentId.value) return;
-  if (connectedPosts[post.id]) return;
+  const state = connectionStates[post.id] ?? defaultConnectionState();
+  if (state.isConnected || state.requestSent || state.requestReceived) return;
 
   try {
     await connexionService.createConnexion({
@@ -371,16 +408,31 @@ const toggleConnect = async (post: FeedPost) => {
       id_destinataire: post.studentId,
       message: `Demande de connexion vers ${post.studentName}`,
     });
-    connectedPosts[post.id] = true;
-    showActionMessage("Demande de connexion envoyée.");
+    connectionStates[post.id] = {
+      ...state,
+      requestSent: true,
+    };
   } catch (err: any) {
-    const message =
+    error.value =
       err?.response?.data?.message || "Impossible d’envoyer la demande de connexion.";
-    if (err?.response?.status === 409) {
-      connectedPosts[post.id] = true;
-    }
-    showActionMessage(message);
   }
+};
+
+const getConnectionState = (post: FeedPost) =>
+  connectionStates[post.id] ?? defaultConnectionState();
+
+const connectionButtonLabel = (post: FeedPost) => {
+  const state = getConnectionState(post);
+  if (post.studentId === myStudentId.value) return "Mon profil";
+  if (state.isConnected) return "Déjà connecté";
+  if (state.requestSent) return "Demande envoyée";
+  if (state.requestReceived) return "Demande reçue";
+  return "Connecter";
+};
+
+const isConnectionDisabled = (post: FeedPost) => {
+  const state = getConnectionState(post);
+  return post.studentId === myStudentId.value || state.isConnected || state.requestSent || state.requestReceived;
 };
 
 const togglePostLike = async (post: FeedPost) => {
@@ -392,7 +444,7 @@ const togglePostLike = async (post: FeedPost) => {
     }
     await loadPosts();
   } catch {
-    error.value = "Impossible de mettre à jour le j'aime.";
+    error.value = "Impossible de mettre a jour le j’aime.";
   }
 };
 
@@ -418,7 +470,7 @@ const addComment = async (post: FeedPost) => {
       authorName: getCurrentUserName(),
       initials: toInitials(getCurrentUserName()),
       text,
-      time: "À l'instant",
+      time: "A l'instant",
       likeCount: 0,
       replies: [],
     });
@@ -438,7 +490,7 @@ const addReply = (comment: FeedComment) => {
     authorName: getCurrentUserName(),
     initials: toInitials(getCurrentUserName()),
     text,
-    time: "À l'instant",
+    time: "A l'instant",
     likeCount: 0,
     replies: [],
   });
@@ -537,8 +589,7 @@ onMounted(() => {
 
         <div v-if="loading" class="feed-state">Chargement...</div>
         <div v-else-if="error" class="feed-state feed-state--error">{{ error }}</div>
-        <div v-if="actionMessage" class="feed-action-message">{{ actionMessage }}</div>
-        <div v-if="!loading && !error && !actionMessage && !visiblePosts.length" class="feed-state">Aucun post trouvé.</div>
+        <div v-else-if="!visiblePosts.length" class="feed-state">Aucun post trouvé.</div>
 
         <article v-for="post in !loading && !error ? visiblePosts : []" :key="post.id" class="feed-card">
           <div v-if="post.repostedBy" class="repost-line">
@@ -586,17 +637,11 @@ onMounted(() => {
                   <button
                     type="button"
                     class="connect-button"
-                    :class="{ active: connectedPosts[post.id] }"
-                    :disabled="post.studentId === myStudentId || connectedPosts[post.id]"
+                    :class="{ active: getConnectionState(post).isConnected || getConnectionState(post).requestSent }"
+                    :disabled="isConnectionDisabled(post)"
                     @click="toggleConnect(post)"
                   >
-                    {{
-                      post.studentId === myStudentId
-                        ? "Mon profil"
-                        : connectedPosts[post.id]
-                          ? "Demande envoyée"
-                          : "Connecter"
-                    }}
+                    {{ connectionButtonLabel(post) }}
                   </button>
                   <button
                     v-if="role === 'pro'"
@@ -1125,16 +1170,6 @@ onMounted(() => {
 
 .feed-state--error {
   color: var(--error);
-}
-
-.feed-action-message {
-  background: #ecfdf5;
-  border: 1px solid #86efac;
-  border-radius: var(--radius-card);
-  color: #166534;
-  font-weight: 800;
-  padding: 12px 16px;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
 }
 
 .feed-filter,
