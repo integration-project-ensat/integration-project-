@@ -604,6 +604,7 @@ model ModelePortfolio {
   id_modele       BigInt  @id @default(autoincrement())
   cree_par_admin  BigInt?
   nom             String  @db.VarChar(100)
+  description    String? @db.VarChar(500)
   structure       Json?
   theme           String?
   sections        String?

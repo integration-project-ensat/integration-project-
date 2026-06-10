@@ -10,7 +10,27 @@ const adminController = require('../controllers/admin.controller');
 
 // Tous les endpoints admin nécessitent authentification + rôle ADMINISTRATEUR
 router.use(authentifier, autoriserRoles(ROLES.ADMINISTRATEUR));
+router.get(
+  '/templates',
+  adminController.getTemplates
+)
+router.delete(
+  '/templates/:id',
+  adminController.deleteTemplate
+)
+router.get(
+  '/portfolio-stats',
+  adminController.getPortfolioStats
+)
+router.post(
+  '/templates',
+  adminController.createTemplate
+)
+router.get('/templates', adminController.getTemplates)
 
+router.post('/templates', adminController.createTemplate)
+
+router.delete('/templates/:id', adminController.deleteTemplate)
 // ── Validation réutilisable pour les filtres étudiants ──────
 const filtresEtudiants = [
   query('recherche').optional().isString().trim().isLength({ max: 100 }),

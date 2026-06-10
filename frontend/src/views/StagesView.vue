@@ -83,7 +83,14 @@ async function loadProfileSchool() {
 async function loadProfessionals() {
   try {
     const { data } = await studentApi.getProfessionnels();
-    professionals.value = Array.isArray(data?.data) ? data.data : [];
+    professionals.value = Array.isArray(data?.data)
+      ? data.data.map((professional) => ({
+          id: professional.id,
+          nom: professional.nom,
+          entreprise: professional.entreprise || "",
+          poste: professional.poste || undefined,
+        }))
+      : [];
   } catch (error) {
     console.warn("Chargement des professionnels impossible", error);
     professionals.value = [];

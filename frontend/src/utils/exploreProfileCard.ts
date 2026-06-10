@@ -30,6 +30,50 @@ const pickRole = (profile: ProfilExplore) =>
 const pickSchool = (profile: ProfilExplore) =>
   profile.etudiant?.diplomes?.[0]?.etablissement || "École Nationale des Sciences Appliquées";
 
+const cityOptions = [
+  "Tanger",
+  "Rabat",
+  "Fès",
+  "Casablanca",
+  "Marrakech",
+  "Agadir",
+  "Oujda",
+  "Tetouan",
+  "Kenitra",
+  "Meknes",
+  "El Jadida",
+  "Safi",
+  "Beni Mellal",
+  "Nador",
+  "Settat",
+  "Taza",
+  "Khouribga",
+  "Mohammedia",
+  "Laayoune",
+  "Dakhla",
+];
+
+const normalizeText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const pickCity = (profile: ProfilExplore) => {
+  const address = profile.profil?.adresse?.trim();
+  if (address) return address;
+
+  const sources = [
+    profile.etudiant?.etablissement,
+    profile.etudiant?.diplomes?.[0]?.etablissement,
+  ].filter(Boolean) as string[];
+
+  const source = normalizeText(sources.join(" "));
+  const city = cityOptions.find((item) => source.includes(normalizeText(item)));
+
+  return city ? `${city}, Maroc` : "Ville non renseignée";
+};
+
 const pickBadges = (profile: ProfilExplore) =>
   resolveProfileBadges({
     badges: profile.etudiant?.badges,
@@ -66,7 +110,7 @@ export const mapExploreProfileCard = (
   name: `${profile.prenom} ${profile.nom}`,
   role: pickRole(profile),
   school: pickSchool(profile),
-  city: profile.profil?.adresse || "Tanger, Maroc",
+  city: pickCity(profile),
   score: profile.etudiant?.score_credibilite?.score_total ?? 0,
   recommendations: profile.nb_recommandations,
   badges: pickBadges(profile),

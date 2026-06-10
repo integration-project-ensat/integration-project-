@@ -1,5 +1,6 @@
 const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
+const { recalculerScore } = require('./score.service')
 
 const attestationService = {
   async findAll(filters = {}) {
@@ -159,6 +160,10 @@ const attestationService = {
       // La notification sera branchee quand cette relation sera ajoutee au schema.
     } catch (e) {
       // Ignore notification failure
+    }
+
+    if (attestation.id_etudiant) {
+      await recalculerScore(attestation.id_etudiant)
     }
 
     return this.findById(id)

@@ -81,6 +81,109 @@ const buildProfileInclude = (role) => {
 // ─────────────────────────────────────────────
 // Vérification visibilité
 // ─────────────────────────────────────────────
+const normalizeText = (value) => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .trim()
+  .toLowerCase();
+
+const FILIERE_NORMALIZATION = [
+  { label: 'Informatique', variants: ['Informatique', 'Genie Informatique', 'Génie Informatique', 'GINF', 'INFO'] },
+  { label: 'Reseaux et Telecoms', variants: ['Reseaux et Telecoms', 'Réseaux et Télécoms', 'Reseaux', 'Réseaux', 'GSTR', 'GTR'] },
+  { label: 'Data Science', variants: ['Data Science', 'Data', 'Big Data'] },
+  { label: 'Cybersecurite', variants: ['Cybersecurite', 'Cybersécurité', 'Cybersecurity', 'Securite', 'Sécurité'] },
+  { label: 'IA', variants: ['IA', 'Intelligence Artificielle', 'IID'] },
+  { label: 'Developpement', variants: ['Developpement', 'Développement', 'Web', 'Mobile'] },
+  { label: 'DevOps', variants: ['DevOps'] },
+  { label: 'Cloud', variants: ['Cloud'] },
+  { label: 'Marketing', variants: ['Marketing'] },
+  { label: 'Design', variants: ['Design'] }
+];
+
+const canonicalFiliere = (value) => {
+  const normalized = normalizeText(value);
+  const match = FILIERE_NORMALIZATION.find((item) =>
+    item.variants.some((variant) => normalizeText(variant) === normalized)
+  );
+
+  return match?.label || String(value || '').trim();
+};
+
+const filiereFilterVariants = (value) => {
+  const canonical = canonicalFiliere(value);
+  const match = FILIERE_NORMALIZATION.find((item) => item.label === canonical);
+  return match ? match.variants : [canonical].filter(Boolean);
+};
+
+const VILLE_NORMALIZATION = [
+  { label: 'Tanger', variants: ['Tanger', 'Tanger, Maroc'] },
+  { label: 'Rabat', variants: ['Rabat', 'Rabat, Maroc'] },
+  { label: 'Fès', variants: ['Fès', 'Fes', 'Fez', 'Fès, Maroc', 'Fes, Maroc'] },
+  { label: 'Casablanca', variants: ['Casablanca', 'Casa', 'Casablanca, Maroc'] },
+  { label: 'Marrakech', variants: ['Marrakech', 'Marrakesh', 'Marrakech, Maroc'] },
+  { label: 'Agadir', variants: ['Agadir', 'Agadir, Maroc'] },
+  { label: 'Oujda', variants: ['Oujda', 'Oujda, Maroc'] },
+  { label: 'Tetouan', variants: ['Tetouan', 'Tétouan', 'Tetouan, Maroc', 'Tétouan, Maroc'] },
+  { label: 'Kenitra', variants: ['Kenitra', 'Kénitra', 'Kenitra, Maroc', 'Kénitra, Maroc'] },
+  { label: 'Meknes', variants: ['Meknes', 'Meknès', 'Meknes, Maroc', 'Meknès, Maroc'] },
+  { label: 'El Jadida', variants: ['El Jadida', 'El Jadida, Maroc'] },
+  { label: 'Safi', variants: ['Safi', 'Safi, Maroc'] },
+  { label: 'Beni Mellal', variants: ['Beni Mellal', 'Béni Mellal', 'Beni Mellal, Maroc', 'Béni Mellal, Maroc'] },
+  { label: 'Nador', variants: ['Nador', 'Nador, Maroc'] },
+  { label: 'Settat', variants: ['Settat', 'Settat, Maroc'] },
+  { label: 'Taza', variants: ['Taza', 'Taza, Maroc'] },
+  { label: 'Khouribga', variants: ['Khouribga', 'Khouribga, Maroc'] },
+  { label: 'Mohammedia', variants: ['Mohammedia', 'Mohammedia, Maroc'] },
+  { label: 'Laayoune', variants: ['Laayoune', 'Laâyoune', 'Laayoune, Maroc', 'Laâyoune, Maroc'] },
+  { label: 'Dakhla', variants: ['Dakhla', 'Dakhla, Maroc'] }
+];
+
+const canonicalVille = (value) => {
+  const normalized = normalizeText(value);
+  if (!normalized) return null;
+
+  const match = VILLE_NORMALIZATION.find((item) =>
+    item.variants.some((variant) => normalizeText(variant) === normalized)
+  );
+
+  return match?.label || String(value || '').trim();
+};
+
+const villeFilterVariants = (value) => {
+  const canonical = canonicalVille(value);
+  const match = VILLE_NORMALIZATION.find((item) => item.label === canonical);
+  return match ? match.variants : [canonical].filter(Boolean);
+};
+
+const uniqueStrings = (values) => {
+  return [...new Set(
+    values
+      .filter(Boolean)
+      .map((value) => String(value).trim())
+      .filter(Boolean)
+  )];
+};
+
+const expandVilleFilter = (value) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  const aliases = {
+    fes: ['Fes', 'Fès'],
+    fès: ['Fes', 'Fès'],
+    tetouan: ['Tetouan', 'Tétouan'],
+    tétouan: ['Tetouan', 'Tétouan'],
+    kenitra: ['Kenitra', 'Kénitra'],
+    kénitra: ['Kenitra', 'Kénitra'],
+    meknes: ['Meknes', 'Meknès'],
+    meknès: ['Meknes', 'Meknès'],
+    'beni mellal': ['Beni Mellal', 'Béni Mellal'],
+    'béni mellal': ['Beni Mellal', 'Béni Mellal'],
+    laayoune: ['Laayoune', 'Laâyoune'],
+    laâyoune: ['Laayoune', 'Laâyoune']
+  };
+
+  return uniqueStrings([value, ...(aliases[normalized] || [])]);
+};
+
 const verifierVisibilite = (visibilite, utilisateurConnecte) => {
   if (visibilite === 'PUBLIC') return true;
   if (!utilisateurConnecte) return false;
@@ -148,7 +251,18 @@ class ProfilService {
       select: { ...buildProfileInclude(donnees.role) }
     });
 
-    return { ...donnees, ...avecRole };
+    return {
+      ...donnees,
+      profil: donnees.profil ? {
+        ...donnees.profil,
+        adresse: canonicalVille(donnees.profil.adresse)
+      } : null,
+      ...avecRole,
+      etudiant: avecRole?.etudiant ? {
+        ...avecRole.etudiant,
+        filiere: canonicalFiliere(avecRole.etudiant.filiere)
+      } : avecRole?.etudiant
+    };
   }
 
   // ─── ÉCRITURE ─────────────────────────────
@@ -159,10 +273,12 @@ class ProfilService {
       select: { role: true }
     });
 
+    const adresseNormalisee = data.adresse !== undefined ? canonicalVille(data.adresse) : undefined;
+
     const champsCommuns = {
       ...(data.photo_profil        !== undefined && { photo_profil:        data.photo_profil }),
       ...(data.telephone           !== undefined && { telephone:           data.telephone }),
-      ...(data.adresse             !== undefined && { adresse:             data.adresse }),
+      ...(data.adresse             !== undefined && { adresse:             adresseNormalisee }),
       ...(data.email_professionnel !== undefined && { email_professionnel: data.email_professionnel }),
       ...(data.bio                 !== undefined && { bio:                 data.bio }),
       ...(data.linkedin_url        !== undefined && { linkedin_url:        data.linkedin_url }),
@@ -176,7 +292,7 @@ class ProfilService {
         id_utilisateur:      BigInt(idUtilisateur),
         photo_profil:        data.photo_profil        ?? null,
         telephone:           data.telephone           ?? null,
-        adresse:             data.adresse             ?? null,
+        adresse:             adresseNormalisee        ?? null,
         email_professionnel: data.email_professionnel ?? null,
         bio:                 data.bio                 ?? null,
         linkedin_url:        data.linkedin_url        ?? null,
@@ -210,12 +326,14 @@ class ProfilService {
       throw err;
     }
 
+    const adresseNormalisee = data.adresse !== undefined ? canonicalVille(data.adresse) : undefined;
+
     const profil = await prisma.profil.upsert({
       where:  { id_utilisateur: BigInt(idCible) },
       update: {
         ...(data.photo_profil        !== undefined && { photo_profil:        data.photo_profil }),
         ...(data.telephone           !== undefined && { telephone:           data.telephone }),
-        ...(data.adresse             !== undefined && { adresse:             data.adresse }),
+        ...(data.adresse             !== undefined && { adresse:             adresseNormalisee }),
         ...(data.email_professionnel !== undefined && { email_professionnel: data.email_professionnel }),
         ...(data.bio                 !== undefined && { bio:                 data.bio }),
         ...(data.linkedin_url        !== undefined && { linkedin_url:        data.linkedin_url }),
@@ -225,7 +343,7 @@ class ProfilService {
         id_utilisateur:      BigInt(idCible),
         photo_profil:        data.photo_profil        ?? null,
         telephone:           data.telephone           ?? null,
-        adresse:             data.adresse             ?? null,
+        adresse:             adresseNormalisee        ?? null,
         email_professionnel: data.email_professionnel ?? null,
         bio:                 data.bio                 ?? null,
         linkedin_url:        data.linkedin_url        ?? null,
@@ -272,7 +390,9 @@ class ProfilService {
       where.etudiant = {};
 
       if (filiere) {
-        where.etudiant.filiere = { contains: filiere, mode: 'insensitive' };
+        where.etudiant.OR = filiereFilterVariants(filiere).map((item) => ({
+          filiere: { equals: item, mode: 'insensitive' }
+        }));
       }
 
       if (competences) {
@@ -298,10 +418,24 @@ class ProfilService {
     }
 
     if (ville) {
-      where.profil = {
-        ...where.profil,
-        adresse: { contains: ville, mode: 'insensitive' }
-      };
+      const villeMatches = villeFilterVariants(ville).flatMap((item) => [
+        { profil: { adresse: { equals: item, mode: 'insensitive' } } },
+        { etudiant: { etablissement: { contains: item, mode: 'insensitive' } } },
+        {
+          etudiant: {
+            diplomes: {
+              some: {
+                etablissement: { contains: item, mode: 'insensitive' }
+              }
+            }
+          }
+        }
+      ]);
+
+      where.AND = [
+        ...(where.AND || []),
+        { OR: villeMatches }
+      ];
     }
 
     const [total, profils] = await Promise.all([
@@ -365,8 +499,13 @@ class ProfilService {
       ...p,
       id_utilisateur:     p.id_utilisateur.toString(),
       nb_recommandations: p.etudiant?.recommandations_recues?.length ?? 0,
+      profil: p.profil ? {
+        ...p.profil,
+        adresse: canonicalVille(p.profil.adresse)
+      } : null,
       etudiant: p.etudiant ? {
         ...p.etudiant,
+        filiere: canonicalFiliere(p.etudiant.filiere),
         recommandations_recues: undefined
       } : null
     }));
@@ -443,6 +582,9 @@ class ProfilService {
                 etablissement: true,
                 score_credibilite: {
                   select: { score_total: true, niveau: true }
+                },
+                portfolio: {
+                  select: { est_public: true }
                 },
                 badges: {
                   select: { badge: { select: { nom: true, icone_url: true } } },

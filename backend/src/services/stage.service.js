@@ -1,5 +1,6 @@
 const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
+const { recalculerScore } = require('./score.service')
 
 const stageService = {
   async findAll(filters = {}) {
@@ -172,13 +173,17 @@ const stageService = {
       })
     } catch (e) {}
 
-    return prisma.stage.update({
+    const updatedStage = await prisma.stage.update({
       where: { id_stage: BigInt(id) },
       data: {
         statut,
         ...(commentaire_prof !== undefined && { commentaire_prof })
       }
     })
+
+    await recalculerScore(stage.id_etudiant)
+
+    return updatedStage
   },
 
   async getHistorique(id) {

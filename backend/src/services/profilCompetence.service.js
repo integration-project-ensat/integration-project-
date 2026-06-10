@@ -1,6 +1,7 @@
 // services/profilCompetenceService.js
 const prisma = require('../../prisma/client');
-const { getSkillType, separateSkills, normalizeSkillCategory } = require('../utils/skillsLogic');
+const { separateSkills } = require('../utils/skillsLogic');
+const { recalculerScore } = require('./score.service');
 
 /**
  * Récupère toutes les compétences d'un étudiant (séparées tech/soft)
@@ -22,31 +23,9 @@ async function getCompetences(userId) {
 /**
  * Ajoute une seule compétence
  */
-/*
-async function addCompetence(userId, data) {
-  const categorie = normalizeSkillCategory(data.categorie, data.nom);
-  let competence = await prisma.competence.findFirst({
-    where: { nom: data.nom },
-  });
-  if (!competence) {
-    competence = await prisma.competence.create({
-      data: { nom: data.nom, categorie },
-    });
-  }
-  return prisma.profilCompetence.create({
-    data: {
-      id_etudiant: userId,
-      id_competence: competence.id_competence,
-      niveau_maitrise: data.niveau_maitrise,
-      date_ajout: new Date(),
-    },
-    include: { competence: true },
-  });
-}
-  */
  async function addCompetence(userId, data) {
   // Mode : lier une compétence existante par id
-  return prisma.profilCompetence.create({
+  const competence = await prisma.profilCompetence.create({
     data: {
       id_etudiant: userId,
       id_competence: BigInt(data.id_competence),
@@ -55,37 +34,15 @@ async function addCompetence(userId, data) {
     },
     include: { competence: true },
   });
+
+  await recalculerScore(userId);
+
+  return competence;
 }
 
 /**
  * Ajoute plusieurs compétences d'un coup (bulk)
  */
-/*
-async function addBulkCompetences(userId, competences) {
-  const toCreate = [];
-  for (const c of competences) {
-    const categorie = normalizeSkillCategory(c.categorie, c.nom);
-    let competence = await prisma.competence.findFirst({
-      where: { nom: c.nom },
-    });
-    if (!competence) {
-      competence = await prisma.competence.create({
-        data: { nom: c.nom, categorie },
-      });
-    }
-    toCreate.push({
-      id_etudiant: userId,
-      id_competence: competence.id_competence,
-      niveau_maitrise: c.niveau_maitrise,
-      date_ajout: new Date(),
-    });
-  }
-  return prisma.profilCompetence.createMany({
-    data: toCreate,
-    skipDuplicates: true,
-  });
-}*/
-
 async function addBulkCompetences(userId, competences) {
   const toCreate = competences.map(c => ({
     id_etudiant: userId,
@@ -94,10 +51,14 @@ async function addBulkCompetences(userId, competences) {
     date_ajout: new Date(),
   }));
 
-  return prisma.profilCompetence.createMany({
+  const result = await prisma.profilCompetence.createMany({
     data: toCreate,
     skipDuplicates: true,
   });
+
+  await recalculerScore(userId);
+
+  return result;
 }
 /**
  * Modifie une compétence (appartient à l'utilisateur)
@@ -108,11 +69,15 @@ async function updateCompetence(userId, competenceId, data) {
   });
   if (!existing) return null;
 
-  return prisma.profilCompetence.update({
+  const competence = await prisma.profilCompetence.update({
     where: { id_etudiant_id_competence: { id_etudiant: userId, id_competence: competenceId } },
     data: { niveau_maitrise: data.niveau_maitrise },
     include: { competence: true },
   });
+
+  await recalculerScore(userId);
+
+  return competence;
 }
 
 /**
@@ -124,9 +89,13 @@ async function deleteCompetence(userId, competenceId) {
   });
   if (!existing) return null;
 
-  return prisma.profilCompetence.delete({
+  const competence = await prisma.profilCompetence.delete({
     where: { id_etudiant_id_competence: { id_etudiant: userId, id_competence: competenceId } },
   });
+
+  await recalculerScore(userId);
+
+  return competence;
 }
 
 /**

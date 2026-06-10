@@ -336,7 +336,7 @@ const getProDashboard = asyncHandler(async (req, res) => {
       badges: (etudiant.etudiant?.badges || [])
         .map((item) => item.badge?.nom)
         .filter(Boolean),
-      hasPortfolio: Boolean(etudiant.etudiant?.score_credibilite),
+      hasPortfolio: Boolean(etudiant.etudiant?.portfolio?.est_public),
       profilePath: `/profile/student/${etudiant.id_utilisateur}?from=pro`,
       portfolioPath: `/portfolio/${etudiant.id_utilisateur}?from=pro`,
     };

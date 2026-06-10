@@ -25,14 +25,39 @@
         <button type="button" class="download-btn ghost" @click="downloadPdf">
           Télécharger PDF
         </button>
+        <!-- FIX 1: openTemplateSelector est maintenant défini dans le script -->
+        <button @click="openTemplateSelector">Changer le template</button>
       </div>
     </header>
 
+    <div v-if="showTemplateModal" class="template-modal">
+      <div class="template-card">
+        <h3>Choisir un template</h3>
+
+        <div
+          v-for="template in templates"
+          :key="template.id_modele"
+          class="template-item"
+          @click="selectTemplate(template.id_modele)"
+        >
+          {{ template.nom }}
+        </div>
+
+        <button @click="showTemplateModal = false">Fermer</button>
+      </div>
+    </div>
+
     <div v-if="loading" class="page-state">Chargement du portfolio...</div>
-    <div v-else-if="error" class="page-state page-state--error">{{ error }}</div>
+    <div v-else-if="error" class="page-state page-state--error">
+      {{ error }}
+    </div>
 
     <template v-else>
-      <section id="about" class="portfolio-section hero-section" data-section-id="about">
+      <section
+        id="about"
+        class="portfolio-section hero-section"
+        data-section-id="about"
+      >
         <div class="hero-left">
           <div class="recos-pill">
             <div>
@@ -108,14 +133,20 @@
         </div>
 
         <div v-if="skills.length" class="skills-grid">
-          <article v-for="group in skills" :key="group.title" class="portfolio-card">
+          <article
+            v-for="group in skills"
+            :key="group.title"
+            class="portfolio-card"
+          >
             <h3>{{ group.title }}</h3>
             <div class="skill-list">
               <span v-for="skill in group.items" :key="skill">{{ skill }}</span>
             </div>
           </article>
         </div>
-        <div v-else class="section-empty">Aucune competence renseignee pour le moment.</div>
+        <div v-else class="section-empty">
+          Aucune competence renseignee pour le moment.
+        </div>
       </section>
 
       <section id="journey" class="portfolio-section" data-section-id="journey">
@@ -125,7 +156,11 @@
         </div>
 
         <div v-if="diplomas.length" class="timeline">
-          <article v-for="diploma in diplomas" :key="`${diploma.title}-${diploma.period}`" class="timeline-card">
+          <article
+            v-for="diploma in diplomas"
+            :key="`${diploma.title}-${diploma.period}`"
+            class="timeline-card"
+          >
             <div class="timeline-dot"></div>
             <div>
               <h3>{{ diploma.title }}</h3>
@@ -135,17 +170,27 @@
             <span>{{ diploma.period }}</span>
           </article>
         </div>
-        <div v-else class="section-empty">Aucun diplome renseigne pour le moment.</div>
+        <div v-else class="section-empty">
+          Aucun diplome renseigne pour le moment.
+        </div>
       </section>
 
-      <section id="projects" class="portfolio-section" data-section-id="projects">
+      <section
+        id="projects"
+        class="portfolio-section"
+        data-section-id="projects"
+      >
         <div class="section-head">
           <h2>Projets</h2>
-          <p>Publications et projets de l’étudiant reliés au backend.</p>
+          <p>Publications et projets de l'étudiant reliés au backend.</p>
         </div>
 
         <div v-if="projects.length" class="projects-grid">
-          <article v-for="project in projects" :key="project.id" class="portfolio-card project-card">
+          <article
+            v-for="project in projects"
+            :key="project.id"
+            class="portfolio-card project-card"
+          >
             <div class="project-top">
               <span class="project-icon">{{ project.icon }}</span>
               <div>
@@ -161,12 +206,22 @@
             </div>
 
             <div class="project-actions">
-              <button type="button" @click="selectedProjectId = project.id">Détails</button>
-              <a v-if="project.github" :href="project.github" target="_blank" rel="noopener">Code</a>
+              <button type="button" @click="selectedProjectId = project.id">
+                Détails
+              </button>
+              <a
+                v-if="project.github"
+                :href="project.github"
+                target="_blank"
+                rel="noopener"
+                >Code</a
+              >
             </div>
           </article>
         </div>
-        <div v-else class="section-empty">Aucun projet valide pour le moment.</div>
+        <div v-else class="section-empty">
+          Aucun projet valide pour le moment.
+        </div>
 
         <article v-if="selectedProject" class="project-details">
           <div class="details-head">
@@ -174,27 +229,41 @@
               <h3>Détails - {{ selectedProject.title }}</h3>
               <p>{{ selectedProject.type }}</p>
             </div>
-            <button type="button" @click="selectedProjectId = null">Fermer</button>
+            <button type="button" @click="selectedProjectId = null">
+              Fermer
+            </button>
           </div>
 
           <p>{{ selectedProject.details }}</p>
 
           <div class="details-media">
-            <div v-for="(image, index) in selectedProject.images" :key="`${selectedProject.id}-${index}`" class="media-placeholder">
+            <div
+              v-for="(image, index) in selectedProject.images"
+              :key="`${selectedProject.id}-${index}`"
+              class="media-placeholder"
+            >
               <img v-if="image" :src="image" alt="Project detail" />
             </div>
           </div>
         </article>
       </section>
 
-      <section id="experience" class="portfolio-section" data-section-id="experience">
+      <section
+        id="experience"
+        class="portfolio-section"
+        data-section-id="experience"
+      >
         <div class="section-head">
           <h2>Expérience</h2>
           <p>Stages et expériences professionnelles liés au parcours.</p>
         </div>
 
         <div v-if="experiences.length" class="experience-list">
-          <article v-for="experience in experiences" :key="`${experience.role}-${experience.company}`" class="experience-card">
+          <article
+            v-for="experience in experiences"
+            :key="`${experience.role}-${experience.company}`"
+            class="experience-card"
+          >
             <div>
               <h3>{{ experience.role }}</h3>
               <strong>{{ experience.company }}</strong>
@@ -208,27 +277,48 @@
             </div>
           </article>
         </div>
-        <div v-else class="section-empty">Aucune experience validee pour le moment.</div>
+        <div v-else class="section-empty">
+          Aucune experience validee pour le moment.
+        </div>
       </section>
 
-      <section id="certifications" class="portfolio-section" data-section-id="certifications">
+      <section
+        id="certifications"
+        class="portfolio-section"
+        data-section-id="certifications"
+      >
         <div class="section-head">
           <h2>Certifications</h2>
-          <p>Attestations et certifications validées récupérées depuis le backend.</p>
+          <p>
+            Attestations et certifications validées récupérées depuis le
+            backend.
+          </p>
         </div>
 
         <div v-if="sortedCertifications.length" class="certification-grid">
-          <article v-for="certification in sortedCertifications" :key="certification.name" class="portfolio-card certification-card">
+          <article
+            v-for="certification in sortedCertifications"
+            :key="certification.name"
+            class="portfolio-card certification-card"
+          >
             <div>
               <h3>{{ certification.name }}</h3>
               <p>{{ certification.organization }}</p>
               <span>{{ certification.date }}</span>
             </div>
 
-            <a v-if="certification.link" :href="certification.link" target="_blank" rel="noopener">Voir</a>
+            <a
+              v-if="certification.link"
+              :href="certification.link"
+              target="_blank"
+              rel="noopener"
+              >Voir</a
+            >
           </article>
         </div>
-        <div v-else class="page-state">Aucune certification reliée pour le moment.</div>
+        <div v-else class="page-state">
+          Aucune certification reliée pour le moment.
+        </div>
       </section>
 
       <section id="contact" class="portfolio-section" data-section-id="contact">
@@ -238,19 +328,39 @@
         </div>
 
         <div class="contact-grid">
-          <a v-if="profile.phone" :href="`tel:${profile.phone}`" class="contact-card">
+          <a
+            v-if="profile.phone"
+            :href="`tel:${profile.phone}`"
+            class="contact-card"
+          >
             <span>Téléphone</span>
             <strong>{{ profile.phone }}</strong>
           </a>
-          <a v-if="profile.email" :href="`mailto:${profile.email}`" class="contact-card">
+          <a
+            v-if="profile.email"
+            :href="`mailto:${profile.email}`"
+            class="contact-card"
+          >
             <span>Email</span>
             <strong>{{ profile.email }}</strong>
           </a>
-          <a v-if="profile.linkedin" :href="profile.linkedin" target="_blank" rel="noopener" class="contact-card">
+          <a
+            v-if="profile.linkedin"
+            :href="profile.linkedin"
+            target="_blank"
+            rel="noopener"
+            class="contact-card"
+          >
             <span>LinkedIn</span>
             <strong>Profil LinkedIn</strong>
           </a>
-          <a v-if="profile.github" :href="profile.github" target="_blank" rel="noopener" class="contact-card">
+          <a
+            v-if="profile.github"
+            :href="profile.github"
+            target="_blank"
+            rel="noopener"
+            class="contact-card"
+          >
             <span>GitHub</span>
             <strong>Dépôts GitHub</strong>
           </a>
@@ -262,22 +372,60 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { portfolioService } from "../services/portfolio.service";
 import { postService } from "../services/post.service";
 import { profileService } from "../services/profile.service";
 import { recommendationService } from "../services/recommendation.service";
 import { attestationService } from "../services/attestation.service";
 
-type SectionId = "about" | "skills" | "journey" | "projects" | "experience" | "certifications" | "contact";
+const showTemplateModal = ref(false);
+const templates = ref<Array<{ id_modele: number; nom: string }>>([]);
+const currentTemplate = ref<number>(1);
+type SectionId =
+  | "about"
+  | "skills"
+  | "journey"
+  | "projects"
+  | "experience"
+  | "certifications"
+  | "contact";
 type SkillGroup = { title: string; items: string[] };
-type DiplomaItem = { title: string; school: string; period: string; description: string };
-type Project = { id: number; icon: string; title: string; type: string; description: string; details: string; tech: string[]; github: string; images: string[] };
-type ExperienceItem = { role: string; company: string; period: string; location: string; mode: string; description: string };
-type CertificationItem = { name: string; organization: string; date: string; strength: number; link: string };
+type DiplomaItem = {
+  title: string;
+  school: string;
+  period: string;
+  description: string;
+};
+type Project = {
+  id: number;
+  icon: string;
+  title: string;
+  type: string;
+  description: string;
+  details: string;
+  tech: string[];
+  github: string;
+  images: string[];
+};
+type ExperienceItem = {
+  role: string;
+  company: string;
+  period: string;
+  location: string;
+  mode: string;
+  description: string;
+};
+type CertificationItem = {
+  name: string;
+  organization: string;
+  date: string;
+  strength: number;
+  link: string;
+};
 
 const route = useRoute();
-
+const router = useRouter();
 const sections: Array<{ id: SectionId; label: string }> = [
   { id: "about", label: "À propos" },
   { id: "skills", label: "Compétences" },
@@ -302,6 +450,55 @@ function getCurrentUserIdFromStorage() {
   }
 }
 
+// FIX 1 : fonction manquante ajoutée
+const openTemplateSelector = () => {
+  showTemplateModal.value = true;
+};
+
+// FIX 2 : on extrait bien le tableau depuis la réponse backend { success, data: [...] }
+const loadTemplates = async () => {
+  try {
+    const response = await portfolioService.getTemplates();
+    // Supporte les deux formes : réponse directe tableau OU { data: [...] }
+    console.log("REPONSE TEMPLATES =", response);
+    templates.value = Array.isArray(response)
+      ? response
+      : (response?.data ?? []);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+onMounted(() => {
+  loadTemplates();
+});
+
+const selectTemplate = async (id_modele: number) => {
+  try {
+    const selectedTemplateId = Number(id_modele);
+    const studentId = profileStudentId.value;
+
+    if (!studentId) {
+      throw new Error("Impossible de trouver l'etudiant du portfolio.");
+    }
+
+    await portfolioService.changeTemplate(selectedTemplateId)
+
+    showTemplateModal.value = false
+
+    const templateRoutes: Record<number, string> = {
+      1: `/portfolio/${studentId}`,
+      2: `/portfolio-creative/${studentId}`,
+      3: `/portfolio-professional/${studentId}`,
+    };
+
+    await router.push(templateRoutes[selectedTemplateId] ?? `/portfolio/${studentId}`);
+
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 const profileStudentId = computed(() => {
   const id = Number(route.params.id);
   if (Number.isFinite(id) && id > 0) return id;
@@ -310,11 +507,15 @@ const profileStudentId = computed(() => {
 
 const fromQuery = computed(() => {
   const from = typeof route.query.from === "string" ? route.query.from : "";
-  return from === "prof" || from === "pro" || from === "student" ? from : "student";
+  return from === "prof" || from === "pro" || from === "student"
+    ? from
+    : "student";
 });
 
 const profileLink = computed(() =>
-  profileStudentId.value ? `/profile/student/${profileStudentId.value}?from=${fromQuery.value}` : "/profile",
+  profileStudentId.value
+    ? `/profile/student/${profileStudentId.value}?from=${fromQuery.value}`
+    : "/profile",
 );
 
 const loading = ref(false);
@@ -351,8 +552,10 @@ const profileInitials = computed(() => {
   return `${first}${last}`.toUpperCase() || "NP";
 });
 
-const selectedProject = computed(() =>
-  projects.value.find((project) => project.id === selectedProjectId.value) || null,
+const selectedProject = computed(
+  () =>
+    projects.value.find((project) => project.id === selectedProjectId.value) ||
+    null,
 );
 
 const sortedCertifications = computed(() =>
@@ -372,8 +575,19 @@ function getInitials(name: string) {
 }
 
 function avatarColorClass(name: string) {
-  const colors = ["avatar-blue", "avatar-orange", "avatar-indigo", "avatar-green", "avatar-deep-blue", "avatar-brown", "avatar-purple", "avatar-slate"];
-  const sum = String(name || "").split("").reduce((total, char) => total + char.charCodeAt(0), 0);
+  const colors = [
+    "avatar-blue",
+    "avatar-orange",
+    "avatar-indigo",
+    "avatar-green",
+    "avatar-deep-blue",
+    "avatar-brown",
+    "avatar-purple",
+    "avatar-slate",
+  ];
+  const sum = String(name || "")
+    .split("")
+    .reduce((total, char) => total + char.charCodeAt(0), 0);
   return colors[sum % colors.length];
 }
 
@@ -394,7 +608,8 @@ function resolveBackendAsset(path: string | null | undefined) {
 function inferGithubUrl(...sources: Array<string | null | undefined>) {
   for (const source of sources) {
     const match = String(source || "").match(githubPattern);
-    if (match?.[1]) return match[1].startsWith("http") ? match[1] : `https://${match[1]}`;
+    if (match?.[1])
+      return match[1].startsWith("http") ? match[1] : `https://${match[1]}`;
   }
   return "";
 }
@@ -411,7 +626,8 @@ function parseStructuredContent(content: string) {
 function categoryLabel(category: string) {
   const normalized = String(category || "").toUpperCase();
   if (normalized.includes("COMPORT")) return "Soft Skills";
-  if (normalized.includes("OUTIL") || normalized.includes("DEVOPS")) return "Outils & DevOps";
+  if (normalized.includes("OUTIL") || normalized.includes("DEVOPS"))
+    return "Outils & DevOps";
   return "Développement";
 }
 
@@ -423,13 +639,25 @@ function formatYearRange(endYear?: number | string | null) {
 }
 
 function formatStagePeriod(start?: string | null, end?: string | null) {
-  const startLabel = start ? new Date(start).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "Début";
-  const endLabel = end ? new Date(end).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "Présent";
+  const startLabel = start
+    ? new Date(start).toLocaleDateString("fr-FR", {
+        month: "short",
+        year: "numeric",
+      })
+    : "Début";
+  const endLabel = end
+    ? new Date(end).toLocaleDateString("fr-FR", {
+        month: "short",
+        year: "numeric",
+      })
+    : "Présent";
   return `${startLabel} - ${endLabel}`;
 }
 
 function projectTechnologies(project: any) {
-  const relations = Array.isArray(project?.technologies) ? project.technologies : [];
+  const relations = Array.isArray(project?.technologies)
+    ? project.technologies
+    : [];
   const relationNames = relations
     .map((item: any) => item?.technologie?.nom || item?.nom)
     .filter(Boolean);
@@ -452,7 +680,9 @@ function mapBackendProject(project: any, index: number): Project {
       project?.description ||
       "Aucun detail supplementaire.",
     tech: projectTechnologies(project),
-    github: project?.lien_github || inferGithubUrl(project?.description, project?.resultats),
+    github:
+      project?.lien_github ||
+      inferGithubUrl(project?.description, project?.resultats),
     images: Array.isArray(project?.captures)
       ? project.captures.map(resolveBackendAsset).filter(Boolean)
       : [],
@@ -465,14 +695,21 @@ function mapPostProject(post: any, index: number): Project {
     id: Number(post?.id_poste ?? 100000 + index),
     icon: index % 3 === 0 ? "PB" : index % 3 === 1 ? "FE" : "DB",
     title:
-  structured?.projectTitle ||
-  (String(post?.contenu || "Publication")
-    .split("\n")[0] ?? "Publication")
-      .slice(0, 70),
+      structured?.projectTitle ||
+      (
+        String(post?.contenu || "Publication").split("\n")[0] ?? "Publication"
+      ).slice(0, 70),
     type: post?.visibilite || "Publication",
-    description: structured?.description || post?.contenu || "Aucune description.",
-    details: structured?.details || structured?.description || post?.contenu || "Aucun detail supplementaire.",
-    tech: Array.isArray(structured?.technologies) ? structured.technologies.filter(Boolean) : [],
+    description:
+      structured?.description || post?.contenu || "Aucune description.",
+    details:
+      structured?.details ||
+      structured?.description ||
+      post?.contenu ||
+      "Aucun detail supplementaire.",
+    tech: Array.isArray(structured?.technologies)
+      ? structured.technologies.filter(Boolean)
+      : [],
     github: inferGithubUrl(structured?.github, post?.contenu),
     images: post?.image_url ? [resolveBackendAsset(post.image_url)] : [],
   };
@@ -484,10 +721,12 @@ function setSelectedProjectFallback() {
     return;
   }
 
-  if (!projects.value.some((project) => project.id === selectedProjectId.value)) {
+  if (
+    !projects.value.some((project) => project.id === selectedProjectId.value)
+  ) {
     selectedProjectId.value = projects.value.length
-  ? projects.value[0]!.id
-  : null;
+      ? projects.value[0]!.id
+      : null;
   }
 }
 
@@ -495,60 +734,87 @@ function mapProfileData(backendProfile: any, portfolioData: any) {
   const raw = backendProfile?.raw || {};
   const userProfile = raw?.profil || {};
   const student = raw?.etudiant || {};
-  const fullName = String(backendProfile?.name || "Nom Prenom").trim().split(/\s+/);
+  const fullName = String(backendProfile?.name || "Nom Prenom")
+    .trim()
+    .split(/\s+/);
 
   profile.value = {
     firstName: fullName[0] || "Nom",
     lastName: fullName.slice(1).join(" ") || "Prenom",
-    title: portfolioData?.objectif_pro || backendProfile?.title || student?.filiere || "Profil étudiant",
-    school: backendProfile?.school || userProfile?.adresse || "Établissement non renseigné",
+    title:
+      portfolioData?.objectif_pro ||
+      backendProfile?.title ||
+      student?.filiere ||
+      "Profil étudiant",
+    school:
+      backendProfile?.school ||
+      userProfile?.adresse ||
+      "Établissement non renseigné",
     recos: backendProfile?.recos || "0+",
-    avatar: resolveBackendAsset(backendProfile?.avatar || userProfile?.photo_profil),
+    avatar: resolveBackendAsset(
+      backendProfile?.avatar || userProfile?.photo_profil,
+    ),
     phone: userProfile?.telephone || "",
     email: backendProfile?.email || "",
     linkedin: backendProfile?.linkedin || userProfile?.linkedin_url || "",
-    github: inferGithubUrl(portfolioData?.titre, portfolioData?.objectif_pro, backendProfile?.website, userProfile?.bio),
-    bio: userProfile?.bio || portfolioData?.objectif_pro || "Aucune description disponible pour le moment.",
+    github: inferGithubUrl(
+      portfolioData?.titre,
+      portfolioData?.objectif_pro,
+      backendProfile?.website,
+      userProfile?.bio,
+    ),
+    bio:
+      userProfile?.bio ||
+      portfolioData?.objectif_pro ||
+      "Aucune description disponible pour le moment.",
   };
 
-  const groupedSkills = (student?.competences || []).reduce((groups: Record<string, string[]>, item: any) => {
-    const label = categoryLabel(item?.competence?.categorie);
-    const skillName = item?.competence?.nom;
-    if (!skillName) return groups;
-    if (!groups[label]) groups[label] = [];
-    if (!groups[label].includes(skillName)) groups[label].push(skillName);
-    return groups;
-  }, {});
+  const groupedSkills = (student?.competences || []).reduce(
+    (groups: Record<string, string[]>, item: any) => {
+      const label = categoryLabel(item?.competence?.categorie);
+      const skillName = item?.competence?.nom;
+      if (!skillName) return groups;
+      if (!groups[label]) groups[label] = [];
+      if (!groups[label].includes(skillName)) groups[label].push(skillName);
+      return groups;
+    },
+    {},
+  );
 
- skills.value =
-  Object.entries(groupedSkills)
-    .map(([title, items]) => ({
-      title,
-      items: items as string[]
-    }))
+  skills.value = Object.entries(groupedSkills).map(([title, items]) => ({
+    title,
+    items: items as string[],
+  }));
 
   diplomas.value = (student?.diplomes || []).map((diploma: any) => ({
     title: diploma?.titre_diplome || "Diplôme",
     school: diploma?.etablissement || "Établissement non renseigné",
     period: formatYearRange(diploma?.annee_fin),
-    description: `Formation obtenue à ${diploma?.etablissement || "l’établissement concerné"}.`,
+    description: `Formation obtenue à ${diploma?.etablissement || "l'établissement concerné"}.`,
   }));
 
-  experiences.value = (student?.stages || []).map((stage: any, index: number) => ({
-    role: stage?.poste || `Stage ${index + 1}`,
-    company: stage?.entreprise || "Entreprise",
-    period: formatStagePeriod(stage?.date_debut, stage?.date_fin),
-    location: stage?.lieu || userProfile?.adresse || "Maroc",
-    mode: stage?.mode || "Non précisé",
-    description: stage?.description || stage?.missions || "Expérience de stage liée au parcours de l'étudiant.",
-  }));
+  experiences.value = (student?.stages || []).map(
+    (stage: any, index: number) => ({
+      role: stage?.poste || `Stage ${index + 1}`,
+      company: stage?.entreprise || "Entreprise",
+      period: formatStagePeriod(stage?.date_debut, stage?.date_fin),
+      location: stage?.lieu || userProfile?.adresse || "Maroc",
+      mode: stage?.mode || "Non précisé",
+      description:
+        stage?.description ||
+        stage?.missions ||
+        "Expérience de stage liée au parcours de l'étudiant.",
+    }),
+  );
 
   certifications.value = [];
 }
 
 function mapRecommendations(items: any[]) {
   recosPreview.value = items.slice(0, 4).map((item) => ({
-    name: [item?.auteur?.prenom, item?.auteur?.nom].filter(Boolean).join(" ") || "Recommandation",
+    name:
+      [item?.auteur?.prenom, item?.auteur?.nom].filter(Boolean).join(" ") ||
+      "Recommandation",
   }));
   profile.value.recos = `${items.length}+`;
 }
@@ -560,14 +826,22 @@ function mapProjects(items: any[]) {
       id: Number(post?.id_poste ?? index + 1),
       icon: index % 3 === 0 ? "📚" : index % 3 === 1 ? "💼" : "📊",
       title:
-  structured?.projectTitle ||
-  (String(post?.contenu || "Projet")
-    .split("\n")[0] ?? "Projet")
-      .slice(0, 70),
+        structured?.projectTitle ||
+        (String(post?.contenu || "Projet").split("\n")[0] ?? "Projet").slice(
+          0,
+          70,
+        ),
       type: post?.visibilite || "Projet",
-      description: structured?.description || post?.contenu || "Aucune description.",
-      details: structured?.details || structured?.description || post?.contenu || "Aucun détail supplémentaire.",
-      tech: Array.isArray(structured?.technologies) ? structured.technologies.filter(Boolean) : [],
+      description:
+        structured?.description || post?.contenu || "Aucune description.",
+      details:
+        structured?.details ||
+        structured?.description ||
+        post?.contenu ||
+        "Aucun détail supplémentaire.",
+      tech: Array.isArray(structured?.technologies)
+        ? structured.technologies.filter(Boolean)
+        : [],
       github: inferGithubUrl(structured?.github, post?.contenu),
       images: post?.image_url ? [resolveBackendAsset(post.image_url)] : [],
     };
@@ -575,8 +849,8 @@ function mapProjects(items: any[]) {
 
   if (!selectedProjectId.value && projects.value.length) {
     selectedProjectId.value = projects.value.length
-  ? projects.value[0]!.id
-  : null;
+      ? projects.value[0]!.id
+      : null;
   }
 }
 
@@ -593,40 +867,77 @@ async function loadPortfolio() {
       postsResponse,
       recommendationsResponse,
     ] = await Promise.all([
-      attestationService.getAttestations({ etudiantId: profileStudentId.value, statut: "VALIDE" }),
+      attestationService.getAttestations({
+        etudiantId: profileStudentId.value,
+        statut: "VALIDE",
+      }),
       portfolioService.getPortfolio(profileStudentId.value),
       profileService.getProfile(profileStudentId.value),
       postService.getPosts(),
-      recommendationService.getRecommendations({ id_etudiant_cible: profileStudentId.value, statut: "VALIDE" }),
+      recommendationService.getRecommendations({
+        id_etudiant_cible: profileStudentId.value,
+        statut: "VALIDE",
+      }),
     ]);
 
     mapProfileData(profileResponse, portfolioResponse?.data ?? {});
 
+    currentTemplate.value = Number(
+  portfolioResponse?.data?.id_modele ?? 1
+);
+    if (currentTemplate.value === 2) {
+  await router.replace(
+    `/portfolio-creative/${profileStudentId.value}`
+  )
+  return
+}
+
+if (currentTemplate.value === 3) {
+  await router.replace(
+    `/portfolio-professional/${profileStudentId.value}`
+  )
+  return
+}
+    console.log("Template actuel :", currentTemplate.value);
+
     const posts = Array.isArray(postsResponse?.data?.data)
       ? postsResponse.data.data.filter(
-          (post: any) => Number(post?.auteur?.id_utilisateur ?? post?.id_auteur ?? 0) === Number(profileStudentId.value),
+          (post: any) =>
+            Number(post?.auteur?.id_utilisateur ?? post?.id_auteur ?? 0) ===
+            Number(profileStudentId.value),
         )
       : [];
     mapProjects(posts);
 
-    const recommendations = Array.isArray(recommendationsResponse?.data?.data) ? recommendationsResponse.data.data : [];
+    const recommendations = Array.isArray(recommendationsResponse?.data?.data)
+      ? recommendationsResponse.data.data
+      : [];
     mapRecommendations(recommendations);
 
     const attestations = Array.isArray(attestationsResponse?.data?.data)
       ? attestationsResponse.data.data
       : [];
 
-    certifications.value = attestations.map((attestation: any, index: number) => ({
-      name: attestation?.titre || attestation?.type || `Certification ${index + 1}`,
-      organization: attestation?.organisme || "Organisme non renseigné",
-      date: attestation?.date
-        ? new Date(attestation.date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" })
-        : "Date non précisée",
-      strength: Math.max(40, 100 - index * 10),
-      link: "",
-    }));
+    certifications.value = attestations.map(
+      (attestation: any, index: number) => ({
+        name:
+          attestation?.titre ||
+          attestation?.type ||
+          `Certification ${index + 1}`,
+        organization: attestation?.organisme || "Organisme non renseigné",
+        date: attestation?.date
+          ? new Date(attestation.date).toLocaleDateString("fr-FR", {
+              month: "short",
+              year: "numeric",
+            })
+          : "Date non précisée",
+        strength: Math.max(40, 100 - index * 10),
+        link: "",
+      }),
+    );
   } catch (err: any) {
-    error.value = err?.response?.data?.message || "Impossible de charger ce portfolio.";
+    error.value =
+      err?.response?.data?.message || "Impossible de charger ce portfolio.";
   } finally {
     loading.value = false;
   }
@@ -634,26 +945,39 @@ async function loadPortfolio() {
 
 function downloadPdf() {
   if (!profileStudentId.value) return;
-  window.open(portfolioService.getPortfolioExportPdfUrl(profileStudentId.value), "_blank");
+  window.open(
+    portfolioService.getPortfolioExportPdfUrl(profileStudentId.value),
+    "_blank",
+  );
 }
 
 function downloadHtml() {
   if (!profileStudentId.value) return;
-  window.open(portfolioService.getPortfolioExportHtmlUrl(profileStudentId.value), "_blank");
+  window.open(
+    portfolioService.getPortfolioExportHtmlUrl(profileStudentId.value),
+    "_blank",
+  );
 }
 
 function initSectionObserver() {
   observer?.disconnect();
-  const sectionElements = document.querySelectorAll<HTMLElement>("[data-section-id]");
+  const sectionElements =
+    document.querySelectorAll<HTMLElement>("[data-section-id]");
 
   observer = new IntersectionObserver(
     (entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
       const target = visible?.target as HTMLElement | undefined;
       if (!target?.dataset.sectionId) return;
       activeSectionId.value = target.dataset.sectionId as SectionId;
     },
-    { root: null, threshold: [0.25, 0.4, 0.6], rootMargin: "-120px 0px -45% 0px" },
+    {
+      root: null,
+      threshold: [0.25, 0.4, 0.6],
+      rootMargin: "-120px 0px -45% 0px",
+    },
   );
 
   sectionElements.forEach((section) => observer?.observe(section));
@@ -846,7 +1170,8 @@ h1 {
   height: min(380px, 70vw);
   border-radius: 50%;
   border: 10px solid rgba(255, 255, 255, 0.86);
-  background: repeating-conic-gradient(#e4e7eb 0% 25%, #f8fafc 0% 50%) 0 0 / 32px 32px;
+  background: repeating-conic-gradient(#e4e7eb 0% 25%, #f8fafc 0% 50%) 0 0 /
+    32px 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -913,7 +1238,11 @@ h1 {
 .project-details {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.045));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.045)
+  );
   box-shadow: 0 20px 46px rgba(0, 0, 0, 0.16);
 }
 
@@ -1020,7 +1349,8 @@ h1 {
 .media-placeholder {
   height: 180px;
   border-radius: 12px;
-  background: repeating-conic-gradient(#e1e5ea 0% 25%, #f8fafc 0% 50%) 0 0 / 24px 24px;
+  background: repeating-conic-gradient(#e1e5ea 0% 25%, #f8fafc 0% 50%) 0 0 /
+    24px 24px;
   overflow: hidden;
 }
 
@@ -1060,14 +1390,70 @@ h1 {
   color: #fca5a5;
 }
 
-.avatar-blue { background: #039be5; }
-.avatar-orange { background: #f57c00; }
-.avatar-indigo { background: #5e6ad2; }
-.avatar-green { background: #43a047; }
-.avatar-deep-blue { background: #0277bd; }
-.avatar-brown { background: #8d6e63; }
-.avatar-purple { background: #5e35b1; }
-.avatar-slate { background: #5c6bc0; }
+.avatar-blue {
+  background: #039be5;
+}
+.avatar-orange {
+  background: #f57c00;
+}
+.avatar-indigo {
+  background: #5e6ad2;
+}
+.avatar-green {
+  background: #43a047;
+}
+.avatar-deep-blue {
+  background: #0277bd;
+}
+.avatar-brown {
+  background: #8d6e63;
+}
+.avatar-purple {
+  background: #5e35b1;
+}
+.avatar-slate {
+  background: #5c6bc0;
+}
+
+/* Template modal */
+.template-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.template-card {
+  background: #121b30;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 28px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.template-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.template-item {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.template-item:hover {
+  background: rgba(91, 63, 212, 0.3);
+}
 
 @media (max-width: 1100px) {
   .portfolio-header {
