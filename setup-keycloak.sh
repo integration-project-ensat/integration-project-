@@ -377,30 +377,71 @@ curl -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM/clients" \
     "name": "SonarQube",
     "enabled": true,
     "protocol": "saml",
-    "redirectUris": ["http://localhost:9000/*"],
     "baseUrl": "http://localhost:9000",
-    "adminUrl": "http://localhost:9000",
-    "attributes": {
-      "saml.authnstatement": "true",
-      "saml_name_id_format": "email",
-      "saml.force.name.id.format": "true",
-      "saml.server.signature": "true",
-      "saml.signature.algorithm": "RSA_SHA256",
-      "saml.signing.certificate": "",
-      "saml_assertion_consumer_url.post.0": "http://localhost:9000/saml2/callback",
-      "saml_single_logout_service_url.front.0": "http://localhost:9000",
-      "saml.force.post.binding": "true",
-      "saml.artifact.binding": "false",
-      "saml.onetimeuse.condition": "false",
-      "saml_idp_initiated_sso_relay_state": "",
-      "frontchannelLogout": "true"
-    }
+    "adminUrl": "http://localhost:9000"
   }' > /dev/null
 
 echo "  Client 'sonarqube' SAML créé ✓"
 
 SONAR_CLIENT_ID=$(curl -s "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=sonarqube" \
   -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+echo "  Configuration SAML du client sonarqube..."
+
+SONAR_PS1="$(mktemp --suffix=.ps1)"
+cat > "$SONAR_PS1" <<'PS1'
+param(
+  [string]$KeycloakUrl,
+  [string]$Token,
+  [string]$Realm,
+  [string]$ClientId
+)
+
+$client = Invoke-RestMethod -Headers @{ Authorization = "Bearer $Token" } -Uri "$KeycloakUrl/admin/realms/$Realm/clients/$ClientId"
+$client.redirectUris = @('http://localhost:9000/*')
+$client.webOrigins = @('http://localhost:9000')
+$client.frontchannelLogout = $true
+$client.standardFlowEnabled = $true
+$client.directAccessGrantsEnabled = $false
+
+$attrs = @{}
+if ($client.attributes) {
+  $client.attributes.psobject.Properties | ForEach-Object {
+    $attrs[$_.Name] = $_.Value
+  }
+}
+$attrs['saml.client.signature'] = 'false'
+$attrs['saml.force.post.binding'] = 'true'
+$attrs['saml.server.signature'] = 'true'
+$attrs['saml.authnstatement'] = 'true'
+$attrs['saml_name_id_format'] = 'email'
+$attrs['saml.force.name.id.format'] = 'true'
+$attrs['saml.signature.algorithm'] = 'RSA_SHA256'
+$attrs['saml.allow.ecp.flow'] = 'false'
+$attrs['saml.onetimeuse.condition'] = 'false'
+$attrs['saml_signature_canonicalization_method'] = 'http://www.w3.org/2001/10/xml-exc-c14n#'
+$attrs['saml.assertion.consumer.url.post.0'] = 'http://localhost:9000/saml2/callback'
+$attrs['saml.single.logout.service.url.post.0'] = 'http://localhost:9000'
+$client.attributes = $attrs
+
+$json = $client | ConvertTo-Json -Depth 20
+Invoke-RestMethod -Method Put -Uri "$KeycloakUrl/admin/realms/$Realm/clients/$ClientId" -Headers @{ Authorization = "Bearer $Token" } -ContentType 'application/json' -Body $json | Out-Null
+PS1
+
+"C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -File "$SONAR_PS1" \
+  -KeycloakUrl "$KEYCLOAK_URL" \
+  -Token "$TOKEN" \
+  -Realm "$REALM" \
+  -ClientId "$SONAR_CLIENT_ID"
+SONAR_PUT_CODE=$?
+rm -f "$SONAR_PS1"
+
+if [[ "$SONAR_PUT_CODE" != "0" ]]; then
+  echo "  ERREUR : impossible de configurer le client sonarqube (HTTP $SONAR_PUT_CODE)"
+  exit 1
+fi
+
+echo "  Configuration SAML du client sonarqube appliquée ✓"
 
 echo "  Ajout des mappers SAML pour sonarqube..."
 
@@ -586,6 +627,20 @@ if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/d
     -d "key=sonar.auth.saml.user.email&value=email" > /dev/null
 
   echo "  SAML SonarQube configuré ✓"
+
+  echo "  Attribution de l'accès projet à sonar-users..."
+  SONAR_PERMISSION_CODE=$(
+    curl -s -o /dev/null -w "%{http_code}" -X POST \
+      "$SONAR_URL/api/permissions/add_group?permission=user&groupName=sonar-users&projectKey=pheracore" \
+      -u "$SONAR_ADMIN:$SONAR_PASSWORD"
+  )
+
+  if [[ "$SONAR_PERMISSION_CODE" != "200" && "$SONAR_PERMISSION_CODE" != "204" && "$SONAR_PERMISSION_CODE" != "400" ]]; then
+    echo "  ERREUR : impossible d'attribuer l'accès projet SonarQube (HTTP $SONAR_PERMISSION_CODE)"
+    exit 1
+  fi
+
+  echo "  Accès projet SonarQube attribué à sonar-users ✓"
 fi
 
 # ----------------------------------------------------------
