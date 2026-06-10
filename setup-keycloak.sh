@@ -622,11 +622,12 @@ if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/d
     -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
     -d "key=sonar.auth.saml.user.name&value=name" > /dev/null
 
-  curl -s -X POST "$SONAR_URL/api/settings/set" \
-    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
-    -d "key=sonar.auth.saml.user.email&value=email" > /dev/null
+   echo "  SAML SonarQube configuré ✓"
 
-  echo "  SAML SonarQube configuré ✓"
+  # Création du projet pheracore s'il n'existe pas
+  curl -s -X POST "$SONAR_URL/api/projects/create" \
+    -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+    -d "name=pheracore&project=pheracore" > /dev/null
 
   echo "  Attribution de l'accès projet à sonar-users..."
   SONAR_PERMISSION_CODE=$(
@@ -634,7 +635,6 @@ if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/d
       "$SONAR_URL/api/permissions/add_group?permission=user&groupName=sonar-users&projectKey=pheracore" \
       -u "$SONAR_ADMIN:$SONAR_PASSWORD"
   )
-
   if [[ "$SONAR_PERMISSION_CODE" != "200" && "$SONAR_PERMISSION_CODE" != "204" && "$SONAR_PERMISSION_CODE" != "400" ]]; then
     echo "  ERREUR : impossible d'attribuer l'accès projet SonarQube (HTTP $SONAR_PERMISSION_CODE)"
     exit 1
