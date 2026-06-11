@@ -296,7 +296,7 @@ for username in "${!TEAM_MEMBERS[@]}"; do
       echo -n "(dry-run) "
       user_id="SIMULATED_ID_$username"
     else
-      user_id=$(create_gitlab_user "$username" "${username}@portfolio.local" "$username")
+      user_id=$(create_gitlab_user "$username" "${username}@portfolio.local" "$username" || true)
       if [[ -z "$user_id" ]]; then
         echo -e "${YELLOW}skipping (user must sign in once through Keycloak first)${NC}"
         continue
