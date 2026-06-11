@@ -64,7 +64,7 @@ const mettreAJourDiplome = async (idDiplome, idEtudiant, donnees) => {
 
   const { titre_diplome, domaine, etablissement, annee_debut, annee_fin } = donnees;
 
-  return prisma.diplome.update({
+  const diplome = await prisma.diplome.update({
     where: { id_diplome: BigInt(idDiplome) },
     data: {
       ...(titre_diplome  !== undefined && { titre_diplome }),
@@ -74,6 +74,10 @@ const mettreAJourDiplome = async (idDiplome, idEtudiant, donnees) => {
       ...(annee_fin      !== undefined && { annee_fin })
     }
   });
+
+  await recalculerScore(idEtudiant);
+
+  return diplome;
 };
 
 // Supprimer un diplôme

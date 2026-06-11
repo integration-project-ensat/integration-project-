@@ -10,6 +10,76 @@ const resolveBackendAsset = (path) => {
 const fullName = (user) =>
   [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
 
+const normalizeText = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+
+const FILIERES = [
+  { label: 'Informatique', variants: ['Informatique', 'Genie Informatique', 'Génie Informatique', 'GINF', 'INFO'] },
+  { label: 'Reseaux et Telecoms', variants: ['Reseaux et Telecoms', 'Réseaux et Télécoms', 'Reseaux', 'Réseaux', 'GSTR', 'GTR'] },
+  { label: 'Data Science', variants: ['Data Science', 'Data', 'Big Data'] },
+  { label: 'Cybersecurite', variants: ['Cybersecurite', 'Cybersécurité', 'Cybersecurity', 'Securite', 'Sécurité'] },
+  { label: 'IA', variants: ['IA', 'Intelligence Artificielle', 'IID'] },
+  { label: 'Developpement', variants: ['Developpement', 'Développement', 'Web', 'Mobile'] },
+  { label: 'DevOps', variants: ['DevOps'] },
+  { label: 'Cloud', variants: ['Cloud'] },
+  { label: 'Marketing', variants: ['Marketing'] },
+  { label: 'Design', variants: ['Design'] },
+]
+
+const VILLES = [
+  'Tanger',
+  'Rabat',
+  'Fès',
+  'Casablanca',
+  'Marrakech',
+  'Agadir',
+  'Oujda',
+  'Tetouan',
+  'Kenitra',
+  'Meknes',
+  'El Jadida',
+  'Safi',
+  'Beni Mellal',
+  'Nador',
+  'Settat',
+  'Taza',
+  'Khouribga',
+  'Mohammedia',
+  'Laayoune',
+  'Dakhla',
+]
+
+const normalizeFiliere = (value) => {
+  const normalized = normalizeText(value)
+  const match = FILIERES.find((item) =>
+    item.variants.some((variant) => normalizeText(variant) === normalized),
+  )
+
+  return match?.label || String(value || '').trim()
+}
+
+const pickSchool = (student) =>
+  student?.etablissement ||
+  student?.diplomes?.[0]?.etablissement ||
+  'École Nationale des Sciences Appliquées'
+
+const pickLocation = (profile, student, payload) => {
+  const explicitLocation = String(payload?.location || profile?.adresse || '').trim()
+  if (explicitLocation) return explicitLocation
+
+  const source = normalizeText([
+    student?.etablissement,
+    student?.diplomes?.[0]?.etablissement,
+  ].filter(Boolean).join(' '))
+  const city = VILLES.find((item) => source.includes(normalizeText(item)))
+
+  return city ? `${city}, Maroc` : ''
+}
+
 const recommendationRole = (role) => {
   const normalized = String(role || '').toUpperCase()
   if (normalized === 'PROFESSIONNEL' || normalized === 'PROFESSIONAL') return 'professional'
@@ -83,19 +153,18 @@ const normalizeProfile = (payload) => {
     score,
     title:
       payload?.title ||
-      student?.filiere ||
+      normalizeFiliere(student?.filiere) ||
       professor?.specialite ||
       professional?.poste ||
       payload?.role ||
       'Profil',
     school:
       payload?.school ||
-      student?.etablissement ||
-      student?.annee_universitaire ||
+      pickSchool(student) ||
       professor?.etablissement ||
       professional?.entreprise ||
       '',
-    location: payload?.location || profile?.adresse || '',
+    location: pickLocation(profile, student, payload),
     recos: payload?.recos || `${recommendations.length}+`,
     avatar: resolveBackendAsset(payload?.avatar || profile?.photo_profil || ''),
     banner: resolveBackendAsset(profile?.banniere_profil || ''),

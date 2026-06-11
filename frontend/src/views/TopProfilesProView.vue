@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { SlidersHorizontal } from "../lib/icons";
 import SidebarPro from "../components/explorePro/SidebarPro.vue";
@@ -16,6 +16,9 @@ const {
   averageScore,
   totalRecommendations,
   profilesWithPortfolio,
+  isLoadingSavedProfiles,
+  savedProfilesError,
+  loadSavedProfiles,
   removeProfile,
 } = useProSavedProfiles();
 
@@ -43,6 +46,10 @@ const filteredProfiles = computed(() => {
 const openPath = (path: string) => {
   router.push(path);
 };
+
+onMounted(() => {
+  loadSavedProfiles();
+});
 
 const fallbackBadges = (profile: { badges?: string[]; field: string; school: string }) =>
   profile.badges?.length
@@ -134,7 +141,15 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
             </label>
           </div>
 
-          <div v-if="filteredProfiles.length" class="table-wrap">
+          <p v-if="isLoadingSavedProfiles" class="empty-state">
+            Chargement des profils sauvegardés...
+          </p>
+
+          <p v-else-if="savedProfilesError" class="empty-state error-state">
+            {{ savedProfilesError }}
+          </p>
+
+          <div v-else-if="filteredProfiles.length" class="table-wrap">
             <table>
               <thead>
                 <tr>

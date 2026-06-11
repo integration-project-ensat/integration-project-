@@ -214,6 +214,36 @@ const getOpportunities = asyncHandler(async (req, res) => {
   })
 })
 
+const getProfessionnels = asyncHandler(async (req, res) => {
+  const professionnels = await prisma.utilisateur.findMany({
+    where: {
+      role: 'PROFESSIONNEL',
+      est_actif: true,
+      professionnel: { est_valide: true }
+    },
+    select: {
+      id_utilisateur: true,
+      nom: true,
+      prenom: true,
+      profil: { select: { photo_profil: true, adresse: true } },
+      professionnel: { select: { entreprise: true, poste: true, secteur: true } }
+    },
+    orderBy: [{ nom: 'asc' }, { prenom: 'asc' }]
+  })
+
+  res.json({
+    success: true,
+    data: professionnels.map(p => ({
+      id: p.id_utilisateur.toString(),
+      nom: `${p.prenom} ${p.nom}`,
+      poste: p.professionnel?.poste,
+      entreprise: p.professionnel?.entreprise,
+      secteur: p.professionnel?.secteur,
+      photo: p.profil?.photo_profil ?? null
+    }))
+  })
+})
+
 // ==================== ACTIVITÉ RÉCENTE ====================
 
 const getRecentActivity = asyncHandler(async (req, res) => {
@@ -262,5 +292,6 @@ module.exports = {
   getDashboard,
   getProfileProgress,
   getOpportunities,
+  getProfessionnels,
   getRecentActivity
 }

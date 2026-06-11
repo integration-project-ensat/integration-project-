@@ -1,5 +1,6 @@
 const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
+const { recalculerScore } = require('./score.service')
 
 async function ensureAttachedProfessorStudent(professorId, studentId) {
   const attached = await prisma.professeurEtudiant.findUnique({
@@ -206,13 +207,17 @@ const projetService = {
       // ne pas bloquer la validation en cas d'erreur de notification
     }
 
-    return prisma.projet.update({
+    const updatedProjet = await prisma.projet.update({
       where: { id_projet: BigInt(id) },
       data: {
         statut,
         ...(appreciation_professeur !== undefined && { appreciation_professeur })
       }
     })
+
+    await recalculerScore(projet.id_etudiant)
+
+    return updatedProjet
   },
 
   async soumettre(id, etudiantId) {

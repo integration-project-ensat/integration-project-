@@ -7,7 +7,7 @@
     <!-- Droite : recherche + cloche + avatar -->
     <div class="right">
  
-      <div class="search-box">
+      <!-- <div class="search-box">
         <svg class="si" width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -18,17 +18,17 @@
           placeholder="Rechercher..."
           class="si-input"
         />
-      </div>
+      </div> -->
  
       <!-- Cloche -->
-      <button class="icon-btn notif-btn" title="Notifications">
+      <!-- <button class="icon-btn notif-btn" title="Notifications">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
           stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
         <span v-if="unreadCount > 0" class="notif-dot"></span>
-      </button>
+      </button> -->
  
       <!-- Avatar -->
       <div class="avatar-wrapper">

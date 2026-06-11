@@ -18,6 +18,11 @@ const ProfilValidator = {
       .isLength({ max: 100 }).withMessage('Adresse trop longue')
       .trim(),
 
+    body('etablissement')
+      .optional({ nullable: true, checkFalsy: true })
+      .isLength({ max: 200 }).withMessage('Etablissement trop long')
+      .trim(),
+
     body('email_professionnel')
       .optional()
       .isEmail().withMessage('Email professionnel invalide')

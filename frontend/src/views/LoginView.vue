@@ -7,7 +7,7 @@
         <input v-model="email"    type="email"    placeholder="Adresse e-mail" />
         <div class="pass-block">
           <input v-model="password" type="password" placeholder="Mot de passe" />
-          <RouterLink to="/forgot" class="forgot">Oubliez-vous le mot de passe?</RouterLink>
+          <RouterLink to="/forgot" class="forgot">Mot de passe oublié ?</RouterLink>
         </div>
 
         <p v-if="error" class="err">{{ error }}</p>
@@ -46,8 +46,8 @@
       </div>
 
       <p class="switch">
-        Vous ne vous etes pas reinscrit auparavant?
-        <RouterLink to="/signup">_s'inscrire</RouterLink>
+        Vous n'avez pas encore de compte ?
+        <RouterLink to="/signup">S'inscrire</RouterLink>
       </p>
     </div>
   </AuthLayout>
@@ -92,7 +92,7 @@ async function submit() {
     if (errors && errors.length > 0) {
       error.value = errors[0].message
     } else {
-      error.value = e.response?.data?.message || 'Erreur de connexion'
+      error.value = e.response?.data?.message || e.message || 'Erreur de connexion'
     }
   } finally {
     loading.value = false

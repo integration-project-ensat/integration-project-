@@ -1475,6 +1475,14 @@ function cancelBio() { bioForm.value = profile.value.bio; editingAbout.value = f
 const editingContact = ref(false)
 const contactForm = reactive({ email: '', phone: '', website: '', linkedin: '', github: '' })
 
+function buildContactPayload() {
+  const payload: Record<string, string> = {}
+  if (contactForm.phone.trim()) payload.telephone = contactForm.phone.trim()
+  if (contactForm.email.trim()) payload.email_professionnel = contactForm.email.trim()
+  if (contactForm.linkedin.trim()) payload.linkedin_url = contactForm.linkedin.trim()
+  return payload
+}
+
 function openEditContact() {
   Object.assign(contactForm, {
     email: profile.value.email || '',

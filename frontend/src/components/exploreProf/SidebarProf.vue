@@ -41,11 +41,11 @@
         @click="handleNavigation('/prof/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </component>
       <button type="button" class="nav-item logout logout-btn" @click="logout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </button>
     </div>
   </aside>
@@ -69,12 +69,12 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 const currentUser = computed(() => ({
-  name: auth.user?.name || 'Nom Prenom',
+  name: auth.user?.name || 'Nom Prénom',
   email: auth.user?.email || 'Exemple.exemple@univ.etu.ac.ma',
 }));
 
 const initials = computed(() => {
-  const name = currentUser.value.name || 'Nom Prenom'
+  const name = currentUser.value.name || 'Nom Prénom'
   return name
     .split(' ')
     .map((part: string) => part[0] || '')

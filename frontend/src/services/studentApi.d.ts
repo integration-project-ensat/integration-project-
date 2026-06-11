@@ -53,6 +53,7 @@ export interface ApiSuccess<T> {
 declare const studentApi: {
   getStudentDashboard(params?: Record<string, unknown>): Promise<AxiosResponse<ApiSuccess<StudentDashboardData>>>
   getOpportunities(): Promise<AxiosResponse<ApiSuccess<{ professionnels: StudentOpportunity[] }>>>
+  getProfessionnels(): Promise<AxiosResponse<ApiSuccess<StudentOpportunity[]>>>
   getRecentActivity(): Promise<AxiosResponse<ApiSuccess<Array<StudentDashboardActivity & { id: string }>>>>
   getProfileProgress(): Promise<AxiosResponse<ApiSuccess<{
     totalScore: number

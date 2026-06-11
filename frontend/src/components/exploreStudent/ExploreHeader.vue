@@ -124,7 +124,7 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
     {
       id: 4,
       category: "Recommandations",
-      person: "Nom Etudiant",
+      person: "Nom Étudiant",
       action: "a recommande votre profil",
       relatedTitle: "Profil ENSA",
       time: "Il y a 2 j",
@@ -168,7 +168,7 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
     {
       id: 8,
       category: "Commentaires",
-      person: "Nom Etudiant",
+      person: "Nom Étudiant",
       action: "a mentionne votre profil dans",
       relatedTitle: "Projet Cloud",
       time: "Il y a 1 sem",
@@ -181,7 +181,7 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
     {
       id: 9,
       category: "Connexions",
-      person: "Nom Etudiant",
+      person: "Nom Étudiant",
       action: "vous a envoye une demande de connexion",
       relatedTitle: "Profil ENSA",
       time: "Il y a 2 min",
@@ -285,7 +285,7 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
     {
       id: 1,
       category: "Connexions",
-      person: "Nom Etudiant",
+      person: "Nom Étudiant",
       action: "a demande une connexion avec vous",
       relatedTitle: "Profil ENSA",
       time: "Il y a 2 min",
@@ -297,7 +297,7 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
     {
       id: 2,
       category: "Commentaires",
-      person: "Nom Etudiant",
+      person: "Nom Étudiant",
       action: "a commente votre post sur",
       relatedTitle: "Automatisation CI/CD",
       time: "Il y a 22 min",
@@ -309,7 +309,7 @@ const notificationsByUser: Record<UserType, NotificationItem[]> = {
     {
       id: 3,
       category: "Commentaires",
-      person: "Nom Etudiant",
+      person: "Nom Étudiant",
       action: "a repondu a votre conseil sur",
       relatedTitle: "Tests Automatises",
       time: "Il y a 3 j",

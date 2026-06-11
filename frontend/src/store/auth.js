@@ -10,6 +10,15 @@ function normalizeUser(user) {
   }
 }
 
+function isUsableToken(token) {
+  return (
+    typeof token === 'string' &&
+    token.trim() &&
+    token !== 'undefined' &&
+    token !== 'null'
+  )
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user:  null,   // { id, id_utilisateur, email, name }
@@ -26,6 +35,10 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     login(user, token, role) {
+      if (!isUsableToken(token)) {
+        throw new Error("Le backend n'a pas renvoye de token de session")
+      }
+
       const normalizedUser = normalizeUser(user)
       this.user  = normalizedUser
       this.token = token
@@ -48,6 +61,11 @@ export const useAuthStore = defineStore('auth', {
       const token = localStorage.getItem('token')
       const role  = localStorage.getItem('role')
       const storedUser = localStorage.getItem('user')
+
+      if (!isUsableToken(token)) {
+        localStorage.removeItem('token')
+        return
+      }
 
       if (token && role) {
         this.token = token

@@ -89,11 +89,10 @@ const recalculerScore = async (idEtudiant) => {
   if (!donnees) return null;
 
   // Attestations validées liées aux activités de l'étudiant
-  const attestations = await prisma.elementValidable.findMany({
+  const attestations = await prisma.attestation.findMany({
     where: {
-      statut:       'VALIDE',
-      type:         'ATTESTATION',
-      reference_id: { in: donnees.activites.map(a => a.id_activite) }
+      id_etudiant: BigInt(idEtudiant),
+      element: { statut: 'VALIDE' }
     }
   });
 

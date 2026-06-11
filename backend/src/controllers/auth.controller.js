@@ -9,12 +9,41 @@ const asyncHandler = require('../middlewares/asyncHandler');
 const { logConnexion, TypeEvenement, RaisonEchec } = require('../services/journal.service');
 const { révoquerToken } = require('../services/tokenBlacklist.service');
 const { timingSafeCompare } = require('../middlewares/auth.middleware');
+const { setAuthCookie, clearAuthCookie } = require('../utils/authCookie');
 
 const SALT_ROUNDS = 12;
 const JWT_EXPIRES_IN = '24h';
 const VERIFICATION_CODE_EXPIRY_HOURS = 24;
 const ADMIN_LINK_EXPIRY_HOURS = 48;
 // Fonction pour générer un token JWTavec les informations de l'utilisateur et une clé secrète, valable pendant 24 heures.
+const normalizeText = (value) => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .trim()
+  .toLowerCase();
+
+const FILIERES = [
+  { label: 'Informatique', variants: ['Informatique', 'Genie Informatique', 'Génie Informatique', 'GINF', 'INFO'] },
+  { label: 'Reseaux et Telecoms', variants: ['Reseaux et Telecoms', 'Réseaux et Télécoms', 'Reseaux', 'Réseaux', 'GSTR', 'GTR'] },
+  { label: 'Data Science', variants: ['Data Science', 'Data', 'Big Data'] },
+  { label: 'Cybersecurite', variants: ['Cybersecurite', 'Cybersécurité', 'Cybersecurity', 'Securite', 'Sécurité'] },
+  { label: 'IA', variants: ['IA', 'Intelligence Artificielle', 'IID'] },
+  { label: 'Developpement', variants: ['Developpement', 'Développement', 'Web', 'Mobile'] },
+  { label: 'DevOps', variants: ['DevOps'] },
+  { label: 'Cloud', variants: ['Cloud'] },
+  { label: 'Marketing', variants: ['Marketing'] },
+  { label: 'Design', variants: ['Design'] }
+];
+
+function normalizeFiliere(value) {
+  const normalized = normalizeText(value);
+  const match = FILIERES.find((item) =>
+    item.variants.some((variant) => normalizeText(variant) === normalized)
+  );
+
+  return match?.label || String(value || '').trim() || null;
+}
+
 function generateToken(user) {
   return jwt.sign(
     { userId: user.id_utilisateur.toString(), email: user.email, role: user.role,jti:uuidv4() },
@@ -119,7 +148,7 @@ if (role === 'PROFESSIONNEL') {
         data: {
           id_utilisateur: newUser.id_utilisateur,
           numero_etudiant: specificData.numero_etudiant,
-          filiere: specificData.filiere,
+          filiere: normalizeFiliere(specificData.filiere),
           annee_universitaire: specificData.annee_universitaire,
         }
       });
@@ -342,6 +371,7 @@ if (user.auth_provider !== 'LOCAL') {
   });
 // Génération du token JWT et envoi de la réponse avec les données de l'utilisateur (sans le mot de passe)
   const token = generateToken(user);
+  setAuthCookie(res, token);
   console.log('LOGIN REUSSI POUR :', user.email, user.role);
   
   await logConnexion({
@@ -415,9 +445,10 @@ const handleOAuthCallback = async (req, res, provider) => {
   });
 
     const token = generateToken(existingUser);
+    setAuthCookie(res, token);
 
     return res.redirect(
-      `${process.env.FRONTEND_URL}/oauth-success?token=${token}`
+      `${process.env.FRONTEND_URL}/oauth-success?token=${encodeURIComponent(token)}`
     );
   }
 
@@ -547,7 +578,7 @@ const completeOAuthSignup = async (req, res, provider) => {
         data: {
           id_utilisateur: newUser.id_utilisateur,
           numero_etudiant: specificData.numero_etudiant,
-          filiere: specificData.filiere,
+          filiere: normalizeFiliere(specificData.filiere),
           annee_universitaire: specificData.annee_universitaire
         }
       });
@@ -613,6 +644,7 @@ await logConnexion({
 });
 
 const finalToken = generateToken(fullUser);
+setAuthCookie(res, finalToken);
 
   res.status(201).json({
     success: true,
@@ -666,7 +698,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 // ==================== Déconnexion ====================
 
 const logout = asyncHandler(async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const token = req.authToken;
  
   if (token) {
     const decoded = jwt.decode(token);
@@ -681,6 +713,7 @@ const logout = asyncHandler(async (req, res) => {
     }
   }
  
+  clearAuthCookie(res);
   await logConnexion({ type: TypeEvenement.DECONNEXION, req, utilisateur: req.utilisateur });
   res.json({ success: true, message: 'Déconnecté avec succès.' });
 });

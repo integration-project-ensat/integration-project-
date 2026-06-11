@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
+import { profileService } from '../services/profile.service'
 
 const router = useRouter()
 const sidebarOpen = ref(false)
@@ -24,11 +25,12 @@ function showToast(msg: string, type: 'success' | 'error' = 'success') {
 // Données profil
 // ──────────────────────────────────────────────
 const profile = reactive({
+  id:        null as number | null,
   name:      'Nom Prénom',
   title:     'Développeur Full Stack',
   school:    'ENSA Tanger',
-  location:  'Tanger, Maroc',
-  score:     90,
+  location:  '',
+  score:     0,
   recos:     '500+',
   bio:       'Étudiant motivé, passionné par le développement web et les projets collaboratifs.',
   email:     'exemple@univ.etu.ac.ma',
@@ -40,6 +42,46 @@ const profile = reactive({
   banner:    null as string | null,
   bannerColor: '#1a3c5e',
 })
+
+function applyBackendProfile(data: any) {
+  profile.id = Number(data?.id ?? 0) || null
+  profile.name = data?.name || profile.name
+  profile.title = data?.title || profile.title
+  profile.school = data?.school || profile.school
+  profile.location = data?.location || profile.location
+  profile.score = Number(data?.score ?? 0)
+  profile.recos = data?.recos || profile.recos
+  profile.bio = data?.bio || ''
+  profile.email = data?.email || ''
+  profile.phone = data?.phone || ''
+  profile.website = data?.website || ''
+  profile.linkedin = data?.linkedin || ''
+  profile.github = data?.github || ''
+  profile.avatar = data?.avatar || null
+  profile.banner = data?.banner || null
+}
+
+async function loadProfile() {
+  try {
+    applyBackendProfile(await profileService.getCurrentUser())
+  } catch (error) {
+    console.warn('Chargement du profil impossible', error)
+    showToast('Impossible de charger le profil', 'error')
+  }
+}
+
+async function persistProfile(payload: Record<string, unknown>) {
+  await profileService.updateProfile(profile.id, payload)
+  applyBackendProfile(await profileService.getCurrentUser())
+}
+
+function buildContactPayload() {
+  const payload: Record<string, string> = {}
+  if (contactForm.phone.trim()) payload.telephone = contactForm.phone.trim()
+  if (contactForm.email.trim()) payload.email_professionnel = contactForm.email.trim()
+  if (contactForm.linkedin.trim()) payload.linkedin_url = contactForm.linkedin.trim()
+  return payload
+}
 
 // Skills
 const techSkills = ref(['Vue.js', 'TypeScript', 'Node.js', 'Docker', 'PostgreSQL'])
@@ -211,6 +253,8 @@ const initials = computed(() =>
   profile.name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
 )
 
+onMounted(loadProfile)
+
 // ──────────────────────────────────────────────
 // Section save helpers
 // ──────────────────────────────────────────────
@@ -218,20 +262,49 @@ function openEditInfo() {
   Object.assign(infoForm, { name: profile.name, title: profile.title, school: profile.school, location: profile.location, score: profile.score })
   editingInfo.value = true
 }
-function saveInfo() {
-  Object.assign(profile, infoForm)
-  editingInfo.value = false
-  showToast('Informations enregistrées')
+async function saveInfo() {
+  try {
+    Object.assign(profile, infoForm)
+    await persistProfile({
+      adresse: infoForm.location,
+      etablissement: infoForm.school,
+    })
+    editingInfo.value = false
+    showToast('Informations enregistrées')
+  } catch (error) {
+    console.warn('Sauvegarde informations impossible', error)
+    showToast('Erreur lors de la sauvegarde', 'error')
+  }
 }
 
 function openEditAbout() { aboutForm.bio = profile.bio; editingAbout.value = true }
-function saveAbout() { profile.bio = aboutForm.bio; editingAbout.value = false; showToast('Bio enregistrée') }
+async function saveAbout() {
+  try {
+    profile.bio = aboutForm.bio
+    await persistProfile({ bio: aboutForm.bio })
+    editingAbout.value = false
+    showToast('Bio enregistrée')
+  } catch (error) {
+    console.warn('Sauvegarde bio impossible', error)
+    showToast('Erreur lors de la sauvegarde', 'error')
+  }
+}
 
 function openEditContact() {
   Object.assign(contactForm, { email: profile.email, phone: profile.phone, website: profile.website, linkedin: profile.linkedin, github: profile.github })
   editingContact.value = true
 }
-function saveContact() { Object.assign(profile, contactForm); editingContact.value = false; showToast('Contact enregistré') }
+async function saveContact() {
+  try {
+    Object.assign(profile, contactForm)
+    await persistProfile(buildContactPayload())
+    editingContact.value = false
+    showToast('Contact enregistré')
+  } catch (error) {
+    console.warn('Sauvegarde contact impossible', error)
+    showToast('Erreur lors de la sauvegarde', 'error')
+  }
+}
 
 function openEditSkills() {
   skillsForm.tech = [...techSkills.value]

@@ -2,17 +2,17 @@
   <aside class="sidebar" :class="{ open: isOpen }">
     <component
       :is="forceNavigation ? 'a' : RouterLink"
-      :to="forceNavigation ? undefined : profileLink"
-      :href="forceNavigation ? profileLink : undefined"
+      :to="forceNavigation ? undefined : '/profile'"
+      :href="forceNavigation ? '/profile' : undefined"
       class="sidebar-user"
-      @click="handleNavigation(profileLink, $event)"
+      @click="handleNavigation('/profile', $event)"
     >
       <div class="avatar-sm">
         <span>{{ initials }}</span>
       </div>
       <div class="user-info">
-        <p class="user-name">{{ currentUser.name }}</p>
-        <p class="user-email">{{ currentUser.email }}</p>
+        <p class="user-name">{{ userName }}</p>
+        <p class="user-email">{{ userEmail }}</p>
       </div>
     </component>
 
@@ -44,11 +44,11 @@
         @click="handleNavigation('/student/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </component>
       <a href="/login" class="nav-item logout" @click="handleLogout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </a>
     </div>
   </aside>
@@ -72,20 +72,25 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
-const currentUser = computed(() => ({
-  name: auth.user?.name || 'Nom Prenom',
-  email: auth.user?.email || 'Exemple.exemple@univ.etu.ac.ma',
-}));
+const userName = computed(() => {
+  const user = auth.user
+  const fullName = user?.name || [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
+  return fullName || 'Étudiant'
+})
 
-const initials = computed(() => currentUser.value.name
-  .split(' ')
-  .map((part: string) => part[0] || '')
-  .join('')
-  .slice(0, 2)
-  .toUpperCase()
-);
+const userEmail = computed(() => auth.user?.email || '')
 
-const profileLink = computed(() => '/student/profile');
+const initials = computed(() => {
+  const words = userName.value.split(/\s+/).filter(Boolean)
+  const letters = words.length > 1
+    ? [words[0], words[words.length - 1]]
+    : [words[0]]
+
+  return letters
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 2) || 'E'
+})
 
 function normalizedPath(path: string) {
   return path.split("?")[0];
@@ -98,7 +103,7 @@ function isActive(path: string) {
 function handleNavigation(path: string, event?: Event) {
   if (!props.forceNavigation) return;
   event?.preventDefault();
-  router.push(path);
+  window.location.assign(path);
 }
 
 async function handleLogout(event: Event) {
@@ -207,19 +212,19 @@ const navItems = [
   },
   {
     path: "/portfolio",
-    label: "My Portfolio",
+    label: "Mon portfolio",
     icon: icons.portfolio,
     activeIcon: icons.portfolioFill,
   },
   {
     path: "/ai-analyzer",
-    label: "AI Portfolio",
+    label: "Portfolio IA",
     icon: icons.ai,
     activeIcon: icons.aiFill,
   },
   {
     path: "/lettres",
-    label: "Lettres de Recos",
+    label: "Lettres de recommandation",
     icon: icons.letter,
     activeIcon: icons.letterFill,
   },

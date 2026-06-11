@@ -24,19 +24,19 @@ router.use(authentifier);
 
 // GET /competences/me
 router.get(
-  '/me',
+  '/moi',
   competenceController.getUserCompetences
 );
 
 // GET /competences/me/suggestions
 router.get(
-  '/me/suggestions',
+  '/moi/suggestions',
   competenceController.getUserSuggestions
 );
 
 // POST /competences/me
 router.post(
-  '/me',
+  '/moi',
   autoriserRoles(ROLES.ETUDIANT),
   validate(competenceValidator.addUserCompetence),
   competenceController.addUserCompetence
@@ -44,7 +44,7 @@ router.post(
 
 // POST /competences/me/bulk
 router.post(
-  '/me/bulk',
+  '/moi/bulk',
   autoriserRoles(ROLES.ETUDIANT),
   validate(competenceValidator.bulkUserCompetences),
   competenceController.addBulkUserCompetences
@@ -52,7 +52,7 @@ router.post(
 
 // PATCH /competences/me/:id
 router.patch(
-  '/me/:id',
+  '/moi/:id',
   autoriserRoles(ROLES.ETUDIANT),
   validate(idParamValidator),
   validate(competenceValidator.updateUserCompetence),
@@ -61,7 +61,7 @@ router.patch(
 
 // DELETE /competences/me/:id
 router.delete(
-  '/me/:id',
+  '/moi/:id',
   autoriserRoles(ROLES.ETUDIANT),
   validate(idParamValidator),
   competenceController.removeUserCompetence

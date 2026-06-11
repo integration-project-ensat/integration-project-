@@ -30,16 +30,16 @@
 
         <!-- Filters bar -->
         <div class="filters-bar">
-          <div class="search-input">
+          <!-- <div class="search-input">
             <Search :size="14" class="si" />
             <input
               v-model="filters.search"
               type="text"
               placeholder="Chercher un portfolio ou un étudiant..."
             />
-          </div>
+          </div> -->
 
-          <div class="select-wrapper">
+          <!-- <div class="select-wrapper">
             <select v-model="filters.category">
               <option value="">Toutes catégories</option>
               <option v-for="c in categories" :key="c" :value="c">
@@ -47,9 +47,9 @@
               </option>
             </select>
             <ChevronDown :size="13" class="sa" />
-          </div>
+          </div> -->
 
-          <div class="view-toggle">
+          <!-- <div class="view-toggle">
             <button
               :class="{ active: viewMode === 'grid' }"
               @click="viewMode = 'grid'"
@@ -62,7 +62,7 @@
             >
               <List :size="16" />
             </button>
-          </div>
+          </div> -->
         </div>
 
         <!-- Grid view -->
@@ -132,7 +132,7 @@
                 <th>Catégorie</th>
                 <th>Auteur</th>
                 <th>Date</th>
-                <th>Statut</th>
+                
                 <th>Actions</th>
               </tr>
             </thead>
@@ -337,11 +337,11 @@ const createTemplate = async () => {
   await loadTemplates();
 };
 /* ── Status helpers ──────────────────── */
-const statusLabel = {
-  verified: "Vérifié",
-  pending: "En attente",
-  revision: "En révision",
-};
+// const statusLabel = {
+//   verified: "Vérifié",
+//   pending: "En attente",
+//   revision: "En révision",
+// };
 
 const statusIcon = (s) => {
   if (s === "verified") return CheckCircle;

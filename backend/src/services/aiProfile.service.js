@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const prisma = require('../../prisma/client')
+const { getAuthTokenFromRequest } = require('../utils/authCookie')
 
 function unique(values) {
   return [...new Set(values.filter(Boolean).map((value) => String(value).trim()).filter(Boolean))]
@@ -14,11 +15,10 @@ function extractGithubLanguages(langages) {
 }
 
 function getUserIdFromToken(req) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ') || !process.env.JWT_SECRET) return null
+  const token = getAuthTokenFromRequest(req)
+  if (!token || !process.env.JWT_SECRET) return null
 
   try {
-    const token = authHeader.split(' ')[1]
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
     return decoded.userId ? BigInt(decoded.userId) : null
   } catch {

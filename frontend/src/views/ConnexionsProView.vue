@@ -68,8 +68,8 @@ const visibleRequests = computed(() =>
 
 const emptyStateMessage = computed(() =>
   activeTab.value === "accepted"
-    ? "Aucune connexion acceptee pour le moment."
-    : "Aucune demande dans cette categorie.",
+    ? "Aucune connexion acceptée pour le moment."
+    : "Aucune demande dans cette catégorie.",
 );
 
 const hasAcceptedConnections = computed(() => acceptedRequests.value.length > 0);
@@ -254,7 +254,10 @@ const loadConnections = async () => {
 
   } catch (err: any) {
     if (err?.response?.status === 401) {
-      router.push("/login");
+      error.value =
+        err?.response?.data?.message ||
+        "Impossible de charger les connexions pour cette session.";
+      rawConnexionData.value = err?.response?.data ?? null;
       return;
     }
     error.value =

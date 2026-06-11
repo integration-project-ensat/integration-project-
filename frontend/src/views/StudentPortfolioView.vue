@@ -378,7 +378,9 @@ import { postService } from "../services/post.service";
 import { profileService } from "../services/profile.service";
 import { recommendationService } from "../services/recommendation.service";
 import { attestationService } from "../services/attestation.service";
-
+import { projetService } from "../services/projet.service";
+import { activiteService } from "../services/activite.service";
+import { stageService } from "../services/stage.service";
 const showTemplateModal = ref(false);
 const templates = ref<Array<{ id_modele: number; nom: string }>>([]);
 const currentTemplate = ref<number>(1);
@@ -482,9 +484,9 @@ const selectTemplate = async (id_modele: number) => {
       throw new Error("Impossible de trouver l'etudiant du portfolio.");
     }
 
-    await portfolioService.changeTemplate(selectedTemplateId)
+    await portfolioService.changeTemplate(selectedTemplateId);
 
-    showTemplateModal.value = false
+    showTemplateModal.value = false;
 
     const templateRoutes: Record<number, string> = {
       1: `/portfolio/${studentId}`,
@@ -492,12 +494,13 @@ const selectTemplate = async (id_modele: number) => {
       3: `/portfolio-professional/${studentId}`,
     };
 
-    await router.push(templateRoutes[selectedTemplateId] ?? `/portfolio/${studentId}`);
-
+    await router.push(
+      templateRoutes[selectedTemplateId] ?? `/portfolio/${studentId}`,
+    );
   } catch (err) {
-    console.error(err)
+    console.error(err);
   }
-}
+};
 
 const profileStudentId = computed(() => {
   const id = Number(route.params.id);
@@ -623,6 +626,14 @@ function parseStructuredContent(content: string) {
   }
 }
 
+function responseList(response: any) {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  return [];
+}
+
 function categoryLabel(category: string) {
   const normalized = String(category || "").toUpperCase();
   if (normalized.includes("COMPORT")) return "Soft Skills";
@@ -690,6 +701,23 @@ function mapBackendProject(project: any, index: number): Project {
       inferGithubUrl(project?.description, project?.resultats),
     images: Array.isArray(project?.captures)
       ? project.captures.map(resolveBackendAsset).filter(Boolean)
+      : [],
+  };
+}
+
+function mapBackendActivity(activity: any, index: number): Project {
+  const rawId = Number(activity?.id_activite ?? activity?.id ?? index + 1);
+  return {
+    id: 900000 + (Number.isFinite(rawId) ? rawId : index + 1),
+    icon: "AC",
+    title: activity?.nom || activity?.title || `Activite ${index + 1}`,
+    type: activity?.type || "Activite",
+    description: activity?.description || "Aucune description.",
+    details: activity?.description || "Aucun detail supplementaire.",
+    tech: [],
+    github: "",
+    images: activity?.justificatif_url
+      ? [resolveBackendAsset(activity.justificatif_url)]
       : [],
   };
 }
@@ -871,6 +899,9 @@ async function loadPortfolio() {
       profileResponse,
       postsResponse,
       recommendationsResponse,
+      projetsResponse,
+      activitesResponse,
+      stagesResponse,
     ] = await Promise.all([
       attestationService.getAttestations({
         etudiantId: profileStudentId.value,
@@ -883,26 +914,38 @@ async function loadPortfolio() {
         id_etudiant_cible: profileStudentId.value,
         statut: "VALIDE",
       }),
+      projetService.getMesProjets({
+        etudiantId: profileStudentId.value,
+        statut: "VALIDE",
+      }),
+
+      activiteService.getMesActivites({
+        etudiantId: profileStudentId.value,
+        statut: "ATTESTEE_INSTITUTION",
+      }),
+
+      stageService.getMesStages({
+        etudiantId: profileStudentId.value,
+        statut: "VALIDE",
+      }),
     ]);
 
     mapProfileData(profileResponse, portfolioResponse?.data ?? {});
 
     currentTemplate.value = Number(
-  portfolioResponse?.data?.id_modele ?? 1
-);
+      portfolioResponse?.data?.modele?.id_modele ??
+        portfolioResponse?.data?.id_modele ??
+        1,
+    );
     if (currentTemplate.value === 2) {
-  await router.replace(
-    `/portfolio-creative/${profileStudentId.value}`
-  )
-  return
-}
+      await router.replace(`/portfolio-creative/${profileStudentId.value}`);
+      return;
+    }
 
-if (currentTemplate.value === 3) {
-  await router.replace(
-    `/portfolio-professional/${profileStudentId.value}`
-  )
-  return
-}
+    if (currentTemplate.value === 3) {
+      await router.replace(`/portfolio-professional/${profileStudentId.value}`);
+      return;
+    }
     console.log("Template actuel :", currentTemplate.value);
 
     const validatedProjects = Array.isArray(profileResponse?.projectsData)
@@ -918,21 +961,53 @@ if (currentTemplate.value === 3) {
             Number(profileStudentId.value),
         )
       : [];
-    if (validatedProjects.length) {
-      projects.value = validatedProjects.map(mapBackendProject);
-      setSelectedProjectFallback();
-    } else {
-      mapProjects(posts);
-    }
+    const projets = responseList(projetsResponse);
+    const stages = responseList(stagesResponse);
+    const projectSource = projets.length ? projets : validatedProjects;
+
+    experiences.value = stages.map((stage: any) => ({
+      role: stage.poste || "Stage",
+      company: stage.entreprise || "",
+      period: formatStagePeriod(stage.date_debut, stage.date_fin),
+      location: stage.lieu || "",
+      mode: stage.mode || "",
+      description: stage.missions || "",
+    }));
+    const activites = responseList(activitesResponse);
+
+projects.value = [
+  ...projectSource.map(mapBackendProject),
+  ...(projectSource.length ? [] : posts.map(mapPostProject)),
+];
+
+experiences.value = [
+  ...stages.map((stage: any) => ({
+    role: stage.poste || "Stage",
+    company: stage.entreprise || "",
+    period: formatStagePeriod(stage.date_debut, stage.date_fin),
+    location: stage.lieu || "",
+    mode: stage.mode || "",
+    description: stage.missions || "",
+  })),
+
+  ...activites.map((activite: any) => ({
+    role: activite.nom || "Activité",
+    company: activite.type || "Activité parascolaire",
+    period: activite.periode || "",
+    location: "",
+    mode: "",
+    description: activite.description || "",
+  })),
+];
+
+    setSelectedProjectFallback();
 
     const recommendations = Array.isArray(recommendationsResponse?.data?.data)
       ? recommendationsResponse.data.data
       : [];
     mapRecommendations(recommendations);
 
-    const attestations = Array.isArray(attestationsResponse?.data?.data)
-      ? attestationsResponse.data.data
-      : [];
+    const attestations = responseList(attestationsResponse);
 
     certifications.value = attestations.map(
       (attestation: any, index: number) => ({

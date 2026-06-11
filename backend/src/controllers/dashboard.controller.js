@@ -262,56 +262,29 @@ const getProDashboard = asyncHandler(async (req, res) => {
     }),
   ]);
 
-  const acceptedConnectionsList = await prisma.connexion.findMany({
+  const professionalStages = await prisma.stage.findMany({
     where: {
-      statut: "ACCEPTEE",
-      OR: [{ demandeur_id: userId }, { destinataire_id: userId }],
+      id_professionnel: userId,
+      statut: {
+        not: "REFUSE",
+      },
     },
     include: {
-      demandeur: {
+      etudiant: {
         select: {
           id_utilisateur: true,
-          nom: true,
-          prenom: true,
-          role: true,
-          profil: { select: { adresse: true } },
-          etudiant: {
+          filiere: true,
+          utilisateur: {
             select: {
-              filiere: true,
-              score_credibilite: { select: { score_total: true } },
-              badges: {
+              id_utilisateur: true,
+              nom: true,
+              prenom: true,
+              profil: { select: { adresse: true } },
+              etudiant: {
                 select: {
-                  badge: {
-                    select: {
-                      nom: true,
-                      icone_url: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      destinataire: {
-        select: {
-          id_utilisateur: true,
-          nom: true,
-          prenom: true,
-          role: true,
-          profil: { select: { adresse: true } },
-          etudiant: {
-            select: {
-              filiere: true,
-              score_credibilite: { select: { score_total: true } },
-              badges: {
-                select: {
-                  badge: {
-                    select: {
-                      nom: true,
-                      icone_url: true,
-                    },
-                  },
+                  filiere: true,
+                  etablissement: true,
+                  score_credibilite: { select: { score_total: true } },
                 },
               },
             },
@@ -319,36 +292,32 @@ const getProDashboard = asyncHandler(async (req, res) => {
         },
       },
     },
-    orderBy: { date_reponse: "desc" },
+    orderBy: [{ date_debut: "desc" }, { id_stage: "desc" }],
   });
 
-  const interns = acceptedConnectionsList
-    .map((connexion) => {
-      const otherUser =
-        connexion.demandeur.role === "ETUDIANT"
-          ? connexion.demandeur
-          : connexion.destinataire.role === "ETUDIANT"
-            ? connexion.destinataire
-            : null;
-      if (!otherUser) return null;
-      const fullName = formatName(otherUser);
+  const now = new Date();
+  const interns = professionalStages
+    .map((stage) => {
+      const studentUser = stage.etudiant?.utilisateur;
+      if (!studentUser) return null;
+      const fullName = formatName(studentUser);
+      const endDate = stage.date_fin ? new Date(stage.date_fin) : null;
+
       return {
-        id: otherUser.id_utilisateur.toString(),
+        id: stage.id_stage.toString(),
         initials: toInitials(fullName),
         name: fullName,
-        school: otherUser.etudiant?.filiere || "Étudiant",
-        field: otherUser.etudiant?.filiere || "—",
-        city: otherUser.profil?.adresse || "—",
-        score: Number(otherUser.etudiant?.score_credibilite?.score_total ?? 0),
-        startDate: connexion.date_reponse
-          ? connexion.date_reponse.toISOString().split("T")[0]
-          : connexion.date_demande.toISOString().split("T")[0],
-        badges: (otherUser.etudiant?.badges || [])
-          .map((item) => item.badge?.nom)
-          .filter(Boolean),
-        status: "Actif",
-        profilePath: `/profile/student/${otherUser.id_utilisateur}?from=pro`,
-        portfolioPath: `/portfolio/${otherUser.id_utilisateur}?from=pro`,
+        school: stage.etablissement || studentUser.etudiant?.etablissement || "Établissement non renseigné",
+        field: studentUser.etudiant?.filiere || "—",
+        city: studentUser.profil?.adresse || "—",
+        score: Number(studentUser.etudiant?.score_credibilite?.score_total ?? 0),
+        startDate: stage.date_debut
+          ? stage.date_debut.toISOString().split("T")[0]
+          : "—",
+        badges: [],
+        status: !endDate || endDate >= now ? "Actif" : "Terminé",
+        profilePath: `/profile/student/${studentUser.id_utilisateur}?from=pro`,
+        portfolioPath: `/portfolio/${studentUser.id_utilisateur}?from=pro`,
       };
     })
     .filter(Boolean);
@@ -359,7 +328,7 @@ const getProDashboard = asyncHandler(async (req, res) => {
     return {
       id: saved.id,
       name: fullName,
-      school: etudiant.etudiant?.filiere || "Étudiant",
+      school: etudiant.etudiant?.etablissement || "Établissement non renseigné",
       field: etudiant.etudiant?.filiere || "—",
       city: etudiant.profil?.adresse || "—",
       score: Number(etudiant.etudiant?.score_credibilite?.score_total ?? 0),
@@ -367,11 +336,14 @@ const getProDashboard = asyncHandler(async (req, res) => {
       badges: (etudiant.etudiant?.badges || [])
         .map((item) => item.badge?.nom)
         .filter(Boolean),
-      hasPortfolio: Boolean(etudiant.etudiant?.score_credibilite),
+      hasPortfolio: Boolean(etudiant.etudiant?.portfolio?.est_public),
       profilePath: `/profile/student/${etudiant.id_utilisateur}?from=pro`,
       portfolioPath: `/portfolio/${etudiant.id_utilisateur}?from=pro`,
     };
   });
+  const activeInternsCount = interns.filter(
+    (intern) => intern.status === "Actif",
+  ).length;
 
   return res.json({
     success: true,
@@ -381,7 +353,7 @@ const getProDashboard = asyncHandler(async (req, res) => {
       },
       stats: {
         totalInterns: interns.length,
-        activeInterns: interns.length,
+        activeInterns: activeInternsCount,
         savedProfiles: savedProfilesData.length,
         publishedOffers: publishedOffers,
       },
