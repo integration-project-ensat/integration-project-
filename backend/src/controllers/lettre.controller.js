@@ -3,6 +3,24 @@ const exportService = require('../services/lettreExport.service')
 
 const getConnectedUserId = (req) => req.utilisateur?.id_utilisateur
 
+exports.createRequest = async (req, res) => {
+  try {
+    const data = await lettreService.createRequest({
+      id_etudiant: getConnectedUserId(req),
+      id_professeur: req.body.id_professeur,
+      motif: req.body.motif,
+      date_souhaitee: req.body.date_souhaitee,
+    })
+    res.status(201).json({
+      success: true,
+      message: 'Demande de lettre envoyee avec succes',
+      data,
+    })
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message })
+  }
+}
+
 exports.getLettres = async (req, res) => {
   try {
     const data = await lettreService.getLettres(req.params.id_etudiant, getConnectedUserId(req))

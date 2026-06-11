@@ -15,7 +15,6 @@ interface Activite {
 }
 
 const sidebarOpen = ref(true);
-const showForm = ref(false);
 
 const categorieLabels: Record<Activite["categorie"], string> = {
   sport: "Sport",
@@ -35,15 +34,6 @@ const categorieColors: Record<Activite["categorie"], string> = {
 
 const activites = ref<Activite[]>([]);
 
-const newActivite = ref({
-  titre: "",
-  organisation: "",
-  categorie: "associatif" as Activite["categorie"],
-  dateDebut: "",
-  dateFin: "",
-  description: "",
-});
-
 function fromBackendType(type: string | null | undefined): Activite["categorie"] {
   switch (String(type || '').toUpperCase()) {
     case 'COMPETITION':
@@ -56,21 +46,6 @@ function fromBackendType(type: string | null | undefined): Activite["categorie"]
       return 'associatif';
     default:
       return 'autre';
-  }
-}
-
-function toBackendType(type: Activite["categorie"]) {
-  switch (type) {
-    case 'sport':
-      return 'COMPETITION';
-    case 'culturel':
-      return 'EVENEMENT';
-    case 'benevolat':
-      return 'ASSOCIATION';
-    case 'associatif':
-      return 'CLUB';
-    default:
-      return 'HACKATHON';
   }
 }
 
@@ -104,30 +79,6 @@ async function loadActivites() {
   } catch (error) {
     console.warn("Chargement des activites impossible", error);
     activites.value = [];
-  }
-}
-
-async function ajouterActivite() {
-  if (!newActivite.value.titre || !newActivite.value.organisation) return;
-  try {
-    await activiteService.createActivite({
-      nom: newActivite.value.titre,
-      type: toBackendType(newActivite.value.categorie),
-      periode: [newActivite.value.dateDebut, newActivite.value.dateFin].filter(Boolean).join(' - '),
-      description: newActivite.value.description || newActivite.value.organisation,
-    });
-    newActivite.value = {
-      titre: "",
-      organisation: "",
-      categorie: "associatif",
-      dateDebut: "",
-      dateFin: "",
-      description: "",
-    };
-    showForm.value = false;
-    await loadActivites();
-  } catch (error) {
-    console.warn("Creation de l'activite impossible", error);
   }
 }
 
@@ -173,63 +124,14 @@ onMounted(() => {
               <p class="panel-subtitle">{{ activites.length }} activité{{ activites.length > 1 ? 's' : '' }} enregistrée{{ activites.length > 1 ? 's' : '' }}</p>
             </div>
           </div>
-          <button class="btn-add" @click="showForm = !showForm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Ajouter une activité
-          </button>
-        </div>
-
-        <!-- Formulaire d'ajout -->
-        <div v-if="showForm" class="form-card">
-          <h2 class="form-title">Nouvelle activité</h2>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Titre *</label>
-              <input v-model="newActivite.titre" placeholder="Ex: Capitaine équipe de football" />
-            </div>
-            <div class="form-group">
-              <label>Organisation *</label>
-              <input v-model="newActivite.organisation" placeholder="Ex: ENSA Tanger, IEEE..." />
-            </div>
-            <div class="form-group">
-              <label>Catégorie</label>
-              <select v-model="newActivite.categorie">
-                <option value="sport">Sport</option>
-                <option value="culturel">Culturel</option>
-                <option value="associatif">Associatif</option>
-                <option value="benevolat">Bénévolat</option>
-                <option value="autre">Autre</option>
-              </select>
-            </div>
-            <div class="form-group"></div>
-            <div class="form-group">
-              <label>Date de début</label>
-              <input type="month" v-model="newActivite.dateDebut" />
-            </div>
-            <div class="form-group">
-              <label>Date de fin</label>
-              <input type="month" v-model="newActivite.dateFin" />
-            </div>
-          </div>
-          <div class="form-group full">
-            <label>Description</label>
-            <textarea v-model="newActivite.description" placeholder="Décrivez votre rôle et vos réalisations..." rows="3" />
-          </div>
-          <div class="form-actions">
-            <button class="btn-cancel" @click="showForm = false">Annuler</button>
-            <button class="btn-save" @click="ajouterActivite">Enregistrer</button>
-          </div>
         </div>
 
         <!-- État vide -->
-        <div v-if="activites.length === 0 && !showForm" class="empty-state">
+        <div v-if="activites.length === 0" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
           <p>Aucune activité parascolaire enregistrée.</p>
-          <button class="btn-add" @click="showForm = true">Ajouter votre première activité</button>
         </div>
 
         <!-- Liste -->

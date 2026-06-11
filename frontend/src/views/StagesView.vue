@@ -3,8 +3,6 @@ import { onMounted, ref } from "vue";
 import Sidebar from "../components/exploreStudent/Sidebar.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { stageService } from "../services/stage.service";
-import studentApi from "../services/studentApi";
-import { profileService } from "../services/profile.service";
 
 interface Stage {
   id: number;
@@ -18,30 +16,8 @@ interface Stage {
   competences: string[];
 }
 
-interface Professional {
-  id: string;
-  nom: string;
-  entreprise: string;
-  poste?: string;
-}
-
 const sidebarOpen = ref(true);
-const showForm = ref(false);
 const stages = ref<Stage[]>([]);
-const professionals = ref<Professional[]>([]);
-const profileSchool = ref("");
-
-const newStage = ref({
-  id_professionnel: "",
-  entreprise: "",
-  etablissement: "",
-  poste: "",
-  lieu: "",
-  dateDebut: "",
-  dateFin: "",
-  description: "",
-  competences: "",
-});
 
 function mapStage(item: any): Stage {
   return {
@@ -68,75 +44,6 @@ async function loadStages() {
   }
 }
 
-async function loadProfileSchool() {
-  try {
-    const profile = await profileService.getCurrentUser();
-    profileSchool.value = profile.school || "";
-    if (!newStage.value.etablissement) {
-      newStage.value.etablissement = profileSchool.value;
-    }
-  } catch (error) {
-    console.warn("Chargement de l'etablissement du profil impossible", error);
-  }
-}
-
-async function loadProfessionals() {
-  try {
-    const { data } = await studentApi.getProfessionnels();
-    professionals.value = Array.isArray(data?.data)
-      ? data.data.map((professional) => ({
-          id: professional.id,
-          nom: professional.nom,
-          entreprise: professional.entreprise || "",
-          poste: professional.poste || undefined,
-        }))
-      : [];
-  } catch (error) {
-    console.warn("Chargement des professionnels impossible", error);
-    professionals.value = [];
-  }
-}
-
-function syncSelectedProfessional() {
-  const selected = professionals.value.find(
-    (professional) => professional.id === newStage.value.id_professionnel,
-  );
-  if (selected?.entreprise) {
-    newStage.value.entreprise = selected.entreprise;
-  }
-}
-
-async function ajouterStage() {
-  if (!newStage.value.id_professionnel || !newStage.value.entreprise || !newStage.value.poste) return;
-  try {
-    await stageService.createStage({
-      id_professionnel: newStage.value.id_professionnel,
-      entreprise: newStage.value.entreprise,
-      etablissement: newStage.value.etablissement,
-      poste: newStage.value.poste,
-      missions: newStage.value.description,
-      technologies: newStage.value.competences,
-      date_debut: newStage.value.dateDebut ? `${newStage.value.dateDebut}-01` : undefined,
-      date_fin: newStage.value.dateFin ? `${newStage.value.dateFin}-01` : undefined,
-    });
-    newStage.value = {
-      id_professionnel: "",
-      entreprise: "",
-      etablissement: profileSchool.value,
-      poste: "",
-      lieu: "",
-      dateDebut: "",
-      dateFin: "",
-      description: "",
-      competences: "",
-    };
-    showForm.value = false;
-    await loadStages();
-  } catch (error) {
-    console.warn("Creation du stage impossible", error);
-  }
-}
-
 async function supprimerStage(id: number) {
   try {
     await stageService.deleteStage(id);
@@ -155,8 +62,6 @@ function formatDate(d: string) {
 
 onMounted(() => {
   loadStages();
-  loadProfessionals();
-  loadProfileSchool();
 });
 </script>
 
@@ -182,74 +87,14 @@ onMounted(() => {
               <p class="panel-subtitle">{{ stages.length }} stage{{ stages.length > 1 ? 's' : '' }} enregistré{{ stages.length > 1 ? 's' : '' }}</p>
             </div>
           </div>
-          <button class="btn-add" @click="showForm = !showForm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Ajouter un stage
-          </button>
         </div>
 
-        <!-- Formulaire d'ajout -->
-        <div v-if="showForm" class="form-card">
-          <h2 class="form-title">Nouveau stage</h2>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Professionnel / entreprise *</label>
-              <select v-model="newStage.id_professionnel" @change="syncSelectedProfessional">
-                <option value="">Choisir un professionnel</option>
-                <option
-                  v-for="professional in professionals"
-                  :key="professional.id"
-                  :value="professional.id"
-                >
-                  {{ professional.entreprise }} - {{ professional.nom }}
-                </option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Poste *</label>
-              <input v-model="newStage.poste" placeholder="Ex: Développeur Full Stack" />
-            </div>
-            <div class="form-group">
-              <label>Établissement</label>
-              <input v-model="newStage.etablissement" placeholder="Ex: ENSA Tanger" />
-            </div>
-            <div class="form-group">
-              <label>Lieu</label>
-              <input v-model="newStage.lieu" placeholder="Ex: Casablanca, Maroc" />
-            </div>
-            <div class="form-group">
-              <label>Compétences acquises</label>
-              <input v-model="newStage.competences" placeholder="Ex: Vue 3, Python, Docker (séparées par des virgules)" />
-            </div>
-            <div class="form-group">
-              <label>Date de début</label>
-              <input type="month" v-model="newStage.dateDebut" />
-            </div>
-            <div class="form-group">
-              <label>Date de fin</label>
-              <input type="month" v-model="newStage.dateFin" />
-            </div>
-          </div>
-          <div class="form-group full">
-            <label>Description</label>
-            <textarea v-model="newStage.description" placeholder="Décrivez vos missions et réalisations..." rows="3" />
-          </div>
-          <div class="form-actions">
-            <button class="btn-cancel" @click="showForm = false">Annuler</button>
-            <button class="btn-save" @click="ajouterStage">Enregistrer</button>
-          </div>
-        </div>
-
-        <!-- Liste des stages -->
-        <div v-if="stages.length === 0 && !showForm" class="empty-state">
+        <div v-if="stages.length === 0" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5">
             <rect x="2" y="7" width="20" height="14" rx="2"/>
             <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
           </svg>
           <p>Aucun stage enregistré pour le moment.</p>
-          <button class="btn-add" @click="showForm = true">Ajouter votre premier stage</button>
         </div>
 
         <div class="stages-list">

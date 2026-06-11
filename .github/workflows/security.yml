@@ -66,6 +66,8 @@ jobs:
 
       - name: "Demarrer Staging"
         run: |
+          echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
+
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
@@ -226,6 +228,7 @@ jobs:
       - name: "Arreter Staging"
         if: always()
         run: |
+          echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \

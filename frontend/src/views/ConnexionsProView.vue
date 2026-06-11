@@ -7,6 +7,7 @@ import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { connexionService } from "../services/connexion.service";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 const router = useRouter();
 const route = useRoute();
@@ -23,6 +24,7 @@ interface ProConnectionRequest {
   name: string;
   school: string;
   field: string;
+  badges: string[];
   message: string;
   time: string;
   status: ProConnectionStatus;
@@ -89,14 +91,13 @@ const formatRelativeDate = (dateValue?: string | null) => {
   return `Il y a ${diffDays} jours`;
 };
 
-const connectionBadges = (field: string) => {
-  const normalized = field.toLowerCase();
-  if (normalized.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (normalized.includes("data")) return ["🧠 AI / Data"];
-  if (normalized.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (normalized.includes("cyber")) return ["🔐 Security Aware"];
-  return ["🌐 Web Developer"];
-};
+const pickBadges = (user: any, field: string, school: string) =>
+  resolveProfileBadges({
+    badges: user?.etudiant?.badges,
+    filiere: field,
+    school,
+    field,
+  });
 
 const toInitials = (name: string) =>
   name
@@ -142,6 +143,7 @@ const mapPendingRequest = (
     name,
     school: getSchoolLabel(sourceUser),
     field: getFieldLabel(sourceUser),
+    badges: pickBadges(sourceUser, getFieldLabel(sourceUser), getSchoolLabel(sourceUser)),
     message: isSentByCurrentUser ? "Demande envoyée" : "Demande de connexion étudiant",
     time: formatRelativeDate(connexion.date_demande),
     status: isSentByCurrentUser ? "sent" : "pending",
@@ -171,6 +173,7 @@ const mapAcceptedRequest = (
     name,
     school: getSchoolLabel(otherUser),
     field: getFieldLabel(otherUser),
+    badges: pickBadges(otherUser, getFieldLabel(otherUser), getSchoolLabel(otherUser)),
     message: "Connexion acceptée",
     time: formatRelativeDate(connexion.date_reponse || connexion.date_demande),
     status: "accepted",
@@ -354,7 +357,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
                 {{ request.name }}
               </button>
               <p>{{ request.school }} · {{ request.field }}</p>
-              <SkillBadges :badges="connectionBadges(request.field)" compact />
+              <SkillBadges :badges="request.badges" compact />
               <span>{{ request.message }}</span>
               <small>{{ request.time }}</small>
 

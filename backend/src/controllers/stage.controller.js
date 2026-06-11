@@ -85,6 +85,9 @@ const stageController = {
       if (!stage) return res.status(404).json(ApiResponse.notFound('Stage'))
       return res.json(ApiResponse.success(stage, `Stage ${statut.toLowerCase()}`))
     } catch (e) {
+      if (e.statusCode === 403) {
+        return res.status(403).json({ message: e.message || 'Acces refuse' })
+      }
       return res.status(500).json(ApiResponse.serverError())
     }
   },

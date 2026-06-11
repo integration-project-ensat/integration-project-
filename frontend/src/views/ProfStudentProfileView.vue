@@ -5,28 +5,45 @@ import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProfValidationRequests } from "../store/profValidationRequests";
+import { profileService } from "../services/profile.service";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 const route = useRoute();
 const router = useRouter();
 const sidebarOpen = ref(true);
+const backendProfile = ref<any | null>(null);
 const { findStudentRequests } = useProfValidationRequests();
 
 const studentId = computed(() => String(route.params.id ?? ""));
+const numericStudentId = computed(() => (/^\d+$/.test(studentId.value) ? studentId.value : null));
 const studentRequests = computed(() => findStudentRequests(studentId.value));
 const student = computed(() => studentRequests.value[0]);
 
 const profileBadges = computed(() => {
-  const title = studentRequests.value.map((request) => request.title).join(" ").toLowerCase();
-  if (title.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (title.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (title.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
-  return ["🌐 Web Developer"];
+  const rawProfile = backendProfile.value;
+  return resolveProfileBadges({
+    badges: rawProfile?.badgesData,
+    competences: rawProfile?.competences,
+    filiere: rawProfile?.title,
+    bio: rawProfile?.bio,
+    school: rawProfile?.school,
+    field: rawProfile?.title,
+  });
 });
 
-onMounted(() => {
+onMounted(async () => {
   console.log('[ProfStudentProfileView] route.params.id =', route.params.id)
   console.log('[ProfStudentProfileView] studentRequests =', studentRequests.value)
+
+  try {
+    backendProfile.value = numericStudentId.value
+      ? await profileService.getProfile(numericStudentId.value)
+      : null
+  } catch (error) {
+    backendProfile.value = null
+  }
 })
+
 </script>
 
 <template>

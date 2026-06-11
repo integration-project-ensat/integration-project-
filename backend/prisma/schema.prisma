@@ -838,3 +838,4 @@ model ProfilSauvegarde {
   @@unique([id_sauvegardeur, id_etudiant])
   @@map("profils_sauvegardes")
 }
+

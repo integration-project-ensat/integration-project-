@@ -87,7 +87,7 @@ const initials = computed(() => {
     .toUpperCase()
 })
 
-const profileLink = computed(() => '/profile')
+const profileLink = computed(() => '/pro/profile')
 
 function normalizedPath(path: string) {
   return path.split('?')[0]

@@ -2,6 +2,25 @@ const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
 const { recalculerScore } = require('./score.service')
 
+async function ensureAttachedProfessorStudent(professorId, studentId) {
+  const attached = await prisma.professeurEtudiant.findUnique({
+    where: {
+      id_professeur_id_etudiant: {
+        id_professeur: toBigInt(professorId),
+        id_etudiant: toBigInt(studentId),
+      },
+    },
+    select: { id_professeur: true },
+  })
+
+  if (!attached) {
+    throw {
+      statusCode: 403,
+      message: "Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.",
+    }
+  }
+}
+
 const stageService = {
   async findAll(filters = {}) {
     const where = {}
@@ -131,6 +150,8 @@ const stageService = {
     if (stage.id_encadrant && stage.id_encadrant !== BigInt(validateurId)) {
       throw { statusCode: 403, message: 'Accès refusé' }
     }
+
+    await ensureAttachedProfessorStudent(validateurId, stage.id_etudiant)
 
     const existingElement = await prisma.elementValidable.findFirst({
       where: { type: 'STAGE', reference_id: stage.id_stage }

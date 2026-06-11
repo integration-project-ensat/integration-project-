@@ -2,6 +2,25 @@ const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
 const { recalculerScore } = require('./score.service')
 
+async function ensureAttachedProfessorStudent(professorId, studentId) {
+  const attached = await prisma.professeurEtudiant.findUnique({
+    where: {
+      id_professeur_id_etudiant: {
+        id_professeur: toBigInt(professorId),
+        id_etudiant: toBigInt(studentId),
+      },
+    },
+    select: { id_professeur: true },
+  })
+
+  if (!attached) {
+    throw {
+      statusCode: 403,
+      message: "Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.",
+    }
+  }
+}
+
 function normalizeTechnologies(input) {
   if (Array.isArray(input)) {
     return input
@@ -128,6 +147,10 @@ const projetService = {
   async changerStatut(id, statut, validateurId, { motif_refus, appreciation_professeur } = {}) {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
+    if (projet.id_professeur && projet.id_professeur !== BigInt(validateurId)) {
+      throw { statusCode: 403, message: 'Acces refuse' }
+    }
+    await ensureAttachedProfessorStudent(validateurId, projet.id_etudiant)
 
     // Enregistrer dans ElementValidable pour historisation
     // Remplacement de l'upsert incorrect (PK != id_projet) par une recherche
