@@ -2163,15 +2163,7 @@ watch(profileId, async () => {
   box-shadow: 0 2px 8px var(--overlay-black-08);
 }
 
-<<<<<<< HEAD
 .page-state--error { color: var(--danger); }
-
-.body-area {
-  position: relative;
-  min-height: calc(100vh - 60px);
-  background: var(--bg-soft-purple);
-=======
-.page-state--error { color: #dc2626; }
 
 .profile-feedback {
   margin: 10px 0 0;
@@ -2183,22 +2175,21 @@ watch(profileId, async () => {
 }
 
 .profile-feedback--success {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--success-bg);
+  color: var(--success-dark);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
 }
 
 .profile-feedback--error {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger-light) 35%, transparent);
 }
 
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
+  background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
 
@@ -2932,7 +2923,6 @@ watch(profileId, async () => {
 .langue-info span { font-size: .72rem; color: var(--text-muted); }
 
 /* Shared buttons */
-<<<<<<< HEAD
 .send-btn {
   min-height: 42px;
   padding: 0 22px;
@@ -2942,22 +2932,11 @@ watch(profileId, async () => {
   font-family: var(--font-head);
   font-weight: 700;
 }
-=======
-.send-btn {
-  min-height: 42px;
-  padding: 0 22px;
-  border-radius: 100px;
-  background: var(--purple);
-  color: white;
-  font-family: var(--font-head);
-  font-weight: 700;
-}
 
 .send-btn:disabled {
   opacity: .65;
   cursor: not-allowed;
 }
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
 
 .cancel-btn {
   min-height: 42px;
