@@ -2163,14 +2163,13 @@ watch(profileId, async () => {
   box-shadow: 0 2px 8px var(--overlay-black-08);
 }
 
-<<<<<<< HEAD
-.page-state--error { color: var(--danger); }
+                .page-state--error { color: var(--danger); }
 
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
   background: var(--bg-soft-purple);
-=======
+}
 .page-state--error { color: #dc2626; }
 
 .profile-feedback {
@@ -2931,7 +2930,7 @@ watch(profileId, async () => {
 .langue-info span { font-size: .72rem; color: var(--text-muted); }
 
 /* Shared buttons */
-<<<<<<< HEAD
+
 .send-btn {
   min-height: 42px;
   padding: 0 22px;
@@ -2941,7 +2940,6 @@ watch(profileId, async () => {
   font-family: var(--font-head);
   font-weight: 700;
 }
-=======
 .send-btn {
   min-height: 42px;
   padding: 0 22px;
