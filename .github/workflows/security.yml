@@ -70,17 +70,14 @@ jobs:
           docker system prune -af --volumes || true
           df -h
 
-      - name: "Demarrer Staging"
+      - name: "Demarrer Postgres seul"
         run: |
           sudo sysctl -w vm.max_map_count=262144
           echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
-            up -d --build
-
-      - name: "Creer base sonarqube"
-        run: |
+            up -d postgres
           timeout 60 bash -c \
             'until docker exec integration-project--postgres-1 pg_isready; \
             do sleep 2; done'
@@ -88,6 +85,14 @@ jobs:
             -U ${DB_USER:-postgres} \
             -c "CREATE DATABASE sonarqube;" || true
           echo "Sonarqube database created"
+
+      - name: "Demarrer tous les services"
+        run: |
+          echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
+          docker compose \
+            -f docker-compose.yml \
+            -f docker-compose.staging.yml \
+            up -d --build
 
       - name: "Attendre SonarQube"
         run: |
