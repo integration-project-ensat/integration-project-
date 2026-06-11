@@ -656,7 +656,13 @@ watch(
   border-radius: 12px;
   border: none; /* Suppression du cadre pâle */
   box-shadow: 0 4px 16px rgba(17, 24, 39, 0.05); /* Ombre douce moderne */
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
+}
+.project-card {
+  background: white;
+  border-radius: 12px;
+  border: none; /* Suppression du cadre pâle */
+  box-shadow: 0 4px 16px rgba(17, 24, 39, 0.05); /* Ombre douce moderne */
+>>>>>>> 96083081d9a2fd2c28d842e2cb6a0e803f93f210
   overflow: hidden;
   transition: box-shadow .25s ease, transform .25s ease;
   display: flex;

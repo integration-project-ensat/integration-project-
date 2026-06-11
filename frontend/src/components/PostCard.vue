@@ -393,6 +393,12 @@ function avatarColorClass(name: string) {
   margin-top: 2px;
 }
 
+.post-subtitle {
+  font-size: .78rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+}
+
 .post-owner-actions {
   margin-left: auto;
   display: flex;
@@ -405,18 +411,18 @@ function avatarColorClass(name: string) {
   min-height: 34px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid var(--border-light);
-  background: var(--white);
-  color: var(--text-body);
+  border: 1px solid #dbe3ef;
+  background: white;
+  color: #334155;
   font-size: .78rem;
   font-weight: 700;
   cursor: pointer;
 }
 
 .owner-action-btn--danger {
-  color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 20%, transparent);
-  background: var(--danger-bg);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, .2);
+  background: #fff5f5;
 }
 
 .post-desc {
@@ -645,4 +651,13 @@ function avatarColorClass(name: string) {
 .avatar-brown { --avatar-bg: var(--tech-brown); }
 .avatar-purple { --avatar-bg: var(--tech-deep-purple); }
 .avatar-slate { --avatar-bg: var(--tech-periwinkle); }
+</style>
+.avatar-blue { --avatar-bg: #039be5; }
+.avatar-orange { --avatar-bg: #f57c00; }
+.avatar-indigo { --avatar-bg: #5e6ad2; }
+.avatar-green { --avatar-bg: #43a047; }
+.avatar-deep-blue { --avatar-bg: #0277bd; }
+.avatar-brown { --avatar-bg: #8d6e63; }
+.avatar-purple { --avatar-bg: #5e35b1; }
+.avatar-slate { --avatar-bg: #5c6bc0; }
 </style>

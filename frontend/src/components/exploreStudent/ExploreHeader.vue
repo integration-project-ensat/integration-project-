@@ -1097,38 +1097,6 @@ onMounted(() => {
   color: var(--text-gray);
 }
 
-<<<<<<< HEAD
-.explore-language-menu {
-  background: var(--white);
-  min-width: 96px;
-  padding: 6px;
-}
-
-.explore-language-option {
-  width: 100%;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  padding: 8px 12px;
-  color: var(--text-dark);
-  font-size: 12px;
-  font-weight: 800;
-  text-align: left;
-  cursor: pointer;
-}
-
-.explore-language-option:hover {
-  background: var(--purple-soft);
-  color: var(--text-dark);
-}
-
-.explore-language-option.is-selected {
-  background: var(--purple-soft);
-  color: var(--text-dark);
-}
-
-=======
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
 @media (max-width: 860px) {
   .explore-header {
     align-items: flex-start;

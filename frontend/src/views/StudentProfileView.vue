@@ -2163,7 +2163,14 @@ watch(profileId, async () => {
   box-shadow: 0 2px 8px var(--overlay-black-08);
 }
 
-.page-state--error { color: var(--danger); }
+                .page-state--error { color: var(--danger); }
+
+.body-area {
+  position: relative;
+  min-height: calc(100vh - 60px);
+  background: var(--bg-soft-purple);
+}
+.page-state--error { color: #dc2626; }
 
 .profile-feedback {
   margin: 10px 0 0;
@@ -2192,6 +2199,26 @@ watch(profileId, async () => {
   background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
+=======
+.profile-feedback--success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.profile-feedback--error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.body-area {
+  position: relative;
+  min-height: calc(100vh - 60px);
+  background: #f0f2f8;
+  overflow-x: hidden;
+}
+>>>>>>> 96083081d9a2fd2c28d842e2cb6a0e803f93f210
 
 .content {
   width: 100%;
@@ -2923,12 +2950,22 @@ watch(profileId, async () => {
 .langue-info span { font-size: .72rem; color: var(--text-muted); }
 
 /* Shared buttons */
+
 .send-btn {
   min-height: 42px;
   padding: 0 22px;
   border-radius: 100px;
   background: var(--purple);
   color: var(--white);
+  font-family: var(--font-head);
+  font-weight: 700;
+}
+.send-btn {
+  min-height: 42px;
+  padding: 0 22px;
+  border-radius: 100px;
+  background: var(--purple);
+  color: white;
   font-family: var(--font-head);
   font-weight: 700;
 }
@@ -2939,6 +2976,7 @@ watch(profileId, async () => {
 }
 
 .cancel-btn {
+>>>>>>> 96083081d9a2fd2c28d842e2cb6a0e803f93f210
   min-height: 42px;
   padding: 0 22px;
   border-radius: 100px;
