@@ -651,7 +651,7 @@ watch(
   border-radius: 12px;
   border: none; /* Suppression du cadre pâle */
   box-shadow: 0 4px 16px rgba(17, 24, 39, 0.05); /* Ombre douce moderne */
-=======
+}
 .project-card {
   background: white;
   border-radius: 12px;
