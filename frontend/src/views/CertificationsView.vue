@@ -20,20 +20,9 @@ interface Certification {
 
 const sidebarOpen = ref(true);
 const route = useRoute();
-const showForm = ref(false);
 const activeTab = ref<"tous" | "diplome" | "certification" | "formation">("tous");
 const certifications = ref<Certification[]>([]);
 const highlightedCertificationId = ref<number | null>(null);
-
-const newCert = ref({
-  titre: "",
-  organisme: "",
-  type: "certification" as Certification["type"],
-  dateObtention: "",
-  dateExpiration: "",
-  lienVerification: "",
-  description: "",
-});
 
 const typeLabels: Record<Certification["type"], string> = {
   diplome: "Dipl�me",
@@ -117,38 +106,6 @@ async function scrollToHighlightedCertification() {
   });
 }
 
-async function ajouterCertification() {
-  if (!newCert.value.titre || !newCert.value.organisme) return;
-
-  try {
-    if (newCert.value.type === "diplome") {
-      await diplomeService.createDiplome({
-        titre_diplome: newCert.value.titre,
-        etablissement: newCert.value.organisme,
-        domaine: newCert.value.description,
-        annee_fin: newCert.value.dateObtention ? Number(newCert.value.dateObtention.slice(0, 4)) : undefined,
-      });
-    } else {
-      await attestationService.createAttestation({
-        titre: newCert.value.titre,
-        type: newCert.value.type === "formation" ? "Formation" : "Certification",
-        date: newCert.value.dateObtention ? `${newCert.value.dateObtention}-01` : undefined,
-        organisme: newCert.value.organisme,
-        description: newCert.value.description,
-      });
-    }
-
-    newCert.value = {
-      titre: "", organisme: "", type: "certification",
-      dateObtention: "", dateExpiration: "", lienVerification: "", description: "",
-    };
-    showForm.value = false;
-    await loadCertifications();
-  } catch (error) {
-    console.warn("Cr�ation dipl�me/certification impossible", error);
-  }
-}
-
 async function supprimerCertification(item: Certification) {
   try {
     if (item.source === "diplome") {
@@ -210,12 +167,6 @@ watch(
               <p class="panel-subtitle">{{ certifications.length }} élément{{ certifications.length > 1 ? 's' : '' }}</p>
             </div>
           </div>
-          <button class="btn-add" @click="showForm = !showForm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Ajouter
-          </button>
         </div>
 
         <!-- Tabs filtres -->
@@ -232,51 +183,8 @@ watch(
           </button>
         </div>
 
-        <!-- Formulaire -->
-        <div v-if="showForm" class="form-card">
-          <h2 class="form-title">Nouvelle entrée</h2>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Titre *</label>
-              <input v-model="newCert.titre" placeholder="Ex: Licence Génie Informatique, AWS Certified..." />
-            </div>
-            <div class="form-group">
-              <label>Organisme *</label>
-              <input v-model="newCert.organisme" placeholder="Ex: ENSA, Coursera, Google..." />
-            </div>
-            <div class="form-group">
-              <label>Type</label>
-              <select v-model="newCert.type">
-                <option value="diplome">Diplôme</option>
-                <option value="certification">Certification</option>
-                <option value="formation">Formation</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Lien de vérification</label>
-              <input v-model="newCert.lienVerification" placeholder="https://..." />
-            </div>
-            <div class="form-group">
-              <label>Date d'obtention</label>
-              <input type="month" v-model="newCert.dateObtention" />
-            </div>
-            <div class="form-group">
-              <label>Date d'expiration (si applicable)</label>
-              <input type="month" v-model="newCert.dateExpiration" />
-            </div>
-          </div>
-          <div class="form-group full">
-            <label>Description</label>
-            <textarea v-model="newCert.description" placeholder="Décrivez le contenu ou les compétences couvertes..." rows="3" />
-          </div>
-          <div class="form-actions">
-            <button class="btn-cancel" @click="showForm = false">Annuler</button>
-            <button class="btn-save" @click="ajouterCertification">Enregistrer</button>
-          </div>
-        </div>
-
         <!-- Empty state -->
-        <div v-if="filtered.length === 0 && !showForm" class="empty-state">
+        <div v-if="filtered.length === 0" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5">
             <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
           </svg>

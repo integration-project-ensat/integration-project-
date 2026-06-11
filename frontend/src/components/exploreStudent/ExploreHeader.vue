@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { Bell, ChevronDown, Search } from "../../lib/icons";
+import { Bell, Search } from "../../lib/icons";
 import { notificationService } from "@/services/notification.service";
 
 type UserType = "student" | "professeur" | "professionnel";
@@ -48,10 +48,7 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const notificationRef = ref<HTMLElement | null>(null);
-const languageRef = ref<HTMLElement | null>(null);
 const isNotificationOpen = ref(false);
-const isLanguageOpen = ref(false);
-const selectedLanguage = ref("FR");
 const selectedNotificationFilter = ref<NotificationCategory>("Tout");
 const selectedNotificationId = ref<number | null>(null);
 const isHeaderHidden = ref(false);
@@ -61,7 +58,6 @@ const hasApiError = ref(false);
 let lastScrollTop = 0;
 let isScrollTicking = false;
 
-const languages = ["FR", "EN", "AR"];
 const notificationFilters: NotificationCategory[] = [
   "Tout",
   "Connexions",
@@ -555,18 +551,6 @@ const hasUnreadNotifications = computed(() =>
 const toggleNotifications = () => {
   isHeaderHidden.value = false;
   isNotificationOpen.value = !isNotificationOpen.value;
-  isLanguageOpen.value = false;
-};
-
-const toggleLanguage = () => {
-  isHeaderHidden.value = false;
-  isLanguageOpen.value = !isLanguageOpen.value;
-  isNotificationOpen.value = false;
-};
-
-const selectLanguage = (language: string) => {
-  selectedLanguage.value = language;
-  isLanguageOpen.value = false;
 };
 
 const markNotificationAsRead = async (notification: NotificationItem) => {
@@ -617,10 +601,6 @@ const handleClickOutside = (event: MouseEvent) => {
   if (notificationRef.value && !notificationRef.value.contains(target)) {
     isNotificationOpen.value = false;
   }
-
-  if (languageRef.value && !languageRef.value.contains(target)) {
-    isLanguageOpen.value = false;
-  }
 };
 
 const updateHeaderVisibility = (scrollTop: number) => {
@@ -629,8 +609,7 @@ const updateHeaderVisibility = (scrollTop: number) => {
   if (
     scrollTop <= 16 ||
     scrollDelta < 0 ||
-    isNotificationOpen.value ||
-    isLanguageOpen.value
+    isNotificationOpen.value
   ) {
     isHeaderHidden.value = false;
   } else if (scrollDelta > 0 && scrollTop > 56) {
@@ -768,30 +747,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <div ref="languageRef" class="explore-dropdown-wrap">
-        <button
-          type="button"
-          class="explore-profile"
-          aria-label="Changer la langue"
-          @click="toggleLanguage"
-        >
-          <span class="explore-flag">{{ selectedLanguage }}</span>
-          <ChevronDown class="h-4 w-4" />
-        </button>
-
-        <div v-if="isLanguageOpen" class="explore-menu explore-language-menu">
-          <button
-            v-for="language in languages"
-            :key="language"
-            type="button"
-            class="explore-language-option"
-            :class="{ 'is-selected': selectedLanguage === language }"
-            @click="selectLanguage(language)"
-          >
-            {{ language }}
-          </button>
-        </div>
-      </div>
     </div>
   </section>
 </template>
@@ -902,39 +857,6 @@ onMounted(() => {
   border-radius: 9999px;
   background: var(--error);
   box-shadow: 0 0 0 2px var(--input-bg);
-}
-
-.explore-profile {
-  display: inline-flex;
-  height: 36px;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-radius: 9999px;
-  background: var(--blue-w);
-  color: var(--text-dark);
-  padding: 0 12px;
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 8px 18px var(--text-gray);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.explore-profile:hover {
-  background: var(--navy-mid);
-}
-
-.explore-flag {
-  display: inline-flex;
-  min-width: 22px;
-  height: 18px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: var(--input-bg);
-  font-size: 10px;
-  font-weight: 800;
 }
 
 .explore-menu {
@@ -1173,35 +1095,6 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-gray);
-}
-
-.explore-language-menu {
-  background: white;
-  min-width: 96px;
-  padding: 6px;
-}
-
-.explore-language-option {
-  width: 100%;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  padding: 8px 12px;
-  color: var(--text-dark);
-  font-size: 12px;
-  font-weight: 800;
-  text-align: left;
-  cursor: pointer;
-}
-
-.explore-language-option:hover {
-  background: #eeecff;
-  color: var(--text-dark);
-}
-
-.explore-language-option.is-selected {
-  background: #eeecff;
-  color: var(--text-dark);
 }
 
 @media (max-width: 860px) {

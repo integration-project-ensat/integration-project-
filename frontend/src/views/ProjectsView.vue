@@ -13,12 +13,6 @@
             <h1>Mes Projets</h1>
             <p>Tous vos projets personnels, académiques et de formation.</p>
           </div>
-          <button class="btn-add" @click="openModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Ajouter un projet
-          </button>
         </section>
 
         <!-- Filters bar -->
@@ -127,7 +121,6 @@
         <div v-else class="empty-state">
           <div class="empty-icon">🗂️</div>
           <p>Aucun projet trouvé.</p>
-          <button class="btn-add" @click="openModal()">Ajouter votre premier projet</button>
         </div>
 
       </main>
@@ -139,7 +132,7 @@
         <div class="modal-content">
 
           <div class="modal-header">
-            <h2>{{ isEditing ? 'Modifier le projet' : 'Nouveau projet' }}</h2>
+            <h2>Modifier le projet</h2>
             <button class="btn-close" @click="closeModal">✕</button>
           </div>
 
@@ -228,7 +221,7 @@
 
           <div class="modal-footer">
             <button class="btn-save" @click="saveProject" :disabled="!form.name || !form.category || !form.completedAt">
-              {{ isEditing ? 'Enregistrer les modifications' : 'Ajouter le projet' }}
+              Enregistrer les modifications
             </button>
             <button class="btn-secondary" @click="closeModal">Annuler</button>
           </div>
@@ -327,18 +320,15 @@ const activeCategory = ref('all')
 const searchQuery = ref('')
 const highlightedProjectId = ref<number | null>(null)
 const showModal = ref(false)
-const isEditing = ref(false)
 const editingId = ref<number | null>(null)
 const techInput = ref('')
 const memberInput = ref('')
 
-const emptyForm = (): Omit<Project, 'id'> => ({
+const form = reactive<Omit<Project, 'id'>>({
   name: '', description: '', category: 'personal',
   technologies: [], supervisor: '', teamMembers: [],
   completedAt: '', url: '',
 })
-
-const form = reactive<Omit<Project, 'id'>>(emptyForm())
 
 async function loadProjects() {
   try {
@@ -385,25 +375,18 @@ function countByCategory(cat: string) {
   return projects.value.filter(p => p.category === cat).length
 }
 
-function openModal(project?: Project) {
-  if (project) {
-    isEditing.value = true
-    editingId.value = project.id
-    Object.assign(form, {
-      name: project.name,
-      description: project.description,
-      category: project.category,
-      technologies: [...project.technologies],
-      supervisor: project.supervisor,
-      teamMembers: [...project.teamMembers],
-      completedAt: project.completedAt,
-      url: project.url,
-    })
-  } else {
-    isEditing.value = false
-    editingId.value = null
-    Object.assign(form, emptyForm())
-  }
+function openModal(project: Project) {
+  editingId.value = project.id
+  Object.assign(form, {
+    name: project.name,
+    description: project.description,
+    category: project.category,
+    technologies: [...project.technologies],
+    supervisor: project.supervisor,
+    teamMembers: [...project.teamMembers],
+    completedAt: project.completedAt,
+    url: project.url,
+  })
   techInput.value = ''
   memberInput.value = ''
   showModal.value = true
@@ -426,11 +409,8 @@ async function saveProject() {
   }
 
   try {
-    if (isEditing.value && editingId.value !== null) {
-      await projetService.updateProjet(editingId.value, payload)
-    } else {
-      await projetService.createProjet(payload)
-    }
+    if (editingId.value === null) return
+    await projetService.updateProjet(editingId.value, payload)
     closeModal()
     await loadProjects()
   } catch (error) {
