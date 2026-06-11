@@ -13,14 +13,16 @@ services:
 
   backend:
     build: ./backend
-    command: sh -c "npm run seed && npm run start"
-    ports:  
+    command: sh -c "npm run seed && node server.js"
+    ports:
       - "3000:3000"
     env_file:
       - ./.env
     environment:
       - PORT=3000
       - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
       - AI_SERVICE_URL=http://ai-service:8000
     depends_on:
       - postgres
