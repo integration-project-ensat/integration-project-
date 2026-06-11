@@ -111,9 +111,10 @@ jobs:
 
       - name: "Attendre Backend"
         run: |
-          timeout 60 bash -c \
+          timeout 120 bash -c \
             'until curl -sf http://127.0.0.1:3000; \
-            do sleep 3; done'
+            do sleep 3; done' || \
+            (docker logs integration-project--backend-1 --tail 50 2>&1; exit 1)
           echo "Backend pret"
 
       - name: "Scanner images Docker avec Trivy"
