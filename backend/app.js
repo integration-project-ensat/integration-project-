@@ -59,6 +59,12 @@ const profStudentRoutes = require('./src/routes/profStudent.routes');
 // Fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
 // Sécurité & CORS
 app.use(securityHeaders)
 app.use(corsMiddleware)
@@ -67,11 +73,7 @@ app.use(passport.initialize());
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
 
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec)
-);
+
 
 
 app.use(
