@@ -41,6 +41,8 @@
     "pg": "^8.20.0",
     "puppeteer": "^25.0.4",
     "sharp": "^0.34.5",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.0"
   },
   "devDependencies": {
