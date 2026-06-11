@@ -2198,7 +2198,6 @@ watch(profileId, async () => {
   position: relative;
   min-height: calc(100vh - 60px);
   background: #f0f2f8;
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
   overflow-x: hidden;
 }
 
