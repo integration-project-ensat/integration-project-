@@ -650,6 +650,12 @@ if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/d
       -H "Authorization: Bearer $SONAR_TOKEN"
   )
   echo "  Accès projet SonarQube attribué à sonar-users ✓"
+
+  if docker ps --format '{{.Names}}' | grep -qx 'portfolio_sonarqube'; then
+    echo "  Redémarrage de SonarQube pour appliquer la configuration..."
+    docker restart portfolio_sonarqube >/dev/null
+    echo "  SonarQube redémarré ✓"
+  fi
 fi
 
 # ----------------------------------------------------------

@@ -298,8 +298,7 @@ for username in "${!TEAM_MEMBERS[@]}"; do
     else
       user_id=$(create_gitlab_user "$username" "${username}@portfolio.local" "$username")
       if [[ -z "$user_id" ]]; then
-        echo -e "${RED}✗ Failed to create user${NC}"
-        ((FAILED++))
+        echo -e "${YELLOW}skipping (user must sign in once through Keycloak first)${NC}"
         continue
       fi
     fi
