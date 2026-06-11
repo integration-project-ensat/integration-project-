@@ -538,8 +538,9 @@ SONAR_ADMIN="admin"
 SONAR_PASSWORD="${SONAR_PASSWORD:-PheraCore2025!}"
 
 # Récupérer le certificat SAML du realm Keycloak
+echo "  Récupération du certificat SAML Keycloak..."
 SONAR_CERT_B64=$(
-  curl -s "$KEYCLOAK_URL/realms/$REALM/protocol/saml/descriptor" | awk '
+  curl -sS --connect-timeout 10 --max-time 20 "$KEYCLOAK_URL/realms/$REALM/protocol/saml/descriptor" | awk '
     /<ds:X509Certificate>/ {
       in_cert = 1
       sub(/.*<ds:X509Certificate>/, "")
@@ -574,7 +575,7 @@ SONAR_CERT=$(
 echo "  Attente que SonarQube soit prêt..."
 MAX_WAIT=120
 WAIT=0
-until curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/dev/null | grep -q '"status":"UP"'; do
+until curl -sS --connect-timeout 5 --max-time 15 -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/dev/null | grep -q '"status":"UP"'; do
   sleep 5
   WAIT=$((WAIT + 5))
   if [ $WAIT -ge $MAX_WAIT ]; then
@@ -585,7 +586,7 @@ until curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2
   echo "  En attente SonarQube... ($WAIT s)"
 done
 
-if curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/dev/null | grep -q '"status":"UP"'; then
+if curl -sS --connect-timeout 5 --max-time 15 -u "$SONAR_ADMIN:$SONAR_PASSWORD" "$SONAR_URL/api/system/status" 2>/dev/null | grep -q '"status":"UP"'; then
   # Activer SAML
   curl -s -X POST "$SONAR_URL/api/settings/set" \
     -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
