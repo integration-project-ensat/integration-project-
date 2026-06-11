@@ -163,6 +163,7 @@ const closeRecommendationDetails = () => {
 
 const updateSelectedStatus = async (status: ValidationStatus) => {
   if (!selectedRequest.value) return;
+  if (!(await ensureStudentAttached(selectedRequest.value.studentId))) return;
   try {
     await profApi.updateValidationStatus(selectedRequest.value, status);
     await loadDashboard();
@@ -184,8 +185,26 @@ const closeWriteRecommendationModal = () => {
   letterDraft.value = "";
 };
 
+const ensureStudentAttached = async (studentId: string) => {
+  try {
+    const response = await profApi.getAttachedStudentStatus(studentId);
+    if (response?.data?.data?.attached) return true;
+    error.value =
+      "Ajoutez d'abord cet étudiant à votre liste pour pouvoir valider ou traiter sa demande.";
+    return false;
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible de vérifier si cet étudiant est dans votre liste.";
+    return false;
+  }
+};
+
 const sendRecommendationLetter = async () => {
   if (!writingRecommendation.value) return;
+  if (!(await ensureStudentAttached(writingRecommendation.value.studentId))) {
+    return;
+  }
   try {
     await profApi.updateRecommendationStatus(
       writingRecommendation.value.id,
@@ -205,6 +224,9 @@ const sendRecommendationLetter = async () => {
 
 const refuseSelectedRecommendation = async () => {
   if (!selectedRecommendation.value) return;
+  if (!(await ensureStudentAttached(selectedRecommendation.value.studentId))) {
+    return;
+  }
   try {
     await profApi.updateRecommendationStatus(
       selectedRecommendation.value.id,
@@ -567,6 +589,8 @@ onMounted(() => {
           <p>{{ selectedRecommendation.writtenLetter }}</p>
         </div>
 
+        <p v-if="error" class="page-error">{{ error }}</p>
+
         <div class="modal-actions">
           <button
             type="button"
@@ -626,6 +650,8 @@ onMounted(() => {
           <h3>{{ writingRecommendation.title }}</h3>
           <p>{{ writingRecommendation.message }}</p>
         </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
 
         <label class="letter-field">
           <span>Lettre de recommandation</span>

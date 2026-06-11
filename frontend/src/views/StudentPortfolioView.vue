@@ -667,6 +667,11 @@ function projectTechnologies(project: any) {
   return [];
 }
 
+function isValidatedProject(project: any) {
+  const status = String(project?.statut || project?.status || "").toUpperCase();
+  return ["VALIDE", "ACCEPTE", "APPROUVE"].includes(status);
+}
+
 function mapBackendProject(project: any, index: number): Project {
   return {
     id: Number(project?.id_projet ?? project?.id ?? index + 1),
@@ -900,6 +905,12 @@ if (currentTemplate.value === 3) {
 }
     console.log("Template actuel :", currentTemplate.value);
 
+    const validatedProjects = Array.isArray(profileResponse?.projectsData)
+      ? profileResponse.projectsData.filter((project: any) =>
+          isValidatedProject(project),
+        )
+      : [];
+
     const posts = Array.isArray(postsResponse?.data?.data)
       ? postsResponse.data.data.filter(
           (post: any) =>
@@ -907,7 +918,12 @@ if (currentTemplate.value === 3) {
             Number(profileStudentId.value),
         )
       : [];
-    mapProjects(posts);
+    if (validatedProjects.length) {
+      projects.value = validatedProjects.map(mapBackendProject);
+      setSelectedProjectFallback();
+    } else {
+      mapProjects(posts);
+    }
 
     const recommendations = Array.isArray(recommendationsResponse?.data?.data)
       ? recommendationsResponse.data.data

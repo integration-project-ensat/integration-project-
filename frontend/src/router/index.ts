@@ -516,6 +516,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresRole: "teacher" },
     },
     {
+      path: "/prof/profile",
+      name: "prof-profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
       path: "/prof/feed",
       name: "prof-feed",
       component: FeedView,
@@ -550,6 +556,12 @@ const router = createRouter({
       path: "/pro/dashboard",
       name: "pro-dashboard",
       component: DashboardProView,
+    },
+    {
+      path: "/pro/profile",
+      name: "pro-profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true, requiresRole: "professional" },
     },
     { path: "/pro/feed", name: "pro-feed", component: FeedView },
     {

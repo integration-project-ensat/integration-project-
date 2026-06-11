@@ -10,6 +10,15 @@
         <p class="post-author">{{ post.author }}</p>
         <p class="post-subtitle">{{ post.subtitle }}</p>
       </div>
+
+      <div v-if="manageable" class="post-owner-actions">
+        <button type="button" class="owner-action-btn" @click="emit('edit', post)">
+          Modifier
+        </button>
+        <button type="button" class="owner-action-btn owner-action-btn--danger" @click="emit('delete', post)">
+          Supprimer
+        </button>
+      </div>
     </div>
 
     <p class="post-desc">
@@ -168,9 +177,12 @@ const fallbackMedia: MediaItem = {
 
 const props = defineProps<{
   post: {
+    id?: number
     author: string
     subtitle: string
     description: string
+    liked?: boolean
+    reposted?: boolean
     avatar?: string
     images?: string[]
     media?: Array<string | {
@@ -179,9 +191,10 @@ const props = defineProps<{
       name?: string
     }>
   }
+  manageable?: boolean
 }>()
 
-const emit = defineEmits(['comment', 'share', 'like', 'submit-comment'])
+const emit = defineEmits(['comment', 'share', 'like', 'submit-comment', 'edit', 'delete'])
 
 // États réactifs existants et nouveaux
 const expanded = ref(false)
@@ -194,6 +207,24 @@ const commentText = ref('')
 const initials = computed(() => {
   return getInitials(props.post.author)
 })
+
+const manageable = computed(() => Boolean(props.manageable))
+
+watch(
+  () => props.post.liked,
+  (value) => {
+    isLiked.value = Boolean(value)
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.post.reposted,
+  (value) => {
+    isReposted.value = Boolean(value)
+  },
+  { immediate: true },
+)
 
 const shortDesc = computed(() => {
   return props.post.description.length > 200
@@ -325,6 +356,7 @@ function avatarColorClass(name: string) {
   display: flex;
   gap: 12px;
   margin-bottom: 12px;
+  align-items: flex-start;
 }
 
 .post-avatar {
@@ -359,6 +391,32 @@ function avatarColorClass(name: string) {
   font-size: .78rem;
   color: var(--text-muted, #64748b);
   margin-top: 2px;
+}
+
+.post-owner-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.owner-action-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #dbe3ef;
+  background: white;
+  color: #334155;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.owner-action-btn--danger {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, .2);
+  background: #fff5f5;
 }
 
 .post-desc {

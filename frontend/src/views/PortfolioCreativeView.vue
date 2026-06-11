@@ -433,6 +433,41 @@ function mapRecommendations(items: any[]) {
   profile.value.recos = `${items.length}+`;
 }
 
+function projectTechnologies(project: any) {
+  const relations = Array.isArray(project?.technologies) ? project.technologies : [];
+  const relationNames = relations
+    .map((item: any) => item?.technologie?.nom || item?.nom)
+    .filter(Boolean);
+  if (relationNames.length) return relationNames;
+  if (Array.isArray(project?.tech)) return project.tech.filter(Boolean);
+  return [];
+}
+
+function isValidatedProject(project: any) {
+  const status = String(project?.statut || project?.status || "").toUpperCase();
+  return ["VALIDE", "ACCEPTE", "APPROUVE"].includes(status);
+}
+
+function mapBackendProject(project: any, i: number) {
+  return {
+    id: Number(project?.id_projet ?? project?.id ?? i + 1),
+    icon: i % 3 === 0 ? "PR" : i % 3 === 1 ? "UX" : "AI",
+    title: project?.titre || project?.title || `Projet ${i + 1}`,
+    type: project?.type || project?.statut || "Projet",
+    description: project?.description || "Aucune description.",
+    details:
+      project?.resultats ||
+      project?.appreciation_professeur ||
+      project?.description ||
+      "Aucun detail supplementaire.",
+    tech: projectTechnologies(project),
+    github: inferGithubUrl(project?.lien_github, project?.description, project?.resultats),
+    images: Array.isArray(project?.captures)
+      ? project.captures.map(resolveBackendAsset).filter(Boolean)
+      : [],
+  };
+}
+
 function mapProjects(items: any[]) {
   projects.value = items.map((post: any, i: number) => {
     const s = parseStructuredContent(post?.contenu || "");
@@ -472,11 +507,18 @@ async function loadPortfolio() {
       router.replace(`/portfolio-creative/${profileStudentId.value}`); return;
     }
 
+    const validatedProjects = Array.isArray(profileResponse?.projectsData)
+      ? profileResponse.projectsData.filter((project: any) => isValidatedProject(project))
+      : [];
     const posts = Array.isArray(postsResponse?.data?.data)
       ? postsResponse.data.data.filter((p: any) =>
           Number(p?.auteur?.id_utilisateur ?? p?.id_auteur ?? 0) === Number(profileStudentId.value))
       : [];
-    mapProjects(posts);
+    if (validatedProjects.length) {
+      projects.value = validatedProjects.map(mapBackendProject);
+    } else {
+      mapProjects(posts);
+    }
     mapRecommendations(Array.isArray(recommendationsResponse?.data?.data) ? recommendationsResponse.data.data : []);
 
     const attestations = Array.isArray(attestationsResponse?.data?.data) ? attestationsResponse.data.data : [];

@@ -459,7 +459,9 @@ const resolveNotificationTargetPath = (notificationRaw: any) => {
   return "/student/dashboard";
 };
 
-const extractNotificationMeta = (messageRaw: any) => {
+const extractNotificationMeta = (
+  messageRaw: any,
+): { person: string; action: string } => {
   const message = String(messageRaw || "").trim();
 
   if (!message) {
@@ -475,8 +477,8 @@ const extractNotificationMeta = (messageRaw: any) => {
 
   if (nameMatch) {
     return {
-      person: nameMatch[1],
-      action: nameMatch[2],
+      person: nameMatch[1] ?? "Utilisateur",
+      action: nameMatch[2] ?? message,
     };
   }
 

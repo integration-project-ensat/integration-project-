@@ -399,6 +399,41 @@ function mapRecommendations(items: any[]) {
   profile.value.recos = `${items.length}+`;
 }
 
+function projectTechnologies(project: any) {
+  const relations = Array.isArray(project?.technologies) ? project.technologies : [];
+  const relationNames = relations
+    .map((item: any) => item?.technologie?.nom || item?.nom)
+    .filter(Boolean);
+  if (relationNames.length) return relationNames;
+  if (Array.isArray(project?.tech)) return project.tech.filter(Boolean);
+  return [];
+}
+
+function isValidatedProject(project: any) {
+  const status = String(project?.statut || project?.status || "").toUpperCase();
+  return ["VALIDE", "ACCEPTE", "APPROUVE"].includes(status);
+}
+
+function mapBackendProject(project: any, i: number) {
+  return {
+    id: Number(project?.id_projet ?? project?.id ?? i + 1),
+    icon: i % 3 === 0 ? "PR" : i % 3 === 1 ? "UX" : "AI",
+    title: project?.titre || project?.title || `Projet ${i + 1}`,
+    type: project?.type || project?.statut || "Projet",
+    description: project?.description || "Aucune description.",
+    details:
+      project?.resultats ||
+      project?.appreciation_professeur ||
+      project?.description ||
+      "Aucun detail supplementaire.",
+    tech: projectTechnologies(project),
+    github: inferGithubUrl(project?.lien_github, project?.description, project?.resultats),
+    images: Array.isArray(project?.captures)
+      ? project.captures.map(resolveBackendAsset).filter(Boolean)
+      : [],
+  };
+}
+
 function mapProjects(items: any[]) {
   projects.value = items.map((post: any,i: number)=>{
     const s = parseStructuredContent(post?.contenu||"");
@@ -431,10 +466,17 @@ async function loadPortfolio() {
     currentTemplate.value = port?.data?.modele?.id_modele||port?.data?.id_modele||3;
     if (currentTemplate.value===1&&!route.path.includes("/portfolio-professional")) { router.replace(`/portfolio/${profileStudentId.value}`); return; }
     if (currentTemplate.value===2&&!route.path.includes("/portfolio-professional")) { router.replace(`/portfolio-creative/${profileStudentId.value}`); return; }
+    const validatedProjects = Array.isArray(prof?.projectsData)
+      ? prof.projectsData.filter((project: any) => isValidatedProject(project))
+      : [];
     const p = Array.isArray(posts?.data?.data)
       ? posts.data.data.filter((p: any)=>Number(p?.auteur?.id_utilisateur??p?.id_auteur??0)===Number(profileStudentId.value))
       : [];
-    mapProjects(p);
+    if (validatedProjects.length) {
+      projects.value = validatedProjects.map(mapBackendProject);
+    } else {
+      mapProjects(p);
+    }
     mapRecommendations(Array.isArray(recos?.data?.data)?recos.data.data:[]);
     const a = Array.isArray(att?.data?.data)?att.data.data:[];
     certifications.value = a.map((x: any,i: number)=>({

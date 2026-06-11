@@ -45,7 +45,12 @@
         </button>
       </p>
 
-      <button type="button" class="recos-summary" @click="emit('open-recos')">
+      <button
+        v-if="showRecommendationsSummary !== false"
+        type="button"
+        class="recos-summary"
+        @click="emit('open-recos')"
+      >
         <span class="recos-count">{{ profile.recos }} recos</span>
 
         <span class="recos-avatars">
@@ -70,7 +75,13 @@
           :class="tabClass(tab)"
           @click="handleTabClick(tab)"
         >
-          {{ tab === 'Connecter' ? connectionLabel : tab }}
+          {{
+            tab === 'Connecter'
+              ? connectionLabel
+              : tab === 'Recommander'
+                ? recommendationLabel
+                : tab
+          }}
         </button>
       </div>
 
@@ -179,7 +190,7 @@
         </div>
       </div>
 
-      <div class="recos-section">
+      <div v-if="showRecommendationsSummary !== false" class="recos-section">
         <div class="reco-card">
           <p class="reco-label">Reco plus récent de profs</p>
 
@@ -280,7 +291,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 type Recommendation = {
   id: number
@@ -303,7 +313,6 @@ type SelectedSkillState = SkillItem & {
 }
 
 const showCompetances = ref(false)
-const router = useRouter()
 
 const showAbout = ref(false)
 const showContact = ref(false)
@@ -336,6 +345,10 @@ const props = defineProps<{
   recentRecommendations?: Recommendation[]
   isOwner?: boolean
   connectionLabel?: string
+  recommendationLabel?: string
+  profileRole?: 'student' | 'teacher' | 'professional'
+  tabs?: string[]
+  showRecommendationsSummary?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -349,8 +362,12 @@ const localAvatar = ref<string | null>(null)
 const localBanner = ref<string | null>(null)
 
 const tabList = computed(() =>
-  props.isOwner
-    ? ['Modifier bio', 'Partager']
+  props.tabs?.length
+    ? props.tabs
+    : props.isOwner
+    ? props.profileRole === 'student'
+      ? ['Modifier bio', 'Partager']
+      : ['Modifier info', 'Partager']
     : ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
 )
 
@@ -366,13 +383,14 @@ const localBannerStyle = computed(() => {
 
 function tabClass(tab: string) {
   return {
+    demandes: tab === 'Demandes',
     portfolio: tab === 'Portfolio',
     recommendation: tab === 'Recommander',
     connect: tab === 'Connecter',
     competances: tab === 'Compétances',
     about: tab === 'À propos',
     share: tab === 'Partager',
-    'modifier-bio': tab === 'Modifier bio',
+    'modifier-bio': tab === 'Modifier bio' || tab === 'Modifier info',
   }
 }
 
@@ -402,9 +420,7 @@ const technicalSkills = computed(() => props.profile.technicalSkills ?? [])
 const softSkills = computed(() => props.profile.softSkills ?? [])
 
 // Liens de Partage Dynamiques
-const profileUrl = computed(() => {
-  return window.location.origin + '/profile'
-})
+const profileUrl = computed(() => window.location.href)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
 const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${props.profile.name}`))
 
@@ -419,6 +435,14 @@ const latestProfessionalReco = computed(() => props.recentRecommendations?.find(
 const latestStudentReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'student'))
 const initials = computed(() => getInitials(props.profile.name))
 const connectionLabel = computed(() => props.connectionLabel || 'Connecter')
+const recommendationLabel = computed(() => props.recommendationLabel || 'Recommander')
+const fallbackTab = computed(() => {
+  if (tabList.value.includes('Modifier bio')) return 'Portfolio'
+  if (tabList.value.includes('Modifier info')) return 'Portfolio'
+  if (tabList.value.includes('Portfolio')) return 'Portfolio'
+  if (tabList.value.includes('À propos')) return 'À propos'
+  return tabList.value[0] || ''
+})
 
 function openSkillPopup(skill: SkillItem, type: 'tech' | 'soft') {
   selectedSkill.value = { ...skill, type }
@@ -443,12 +467,15 @@ const handleTabClick = (tab: string) => {
     showCompetances.value = false
     showAbout.value = false
     emit('update:modelValue', 'Portfolio')
-    router.push('/portfolio')
     return
   }
 
-  if (tab === 'Modifier bio') {
-    emit('update:modelValue', props.modelValue === 'Modifier bio' ? '' : 'Modifier bio')
+  if (tab === 'Modifier bio' || tab === 'Modifier info') {
+    if (props.modelValue === tab) {
+      emit('update:modelValue', fallbackTab.value)
+    } else {
+      emit('update:modelValue', tab === 'Modifier info' ? 'Modifier info' : 'Modifier bio')
+    }
     return
   }
 
@@ -456,7 +483,7 @@ const handleTabClick = (tab: string) => {
     return
   }
   if (props.modelValue === tab) {
-    emit('update:modelValue', 'Portfolio')
+    emit('update:modelValue', fallbackTab.value)
   } else {
     emit('update:modelValue', tab)
   }
@@ -727,6 +754,7 @@ h1 {
 }
 
 .tab.recommendation,
+.tab.demandes,
 .tab.competances,
 .tab.about,
 .tab.share,
@@ -735,6 +763,7 @@ h1 {
 }
 
 .tab.recommendation { min-width: 180px; }
+.tab.demandes { min-width: 170px; }
 .tab.competances { min-width: 170px; }
 .tab.about, .tab.share { min-width: 150px; }
 .tab.connect { min-width: 160px; }

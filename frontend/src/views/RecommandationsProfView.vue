@@ -79,6 +79,21 @@ const loadRecommendations = async () => {
   }
 };
 
+const ensureStudentAttached = async (studentId: string) => {
+  try {
+    const response = await profApi.getAttachedStudentStatus(studentId);
+    if (response?.data?.data?.attached) return true;
+    error.value =
+      "Ajoutez d'abord cet étudiant à votre liste pour pouvoir traiter sa demande.";
+    return false;
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible de vérifier si cet étudiant est dans votre liste.";
+    return false;
+  }
+};
+
 const openStudentProfile = (request: RecommendationRequest) => {
   router.push(`/profile/student/${request.studentId}?from=prof`);
 };
@@ -104,6 +119,7 @@ const closeWriteModal = () => {
 const sendLetter = async () => {
   if (!writingRequest.value) return;
   error.value = null;
+  if (!(await ensureStudentAttached(writingRequest.value.studentId))) return;
   try {
     await profApi.updateRecommendationStatus(
       writingRequest.value.id,
@@ -124,6 +140,7 @@ const sendLetter = async () => {
 
 const refuseRequest = async (request: RecommendationRequest) => {
   error.value = null;
+  if (!(await ensureStudentAttached(request.studentId))) return;
   try {
     await profApi.updateRecommendationStatus(request.id, refusedStatus);
     closeDetailsModal();
@@ -303,6 +320,8 @@ onMounted(() => {
           <p>{{ selectedRequest.writtenLetter }}</p>
         </div>
 
+        <p v-if="error" class="page-error">{{ error }}</p>
+
         <div class="modal-actions">
           <button
             type="button"
@@ -352,6 +371,8 @@ onMounted(() => {
           <h3>{{ writingRequest.title }}</h3>
           <p>{{ writingRequest.message }}</p>
         </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
 
         <label class="letter-field">
           <span>Lettre de recommandation</span>

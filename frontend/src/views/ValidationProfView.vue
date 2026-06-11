@@ -67,6 +67,7 @@ const updateStatus = async (
   status: ValidationStatus,
 ) => {
   error.value = null;
+  if (!(await ensureStudentAttached(request.studentId))) return;
   try {
     await profApi.updateValidationStatus(request, status);
     await loadRequests();
@@ -88,7 +89,24 @@ const updateSelectedStatus = async (status: ValidationStatus) => {
   if (selectedRequest.value) {
     await updateStatus(selectedRequest.value, status);
   }
-  closeDetailsModal();
+  if (!error.value) {
+    closeDetailsModal();
+  }
+};
+
+const ensureStudentAttached = async (studentId: string) => {
+  try {
+    const response = await profApi.getAttachedStudentStatus(studentId);
+    if (response?.data?.data?.attached) return true;
+    error.value =
+      "Ajoutez d'abord cet étudiant à votre liste pour pouvoir valider sa demande.";
+    return false;
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible de vérifier si cet étudiant est dans votre liste.";
+    return false;
+  }
 };
 
 const openStudentProfile = (request: ValidationRequest) => {
@@ -285,6 +303,8 @@ onMounted(() => {
             </a>
           </div>
         </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
 
         <div class="modal-actions">
           <button
