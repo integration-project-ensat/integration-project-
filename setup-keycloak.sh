@@ -652,6 +652,21 @@ if curl -sS --connect-timeout 5 --max-time 15 -u "$SONAR_ADMIN:$SONAR_PASSWORD" 
   )
   echo "  Accès projet SonarQube attribué à sonar-users ✓"
 
+  echo "  Application du template de permissions par défaut au projet..."
+  SONAR_TEMPLATE_CODE=$(
+    curl -s -o /dev/null -w "%{http_code}" -X POST \
+      "$SONAR_URL/api/permissions/apply_template" \
+      -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
+      --data-urlencode "templateName=Default template" \
+      --data-urlencode "projectKey=pheracore"
+  )
+
+  if [[ "$SONAR_TEMPLATE_CODE" != "200" && "$SONAR_TEMPLATE_CODE" != "204" ]]; then
+    echo "  ATTENTION : impossible d'appliquer le template de permissions (HTTP $SONAR_TEMPLATE_CODE)"
+  else
+    echo "  Template de permissions appliqué ✓"
+  fi
+
   if docker ps --format '{{.Names}}' | grep -qx 'portfolio_sonarqube'; then
     echo "  Redémarrage de SonarQube pour appliquer la configuration..."
     docker restart portfolio_sonarqube >/dev/null
