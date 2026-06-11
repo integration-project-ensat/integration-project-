@@ -646,7 +646,6 @@ watch(
   gap: 18px;
 }
 
-<<<<<<< HEAD
 .project-card {
   background: var(--white);
   border-radius: 12px;
@@ -658,7 +657,6 @@ watch(
   border-radius: 12px;
   border: none; /* Suppression du cadre pâle */
   box-shadow: 0 4px 16px rgba(17, 24, 39, 0.05); /* Ombre douce moderne */
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
   overflow: hidden;
   transition: box-shadow .25s ease, transform .25s ease;
   display: flex;
