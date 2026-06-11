@@ -72,12 +72,21 @@ jobs:
 
       - name: "Demarrer Staging"
         run: |
+          sudo sysctl -w vm.max_map_count=262144
           echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
-
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
             up -d --build
+
+      - name: "Creer base sonarqube"
+        run: |
+          timeout 60 bash -c \
+            'until docker exec integration-project--postgres-1 pg_isready -U postgres; \
+            do sleep 2; done'
+          docker exec integration-project--postgres-1 \
+            psql -U postgres -c "CREATE DATABASE sonarqube;" || true
+          echo "Sonarqube database ready"
 
       - name: "Attendre SonarQube"
         run: |
