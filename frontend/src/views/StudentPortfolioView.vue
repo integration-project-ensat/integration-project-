@@ -678,6 +678,11 @@ function projectTechnologies(project: any) {
   return [];
 }
 
+function isValidatedProject(project: any) {
+  const status = String(project?.statut || project?.status || "").toUpperCase();
+  return ["VALIDE", "ACCEPTE", "APPROUVE"].includes(status);
+}
+
 function mapBackendProject(project: any, index: number): Project {
   return {
     id: Number(project?.id_projet ?? project?.id ?? index + 1),
@@ -943,6 +948,12 @@ async function loadPortfolio() {
     }
     console.log("Template actuel :", currentTemplate.value);
 
+    const validatedProjects = Array.isArray(profileResponse?.projectsData)
+      ? profileResponse.projectsData.filter((project: any) =>
+          isValidatedProject(project),
+        )
+      : [];
+
     const posts = Array.isArray(postsResponse?.data?.data)
       ? postsResponse.data.data.filter(
           (post: any) =>
@@ -952,6 +963,7 @@ async function loadPortfolio() {
       : [];
     const projets = responseList(projetsResponse);
     const stages = responseList(stagesResponse);
+    const projectSource = projets.length ? projets : validatedProjects;
 
     experiences.value = stages.map((stage: any) => ({
       role: stage.poste || "Stage",
@@ -964,8 +976,8 @@ async function loadPortfolio() {
     const activites = responseList(activitesResponse);
 
 projects.value = [
-  ...projets.map(mapBackendProject),
-  ...(projets.length ? [] : posts.map(mapPostProject)),
+  ...projectSource.map(mapBackendProject),
+  ...(projectSource.length ? [] : posts.map(mapPostProject)),
 ];
 
 experiences.value = [

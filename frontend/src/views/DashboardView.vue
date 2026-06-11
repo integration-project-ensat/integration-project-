@@ -222,9 +222,11 @@ const progressChecklist = computed(() => {
 
   if (!entries.length) {
     return [
-      { label: "Informations personnelles", completed: profileProgress.value >= 15 },
-      { label: "Compétences et projets", completed: profileProgress.value >= 50 },
-      { label: "Portfolio", completed: profileProgress.value >= 80 },
+      { label: "Informations personnelles", completed: false },
+      { label: "Parcours académique", completed: false },
+      { label: "Compétences", completed: false },
+      { label: "Projets", completed: false },
+      { label: "Portfolio", completed: false },
     ];
   }
 

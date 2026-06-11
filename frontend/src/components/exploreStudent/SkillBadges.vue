@@ -13,6 +13,39 @@ const badgeKey = (badge: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
+const badgeVariantKey = (badge: string) => {
+  const normalized = badge.toLowerCase();
+
+  if (normalized.includes("devops")) return "devops";
+  if (
+    normalized.includes("ai") ||
+    normalized.includes("data") ||
+    normalized.includes("machine learning")
+  ) {
+    return "ai-data";
+  }
+  if (
+    normalized.includes("cloud") ||
+    normalized.includes("web") ||
+    normalized.includes("frontend") ||
+    normalized.includes("full stack") ||
+    normalized.includes("backend") ||
+    normalized.includes("mobile")
+  ) {
+    return "web-developer";
+  }
+  if (
+    normalized.includes("cyber") ||
+    normalized.includes("security") ||
+    normalized.includes("securite")
+  ) {
+    return "security-aware";
+  }
+  if (normalized.includes("hackathon")) return "hackathon-participant";
+
+  return badgeKey(badge);
+};
+
 const badgeMeanings: Record<string, string> = {
   devops: "L'étudiant a réalisé des projets avec Docker et CI/CD",
   "web-developer": "Plusieurs projets web validés",
@@ -21,7 +54,8 @@ const badgeMeanings: Record<string, string> = {
   "hackathon-participant": "Participation à des hackathons",
 };
 
-const badgeMeaning = (badge: string) => badgeMeanings[badgeKey(badge)] ?? badge;
+const badgeMeaning = (badge: string) =>
+  badgeMeanings[badgeVariantKey(badge)] ?? badge;
 </script>
 
 <template>
@@ -30,7 +64,7 @@ const badgeMeaning = (badge: string) => badgeMeanings[badgeKey(badge)] ?? badge;
       v-for="badge in badges.slice(0, 3)"
       :key="badge"
       class="skill-badge"
-      :class="`skill-badge-${badgeKey(badge)}`"
+      :class="`skill-badge-${badgeVariantKey(badge)}`"
       :title="badgeMeaning(badge)"
     >
       {{ badge }}

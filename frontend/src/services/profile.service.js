@@ -1,5 +1,12 @@
 import api from './api'
 
+const resolveBackendAsset = (path) => {
+  if (!path || /^https?:\/\//.test(path) || String(path).startsWith('data:')) return path
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+  const backendBase = apiBase.replace(/\/api\/?$/, '')
+  return `${backendBase}${path}`
+}
+
 const fullName = (user) =>
   [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
 
@@ -116,7 +123,7 @@ const mapPost = (item) => ({
 })
 
 const normalizeProfile = (payload) => {
-  const profile = payload?.profil || {}
+  const profile = payload?.profil || payload?.profile || (payload?.id_profil ? payload : {})
   const student = payload?.etudiant || {}
   const professional = payload?.professionnel || {}
   const professor = payload?.professeur || {}
@@ -159,8 +166,8 @@ const normalizeProfile = (payload) => {
       '',
     location: pickLocation(profile, student, payload),
     recos: payload?.recos || `${recommendations.length}+`,
-    avatar: payload?.avatar || profile?.photo_profil || '',
-    banner: profile?.banniere_profil || '',
+    avatar: resolveBackendAsset(payload?.avatar || profile?.photo_profil || ''),
+    banner: resolveBackendAsset(profile?.banniere_profil || ''),
     bio: payload?.bio || profile?.bio || '',
     email: payload?.email || profile?.email_professionnel || '',
     phone: payload?.phone || profile?.telephone || '',
@@ -198,9 +205,10 @@ export const profileService = {
   return normalizeProfile(data?.data ?? data)
 },
   async updateProfile(userId, payload) {
-    const url = userId == null || Number.isNaN(Number(userId)) ? '/profil/me' : `/profil/${userId}`
+    const id = userId == null || Number.isNaN(Number(userId)) ? null : Number(userId)
+    const url = id != null ? `/profil/${id}` : '/profil/me'
     const { data } = await api.put(url, payload)
-    return data.data
+    return normalizeProfile(data?.data ?? data)
   },
   
 

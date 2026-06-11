@@ -417,6 +417,11 @@ function mapRecommendations(items: any[]) {
   profile.value.recos = `${items.length}+`;
 }
 
+function isValidatedProject(project: any) {
+  const status = String(project?.statut || project?.status || "").toUpperCase();
+  return ["VALIDE", "ACCEPTE", "APPROUVE"].includes(status);
+}
+
 function mapProjects(items: any[]) {
   projects.value = items.map((post: any,i: number)=>{
     const s = parseStructuredContent(post?.contenu||"");
@@ -488,21 +493,23 @@ async function loadPortfolio() {
       stageService.getMesStages({etudiantId:profileStudentId.value,statut:"VALIDE"}),
     ]);
     mapProfileData(prof,port?.data??{});
-    currentTemplate.value = Number(port?.data?.modele?.id_modele||port?.data?.id_modele||3);
-    if (currentTemplate.value !== 3) {
-      await router.replace(templateRoute(currentTemplate.value, profileStudentId.value));
-      return;
-    }
+    currentTemplate.value = port?.data?.modele?.id_modele||port?.data?.id_modele||3;
+    if (currentTemplate.value===1&&!route.path.includes("/portfolio-professional")) { router.replace(`/portfolio/${profileStudentId.value}`); return; }
+    if (currentTemplate.value===2&&!route.path.includes("/portfolio-professional")) { router.replace(`/portfolio-creative/${profileStudentId.value}`); return; }
+    const validatedProjects = Array.isArray(prof?.projectsData)
+      ? prof.projectsData.filter((project: any) => isValidatedProject(project))
+      : [];
     const p = Array.isArray(posts?.data?.data)
       ? posts.data.data.filter((p: any)=>Number(p?.auteur?.id_utilisateur??p?.id_auteur??0)===Number(profileStudentId.value))
       : [];
     const projets = responseList(projetsResponse);
     const activites = responseList(activitesResponse);
     const stages = responseList(stagesResponse);
+    const projectSource = projets.length ? projets : validatedProjects;
 
     projects.value = [
-  ...projets.map(mapBackendProject),
-  ...(projets.length ? [] : posts.map((post: any, index: number) => {
+  ...projectSource.map(mapBackendProject),
+  ...(projectSource.length ? [] : p.map((post: any, index: number) => {
     const structured = parseStructuredContent(post?.contenu || "");
 
     return {

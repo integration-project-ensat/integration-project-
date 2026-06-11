@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { Bell, ChevronDown, Search } from "../../lib/icons";
+import { Bell, Search } from "../../lib/icons";
 import { notificationService } from "@/services/notification.service";
 
 type UserType = "student" | "professeur" | "professionnel";
@@ -48,10 +48,7 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const notificationRef = ref<HTMLElement | null>(null);
-const languageRef = ref<HTMLElement | null>(null);
 const isNotificationOpen = ref(false);
-const isLanguageOpen = ref(false);
-const selectedLanguage = ref("FR");
 const selectedNotificationFilter = ref<NotificationCategory>("Tout");
 const selectedNotificationId = ref<number | null>(null);
 const isHeaderHidden = ref(false);
@@ -61,7 +58,6 @@ const hasApiError = ref(false);
 let lastScrollTop = 0;
 let isScrollTicking = false;
 
-const languages = ["FR", "EN", "AR"];
 const notificationFilters: NotificationCategory[] = [
   "Tout",
   "Connexions",
@@ -385,6 +381,18 @@ const resolveConnexionPath = (type: string) => {
   return `/student/connexions?tab=${tab}`;
 };
 
+const appendQuery = (path: string, query: Record<string, string | number | null | undefined>) => {
+  const params = new URLSearchParams();
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === "") return;
+    params.set(key, String(value));
+  });
+
+  const suffix = params.toString();
+  return suffix ? `${path}?${suffix}` : path;
+};
+
 const resolveNotificationTargetPath = (notificationRaw: any) => {
   const type = String(notificationRaw?.type || "").toUpperCase();
   const targetType = String(
@@ -393,6 +401,12 @@ const resolveNotificationTargetPath = (notificationRaw: any) => {
       notificationRaw?.targetType ||
       "",
   ).toUpperCase();
+  const targetId = String(
+    notificationRaw?.cible_id ||
+      notificationRaw?.cibleId ||
+      notificationRaw?.targetId ||
+      "",
+  ).trim();
 
   if (type.includes("CONNEXION")) {
     return resolveConnexionPath(type);
@@ -400,17 +414,19 @@ const resolveNotificationTargetPath = (notificationRaw: any) => {
 
   if (props.userType === "professeur") {
     if (targetType === "LETTRE" || type.includes("RECOMMANDATION")) {
-      return "/prof/recommandations";
+      return appendQuery("/prof/recommandations", { highlight: targetId || null });
     }
-    if (
-      targetType === "PROJET" ||
-      targetType === "STAGE" ||
-      targetType === "ATTESTATION" ||
-      type.includes("PROJET") ||
-      type.includes("STAGE") ||
-      type.includes("ATTESTATION")
-    ) {
-      return "/prof/validations";
+    if (targetType === "PROJET" || type.includes("PROJET")) {
+      return appendQuery("/prof/validations", {
+        tab: "Projet",
+        highlight: targetId || null,
+      });
+    }
+    if (targetType === "STAGE" || type.includes("STAGE") || targetType === "ATTESTATION" || type.includes("ATTESTATION")) {
+      return appendQuery("/prof/validations", {
+        tab: "Stage",
+        highlight: targetId || null,
+      });
     }
     if (type.includes("COMMENTAIRE")) return "/prof/feed";
     return "/prof/dashboard";
@@ -421,22 +437,72 @@ const resolveNotificationTargetPath = (notificationRaw: any) => {
     return "/pro/dashboard";
   }
 
-  if (targetType === "LETTRE") return "/lettres";
-  if (targetType === "PROJET" || type.includes("PROJET")) return "/projets";
-  if (targetType === "STAGE" || type.includes("STAGE")) return "/stages";
-  if (targetType === "ACTIVITE") return "/activites";
+  if (targetType === "LETTRE") return appendQuery("/lettres", { highlight: targetId || null });
+  if (targetType === "PROJET" || type.includes("PROJET")) return appendQuery("/projets", { highlight: targetId || null });
+  if (targetType === "STAGE" || type.includes("STAGE")) return appendQuery("/stages", { highlight: targetId || null });
+  if (targetType === "ACTIVITE") return appendQuery("/activites", { highlight: targetId || null });
   if (
     targetType === "ATTESTATION" ||
     targetType === "BADGE" ||
     type.includes("ATTESTATION") ||
     type.includes("BADGE")
   ) {
-    return "/certifications";
+    return appendQuery("/certifications", { highlight: targetId || null });
   }
-  if (type.includes("RECOMMANDATION")) return "/recos";
+  if (type.includes("RECOMMANDATION")) return appendQuery("/recos", { highlight: targetId || null });
   if (type.includes("COMMENTAIRE")) return "/commentaires";
 
   return "/student/dashboard";
+};
+
+const extractNotificationMeta = (
+  messageRaw: any,
+): { person: string; action: string } => {
+  const message = String(messageRaw || "").trim();
+
+  if (!message) {
+    return {
+      person: "Système",
+      action: "Nouvelle notification",
+    };
+  }
+
+  const nameMatch = message.match(
+    /^([A-ZÀ-Ý][\p{L}'’.-]+(?:\s+[A-ZÀ-Ý][\p{L}'’.-]+)*)\s+((?:a|vous a)\s+.+)$/u,
+  );
+
+  if (nameMatch) {
+    return {
+      person: nameMatch[1] ?? "Utilisateur",
+      action: nameMatch[2] ?? message,
+    };
+  }
+
+  if (/^Un étudiant\b/i.test(message)) {
+    return {
+      person: "Étudiant",
+      action: message.replace(/^Un étudiant\s+/i, ""),
+    };
+  }
+
+  if (/^Le professeur\b/i.test(message)) {
+    return {
+      person: "Professeur",
+      action: message.replace(/^Le professeur\s+/i, ""),
+    };
+  }
+
+  if (/^Votre\b/i.test(message)) {
+    return {
+      person: "Système",
+      action: message,
+    };
+  }
+
+  return {
+    person: "Système",
+    action: message,
+  };
 };
 
 const mapNotification = (notificationRaw: any): NotificationItem => {
@@ -444,6 +510,7 @@ const mapNotification = (notificationRaw: any): NotificationItem => {
   const targetType = String(notificationRaw.cible_type ?? notificationRaw.cibleType ?? "");
   const targetId = String(notificationRaw.cible_id ?? notificationRaw.cibleId ?? "");
   const targetPath = resolveNotificationTargetPath(notificationRaw);
+  const { person, action } = extractNotificationMeta(notificationRaw.message);
 
   return {
     id: Number(notificationRaw.id_notification ?? notificationRaw.id ?? 0),
@@ -451,8 +518,8 @@ const mapNotification = (notificationRaw: any): NotificationItem => {
     type: String(notificationRaw.type || ""),
     targetId,
     targetType,
-    person: "Système",
-    action: notificationRaw.message || "Nouvelle notification",
+    person,
+    action,
     relatedTitle: targetType || "",
     time: formatTimeAgo(notificationRaw.date_reception),
     initials: category.charAt(0).toUpperCase(),
@@ -484,18 +551,6 @@ const hasUnreadNotifications = computed(() =>
 const toggleNotifications = () => {
   isHeaderHidden.value = false;
   isNotificationOpen.value = !isNotificationOpen.value;
-  isLanguageOpen.value = false;
-};
-
-const toggleLanguage = () => {
-  isHeaderHidden.value = false;
-  isLanguageOpen.value = !isLanguageOpen.value;
-  isNotificationOpen.value = false;
-};
-
-const selectLanguage = (language: string) => {
-  selectedLanguage.value = language;
-  isLanguageOpen.value = false;
 };
 
 const markNotificationAsRead = async (notification: NotificationItem) => {
@@ -546,10 +601,6 @@ const handleClickOutside = (event: MouseEvent) => {
   if (notificationRef.value && !notificationRef.value.contains(target)) {
     isNotificationOpen.value = false;
   }
-
-  if (languageRef.value && !languageRef.value.contains(target)) {
-    isLanguageOpen.value = false;
-  }
 };
 
 const updateHeaderVisibility = (scrollTop: number) => {
@@ -558,8 +609,7 @@ const updateHeaderVisibility = (scrollTop: number) => {
   if (
     scrollTop <= 16 ||
     scrollDelta < 0 ||
-    isNotificationOpen.value ||
-    isLanguageOpen.value
+    isNotificationOpen.value
   ) {
     isHeaderHidden.value = false;
   } else if (scrollDelta > 0 && scrollTop > 56) {
@@ -664,24 +714,30 @@ onMounted(() => {
                 {{ notification.initials }}
               </button>
 
-              <span class="explore-notif-copy">
-                <span class="explore-notif-text">
-                  <button
-                    type="button"
-                    class="explore-person-link"
-                    @click.stop="navigateToProfile(notification)"
-                  >
-                    {{ notification.person }}
-                  </button>
-                  {{ notification.action }}
-                  <span class="explore-related">{{
-                    notification.relatedTitle
-                  }}</span>
+                <span class="explore-notif-copy">
+                  <span class="explore-notif-text">
+                    <button
+                      v-if="notification.person !== 'Système'"
+                      type="button"
+                      class="explore-person-link"
+                      @click.stop="navigateToProfile(notification)"
+                    >
+                      {{ notification.person }}
+                    </button>
+                    {{ notification.action }}
+                    <button
+                      v-if="notification.relatedTitle"
+                      type="button"
+                      class="explore-related"
+                      @click.stop="navigateToNotificationTarget(notification)"
+                    >{{
+                      notification.relatedTitle
+                    }}</button>
+                  </span>
+                  <span class="explore-notif-meta">
+                    {{ notification.time }}
+                  </span>
                 </span>
-                <span class="explore-notif-meta">
-                  {{ notification.time }}
-                </span>
-              </span>
 
               <span v-if="notification.unread" class="explore-item-dot" />
             </div>
@@ -691,30 +747,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <div ref="languageRef" class="explore-dropdown-wrap">
-        <button
-          type="button"
-          class="explore-profile"
-          aria-label="Changer la langue"
-          @click="toggleLanguage"
-        >
-          <span class="explore-flag">{{ selectedLanguage }}</span>
-          <ChevronDown class="h-4 w-4" />
-        </button>
-
-        <div v-if="isLanguageOpen" class="explore-menu explore-language-menu">
-          <button
-            v-for="language in languages"
-            :key="language"
-            type="button"
-            class="explore-language-option"
-            :class="{ 'is-selected': selectedLanguage === language }"
-            @click="selectLanguage(language)"
-          >
-            {{ language }}
-          </button>
-        </div>
-      </div>
     </div>
   </section>
 </template>
@@ -825,39 +857,6 @@ onMounted(() => {
   border-radius: 9999px;
   background: var(--error);
   box-shadow: 0 0 0 2px var(--input-bg);
-}
-
-.explore-profile {
-  display: inline-flex;
-  height: 36px;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-radius: 9999px;
-  background: var(--blue-w);
-  color: var(--text-dark);
-  padding: 0 12px;
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 8px 18px var(--text-gray);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.explore-profile:hover {
-  background: var(--navy-mid);
-}
-
-.explore-flag {
-  display: inline-flex;
-  min-width: 22px;
-  height: 18px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: var(--input-bg);
-  font-size: 10px;
-  font-weight: 800;
 }
 
 .explore-menu {
@@ -1059,9 +1058,18 @@ onMounted(() => {
 }
 
 .explore-related {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   color: var(--purple);
   font-weight: 800;
   overflow-wrap: anywhere;
+}
+
+.explore-related:hover {
+  text-decoration: underline;
 }
 
 .explore-notif-meta {
@@ -1087,35 +1095,6 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-gray);
-}
-
-.explore-language-menu {
-  background: white;
-  min-width: 96px;
-  padding: 6px;
-}
-
-.explore-language-option {
-  width: 100%;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  padding: 8px 12px;
-  color: var(--text-dark);
-  font-size: 12px;
-  font-weight: 800;
-  text-align: left;
-  cursor: pointer;
-}
-
-.explore-language-option:hover {
-  background: #eeecff;
-  color: var(--text-dark);
-}
-
-.explore-language-option.is-selected {
-  background: #eeecff;
-  color: var(--text-dark);
 }
 
 @media (max-width: 860px) {

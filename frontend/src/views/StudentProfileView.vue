@@ -35,20 +35,70 @@
             :profile="profile"
             :recent-recommendations="recommendations"
             v-model="activeTab"
-            :is-owner="userRole === 'student' && !profileStudentId"
+            :is-owner="isOwnProfile"
             :connection-label="connectionTabLabel"
+            :recommendation-label="recommendationTabLabel"
+            :profile-role="viewedProfileRole"
+            :tabs="profileHeaderTabs"
+            :show-recommendations-summary="showRecommendationsSummary"
             @open-recos="showRecosModal = true"
             @open-portfolio="openPortfolio"
             @avatar-changed="profile.avatar = $event"
             @banner-changed="profile.banner = $event"
           />
 
+          <p v-if="profileSuccess" class="profile-feedback profile-feedback--success">
+            {{ profileSuccess }}
+          </p>
+          <p v-if="profileSaveError" class="profile-feedback profile-feedback--error">
+            {{ profileSaveError }}
+          </p>
+
+          <section v-if="activeTab === 'Connecter'" class="profile-top-popup">
+            <div class="connect-card connect-card--top">
+              <div>
+                <h3>{{ connectionPanelTitle }}</h3>
+                <p>{{ connectionPanelDescription }}</p>
+                <p v-if="connectionActionMessage" class="connection-message">
+                  {{ connectionActionMessage }}
+                </p>
+              </div>
+              <div class="connection-actions">
+                <template v-if="connectionStatus.isConnected">
+                  <button type="button" class="connect-btn connected" disabled>Déjà connecté</button>
+                  <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="removeConnection">
+                    {{ connectionLoading ? 'Traitement...' : 'Supprimer' }}
+                  </button>
+                </template>
+                <template v-else-if="connectionStatus.requestSent">
+                  <button type="button" class="connect-btn pending" disabled>Demande envoyée</button>
+                  <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="cancelConnectionRequest">
+                    {{ connectionLoading ? 'Traitement...' : 'Annuler' }}
+                  </button>
+                </template>
+                <template v-else-if="connectionStatus.requestReceived">
+                  <button type="button" class="connect-btn" :disabled="connectionLoading" @click="acceptConnectionRequest">Accepter</button>
+                  <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="rejectConnectionRequest">Refuser</button>
+                </template>
+                <button
+                  v-else
+                  type="button"
+                  class="connect-btn"
+                  :disabled="connectionLoading || isOwnProfile"
+                  @click="sendConnectionRequest"
+                >
+                  {{ connectionLoading ? 'Traitement...' : 'Se connecter' }}
+                </button>
+              </div>
+            </div>
+          </section>
+
           <!-- Action enseignant : attacher l'étudiant -->
-          <section v-if="userRole === 'teacher'" class="teacher-actions">
+          <section v-if="canAttachStudent" class="teacher-actions">
             <div class="teacher-actions__content">
               <div>
                 <h3>Ajouter cet étudiant</h3>
-                <p>Attachez ce profil à votre liste d'étudiants suivis.</p>
+                <p>Ajoutez cet étudiant à votre liste pour pouvoir valider ses demandes.</p>
               </div>
               <button
                 type="button"
@@ -69,20 +119,231 @@
           </section>
 
           <!-- Tab : Portfolio -->
-          <div v-if="activeTab === 'Portfolio'">
+          <div
+            v-if="activeTab === 'Portfolio' && isStudentProfile"
+            class="portfolio-tab"
+          >
+            <section v-if="showRoleOverview" class="role-overview">
+              <article
+                v-for="item in roleOverviewCards"
+                :key="item.label"
+                class="role-overview-card"
+              >
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </article>
+            </section>
+
+            <section v-if="canPublishPosts" class="post-composer">
+              <div class="post-composer__head">
+                <div>
+                  <h3>Publier un post</h3>
+                  <p>Partagez une actualité, une expertise ou une opportunité avec votre réseau.</p>
+                </div>
+                <span class="post-composer__badge">{{ viewedProfileLabel }}</span>
+              </div>
+              <textarea
+                v-model="newPostForm.content"
+                class="bio-textarea"
+                placeholder="Écrivez votre publication..."
+              />
+              <div v-if="newPostForm.imagePreview" class="composer-preview">
+                <img :src="newPostForm.imagePreview" alt="Aperçu du post" />
+                <button type="button" class="remove-photo-btn" @click="clearNewPostImage">
+                  Supprimer l'image
+                </button>
+              </div>
+              <div class="post-composer__actions">
+                <label class="btn-modifier post-upload-btn" for="new-post-image">
+                  Ajouter une image
+                </label>
+                <input
+                  id="new-post-image"
+                  type="file"
+                  accept="image/*"
+                  class="sr-only"
+                  @change="onNewPostImageChange"
+                />
+                <button
+                  type="button"
+                  class="send-btn"
+                  :disabled="postSubmitting || !newPostForm.content.trim()"
+                  @click="submitNewPost"
+                >
+                  {{ postSubmitting ? 'Publication...' : 'Publier' }}
+                </button>
+              </div>
+              <p v-if="postFeedback" class="profile-feedback profile-feedback--success">{{ postFeedback }}</p>
+              <p v-if="postError" class="profile-feedback profile-feedback--error">{{ postError }}</p>
+            </section>
+
+            <div v-if="!posts.length" class="page-state">
+              Aucune publication pour le moment.
+            </div>
             <PostCard
               v-for="(post, i) in posts"
               :key="post.id || i"
               :post="post"
+              :manageable="isOwnProfile"
               @comment="handleComment(i)"
+              @edit="openEditPost"
+              @delete="deletePost"
               @like="handleLike(post, $event)"
               @share="handleRepost(post, $event)"
               @submit-comment="handleSubmitComment(post, $event)"
             />
           </div>
 
-          <!-- Tab : Modifier bio (profil complet, owner uniquement) -->
-          <section v-if="activeTab === 'Modifier bio'" class="profile-edit-sections">
+          <section v-if="showRolePostsSection" class="portfolio-tab">
+            <section v-if="showRoleOverview && !isOwnProfile" class="role-overview">
+              <article
+                v-for="item in roleOverviewCards"
+                :key="item.label"
+                class="role-overview-card"
+              >
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </article>
+            </section>
+
+            <section v-if="canPublishPosts" class="post-composer">
+              <div class="post-composer__head">
+                <div>
+                  <h3>Publier un post</h3>
+                  <p>Partagez une actualite, une expertise ou une opportunite avec votre reseau.</p>
+                </div>
+                <span class="post-composer__badge">{{ viewedProfileLabel }}</span>
+              </div>
+              <textarea
+                v-model="newPostForm.content"
+                class="bio-textarea"
+                placeholder="Ecrivez votre publication..."
+              />
+              <div v-if="newPostForm.imagePreview" class="composer-preview">
+                <img :src="newPostForm.imagePreview" alt="Apercu du post" />
+                <button type="button" class="remove-photo-btn" @click="clearNewPostImage">
+                  Supprimer l'image
+                </button>
+              </div>
+              <div class="post-composer__actions">
+                <label class="btn-modifier post-upload-btn" for="role-post-image">
+                  Ajouter une image
+                </label>
+                <input
+                  id="role-post-image"
+                  type="file"
+                  accept="image/*"
+                  class="sr-only"
+                  @change="onNewPostImageChange"
+                />
+                <button
+                  type="button"
+                  class="send-btn"
+                  :disabled="postSubmitting || !newPostForm.content.trim()"
+                  @click="submitNewPost"
+                >
+                  {{ postSubmitting ? 'Publication...' : 'Publier' }}
+                </button>
+              </div>
+              <p v-if="postFeedback" class="profile-feedback profile-feedback--success">{{ postFeedback }}</p>
+              <p v-if="postError" class="profile-feedback profile-feedback--error">{{ postError }}</p>
+            </section>
+
+            <div v-if="!posts.length" class="page-state">
+              Aucune publication pour le moment.
+            </div>
+            <PostCard
+              v-for="(post, i) in posts"
+              :key="`role-post-${post.id || i}`"
+              :post="post"
+              :manageable="isOwnProfile"
+              @comment="handleComment(i)"
+              @edit="openEditPost"
+              @delete="deletePost"
+              @like="handleLike(post, $event)"
+              @share="handleRepost(post, $event)"
+              @submit-comment="handleSubmitComment(post, $event)"
+            />
+          </section>
+
+          <!-- Tab : Modifier info (professeur / professionnel) -->
+          <section
+            v-if="activeTab === 'Modifier info' && !isStudentProfile"
+            class="profile-edit-sections"
+          >
+            <div class="pedit-card">
+              <div class="pedit-head">
+                <h3>A propos</h3>
+                <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
+                  Modifier
+                </button>
+              </div>
+              <template v-if="!editingAbout">
+                <p class="pedit-bio-text">{{ profile.bio || 'Aucune biographie renseignee.' }}</p>
+              </template>
+              <template v-else>
+                <textarea v-model="bioForm" class="bio-textarea" placeholder="Decrivez votre parcours et votre expertise..." />
+                <div class="pedit-row-actions">
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveBio">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
+                  <button type="button" class="cancel-btn" @click="cancelBio">Annuler</button>
+                </div>
+              </template>
+            </div>
+
+            <div class="pedit-card">
+              <div class="pedit-head">
+                <h3>Contact et liens</h3>
+                <button v-if="!editingContact" type="button" class="btn-modifier" @click="openEditContact">
+                  Modifier
+                </button>
+              </div>
+              <template v-if="!editingContact">
+                <div class="contact-display">
+                  <div v-if="profile.email" class="contact-row"><span>{{ profile.email }}</span></div>
+                  <div v-if="profile.phone" class="contact-row"><span>{{ profile.phone }}</span></div>
+                  <div v-if="profile.website" class="contact-row"><span>{{ profile.website }}</span></div>
+                  <div v-if="profile.linkedin" class="contact-row"><span>{{ profile.linkedin }}</span></div>
+                  <div v-if="profile.github" class="contact-row"><span>{{ profile.github }}</span></div>
+                </div>
+              </template>
+              <template v-else>
+                <div class="contact-form">
+                  <div class="form-field"><label>Email</label><input v-model="contactForm.email" type="email" /></div>
+                  <div class="form-field"><label>Telephone</label><input v-model="contactForm.phone" type="tel" /></div>
+                  <div class="form-field"><label>Site web</label><input v-model="contactForm.website" type="url" /></div>
+                  <div class="form-field"><label>LinkedIn</label><input v-model="contactForm.linkedin" type="url" /></div>
+                  <div class="form-field"><label>GitHub</label><input v-model="contactForm.github" type="url" /></div>
+                </div>
+                <div class="pedit-row-actions">
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveContact">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
+                  <button type="button" class="cancel-btn" @click="editingContact = false">Annuler</button>
+                </div>
+              </template>
+            </div>
+
+            <div class="pedit-card">
+              <div class="pedit-head">
+                <h3>Informations {{ viewedProfileLabel.toLowerCase() }}</h3>
+              </div>
+              <div class="role-overview role-overview--edit">
+                <article
+                  v-for="item in roleOverviewCards"
+                  :key="item.label"
+                  class="role-overview-card"
+                >
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tab : Modifier bio (profil etudiant) -->
+          <section v-if="activeTab === 'Modifier bio' && isStudentProfile" class="profile-edit-sections">
 
             <!-- À propos -->
             <div class="pedit-card">
@@ -99,7 +360,9 @@
               <template v-else>
                 <textarea v-model="bioForm" class="bio-textarea" placeholder="Décrivez-vous en quelques mots..." />
                 <div class="pedit-row-actions">
-                  <button type="button" class="send-btn" @click="saveBio">Enregistrer</button>
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveBio">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
                   <button type="button" class="cancel-btn" @click="cancelBio">Annuler</button>
                 </div>
               </template>
@@ -147,7 +410,9 @@
                   <div class="form-field"><label>GitHub</label><input v-model="contactForm.github" type="url" placeholder="https://github.com/..." /></div>
                 </div>
                 <div class="pedit-row-actions">
-                  <button type="button" class="send-btn" @click="saveContact">Enregistrer</button>
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveContact">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
                   <button type="button" class="cancel-btn" @click="editingContact = false">Annuler</button>
                 </div>
               </template>
@@ -157,7 +422,7 @@
             <div class="pedit-card">
               <div class="pedit-head">
                 <h3>Compétences</h3>
-                <button v-if="!editingSkills" type="button" class="btn-modifier" @click="openEditSkills">
+                <button v-if="!editingSkills && isStudentProfile" type="button" class="btn-modifier" @click="openEditSkills">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Modifier
                 </button>
@@ -342,8 +607,193 @@
 
           </section>
 
+          <section
+            v-if="activeTab === 'Demandes' && canOpenProfessorRequests"
+            class="requests-panel"
+          >
+            <article class="pedit-card role-action-card role-action-card--wide">
+              <div>
+                <h3>Demande de validation de projet</h3>
+                <p>Envoyez un projet a {{ profile.name }} pour validation. Le professeur recevra la notification dans son espace de validations.</p>
+              </div>
+              <div class="contact-form">
+                <div class="form-field">
+                  <label>Titre du projet</label>
+                  <input v-model="projectRequestForm.titre" type="text" placeholder="Ex: Plateforme de gestion des stages" />
+                </div>
+                <div class="form-field">
+                  <label>Lien GitHub</label>
+                  <input v-model="projectRequestForm.lien_github" type="url" placeholder="https://github.com/..." />
+                </div>
+                <div class="form-field">
+                  <label>Technologies</label>
+                  <input v-model="projectRequestForm.technologies" type="text" placeholder="Vue, Node.js, Docker" />
+                </div>
+                <div class="form-field">
+                  <label>Description</label>
+                  <textarea v-model="projectRequestForm.description" rows="4" placeholder="Precisez le contexte, votre role et les resultats attendus..." />
+                </div>
+              </div>
+              <div class="pedit-row-actions">
+                <button
+                  type="button"
+                  class="send-btn"
+                  :disabled="projectRequestLoading"
+                  @click="submitProjectValidationRequest"
+                >
+                  {{ projectRequestLoading ? 'Envoi...' : 'Envoyer le projet' }}
+                </button>
+              </div>
+              <p v-if="projectRequestSuccess" class="profile-feedback profile-feedback--success">{{ projectRequestSuccess }}</p>
+              <p v-if="projectRequestError" class="profile-feedback profile-feedback--error">{{ projectRequestError }}</p>
+            </article>
+
+            <article class="pedit-card role-action-card role-action-card--wide">
+              <div>
+                <h3>Demande de validation de stage</h3>
+                <p>Ajoutez votre stage et transmettez-le directement a ce professeur pour validation.</p>
+              </div>
+              <div class="contact-form">
+                <div class="form-field">
+                  <label>Entreprise</label>
+                  <input v-model="stageRequestForm.entreprise" type="text" placeholder="Ex: Entreprise Alpha" />
+                </div>
+                <div class="form-field">
+                  <label>Poste</label>
+                  <input v-model="stageRequestForm.poste" type="text" placeholder="Ex: Stagiaire developpement web" />
+                </div>
+                <div class="form-field">
+                  <label>Date de debut</label>
+                  <input v-model="stageRequestForm.date_debut" type="date" />
+                </div>
+                <div class="form-field">
+                  <label>Date de fin</label>
+                  <input v-model="stageRequestForm.date_fin" type="date" />
+                </div>
+                <div class="form-field">
+                  <label>Technologies</label>
+                  <input v-model="stageRequestForm.technologies" type="text" placeholder="Laravel, PostgreSQL, React" />
+                </div>
+                <div class="form-field">
+                  <label>Missions</label>
+                  <textarea v-model="stageRequestForm.missions" rows="4" placeholder="Resumez les missions du stage..." />
+                </div>
+              </div>
+              <div class="pedit-row-actions">
+                <button
+                  type="button"
+                  class="send-btn"
+                  :disabled="stageRequestLoading"
+                  @click="submitStageValidationRequest"
+                >
+                  {{ stageRequestLoading ? 'Envoi...' : 'Envoyer le stage' }}
+                </button>
+              </div>
+              <p v-if="stageRequestSuccess" class="profile-feedback profile-feedback--success">{{ stageRequestSuccess }}</p>
+              <p v-if="stageRequestError" class="profile-feedback profile-feedback--error">{{ stageRequestError }}</p>
+            </article>
+
+            <article class="pedit-card role-action-card role-action-card--wide">
+              <div>
+                <h3>Demande de lettre de recommandation</h3>
+                <p>Demandez a {{ profile.name }} de rediger une lettre de recommandation.</p>
+              </div>
+              <div class="contact-form">
+                <div class="form-field">
+                  <label>Motif</label>
+                  <select v-model="letterRequestForm.motif">
+                    <option value="MASTER">Master</option>
+                    <option value="EMPLOI">Emploi</option>
+                    <option value="STAGE">Stage</option>
+                    <option value="DOUBLE_DIPLOME">Double diplome</option>
+                    <option value="INTERNATIONAL">International</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Date souhaitee</label>
+                  <input v-model="letterRequestForm.date_souhaitee" type="date" />
+                </div>
+              </div>
+              <div class="pedit-row-actions">
+                <button
+                  type="button"
+                  class="send-btn"
+                  :disabled="letterRequestLoading"
+                  @click="submitLetterRequest"
+                >
+                  {{ letterRequestLoading ? 'Envoi...' : 'Envoyer la demande' }}
+                </button>
+              </div>
+              <p v-if="letterRequestSuccess" class="profile-feedback profile-feedback--success">{{ letterRequestSuccess }}</p>
+              <p v-if="letterRequestError" class="profile-feedback profile-feedback--error">{{ letterRequestError }}</p>
+            </article>
+          </section>
+
+          <!-- Tab : Recommander / Demander -->
+          <section
+            v-if="activeTab === 'Recommander' && (canSendRecommendation || canRequestLetterValidation)"
+            class="connect-tab"
+          >
+            <div class="share-card role-action-card">
+              <div>
+                <h3>{{ recommendationTabTitle }}</h3>
+                <p>{{ recommendationTabDescription }}</p>
+              </div>
+
+              <template v-if="canSendRecommendation">
+                <textarea
+                  v-model="recommendationMessage"
+                  class="bio-textarea"
+                  placeholder="Écrivez votre recommandation..."
+                />
+                <div class="share-actions">
+                  <button type="button" class="send-btn" @click="sendRecommendation">
+                    Envoyer la recommandation
+                  </button>
+                </div>
+                <p v-if="recommendationFeedback" class="profile-feedback profile-feedback--success">{{ recommendationFeedback }}</p>
+                <p v-if="recommendationError" class="profile-feedback profile-feedback--error">{{ recommendationError }}</p>
+              </template>
+
+              <template v-else-if="canRequestLetterValidation">
+                <div class="contact-form">
+                  <div class="form-field">
+                    <label>Motif</label>
+                    <select v-model="letterRequestForm.motif">
+                      <option value="MASTER">Master</option>
+                      <option value="EMPLOI">Emploi</option>
+                      <option value="STAGE">Stage</option>
+                      <option value="DOUBLE_DIPLOME">Double diplôme</option>
+                      <option value="INTERNATIONAL">International</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>Date souhaitée</label>
+                    <input v-model="letterRequestForm.date_souhaitee" type="date" />
+                  </div>
+                </div>
+                <div class="share-actions">
+                  <button
+                    type="button"
+                    class="send-btn"
+                    :disabled="letterRequestLoading"
+                    @click="submitLetterRequest"
+                  >
+                    {{ letterRequestLoading ? 'Envoi...' : 'Envoyer la demande' }}
+                  </button>
+                </div>
+                <p v-if="letterRequestSuccess" class="profile-feedback profile-feedback--success">{{ letterRequestSuccess }}</p>
+                <p v-if="letterRequestError" class="profile-feedback profile-feedback--error">{{ letterRequestError }}</p>
+              </template>
+
+              <p v-else class="page-state">
+                Cette action n'est pas disponible pour ce profil.
+              </p>
+            </div>
+          </section>
+
           <!-- Tab : Connecter -->
-          <section v-if="activeTab === 'Connecter'" class="connect-tab">
+          <section v-if="false" class="connect-tab">
             <div class="connect-card">
               <div>
                 <h3>{{ connectionPanelTitle }}</h3>
@@ -489,9 +939,12 @@
               <input id="edit-post-img" type="file" accept="image/*" class="sr-only" @change="onEditImageChange" />
             </label>
           </div>
+          <p v-if="editPostError" class="profile-feedback profile-feedback--error">{{ editPostError }}</p>
         </div>
         <div class="post-edit-footer">
-          <button type="button" class="send-btn" @click="saveEditPost">Enregistrer</button>
+          <button type="button" class="send-btn" :disabled="editPostSaving" @click="saveEditPost">
+            {{ editPostSaving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
           <button type="button" class="cancel-btn" @click="showEditModal = false">Annuler</button>
         </div>
       </div>
@@ -537,10 +990,13 @@ import StudentProfileHeader from '../components/StudentProfileHeader.vue'
 import PostCard from '../components/PostCard.vue'
 import { commentaireService } from '../services/commentaire.service'
 import { connexionService } from '../services/connexion.service'
+import { lettreService } from '../services/lettre.service'
 import { postService } from '../services/post.service'
+import { projetService } from '../services/projet.service'
 import profApi from '../services/profApi'
 import { profileService } from '../services/profile.service'
 import { recommendationService } from '../services/recommendation.service'
+import { stageService } from '../services/stage.service'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -558,8 +1014,11 @@ type ProfilePost = {
   author: string
   subtitle: string
   description: string
+  liked?: boolean
+  reposted?: boolean
   avatar?: string
   images?: string[]
+  imageUrl?: string
   media?: Array<string | { url: string; type?: 'image' | 'video' | 'pdf' | 'file'; name?: string }>
 }
 
@@ -570,6 +1029,8 @@ type ConnectionStatus = {
   status: string
   connexionId: string | null
 }
+
+type ProfileRole = 'student' | 'teacher' | 'professional'
 
 interface Experience { id: number; poste: string; entreprise: string; debut: string; fin: string; description: string }
 interface Formation { id: number; diplome: string; etablissement: string; debut: string; fin: string }
@@ -589,6 +1050,9 @@ const sidebarOpen = ref(false)
 const showRecosModal = ref(false)
 const showEditModal = ref(false)
 const copied = ref(false)
+const savingProfile = ref(false)
+const profileSuccess = ref('')
+const profileSaveError = ref('')
 
 // ─── Role ─────────────────────────────────────────────────────────────────────
 
@@ -615,19 +1079,31 @@ const userRole = computed<'student' | 'teacher' | 'professional'>(
 
 // ─── Tab ──────────────────────────────────────────────────────────────────────
 
-const allowedTabs = new Set(['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager', 'Modifier bio'])
+const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'Compétances', 'À propos', 'Partager', 'Modifier bio', 'Modifier info'])
 
 const getRouteTab = () => {
-  const tab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'
+  const rawTab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'
+  const tab = rawTab === 'Modifier bio' && normalizedAuthRole.value !== 'student'
+    ? 'Modifier info'
+    : rawTab
   return allowedTabs.has(tab) ? tab : 'Portfolio'
 }
 
 const activeTab = ref(getRouteTab())
 
+function resolveDefaultTab() {
+  if (isOwnProfile.value) return isStudentProfile.value ? getRouteTab() : 'Portfolio'
+  if (isTeacherProfile.value) return canOpenProfessorRequests.value ? 'Demandes' : canRequestLetterValidation.value ? 'Recommander' : 'À propos'
+  if (isProfessionalProfile.value) return 'À propos'
+  return getRouteTab()
+}
+
 // ─── Profile data ─────────────────────────────────────────────────────────────
 
 const profileLoading = ref(true)
 const profileError = ref('')
+const profileRaw = ref<any>(null)
+const viewedProfileRole = ref<ProfileRole>('student')
 
 const profile = ref({
   id: 0,
@@ -651,6 +1127,65 @@ const profile = ref({
 
 const recommendations = ref<Recommendation[]>([])
 const posts = ref<ProfilePost[]>([])
+const recommendationFeedback = ref('')
+const recommendationError = ref('')
+
+const isStudentProfile = computed(() => viewedProfileRole.value === 'student')
+const isTeacherProfile = computed(() => viewedProfileRole.value === 'teacher')
+const isProfessionalProfile = computed(() => viewedProfileRole.value === 'professional')
+const canAttachStudent = computed(() => userRole.value === 'teacher' && isStudentProfile.value && !isOwnProfile.value)
+const canPublishPosts = computed(() => isOwnProfile.value && (isTeacherProfile.value || isProfessionalProfile.value))
+const canSendRecommendation = computed(
+  () => !isOwnProfile.value && isStudentProfile.value && (userRole.value === 'teacher' || userRole.value === 'professional')
+)
+const canRequestLetterValidation = computed(
+  () => !isOwnProfile.value && userRole.value === 'student' && isTeacherProfile.value
+)
+const canOpenProfessorRequests = computed(
+  () => !isOwnProfile.value && userRole.value === 'student' && isTeacherProfile.value
+)
+const showRoleOverview = computed(() => isTeacherProfile.value || isProfessionalProfile.value)
+const viewedProfileLabel = computed(() => {
+  if (isTeacherProfile.value) return 'Professeur'
+  if (isProfessionalProfile.value) return 'Professionnel'
+  return 'Etudiant'
+})
+const roleOverviewCards = computed(() => {
+  const rawProfessor = profileRaw.value?.professeur || {}
+  const rawProfessional = profileRaw.value?.professionnel || {}
+
+  if (isTeacherProfile.value) {
+    return [
+      { label: 'Specialite', value: rawProfessor.specialite || profile.value.title || 'Non renseignee' },
+      { label: 'Etablissement', value: rawProfessor.etablissement || profile.value.school || 'Non renseigne' },
+      { label: 'Localisation', value: profile.value.location || 'Non renseignee' },
+    ]
+  }
+
+  if (isProfessionalProfile.value) {
+    return [
+      { label: 'Poste', value: rawProfessional.poste || profile.value.title || 'Non renseigne' },
+      { label: 'Entreprise', value: rawProfessional.entreprise || profile.value.school || 'Non renseignee' },
+      { label: 'Secteur', value: rawProfessional.secteur || 'Non renseigne' },
+    ]
+  }
+
+  return []
+})
+const showRolePostsSection = computed(() => {
+  if (isStudentProfile.value) return false
+  if (isOwnProfile.value) return activeTab.value !== 'Modifier info'
+  return activeTab.value === 'À propos'
+})
+const profileHeaderTabs = computed(() => {
+  if (isOwnProfile.value) return undefined
+  if (isTeacherProfile.value) return ['Demandes', 'Connecter', 'À propos', 'Partager']
+  if (isProfessionalProfile.value) return ['Connecter', 'À propos', 'Partager']
+  return undefined
+})
+const showRecommendationsSummary = computed(
+  () => isStudentProfile.value
+)
 
 // Derived skill name lists (used in display mode)
 const technicalSkillNames = computed(() => profile.value.technicalSkills.map(s => s.name))
@@ -661,6 +1196,41 @@ const softSkillNames = computed(() => profile.value.softSkills.map(s => s.name))
 const attachingStudent = ref(false)
 const studentAttached = ref(false)
 const attachMessage = ref('')
+const postSubmitting = ref(false)
+const postFeedback = ref('')
+const postError = ref('')
+const projectRequestLoading = ref(false)
+const projectRequestSuccess = ref('')
+const projectRequestError = ref('')
+const stageRequestLoading = ref(false)
+const stageRequestSuccess = ref('')
+const stageRequestError = ref('')
+const letterRequestLoading = ref(false)
+const letterRequestSuccess = ref('')
+const letterRequestError = ref('')
+const newPostForm = reactive({
+  content: '',
+  imageFile: null as File | null,
+  imagePreview: '',
+})
+const projectRequestForm = reactive({
+  titre: '',
+  description: '',
+  technologies: '',
+  lien_github: '',
+})
+const stageRequestForm = reactive({
+  entreprise: '',
+  poste: '',
+  missions: '',
+  technologies: '',
+  date_debut: '',
+  date_fin: '',
+})
+const letterRequestForm = reactive({
+  motif: 'MASTER',
+  date_souhaitee: '',
+})
 
 // ─── IDs ──────────────────────────────────────────────────────────────────────
 
@@ -707,6 +1277,27 @@ const connectionTabLabel = computed(() => {
   if (connectionStatus.value.requestSent) return 'Demande envoyée'
   if (connectionStatus.value.requestReceived) return 'Répondre'
   return 'Connecter'
+})
+
+const recommendationTabLabel = computed(() => {
+  if (canRequestLetterValidation.value) return 'Demander une lettre'
+  return 'Recommander'
+})
+
+const recommendationTabTitle = computed(() => {
+  if (canRequestLetterValidation.value) return 'Demande de validation de lettre'
+  if (canSendRecommendation.value) return 'Envoyer une recommandation'
+  return 'Action indisponible'
+})
+
+const recommendationTabDescription = computed(() => {
+  if (canRequestLetterValidation.value) {
+    return `Envoyez une demande de lettre de recommandation Ã  ${profile.value.name}.`
+  }
+  if (canSendRecommendation.value) {
+    return `Partagez une recommandation utile pour renforcer le profil de ${profile.value.name}.`
+  }
+  return "Ce profil ne propose pas d'action de recommandation pour votre rôle."
 })
 
 const connectionPanelTitle = computed(() => {
@@ -834,16 +1425,48 @@ async function copyProfileLink() {
 const editingAbout = ref(false)
 const bioForm = ref('')
 
+function applySavedProfile(savedProfile: any) {
+  profile.value = {
+    ...profile.value,
+    bio: savedProfile?.bio ?? profile.value.bio,
+    email: savedProfile?.email ?? profile.value.email,
+    phone: savedProfile?.phone ?? profile.value.phone,
+    location: savedProfile?.location ?? profile.value.location,
+    linkedin: savedProfile?.linkedin ?? profile.value.linkedin,
+    avatar: savedProfile?.avatar ?? profile.value.avatar,
+    banner: savedProfile?.banner ?? profile.value.banner,
+  }
+}
+
+async function saveProfileChanges(payload: Record<string, string>, successMessage: string) {
+  if (savingProfile.value) return false
+  savingProfile.value = true
+  profileSuccess.value = ''
+  profileSaveError.value = ''
+
+  try {
+    const savedProfile = await profileService.updateProfile(null, payload)
+    applySavedProfile(savedProfile)
+    profileSuccess.value = successMessage
+    window.setTimeout(() => { profileSuccess.value = '' }, 3000)
+    return true
+  } catch (error: any) {
+    profileSaveError.value =
+      error?.response?.data?.message ||
+      "Impossible d'enregistrer le profil pour le moment."
+    return false
+  } finally {
+    savingProfile.value = false
+  }
+}
+
 function openEditAbout() { bioForm.value = profile.value.bio; editingAbout.value = true }
 async function saveBio() {
-  try {
-    await profileService.updateProfile(profile.value.id || null, { bio: bioForm.value })
-    profile.value.bio = bioForm.value
-    editingAbout.value = false
-  } catch (error) {
-    console.warn('Sauvegarde bio impossible', error)
-    profileError.value = 'Impossible de sauvegarder la bio.'
-  }
+  const saved = await saveProfileChanges(
+    { bio: bioForm.value },
+    'Bio mise a jour avec succes.'
+  )
+  if (saved) editingAbout.value = false
 }
 function cancelBio() { bioForm.value = profile.value.bio; editingAbout.value = false }
 
@@ -872,13 +1495,17 @@ function openEditContact() {
 }
 
 async function saveContact() {
-  try {
-    await profileService.updateProfile(profile.value.id || null, buildContactPayload())
-    Object.assign(profile.value, { ...contactForm })
+  const payload: Record<string, string> = {}
+  if (contactForm.email.trim()) payload.email_professionnel = contactForm.email.trim()
+  if (contactForm.phone.trim()) payload.telephone = contactForm.phone.trim()
+  if (contactForm.linkedin.trim()) payload.linkedin_url = contactForm.linkedin.trim()
+
+  const saved = await saveProfileChanges(
+    payload,
+    'Informations de contact mises a jour avec succes.'
+  )
+  if (saved) {
     editingContact.value = false
-  } catch (error) {
-    console.warn('Sauvegarde contact impossible', error)
-    profileError.value = 'Impossible de sauvegarder les informations de contact.'
   }
 }
 
@@ -988,31 +1615,66 @@ function deleteEntry(section: EntrySection, id: number) {
 // ─── Post edit modal ──────────────────────────────────────────────────────────
 
 const editingPostId = ref<number | null>(null)
-const editForm = reactive({ description: '', imagePreview: null as string | null })
+const editPostSaving = ref(false)
+const editPostError = ref('')
+const editForm = reactive({
+  description: '',
+  imagePreview: null as string | null,
+  imageFile: null as File | null,
+})
 
-function openEditPost(post: any) {
-  editingPostId.value = post.id
+function openEditPost(post: ProfilePost) {
+  editingPostId.value = post.id ?? null
   editForm.description = post.description
-  editForm.imagePreview = post.imagePreview ?? null
+  editForm.imagePreview = post.imageUrl || post.images?.[0] || null
+  editForm.imageFile = null
+  editPostError.value = ''
   showEditModal.value = true
 }
 
-function saveEditPost() {
-  const idx = posts.value.findIndex(p => p.id === editingPostId.value)
-  if (idx !== -1) {
-    ;(posts.value[idx] as any).description = editForm.description
-    ;(posts.value[idx] as any).imagePreview = editForm.imagePreview
+async function saveEditPost() {
+  if (!editingPostId.value) return
+  const description = editForm.description.trim()
+  if (!description) {
+    editPostError.value = 'La description est obligatoire.'
+    return
   }
-  showEditModal.value = false
+
+  editPostSaving.value = true
+  editPostError.value = ''
+
+  try {
+    const payload = new FormData()
+    payload.append('contenu', description)
+    payload.append('visibilite', 'PUBLIC')
+    if (editForm.imageFile) payload.append('image', editForm.imageFile)
+
+    await postService.updatePost(editingPostId.value, payload)
+    await loadPosts()
+    showEditModal.value = false
+  } catch (error: any) {
+    editPostError.value = error?.response?.data?.message || 'Impossible de modifier ce post.'
+  } finally {
+    editPostSaving.value = false
+  }
 }
 
-function deletePost(id: number) {
-  posts.value = posts.value.filter(p => p.id !== id)
+async function deletePost(postOrId: ProfilePost | number) {
+  const id = typeof postOrId === 'number' ? postOrId : postOrId.id
+  if (!id) return
+
+  try {
+    await postService.deletePost(id)
+    posts.value = posts.value.filter((post) => post.id !== id)
+  } catch (error) {
+    console.error('Erreur suppression post', error)
+  }
 }
 
 function onEditImageChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  editForm.imageFile = file
   const reader = new FileReader()
   reader.onload = () => { editForm.imagePreview = reader.result as string }
   reader.readAsDataURL(file)
@@ -1041,6 +1703,8 @@ async function handleLike(post: ProfilePost, liked: boolean) {
     } else {
       await postService.removeReaction(post.id)
     }
+    const targetPost = posts.value.find((entry) => entry.id === post.id)
+    if (targetPost) targetPost.liked = liked
   } catch (error) {
     console.error('Erreur reaction post', error)
   }
@@ -1054,6 +1718,8 @@ async function handleRepost(post: ProfilePost, reposted: boolean) {
     } else {
       await postService.removeRepost(post.id)
     }
+    const targetPost = posts.value.find((entry) => entry.id === post.id)
+    if (targetPost) targetPost.reposted = reposted
   } catch (error) {
     console.error('Erreur republication post', error)
   }
@@ -1064,17 +1730,173 @@ async function handleRepost(post: ProfilePost, reposted: boolean) {
 const recommendationMessage = ref('')
 
 async function sendRecommendation() {
+  if (!canSendRecommendation.value || !profileId.value) return
   const message = recommendationMessage.value.trim()
+  if (!message) return
+  recommendationFeedback.value = ''
+  recommendationError.value = ''
   try {
-    const { data } = await recommendationService.createRecommendation({
+    await recommendationService.createRecommendation({
       id_etudiant_cible: profileId.value,
       message,
-      role_auteur: 'PROFESSEUR'
+      role_auteur: userRole.value === 'professional' ? 'PROFESSIONNEL' : 'PROFESSEUR'
     })
-    recommendations.value.unshift(mapBackendRecommendation(data.data))
     recommendationMessage.value = ''
+    recommendationFeedback.value = 'Recommandation envoyee avec succes.'
+    await loadRecommendations()
+    window.setTimeout(() => { recommendationFeedback.value = '' }, 3000)
   } catch (error) {
     console.error('Erreur envoi recommandation', error)
+    recommendationError.value = 'Impossible denvoyer cette recommandation pour le moment.'
+  }
+}
+
+function onNewPostImageChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  newPostForm.imageFile = file
+  const reader = new FileReader()
+  reader.onload = () => { newPostForm.imagePreview = reader.result as string }
+  reader.readAsDataURL(file)
+}
+
+function clearNewPostImage() {
+  newPostForm.imageFile = null
+  newPostForm.imagePreview = ''
+}
+
+function parseCsvList(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+async function submitNewPost() {
+  const content = newPostForm.content.trim()
+  if (!canPublishPosts.value || !content) return
+
+  postSubmitting.value = true
+  postFeedback.value = ''
+  postError.value = ''
+
+  try {
+    const payload = new FormData()
+    payload.append('contenu', content)
+    payload.append('visibilite', 'PUBLIC')
+    if (newPostForm.imageFile) payload.append('image', newPostForm.imageFile)
+
+    await postService.createPost(payload)
+    newPostForm.content = ''
+    clearNewPostImage()
+    postFeedback.value = 'Publication envoyee avec succes.'
+    await loadPosts()
+    window.setTimeout(() => { postFeedback.value = '' }, 3000)
+  } catch (error: any) {
+    postError.value = error?.response?.data?.message || 'Impossible de publier ce post pour le moment.'
+  } finally {
+    postSubmitting.value = false
+  }
+}
+
+async function submitProjectValidationRequest() {
+  if (!canOpenProfessorRequests.value || !profileId.value) return
+  if (!projectRequestForm.titre.trim()) {
+    projectRequestError.value = 'Le titre du projet est obligatoire.'
+    return
+  }
+
+  projectRequestLoading.value = true
+  projectRequestSuccess.value = ''
+  projectRequestError.value = ''
+
+  try {
+    const { data } = await projetService.createProjet({
+      titre: projectRequestForm.titre.trim(),
+      description: projectRequestForm.description.trim() || undefined,
+      type: 'INTEGRATION',
+      lien_github: projectRequestForm.lien_github.trim() || undefined,
+      technologies: parseCsvList(projectRequestForm.technologies),
+      id_professeur: profileId.value,
+    })
+
+    const createdProjectId = Number(data?.data?.id_projet)
+    if (Number.isFinite(createdProjectId) && createdProjectId > 0) {
+      await projetService.soumettreProjet(createdProjectId)
+    }
+
+    projectRequestSuccess.value = 'Projet envoye pour validation avec succes.'
+    projectRequestForm.titre = ''
+    projectRequestForm.description = ''
+    projectRequestForm.technologies = ''
+    projectRequestForm.lien_github = ''
+    window.setTimeout(() => { projectRequestSuccess.value = '' }, 3000)
+  } catch (error: any) {
+    projectRequestError.value =
+      error?.response?.data?.message || 'Impossible denvoyer cette demande de projet.'
+  } finally {
+    projectRequestLoading.value = false
+  }
+}
+
+async function submitStageValidationRequest() {
+  if (!canOpenProfessorRequests.value || !profileId.value) return
+  if (!stageRequestForm.entreprise.trim() || !stageRequestForm.poste.trim()) {
+    stageRequestError.value = 'Lentreprise et le poste sont obligatoires.'
+    return
+  }
+
+  stageRequestLoading.value = true
+  stageRequestSuccess.value = ''
+  stageRequestError.value = ''
+
+  try {
+    await stageService.createStage({
+      entreprise: stageRequestForm.entreprise.trim(),
+      poste: stageRequestForm.poste.trim(),
+      missions: stageRequestForm.missions.trim() || undefined,
+      technologies: stageRequestForm.technologies.trim() || undefined,
+      date_debut: stageRequestForm.date_debut || undefined,
+      date_fin: stageRequestForm.date_fin || undefined,
+      id_encadrant: profileId.value,
+    })
+
+    stageRequestSuccess.value = 'Stage envoye pour validation avec succes.'
+    stageRequestForm.entreprise = ''
+    stageRequestForm.poste = ''
+    stageRequestForm.missions = ''
+    stageRequestForm.technologies = ''
+    stageRequestForm.date_debut = ''
+    stageRequestForm.date_fin = ''
+    window.setTimeout(() => { stageRequestSuccess.value = '' }, 3000)
+  } catch (error: any) {
+    stageRequestError.value =
+      error?.response?.data?.message || 'Impossible denvoyer cette demande de stage.'
+  } finally {
+    stageRequestLoading.value = false
+  }
+}
+
+async function submitLetterRequest() {
+  if (!canRequestLetterValidation.value || !profileId.value) return
+
+  letterRequestLoading.value = true
+  letterRequestSuccess.value = ''
+  letterRequestError.value = ''
+
+  try {
+    await lettreService.requestRecommendationLetter({
+      id_professeur: profileId.value,
+      motif: letterRequestForm.motif,
+      date_souhaitee: letterRequestForm.date_souhaitee || undefined,
+    })
+    letterRequestSuccess.value = 'Demande de lettre envoyee avec succes.'
+    window.setTimeout(() => { letterRequestSuccess.value = '' }, 3000)
+  } catch (error: any) {
+    letterRequestError.value =
+      error?.response?.data?.message || 'Impossible denvoyer la demande pour le moment.'
+  } finally {
+    letterRequestLoading.value = false
   }
 }
 
@@ -1096,6 +1918,9 @@ async function loadProfile() {
     const backendProfile = profileStudentId.value
       ? await profileService.getProfile(profileStudentId.value)
       : await profileService.getCurrentUser()
+
+    profileRaw.value = backendProfile?.raw ?? null
+    viewedProfileRole.value = normalizeBackendRole(backendProfile?.raw?.role)
 
     const rawStudent = backendProfile?.raw?.etudiant || {}
     const rawCompetences = Array.isArray(rawStudent?.competences) ? rawStudent.competences : []
@@ -1128,6 +1953,7 @@ async function loadProfile() {
       location: backendProfile.location,
       recos: backendProfile.recos,
       avatar: backendProfile.avatar,
+      banner: backendProfile.banner,
       bio: backendProfile.bio,
       email: backendProfile.email,
       phone: backendProfile.phone || '',
@@ -1140,6 +1966,7 @@ async function loadProfile() {
 
     if (Array.isArray(backendProfile.posts)) posts.value = backendProfile.posts
     if (Array.isArray(backendProfile.recommendations)) recommendations.value = backendProfile.recommendations
+    activeTab.value = resolveDefaultTab()
   } catch (error) {
     console.warn('Chargement du profil complet impossible', error)
     profileError.value = 'Impossible de charger ce profil pour le moment.'
@@ -1163,12 +1990,44 @@ async function loadPosts() {
 }
 
 async function loadRecommendations() {
+  if (!isStudentProfile.value || !profileId.value) {
+    recommendations.value = []
+    return
+  }
   try {
-    const { data } = await recommendationService.getRecommendations({
-      id_etudiant_cible: profileId.value,
-      statut: 'VALIDE'
+    const requests = [
+      recommendationService.getRecommendations({
+        id_etudiant_cible: profileId.value,
+        statut: 'VALIDE'
+      }),
+    ]
+
+    const canLoadOwnPendingRecommendations =
+      !isOwnProfile.value &&
+      canSendRecommendation.value &&
+      currentUserId.value != null
+
+    if (canLoadOwnPendingRecommendations) {
+      requests.push(
+        recommendationService.getRecommendations({
+          id_etudiant_cible: profileId.value,
+          id_auteur: currentUserId.value,
+        }),
+      )
+    }
+
+    const responses = await Promise.all(requests)
+    const merged = new Map<number, Recommendation>()
+
+    responses.forEach((response) => {
+      const items = Array.isArray(response?.data?.data) ? response.data.data : []
+      items.forEach((item: any) => {
+        const mapped = mapBackendRecommendation(item)
+        merged.set(mapped.id, mapped)
+      })
     })
-    recommendations.value = (data.data || []).map(mapBackendRecommendation)
+
+    recommendations.value = Array.from(merged.values()).sort((left, right) => right.id - left.id)
   } catch (error) {
     console.warn('Chargement des recommandations impossible', error)
     recommendations.value = []
@@ -1176,7 +2035,7 @@ async function loadRecommendations() {
 }
 
 async function loadAttachedStatus() {
-  if (userRole.value !== 'teacher' || !profileId.value) return
+  if (!canAttachStudent.value || !profileId.value) return
   try {
     const { data } = await profApi.getAttachedStudentStatus(profileId.value)
     studentAttached.value = Boolean(data?.data?.attached)
@@ -1186,7 +2045,7 @@ async function loadAttachedStatus() {
 }
 
 async function attachCurrentStudent() {
-  if (!profileId.value || studentAttached.value) return
+  if (!canAttachStudent.value || !profileId.value || studentAttached.value) return
   attachingStudent.value = true
   attachMessage.value = ''
   try {
@@ -1213,8 +2072,15 @@ function mapBackendPost(post: any): ProfilePost {
     author: [fullName(auteur), ...collaboratorNames].filter(Boolean).join(' & ') || 'Auteur inconnu',
     subtitle: post.visibilite || 'Post portfolio',
     description: post.contenu,
+    liked: Array.isArray(post.reactions)
+      ? post.reactions.some((reaction: any) => Number(reaction?.auteur?.id_utilisateur) === currentUserId.value)
+      : false,
+    reposted: Array.isArray(post.reposts)
+      ? post.reposts.some((repost: any) => Number(repost?.auteur?.id_utilisateur) === currentUserId.value)
+      : false,
     avatar: '',
-    images: post.image_url ? [resolveBackendAsset(post.image_url)] : []
+    images: post.image_url ? [resolveBackendAsset(post.image_url)] : [],
+    imageUrl: post.image_url ? resolveBackendAsset(post.image_url) : undefined,
   }
 }
 
@@ -1241,6 +2107,13 @@ function fullName(user: any) {
   return [user?.prenom, user?.nom].filter(Boolean).join(' ')
 }
 
+function normalizeBackendRole(roleRaw: unknown): ProfileRole {
+  const role = String(roleRaw || '').trim().toUpperCase()
+  if (role === 'PROFESSEUR' || role === 'TEACHER') return 'teacher'
+  if (role === 'PROFESSIONNEL' || role === 'PROFESSIONAL') return 'professional'
+  return 'student'
+}
+
 function resolveBackendAsset(path: string) {
   if (!path || /^https?:\/\//.test(path)) return path
   const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
@@ -1264,12 +2137,12 @@ onMounted(async () => {
 
 watch(() => route.query.tab, () => { activeTab.value = getRouteTab() })
 
-watch(profileId, () => {
+watch(profileId, async () => {
+  await loadProfile()
   loadAttachedStatus()
   connectionActionMessage.value = ''
   connectionStatus.value = defaultConnectionStatus()
   loadConnectionStatus()
-  loadProfile()
   loadPosts()
   loadRecommendations()
 })
@@ -1292,6 +2165,27 @@ watch(profileId, () => {
 
 .page-state--error { color: #dc2626; }
 
+.profile-feedback {
+  margin: 10px 0 0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: var(--font-head);
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+.profile-feedback--success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.profile-feedback--error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
@@ -1309,6 +2203,121 @@ watch(profileId, () => {
 }
 
 .content.shifted { padding-left: 230px; }
+
+.portfolio-tab {
+  display: grid;
+  gap: 14px;
+}
+
+.role-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.role-overview--edit {
+  margin-bottom: 14px;
+}
+
+.role-overview-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+.role-overview-card span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-head);
+}
+
+.role-overview-card strong {
+  display: block;
+  font-size: .92rem;
+  color: var(--text-dark);
+  line-height: 1.45;
+}
+
+.post-composer {
+  background: white;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+  display: grid;
+  gap: 14px;
+}
+
+.post-composer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.post-composer__head h3 {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.post-composer__head p {
+  font-size: .85rem;
+  color: var(--text-muted);
+}
+
+.post-composer__badge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eeecff;
+  color: var(--purple);
+  font-family: var(--font-head);
+  font-size: .76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.composer-preview img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+.post-composer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.post-upload-btn {
+  width: fit-content;
+}
+
+.role-action-card {
+  width: min(620px, 100%);
+}
+
+.role-action-card--wide {
+  width: 100%;
+}
+
+.profile-top-popup {
+  margin-top: 14px;
+}
+
+.connect-card--top {
+  width: 100%;
+}
 
 /* ── Teacher actions ─────────────────────────────── */
 .teacher-actions {
@@ -1385,6 +2394,12 @@ watch(profileId, () => {
 .recommendation-message { font-size: .9rem; line-height: 1.5; color: var(--text-dark); }
 
 /* ── Connect tab ─────────────────────────────────── */
+.requests-panel {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
 .connect-tab {
   display: flex;
   justify-content: center;
@@ -1918,6 +2933,11 @@ watch(profileId, () => {
   font-weight: 700;
 }
 
+.send-btn:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
 .cancel-btn {
   min-height: 42px;
   padding: 0 22px;
@@ -1951,7 +2971,9 @@ watch(profileId, () => {
 @media (max-width: 900px) {
   .content,
   .content.shifted { padding: 16px; }
+  .role-overview { grid-template-columns: 1fr; }
   .recommendation-head { flex-direction: column; }
   .connect-card { flex-direction: column; align-items: flex-start; }
+  .post-composer__head { flex-direction: column; }
 }
 </style>
