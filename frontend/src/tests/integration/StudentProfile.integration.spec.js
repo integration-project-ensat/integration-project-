@@ -1,187 +1,143 @@
 /**
- * TESTS D'INTÉGRATION — ProfileView ↔ StudentProfileHeader ↔ profileService
+ * TESTS D'INTÉGRATION — StudentProfileView ↔ StudentProfileHeader (v2)
  *
- * But : tester que les 3 fichiers du profil fonctionnent correctement ENSEMBLE.
+ * But : tester que StudentProfileView et StudentProfileHeader fonctionnent
+ * correctement ensemble — données du profil, onglets, événements.
  *
- * Différence avec les tests unitaires :
- *   - Tests unitaires    → StudentProfileHeader seul, service mocké
- *   - Tests d'intégration → ProfileView + StudentProfileHeader + store auth
- *     montés ensemble avec des flux de données réels entre eux.
+ * Approche : mount complet de StudentProfileView avec TopBar/SideBar/PostCard
+ * stubés. Le flux réel View → Header → DOM est testé.
  *
- * Ce qu'on teste :
- *   INT-SP-01 : ProfileView rend bien StudentProfileHeader
- *   INT-SP-02 : userId du store auth est transmis en prop
- *   INT-SP-03 : userId = null quand aucun utilisateur connecté
- *   INT-SP-04 : après API, le nom est visible dans la page complète
- *   INT-SP-05 : skeleton visible avant la résolution API
- *   INT-SP-06 : badge vérifié visible dans ProfileView après chargement
- *   INT-SP-07 : lien GitHub accessible depuis ProfileView
- *   INT-SP-08 : changement d'utilisateur dans le store met à jour userId
+ * INT-SP-01 : StudentProfileView rend le composant StudentProfileHeader
+ * INT-SP-02 : Le profil avec un nom valide est transmis au header
+ * INT-SP-03 : isOwner=true est transmis (mode propriétaire)
+ * INT-SP-04 : Le nom du profil est visible dans le DOM de la vue
+ * INT-SP-05 : Les onglets owner (Modifier bio, Partager) sont visibles
+ * INT-SP-06 : Clic Modifier bio affiche les sections d'édition du profil
+ * INT-SP-07 : L'événement avatar-changed met à jour le profil dans la vue
+ * INT-SP-08 : Double clic sur Modifier bio masque les sections d'édition
  */
 
-import { mount, flushPromises } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
-import ProfileView          from '@/views/ProfileView.vue'
+import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi } from 'vitest'
+import StudentProfileView from '@/views/StudentProfileView.vue'
 import StudentProfileHeader from '@/components/StudentProfileHeader.vue'
-import { useAuthStore }     from '@/store/auth.js'
 
-// ── vi.hoisted : MOCK_PROFILE disponible avant le hoist de vi.mock ─────────
-const { MOCK_PROFILE, mockGetProfile } = vi.hoisted(() => {
-  const MOCK_PROFILE = {
-    id:          1,
-    name:        'Aimad Eddine Slimani',
-    email:       'aimad@test.com',
-    apogee:      '21009876',
-    field:       'Génie Informatique',
-    year:        '3ème année',
-    school:      'ENSA Marrakech',
-    city:        'Marrakech',
-    avatar:      null,
-    bannerColor: '#1a3c5e',
-    bio:         'Étudiant passionné par le développement web.',
-    isVerified:  true,
-    github:      'https://github.com/slimo777',
-    linkedin:    null,
-  }
-  const mockGetProfile = vi.fn().mockResolvedValue(MOCK_PROFILE)
-  return { MOCK_PROFILE, mockGetProfile }
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual('vue-router')
+  return { ...actual, useRouter: vi.fn(() => ({ push: vi.fn() })) }
 })
 
-vi.mock('@/services/profile.service.js', () => ({
-  profileService: {
-    getProfile:    mockGetProfile,
-    updateProfile: vi.fn(),
-    uploadAvatar:  vi.fn(),
-  }
-}))
+const GLOBAL_CONFIG = {
+  stubs: {
+    TopBar: { template: '<div class="topbar-stub" />' },
+    SideBar: { template: '<div class="sidebar-stub" />' },
+    PostCard: { template: '<div class="postcard-stub" />' },
+  },
+}
 
-describe('Intégration : ProfileView ↔ StudentProfileHeader ↔ profileService', () => {
+function mountView() {
+  return mount(StudentProfileView, { global: GLOBAL_CONFIG })
+}
 
-  beforeEach(() => {
-    setActivePinia(createPinia())
-  })
+describe('Intégration : StudentProfileView ↔ StudentProfileHeader', () => {
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-01
-  // But : vérifier que ProfileView inclut bien StudentProfileHeader dans
-  // son arbre DOM. Si ce test échoue, le composant n'est pas importé/utilisé.
+  // But : vérifier que StudentProfileView inclut bien StudentProfileHeader
+  // dans son arbre DOM — test de base de l'intégration des deux fichiers.
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-01 : ProfileView rend le composant StudentProfileHeader', () => {
-    const pinia   = createPinia()
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
+  it('INT-SP-01 : StudentProfileView rend le composant StudentProfileHeader', () => {
+    const wrapper = mountView()
     expect(wrapper.findComponent(StudentProfileHeader).exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-02
-  // But : vérifier le flux store → ProfileView → StudentProfileHeader.
-  // Quand l'utilisateur est connecté (id: 42), cette valeur doit arriver
-  // en prop dans StudentProfileHeader. C'est toute la chaîne de données.
+  // But : le profil (objet réactif de la vue) doit être transmis comme prop
+  // au composant header. Sans cette transmission, rien ne s'affiche.
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-02 : userId du store auth est transmis en prop à StudentProfileHeader', () => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    const auth = useAuthStore()
-    auth.login({ id: 42 }, 'mock-token', 'student')
-
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    const header  = wrapper.findComponent(StudentProfileHeader)
-    expect(header.props('userId')).toBe(42)
+  it('INT-SP-02 : le profil avec un nom valide est transmis au header', () => {
+    const wrapper = mountView()
+    const profile = wrapper.findComponent(StudentProfileHeader).props('profile')
+    expect(profile).toBeDefined()
+    expect(typeof profile.name).toBe('string')
+    expect(profile.name.length).toBeGreaterThan(0)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-03
-  // But : quand aucun utilisateur n'est connecté (auth.user = null),
-  // la prop userId transmise doit être null et non undefined.
+  // But : isOwner=true est transmis au header — c'est ce qui active le mode
+  // édition (overlays avatar/bannière, onglets Modifier bio).
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-03 : userId = null quand aucun utilisateur n\'est connecté', () => {
-    const pinia   = createPinia()
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    const header  = wrapper.findComponent(StudentProfileHeader)
-    expect(header.props('userId')).toBeNull()
+  it('INT-SP-03 : isOwner=true est transmis au header (mode propriétaire)', () => {
+    const wrapper = mountView()
+    expect(wrapper.findComponent(StudentProfileHeader).props('isOwner')).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-04
-  // But : end-to-end du flux complet — depuis le store jusqu'au DOM.
-  // Après que l'API répond, le nom du profil doit être visible dans la page.
+  // But : end-to-end du flux vue → header → DOM.
+  // Le nom du profil doit remonter jusqu'au h1 visible dans la page.
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-04 : le nom du profil est visible dans ProfileView après chargement', async () => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    const auth = useAuthStore()
-    auth.login({ id: 1 }, 'mock-token', 'student')
-
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    await flushPromises()
-    expect(wrapper.text()).toContain('Aimad Eddine Slimani')
+  it('INT-SP-04 : le nom du profil est visible dans le DOM de la vue', () => {
+    const wrapper = mountView()
+    expect(wrapper.find('h1').exists()).toBe(true)
+    expect(wrapper.find('h1').text().length).toBeGreaterThan(0)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-05
-  // But : avant que l'API réponde, le skeleton doit être visible même
-  // depuis ProfileView. Vérifie que l'état loading se propage jusqu'au DOM.
+  // But : puisque isOwner=true, seuls les onglets "Modifier bio" et "Partager"
+  // doivent apparaître — les onglets de visite (Portfolio, Recommander…) non.
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-05 : le skeleton est visible dans ProfileView avant la résolution API', () => {
-    const pinia   = createPinia()
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    expect(wrapper.find('.skeleton-name').exists()).toBe(true)
+  it('INT-SP-05 : les onglets owner (Modifier bio, Partager) sont visibles', () => {
+    const wrapper = mountView()
+    const tabTexts = wrapper.findAll('.tab').map(t => t.text())
+    expect(tabTexts).toContain('Modifier bio')
+    expect(tabTexts).toContain('Partager')
+    expect(tabTexts).toHaveLength(2)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-06
-  // But : vérifier que le badge "vérifié" remonte jusqu'au DOM de ProfileView.
-  // Ce test couvre la chaîne : API → StudentProfileHeader → DOM → ProfileView.
+  // But : cliquer sur l'onglet Modifier bio doit mettre à jour activeTab dans
+  // la vue via update:modelValue → les sections d'édition doivent apparaître.
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-06 : le badge vérifié est visible dans ProfileView après chargement', async () => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    const auth = useAuthStore()
-    auth.login({ id: 1 }, 'mock-token', 'student')
-
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    await flushPromises()
-    expect(wrapper.find('.verified-badge').exists()).toBe(true)
+  it('INT-SP-06 : clic Modifier bio affiche les sections d\'édition du profil', async () => {
+    const wrapper = mountView()
+    expect(wrapper.find('.profile-edit-sections').exists()).toBe(false)
+    const modifierTab = wrapper.findAll('.tab').find(t => t.text() === 'Modifier bio')
+    await modifierTab.trigger('click')
+    expect(wrapper.find('.profile-edit-sections').exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-07
-  // But : le lien GitHub doit être accessible et cliquable depuis ProfileView.
-  // Vérifie que les liens sociaux remontent correctement depuis le composant.
+  // But : quand le header émet avatar-changed, la vue doit mettre à jour
+  // profile.avatar via son handler @avatar-changed. Teste la réactivité
+  // de bout en bout : événement composant → mise à jour du profil parent.
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-07 : le lien GitHub est accessible depuis ProfileView', async () => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    const auth = useAuthStore()
-    auth.login({ id: 1 }, 'mock-token', 'student')
-
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    await flushPromises()
-    const githubBtn = wrapper.find('.social-btn.github')
-    expect(githubBtn.exists()).toBe(true)
-    expect(githubBtn.attributes('href')).toBe('https://github.com/slimo777')
+  it('INT-SP-07 : l\'événement avatar-changed met à jour le profil dans la vue', async () => {
+    const wrapper = mountView()
+    const header = wrapper.findComponent(StudentProfileHeader)
+    await header.vm.$emit('avatar-changed', 'data:image/png;base64,fakedata')
+    await wrapper.vm.$nextTick()
+    expect(header.props('profile').avatar).toBe('data:image/png;base64,fakedata')
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // INT-SP-08
-  // But : vérifier la réactivité store → prop.
-  // Quand on change d'utilisateur dans le store, la prop userId dans
-  // StudentProfileHeader doit se mettre à jour automatiquement.
+  // But : le double clic sur Modifier bio doit masquer les sections d'édition
+  // (comportement de toggle). Vérifie que la logique d'émission et la v-model
+  // de la vue fonctionnent correctement dans les deux sens.
   // ─────────────────────────────────────────────────────────────────────────
-  it('INT-SP-08 : changer d\'utilisateur dans le store met à jour la prop userId', async () => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    const auth = useAuthStore()
-    auth.login({ id: 10 }, 'token-a', 'student')
-
-    const wrapper = mount(ProfileView, { global: { plugins: [pinia] } })
-    expect(wrapper.findComponent(StudentProfileHeader).props('userId')).toBe(10)
-
-    auth.login({ id: 99 }, 'token-b', 'Prof')
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.findComponent(StudentProfileHeader).props('userId')).toBe(99)
+  it('INT-SP-08 : double clic sur Modifier bio masque les sections d\'édition', async () => {
+    const wrapper = mountView()
+    const modifierTab = wrapper.findAll('.tab').find(t => t.text() === 'Modifier bio')
+    await modifierTab.trigger('click')
+    expect(wrapper.find('.profile-edit-sections').exists()).toBe(true)
+    await modifierTab.trigger('click')
+    expect(wrapper.find('.profile-edit-sections').exists()).toBe(false)
   })
 
 })

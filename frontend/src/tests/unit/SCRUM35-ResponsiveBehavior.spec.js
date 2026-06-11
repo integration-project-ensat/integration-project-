@@ -1,203 +1,193 @@
 /**
- * SCRUM-35 — Test Responsive Behavior
+ * SCRUM-35 — Test Responsive Behavior (v2)
  *
- * But : vérifier que le composant StudentProfileHeader s'adapte
- * correctement aux différentes tailles d'écran.
+ * But : vérifier que le composant StudentProfileHeader reste fonctionnel
+ * et structurellement correct à différentes tailles d'écran.
  *
- * Approche :
- *   - Vitest + jsdom pour tester la structure HTML responsive
- *   - window.innerWidth simulé pour chaque breakpoint
- *   - Vérification que les éléments clés restent présents à toutes tailles
+ * Note : jsdom n'applique pas les @media CSS — ces tests vérifient la
+ * structure HTML et la logique Vue, pas le rendu CSS final.
  *
  * Breakpoints testés :
  *   Mobile  : 375px  (iPhone SE)
  *   Tablette: 768px  (iPad portrait)
  *   Desktop : 1280px (écran standard)
+ *   Très petit : 320px (anciens Android)
  *
- * Note : jsdom n'applique pas les @media CSS — les tests vérifient
- * la structure HTML et la logique Vue, pas le rendu CSS final.
- * Pour les tests visuels CSS, utiliser Playwright (voir profile.spec.js).
- *
- * Tests :
- *   RESP-01 : composant présent sur mobile (375px)
- *   RESP-02 : composant présent sur tablette (768px)
- *   RESP-03 : composant présent sur desktop (1280px)
- *   RESP-04 : éléments critiques visibles sur mobile
- *   RESP-05 : éléments critiques visibles sur tablette
- *   RESP-06 : la section cover utilise flex (layout responsive)
- *   RESP-07 : les méta-puces utilisent flex-wrap (pas de débordement)
- *   RESP-08 : les liens sociaux utilisent flex-wrap
- *   RESP-09 : le nom est tronqué avec text-overflow sur desktop
- *   RESP-10 : le composant se monte sans erreur à 320px (très petit écran)
+ * RESP-01 : Composant présent sur mobile (375px)
+ * RESP-02 : Composant présent sur tablette (768px)
+ * RESP-03 : Composant présent sur desktop (1280px)
+ * RESP-04 : Éléments critiques visibles sur mobile
+ * RESP-05 : Éléments critiques visibles sur tablette
+ * RESP-06 : .cover-section contient .avatar-wrap (layout responsive)
+ * RESP-07 : Onglets présents à toutes les tailles
+ * RESP-08 : La section about toggle au clic sur l\'onglet À propos
+ * RESP-09 : Le nom est dans un élément h1 (sémantique correcte)
+ * RESP-10 : Pas d\'erreur au montage sur très petit écran (320px)
  */
 
-import { mount, flushPromises } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import StudentProfileHeader from '@/components/StudentProfileHeader.vue'
 
-const { mockGetProfile } = vi.hoisted(() => {
-  const MOCK = {
-    id: 1, name: 'Aimad Eddine Slimani', email: 'aimad@test.com',
-    apogee: '21009876', field: 'Génie Informatique', year: '3ème année',
-    school: 'ENSA Marrakech', city: 'Marrakech', avatar: null,
-    bannerColor: '#1a3c5e', bio: 'Bio test.', isVerified: true,
-    github: 'https://github.com/slimo777', linkedin: null,
-  }
-  return { mockGetProfile: vi.fn().mockResolvedValue(MOCK) }
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual('vue-router')
+  return { ...actual, useRouter: vi.fn(() => ({ push: vi.fn() })) }
 })
 
-vi.mock('@/services/profile.service.js', () => ({
-  profileService: { getProfile: mockGetProfile, updateProfile: vi.fn(), uploadAvatar: vi.fn() }
-}))
+const MOCK_PROFILE = {
+  name: 'Aimad Eddine Slimani',
+  score: 500,
+  title: 'Étudiant en Génie Informatique',
+  school: 'ENSA Marrakech',
+  location: 'Marrakech',
+  recos: '12',
+  bio: 'Bio de test.',
+  email: 'aimad@test.com',
+}
 
-// Utilitaire : simuler une largeur d'écran dans jsdom
 function setViewport(width) {
   Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: width })
   window.dispatchEvent(new Event('resize'))
 }
 
+function mountHeader(isOwner = false) {
+  return mount(StudentProfileHeader, {
+    props: { profile: MOCK_PROFILE, modelValue: '', isOwner },
+  })
+}
+
 describe('SCRUM-35 — Test Responsive Behavior', () => {
 
   afterEach(() => {
-    setViewport(1280) // reset après chaque test
+    setViewport(1280)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-01
-  // But : le composant doit se monter et s'afficher correctement sur mobile.
-  // On simule un écran iPhone SE (375×667px).
+  // But : le composant doit se monter correctement sur mobile (375px).
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-01 : le composant se monte correctement sur mobile (375px)', async () => {
+  it('RESP-01 : le composant se monte correctement sur mobile (375px)', () => {
     setViewport(375)
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
+    const wrapper = mountHeader()
     expect(wrapper.find('.profile-header').exists()).toBe(true)
-    expect(wrapper.find('.student-name').text()).toBe('Aimad Eddine Slimani')
+    expect(wrapper.find('h1').text()).toBe('Aimad Eddine Slimani')
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-02
-  // But : le composant doit se monter et s'afficher correctement sur tablette.
-  // On simule un iPad en portrait (768×1024px).
+  // But : le composant doit se monter correctement sur tablette (768px).
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-02 : le composant se monte correctement sur tablette (768px)', async () => {
+  it('RESP-02 : le composant se monte correctement sur tablette (768px)', () => {
     setViewport(768)
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
+    const wrapper = mountHeader()
     expect(wrapper.find('.profile-header').exists()).toBe(true)
-    expect(wrapper.find('.banner').exists()).toBe(true)
-    expect(wrapper.find('.avatar-wrapper').exists()).toBe(true)
+    expect(wrapper.find('.cover-img').exists()).toBe(true)
+    expect(wrapper.find('.avatar-wrap').exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-03
-  // But : le composant doit se monter et s'afficher correctement sur desktop.
+  // But : le composant doit se monter correctement sur desktop (1280px).
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-03 : le composant se monte correctement sur desktop (1280px)', async () => {
+  it('RESP-03 : le composant se monte correctement sur desktop (1280px)', () => {
     setViewport(1280)
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
+    const wrapper = mountHeader()
     expect(wrapper.find('.profile-header').exists()).toBe(true)
-    expect(wrapper.find('.student-name').exists()).toBe(true)
-    expect(wrapper.find('.social-links').exists()).toBe(true)
+    expect(wrapper.find('h1').exists()).toBe(true)
+    expect(wrapper.find('.tabs').exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-04
-  // But : sur mobile, les éléments critiques (nom, avatar, filière) doivent
-  // tous rester visibles — aucun ne doit être masqué par du CSS display:none.
+  // But : les éléments critiques (nom, bannière, avatar, école) doivent rester
+  // présents sur mobile — aucun ne doit être conditionnel à la taille.
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-04 : éléments critiques présents sur mobile (375px)', async () => {
+  it('RESP-04 : éléments critiques présents sur mobile (375px)', () => {
     setViewport(375)
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
-    expect(wrapper.find('.avatar-wrapper').exists()).toBe(true)
-    expect(wrapper.find('.student-name').exists()).toBe(true)
-    expect(wrapper.find('.field-badge').exists()).toBe(true)
-    expect(wrapper.find('.student-school').exists()).toBe(true)
+    const wrapper = mountHeader()
+    expect(wrapper.find('.cover-img').exists()).toBe(true)
+    expect(wrapper.find('.avatar-wrap').exists()).toBe(true)
+    expect(wrapper.find('h1').exists()).toBe(true)
+    expect(wrapper.find('.school').exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-05
-  // But : sur tablette, les éléments critiques doivent aussi tous être présents.
+  // But : sur tablette, les éléments critiques doivent aussi être tous présents.
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-05 : éléments critiques présents sur tablette (768px)', async () => {
+  it('RESP-05 : éléments critiques présents sur tablette (768px)', () => {
     setViewport(768)
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
-    expect(wrapper.find('.meta-row').exists()).toBe(true)
-    expect(wrapper.find('.student-bio').exists()).toBe(true)
-    expect(wrapper.find('.social-links').exists()).toBe(true)
+    const wrapper = mountHeader()
+    expect(wrapper.find('.profile-info').exists()).toBe(true)
+    expect(wrapper.find('.location').exists()).toBe(true)
+    expect(wrapper.find('.recos-summary').exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-06
-  // But : la section cover utilise flexbox pour aligner avatar + infos.
-  // C'est ce qui permet le passage en colonne sur mobile via CSS @media.
+  // But : .cover-section doit contenir .avatar-wrap — c'est la structure
+  // qui permet le passage en colonne sur mobile via CSS @media.
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-06 : la section cover contient avatar-wrapper et student-info côte à côte', async () => {
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
-    const cover = wrapper.find('.cover')
-    expect(cover.exists()).toBe(true)
-    expect(cover.find('.avatar-wrapper').exists()).toBe(true)
-    expect(cover.find('.student-info').exists()).toBe(true)
+  it('RESP-06 : .cover-section contient .avatar-wrap (layout responsive)', () => {
+    const wrapper = mountHeader()
+    const coverSection = wrapper.find('.cover-section')
+    expect(coverSection.exists()).toBe(true)
+    expect(coverSection.find('.avatar-wrap').exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-07
-  // But : les méta-puces (APOGEE, email, ville) utilisent flex-wrap pour ne
-  // pas déborder sur mobile. On vérifie qu'il y a bien plusieurs puces.
+  // But : la section onglets doit être présente à toutes les tailles d'écran.
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-07 : la méta-row contient plusieurs puces (wrappables sur mobile)', async () => {
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
-    const chips = wrapper.findAll('.meta-chip')
-    expect(chips.length).toBeGreaterThanOrEqual(2)
+  it('RESP-07 : les onglets sont présents à toutes les tailles', () => {
+    for (const width of [320, 375, 768, 1280]) {
+      setViewport(width)
+      const wrapper = mountHeader()
+      expect(wrapper.find('.tabs').exists()).toBe(true)
+    }
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-08
-  // But : les liens sociaux utilisent flex-wrap pour s'adapter aux petits écrans.
-  // On vérifie que la section social-links existe et contient des boutons.
+  // But : la section À propos doit s'afficher/se masquer au clic sur l'onglet,
+  // et ce comportement doit fonctionner quelle que soit la taille d'écran.
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-08 : les liens sociaux sont dans un conteneur flex', async () => {
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
-    const socialLinks = wrapper.find('.social-links')
-    expect(socialLinks.exists()).toBe(true)
-    expect(socialLinks.find('.social-btn').exists()).toBe(true)
+  it('RESP-08 : la section à propos toggle correctement au clic sur l\'onglet', async () => {
+    setViewport(375)
+    const wrapper = mountHeader(false) // non-owner voit l'onglet À propos
+    expect(wrapper.find('.about-section').exists()).toBe(false)
+    const aboutTab = wrapper.findAll('.tab').find(t => t.text() === 'À propos')
+    await aboutTab.trigger('click')
+    expect(wrapper.find('.about-section').exists()).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-09
-  // But : le nom utilise text-overflow: ellipsis pour ne pas casser le layout
-  // sur les petits écrans avec de longs noms.
+  // But : le nom doit être dans un élément h1 — sémantique correcte
+  // pour le référencement et l'accessibilité à toutes tailles.
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-09 : le nom de l\'étudiant est rendu dans un élément h1', async () => {
-    const wrapper = mount(StudentProfileHeader, { props: { userId: 1 } })
-    await flushPromises()
-    // Le .student-name est un h1 → sémantique correcte pour tous les écrans
-    expect(wrapper.find('h1.student-name').exists()).toBe(true)
+  it('RESP-09 : le nom de l\'étudiant est dans un élément h1 (sémantique)', () => {
+    const wrapper = mountHeader()
+    expect(wrapper.find('h1').exists()).toBe(true)
+    expect(wrapper.find('h1').text()).toBe('Aimad Eddine Slimani')
   })
 
   // ─────────────────────────────────────────────────────────────────────────
   // RESP-10
-  // But : le composant doit se monter sans crash même sur très petit écran
-  // (320px = anciens Android). Aucune erreur Vue ne doit être lancée.
+  // But : le composant doit se monter sans crash sur très petit écran (320px).
+  // Aucune erreur Vue ne doit être lancée.
   // ─────────────────────────────────────────────────────────────────────────
-  it('RESP-10 : aucune erreur au montage sur très petit écran (320px)', async () => {
+  it('RESP-10 : aucune erreur au montage sur très petit écran (320px)', () => {
     setViewport(320)
     let error = null
     const wrapper = mount(StudentProfileHeader, {
-      props: { userId: 1 },
+      props: { profile: MOCK_PROFILE, modelValue: '' },
       global: {
         config: {
-          errorHandler: (err) => { error = err }
-        }
-      }
+          errorHandler: (err) => { error = err },
+        },
+      },
     })
-    await flushPromises()
     expect(error).toBeNull()
     expect(wrapper.find('.profile-header').exists()).toBe(true)
   })
