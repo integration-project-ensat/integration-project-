@@ -276,8 +276,8 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: #eef1fb;
-  color: rgb(15 23 42);
+  background: var(--surface-page);
+  color: var(--text-strong);
   padding-top: 50px;
 }
 .explore-shell {
@@ -306,9 +306,9 @@ const handleUpdateFilters = (next: Record<string, any>) => {
 .explore-middle-inner { margin: 0; width: 100%; max-width: none; padding: 0; }
 .explore-panel {
   border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-06);
+  box-shadow: 0 18px 40px var(--overlay-slate-09);
   overflow: hidden;
 }
 .explore-feed {
@@ -316,12 +316,12 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   flex-direction: column;
   gap: 20px;
   padding: 16px 18px 18px;
-  background: #ffffff;
+  background: var(--white);
 }
 .explore-state {
   padding: 40px;
   text-align: center;
-  color: rgb(100 116 139);
+  color: var(--text-slate);
   font-size: 14px;
 }
 .explore-state--error { color: #e11d48; }
@@ -334,7 +334,7 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   width: 36px;
   height: 36px;
   border-radius: 9999px;
-  background: white;
+  background: var(--white);
   border: 1px solid rgba(15, 23, 42, 0.1);
   box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
   display: inline-flex;
@@ -343,7 +343,7 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.save-profile-btn.saved { background: #6c5ce7; border-color: #6c5ce7; color: white; }
+.save-profile-btn.saved { background: var(--violet); border-color: var(--violet); color: var(--white); }
 .save-icon { width: 18px; height: 18px; }
 .save-feedback {
   position: absolute;
@@ -351,8 +351,8 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   top: 22px;
   z-index: 6;
   border-radius: 9999px;
-  background: rgb(15 23 42);
-  color: white;
+  background: var(--text-strong);
+  color: var(--white);
   padding: 7px 12px;
   font-size: 12px;
   font-weight: 800;

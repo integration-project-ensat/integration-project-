@@ -518,10 +518,10 @@ onMounted(async () => {
 .info-card,
 .ai-feedback-card,
 .tool-card {
-  background: white;
+  background: var(--white);
   border-radius: var(--radius-card);
-  box-shadow: 0 18px 35px rgba(17, 24, 39, 0.08);
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: 0 18px 35px var(--overlay-navy-08);
+  border: 1px solid var(--overlay-navy-08);
 }
 
 .hero-card {
@@ -567,10 +567,10 @@ h1 {
 }
 
 .page-state {
-  background: white;
+  background: var(--white);
   border-radius: var(--radius-card);
   padding: 24px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid var(--overlay-navy-08);
 }
 
 .page-state--error,
@@ -623,7 +623,7 @@ h1 {
 }
 
 .chips span {
-  background: white;
+  background: var(--white);
   color: var(--purple);
   border-radius: var(--radius-pill);
   padding: 8px 12px;
@@ -703,7 +703,7 @@ h1 {
 }
 .level-excellent .level-dot { background: #10b981; }
 .level-good {
-  background: #ede9fe;
+  background: var(--indigo-soft);
   color: #5b21b6;
 }
 .level-good .level-dot { background: #7c3aed; }
@@ -711,12 +711,12 @@ h1 {
   background: #fef3c7;
   color: #92400e;
 }
-.level-mid .level-dot { background: #f59e0b; }
+.level-mid .level-dot { background: var(--warning); }
 .level-low {
-  background: #fee2e2;
+  background: var(--surface-danger-soft);
   color: #991b1b;
 }
-.level-low .level-dot { background: #ef4444; }
+.level-low .level-dot { background: var(--danger-light); }
 
 .cards-grid {
   display: grid;
@@ -749,10 +749,10 @@ h1 {
   font-weight: 900;
 }
 
-.green-icon { background: #d1fae5; color: #059669; }
-.red-icon { background: #fee2e2; color: #dc2626; }
+.green-icon { background: #d1fae5; color: var(--success-strong); }
+.red-icon { background: var(--surface-danger-soft); color: var(--danger); }
 .purple-icon,
-.ai-logo { background: #ede9fe; color: #7c3aed; }
+.ai-logo { background: var(--indigo-soft); color: #7c3aed; }
 
 .info-card ul {
   list-style: none;
@@ -777,7 +777,7 @@ h1 {
 }
 
 .green-dot { background: #10b981; }
-.red-dot { background: #ef4444; }
+.red-dot { background: var(--danger-light); }
 .purple-dot { background: #7c3aed; }
 
 .ai-section {
@@ -813,7 +813,7 @@ h1 {
   width: 100%;
   border-radius: 16px;
   border: 1px solid #d7dce5;
-  background: white;
+  background: var(--white);
   color: var(--navy);
   padding: 14px 16px;
   font: inherit;
@@ -849,12 +849,12 @@ h1 {
 
 .primary-btn {
   background: var(--purple);
-  color: white;
+  color: var(--white);
   box-shadow: 0 12px 26px rgba(79, 70, 229, 0.22);
 }
 
 .ghost-btn {
-  background: white;
+  background: var(--white);
   color: var(--navy);
   border-color: #d7dce5;
 }
@@ -889,7 +889,7 @@ h1 {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.45);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

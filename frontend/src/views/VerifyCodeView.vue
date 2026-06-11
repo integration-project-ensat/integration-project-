@@ -186,7 +186,7 @@ async function resend() {
 }
 
 .card {
-  background: white;
+  background: var(--white);
   border-radius: 16px;
   padding: 48px 40px;
   width: 100%;
@@ -248,7 +248,7 @@ form {
 
 .code-box:focus {
   border-color: var(--purple);
-  background: white;
+  background: var(--white);
   outline: none;
 }
 
@@ -258,7 +258,7 @@ form {
 .btn {
   width: 100%;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-family: var(--font-head);
   font-size: .93rem;
   font-weight: 600;
@@ -278,7 +278,7 @@ form {
 .spin {
   width: 18px; height: 18px;
   border: 2px solid rgba(255,255,255,.3);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }

@@ -389,7 +389,7 @@ const getInitials = (name: string) => {
 .portfolio-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #0b1220 0%, #121b30 48%, #1f315c 100%);
-  color: #f8fafc;
+  color: var(--surface-subtle);
 }
 
 .portfolio-header {
@@ -409,7 +409,7 @@ const getInitials = (name: string) => {
 .brand {
   display: flex;
   align-items: center;
-  color: white;
+  color: var(--white);
   text-decoration: none;
 }
 
@@ -439,7 +439,7 @@ const getInitials = (name: string) => {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
-  color: white;
+  color: var(--white);
   padding: 10px 16px;
   font-weight: 700;
 }
@@ -512,7 +512,7 @@ const getInitials = (name: string) => {
   justify-content: center;
   font-size: 0.68rem;
   font-weight: 800;
-  color: white;
+  color: var(--white);
 }
 
 .recos-avatar:first-child {
@@ -558,7 +558,7 @@ h1 {
   height: min(380px, 70vw);
   border-radius: 50%;
   border: 10px solid rgba(255, 255, 255, 0.86);
-  background: repeating-conic-gradient(#e4e7eb 0% 25%, #f8fafc 0% 50%) 0 0 /
+  background: repeating-conic-gradient(#e4e7eb 0% 25%, var(--surface-subtle) 0% 50%) 0 0 /
     32px 32px;
   display: flex;
   align-items: center;
@@ -628,7 +628,7 @@ h1 {
   border-radius: 14px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.08),
+    var(--overlay-white-08),
     rgba(255, 255, 255, 0.045)
   );
   box-shadow: 0 20px 46px rgba(0, 0, 0, 0.16);
@@ -737,7 +737,7 @@ h1 {
 .media-placeholder {
   height: 180px;
   border-radius: 12px;
-  background: repeating-conic-gradient(#e1e5ea 0% 25%, #f8fafc 0% 50%) 0 0 /
+  background: repeating-conic-gradient(#e1e5ea 0% 25%, var(--surface-subtle) 0% 50%) 0 0 /
     24px 24px;
   overflow: hidden;
 }
@@ -756,7 +756,7 @@ h1 {
 }
 
 .contact-card {
-  color: white;
+  color: var(--white);
   text-decoration: none;
 }
 
@@ -779,28 +779,28 @@ h1 {
 }
 
 .avatar-blue {
-  background: #039be5;
+  background: var(--sky);
 }
 .avatar-orange {
-  background: #f57c00;
+  background: var(--tech-amber);
 }
 .avatar-indigo {
-  background: #5e6ad2;
+  background: var(--tech-slate);
 }
 .avatar-green {
-  background: #43a047;
+  background: var(--tech-green);
 }
 .avatar-deep-blue {
-  background: #0277bd;
+  background: var(--tech-blue);
 }
 .avatar-brown {
-  background: #8d6e63;
+  background: var(--tech-brown);
 }
 .avatar-purple {
-  background: #5e35b1;
+  background: var(--tech-deep-purple);
 }
 .avatar-slate {
-  background: #5c6bc0;
+  background: var(--tech-periwinkle);
 }
 
 @media (max-width: 1100px) {
@@ -857,8 +857,8 @@ h1 {
 }
 
 .template-card {
-  background: white;
-  color: black;
+  background: var(--white);
+  color: var(--black);
   border-radius: 12px;
   padding: 20px;
 }

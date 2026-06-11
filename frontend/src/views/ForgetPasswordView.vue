@@ -122,7 +122,7 @@ async function submit() {
 
 /* carte */
 .card {
-  background: white;
+  background: var(--white);
   border-radius: 16px;
   padding: 48px 40px;
   width: 100%;
@@ -182,7 +182,7 @@ input:focus { border-color: var(--purple); outline: none; }
 .btn {
   width: 100%;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-family: var(--font-head);
   font-size: .93rem;
   font-weight: 700;
@@ -204,7 +204,7 @@ input:focus { border-color: var(--purple); outline: none; }
 .spin {
   width: 18px; height: 18px;
   border: 2px solid rgba(255,255,255,.3);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }

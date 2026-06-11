@@ -225,10 +225,10 @@ onMounted(loadProject);
 .project-card {
   width: min(860px, 100%);
   margin: 0 auto;
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
   padding: 24px;
 }
 
@@ -314,7 +314,7 @@ p {
 .tag-row span,
 .link-row a {
   border-radius: var(--radius-pill);
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
   padding: 8px 13px;
   font-size: 12px;

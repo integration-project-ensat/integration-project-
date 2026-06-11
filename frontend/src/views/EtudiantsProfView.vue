@@ -666,7 +666,7 @@ onMounted(loadStudents);
 .students-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -693,10 +693,10 @@ onMounted(loadStudents);
 .students-table-card,
 .details-modal,
 .import-card {
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
 }
 
 .page-heading {
@@ -744,14 +744,14 @@ onMounted(loadStudents);
 .primary-btn {
   border: 1px solid var(--purple);
   background: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .outline-btn,
 .filter-toggle,
 .action-row button {
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
 }
 
@@ -768,7 +768,7 @@ onMounted(loadStudents);
 
 .flash-success {
   background: rgba(16, 185, 129, 0.12);
-  color: #047857;
+  color: var(--success-dark);
 }
 
 .flash-error {
@@ -844,7 +844,7 @@ onMounted(loadStudents);
 .filter-toggle.active {
   background: var(--purple);
   border-color: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .filter-icon {
@@ -874,7 +874,7 @@ onMounted(loadStudents);
   height: 40px;
   border: 1px solid rgba(17, 24, 39, 0.12);
   border-radius: var(--radius-pill);
-  background: white;
+  background: var(--white);
   color: var(--text-dark);
   padding: 0 14px;
   font-weight: 800;
@@ -946,7 +946,7 @@ th {
 }
 
 .score-pill {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
 }
 
@@ -957,7 +957,7 @@ th {
 
 .danger-btn {
   border-color: rgba(239, 68, 68, 0.3) !important;
-  color: #dc2626 !important;
+  color: var(--danger) !important;
 }
 
 .modal-backdrop {
@@ -1021,7 +1021,7 @@ th {
 }
 
 .is-pending { color: #d97706; }
-.is-valid   { color: #047857; }
+.is-valid   { color: var(--success-dark); }
 .is-refused { color: #b91c1c; }
 .is-empty   { color: var(--text-gray); }
 

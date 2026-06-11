@@ -22,7 +22,6 @@
     "axios": "^1.16.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.4.1",
     "express-session": "^1.19.0",
@@ -48,6 +47,7 @@
   "devDependencies": {
     "@types/multer": "^2.1.0",
     "@types/node": "^25.6.0",
+    "dotenv": "^17.4.2",
     "nodemon": "^3.1.14",
     "prisma": "^7.8.0",
     "ts-node": "^10.9.2"

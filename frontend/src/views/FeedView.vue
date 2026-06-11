@@ -838,7 +838,7 @@ onMounted(() => {
 .feed-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -865,10 +865,10 @@ onMounted(() => {
 
 .feed-header,
 .feed-card {
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
 }
 
 .feed-header {
@@ -916,7 +916,7 @@ onMounted(() => {
 
 .feed-search input:focus {
   border-color: var(--purple);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 4px var(--overlay-purple-12);
 }
 
 .feed-search-icon {
@@ -939,7 +939,7 @@ onMounted(() => {
 .feed-language {
   height: 36px;
   border-radius: 9999px;
-  color: white;
+  color: var(--white);
   box-shadow: 0 8px 18px rgba(122, 127, 136, 0.45);
 }
 
@@ -960,7 +960,7 @@ onMounted(() => {
   height: 10px;
   border-radius: 50%;
   background: var(--error);
-  box-shadow: 0 0 0 2px white;
+  box-shadow: 0 0 0 2px var(--white);
 }
 
 .feed-language {
@@ -989,7 +989,7 @@ onMounted(() => {
   top: calc(100% + 10px);
   right: 0;
   z-index: 40;
-  background: white;
+  background: var(--white);
   border: 1px solid var(--input-bg);
   border-radius: 14px;
   box-shadow: 0 18px 38px rgba(17, 24, 39, 0.18);
@@ -1079,13 +1079,13 @@ onMounted(() => {
 }
 
 .feed-notif-item.unread {
-  background: white;
+  background: var(--white);
 }
 
 .feed-notif-item:hover,
 .feed-language-option:hover,
 .feed-language-option.active {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
 }
 
 .feed-notif-avatar {
@@ -1153,19 +1153,19 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  background: white;
+  background: var(--white);
   border-radius: var(--radius-card);
   padding: 14px;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+  box-shadow: 0 10px 24px var(--overlay-navy-06);
 }
 
 .feed-state {
-  background: white;
+  background: var(--white);
   border-radius: var(--radius-card);
   padding: 20px;
   color: var(--text-gray);
   font-weight: 800;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+  box-shadow: 0 10px 24px var(--overlay-navy-06);
 }
 
 .feed-state--error {
@@ -1184,7 +1184,7 @@ onMounted(() => {
 .connect-button,
 .post-actions button {
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--text-gray);
 }
 
@@ -1199,7 +1199,7 @@ onMounted(() => {
 .comment-form button {
   border-color: var(--purple);
   background: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .connect-button {
@@ -1218,7 +1218,7 @@ onMounted(() => {
   width: 30px;
   height: 30px;
   border-radius: 9999px;
-  background: white;
+  background: var(--white);
   color: var(--text-gray);
   border: 1px solid var(--input-bg);
   box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
@@ -1230,7 +1230,7 @@ onMounted(() => {
 .feed-save-btn.saved {
   background: var(--purple);
   border-color: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .feed-save-icon {
@@ -1241,7 +1241,7 @@ onMounted(() => {
 .feed-save-feedback {
   border-radius: var(--radius-pill);
   background: var(--text-dark);
-  color: white;
+  color: var(--white);
   padding: 7px 12px;
   font-size: 12px;
   font-weight: 800;
@@ -1367,7 +1367,7 @@ onMounted(() => {
 .tag-row span,
 .link-row a {
   border-radius: var(--radius-pill);
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
   padding: 7px 12px;
   font-size: 12px;
@@ -1423,7 +1423,7 @@ onMounted(() => {
 .post-actions button:hover,
 .connect-button:hover,
 .feed-filter:hover {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--text-dark);
 }
 
@@ -1492,7 +1492,7 @@ onMounted(() => {
 .reply-form button {
   border-radius: 100px 180px 0px 100px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   padding: 8px 14px;
   font-weight: 800;
 }
@@ -1508,7 +1508,7 @@ onMounted(() => {
   align-items: center;
   gap: 7px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   border: none;
   border-radius: var(--radius-pill);
   padding: 9px 20px;
@@ -1525,7 +1525,7 @@ onMounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: white;
+  background: var(--white);
   border: 1px solid var(--input-bg);
   color: var(--text-gray);
   display: inline-flex;
@@ -1535,8 +1535,8 @@ onMounted(() => {
   transition: var(--ease);
   flex-shrink: 0;
 }
-.post-owner-btn:hover { background: rgba(79,70,229,0.1); color: var(--purple); border-color: var(--purple); }
-.post-owner-btn.delete:hover { background: rgba(223,30,33,0.08); color: var(--error); border-color: var(--error); }
+.post-owner-btn:hover { background: var(--overlay-purple-10); color: var(--purple); border-color: var(--purple); }
+.post-owner-btn.delete:hover { background: var(--overlay-danger-08); color: var(--error); border-color: var(--error); }
 
 /* ── Image du post ── */
 .project-preview.has-image {
@@ -1567,7 +1567,7 @@ onMounted(() => {
 }
 
 .collab-tag {
-  background: rgba(79,70,229,0.1);
+  background: var(--overlay-purple-10);
   color: var(--purple);
   font-size: 11px;
   font-weight: 800;

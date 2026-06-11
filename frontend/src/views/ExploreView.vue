@@ -166,8 +166,8 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: #eef1fb;
-  color: rgb(15 23 42);
+  background: var(--surface-page);
+  color: var(--text-strong);
   padding-top: 50px;
 }
 .explore-shell {
@@ -206,9 +206,9 @@ const handleUpdateFilters = (next: Record<string, any>) => {
 .explore-middle-inner { margin: 0; width: 100%; max-width: none; padding: 0; }
 .explore-panel {
   border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-06);
+  box-shadow: 0 18px 40px var(--overlay-slate-09);
   overflow: hidden;
 }
 .explore-feed {
@@ -216,12 +216,12 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   flex-direction: column;
   gap: 20px;
   padding: 16px 18px 18px;
-  background: #ffffff;
+  background: var(--white);
 }
 .explore-state {
   padding: 40px;
   text-align: center;
-  color: rgb(100 116 139);
+  color: var(--text-slate);
   font-size: 14px;
 }
 .explore-state--error { color: #e11d48; }
@@ -230,18 +230,18 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   justify-content: center;
   gap: 8px;
   padding: 16px;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-top: 1px solid var(--overlay-slate-border-soft);
 }
 .page-btn {
   width: 32px;
   height: 32px;
   border-radius: 8px;
   border: 1px solid rgba(15, 23, 42, 0.1);
-  background: white;
+  background: var(--white);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
 }
-.page-btn.active { background: #6c5ce7; color: white; border-color: #6c5ce7; }
+.page-btn.active { background: var(--violet); color: var(--white); border-color: var(--violet); }
 </style>

@@ -27,7 +27,7 @@
               <button type="button" class="ghost-action" :disabled="isLoading" @click="loadDashboard">
                 Actualiser
               </button>
-              <button type="button" class="primary-action" @click="router.push({ name: 'profile' })">
+              <button type="button" class="primary-action" @click="goTo('/profile/edit')">
                 Compléter mon profil
               </button>
             </div>
@@ -282,14 +282,14 @@ function goTo(path: string) {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   padding-top: 60px;
 }
 
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
 
@@ -314,11 +314,11 @@ function goTo(path: string) {
   left: 8px;
   right: 8px;
   bottom: 24px;
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   z-index: 0;
   box-shadow:
-    0 2px 8px rgba(17, 24, 39, 0.06),
+    0 2px 8px var(--overlay-navy-06),
     0 0 0 1px rgba(17, 24, 39, 0.03);
 }
 
@@ -378,9 +378,9 @@ function goTo(path: string) {
 }
 
 .ghost-action {
-  background: #ffffff;
+  background: var(--white);
   color: var(--text-dark);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--input-bg);
 }
 
 .ghost-action:disabled {
@@ -390,7 +390,7 @@ function goTo(path: string) {
 
 .primary-action {
   background: var(--purple);
-  color: #ffffff;
+  color: var(--white);
   border: 1px solid var(--purple);
 }
 
@@ -408,13 +408,13 @@ function goTo(path: string) {
 }
 
 .stat-card {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   padding: 20px;
   border: none;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
-    0 4px 14px rgba(17, 24, 39, 0.08);
+    0 1px 3px var(--overlay-navy-06),
+    0 4px 14px var(--overlay-navy-08);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -438,7 +438,7 @@ function goTo(path: string) {
 }
 
 .filters-card {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -446,7 +446,7 @@ function goTo(path: string) {
   padding: 18px;
   margin-bottom: 20px;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
+    0 1px 3px var(--overlay-navy-06),
     0 4px 14px rgba(17, 24, 39, 0.07);
   overflow: visible;
   position: relative;
@@ -507,8 +507,8 @@ function goTo(path: string) {
   left: 0;
   right: 0;
   z-index: 150;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--white);
+  border: 1px solid var(--input-bg);
   border-radius: 14px;
   padding: 10px 0;
   overflow: hidden;
@@ -520,7 +520,7 @@ function goTo(path: string) {
   min-height: 42px;
   padding: 0 26px;
   border-radius: 0;
-  background: white;
+  background: var(--white);
   color: var(--text-gray);
   display: flex;
   align-items: center;
@@ -544,14 +544,14 @@ function goTo(path: string) {
 }
 
 .panel {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   padding: 24px;
   min-height: 238px;
   border: none;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
-    0 4px 14px rgba(17, 24, 39, 0.08);
+    0 1px 3px var(--overlay-navy-06),
+    0 4px 14px var(--overlay-navy-08);
 }
 
 .panel h2,
@@ -587,7 +587,7 @@ function goTo(path: string) {
 
 .opportunity {
   padding: 14px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-neutral);
 }
 
 .opportunity:last-child { border-bottom: none; }
@@ -619,13 +619,13 @@ function goTo(path: string) {
 .opp-badge.coral { background: #faece7; color: #993c1d; }
 
 .results-card {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   padding: 24px;
   border: none;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
-    0 4px 14px rgba(17, 24, 39, 0.08);
+    0 1px 3px var(--overlay-navy-06),
+    0 4px 14px var(--overlay-navy-08);
 }
 
 .results-head {
@@ -662,7 +662,7 @@ function goTo(path: string) {
 
 .profile-card:hover,
 .profile-card:focus-visible {
-  background: #ffffff;
+  background: var(--white);
   box-shadow: 0 4px 16px rgba(91, 79, 207, 0.10);
   outline: none;
   transform: translateY(-1px);
@@ -683,8 +683,8 @@ function goTo(path: string) {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--avatar-bg, #039be5);
-  color: white;
+  background: var(--avatar-bg, var(--sky));
+  color: var(--white);
   font-family: var(--font-head);
   font-size: .9rem;
   font-weight: 700;
@@ -694,14 +694,14 @@ function goTo(path: string) {
   flex-shrink: 0;
 }
 
-.avatar-blue      { --avatar-bg: #039be5; }
-.avatar-orange    { --avatar-bg: #f57c00; }
-.avatar-indigo    { --avatar-bg: #5e6ad2; }
-.avatar-green     { --avatar-bg: #43a047; }
-.avatar-deep-blue { --avatar-bg: #0277bd; }
-.avatar-brown     { --avatar-bg: #8d6e63; }
-.avatar-purple    { --avatar-bg: #5e35b1; }
-.avatar-slate     { --avatar-bg: #5c6bc0; }
+.avatar-blue      { --avatar-bg: var(--sky); }
+.avatar-orange    { --avatar-bg: var(--tech-amber); }
+.avatar-indigo    { --avatar-bg: var(--tech-slate); }
+.avatar-green     { --avatar-bg: var(--tech-green); }
+.avatar-deep-blue { --avatar-bg: var(--tech-blue); }
+.avatar-brown     { --avatar-bg: var(--tech-brown); }
+.avatar-purple    { --avatar-bg: var(--tech-deep-purple); }
+.avatar-slate     { --avatar-bg: var(--tech-periwinkle); }
 
 @media (max-width: 1200px) {
   .stats-grid,

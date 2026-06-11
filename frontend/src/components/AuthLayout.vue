@@ -115,7 +115,7 @@ function next() {
 .auth-wrapper {
   width: 100%;
   min-height: 100svh;
-  background: #ffffff;
+  background: var(--white);
   overflow: hidden;
 }
 
@@ -129,8 +129,8 @@ function next() {
 .left {
   position: relative;
   overflow: hidden;
-  background: #111827;
-  color: #ffffff;
+  background: var(--navy);
+  color: var(--white);
   padding: clamp(30px, 4vw, 70px);
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -153,7 +153,7 @@ function next() {
   font-family: Inter, Arial, sans-serif;
   font-size: clamp(24px, 2.3vw, 36px);
   font-weight: 800;
-  color: #ffffff;
+  color: var(--white);
 }
 
 .slide-area {
@@ -182,7 +182,7 @@ function next() {
   font-family: Inter, Arial, sans-serif;
   font-size: clamp(17px, 1.35vw, 24px);
   line-height: 1.45;
-  color: #ffffff;
+  color: var(--white);
 }
 
 .arrow {
@@ -190,7 +190,7 @@ function next() {
   height: 54px;
   border: 0;
   background: transparent;
-  color: #ffffff;
+  color: var(--white);
   font-size: clamp(42px, 4vw, 62px);
   line-height: 1;
   cursor: pointer;
@@ -220,7 +220,7 @@ function next() {
 
 .dot.active {
   height: 4px;
-  background: #ffffff;
+  background: var(--white);
 }
 
 .shapes {
@@ -315,7 +315,7 @@ function next() {
 
 .right {
   position: relative;
-  background: #ffffff;
+  background: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -328,7 +328,7 @@ function next() {
   right: 24px;
   border: 0;
   background: transparent;
-  color: #111827;
+  color: var(--navy);
   font-size: 18px;
   cursor: pointer;
 }

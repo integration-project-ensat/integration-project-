@@ -509,7 +509,7 @@ const submitStage = async () => {
 .pro-dashboard-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -530,10 +530,10 @@ const submitStage = async () => {
 .stat-card,
 .panel,
 .stage-modal {
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
 }
 
 .dashboard-header-card {
@@ -577,7 +577,7 @@ const submitStage = async () => {
   align-items: center;
   gap: 8px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   padding: 12px 18px;
 }
 
@@ -620,7 +620,7 @@ const submitStage = async () => {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
   display: inline-flex;
   align-items: center;
@@ -684,7 +684,7 @@ const submitStage = async () => {
 
 .section-heading > span {
   border-radius: var(--radius-pill);
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
   padding: 8px 12px;
   font-weight: 900;
@@ -745,7 +745,7 @@ th {
 }
 
 .score-pill {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
 }
 
@@ -768,14 +768,14 @@ th {
 .open-connections,
 .modal-actions button:first-child {
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 8px 12px;
 }
 
 .row-actions button:hover,
 .open-connections:hover {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
 }
 
 .request-list,
@@ -790,7 +790,7 @@ th {
   gap: 12px;
   align-items: flex-start;
   width: 100%;
-  background: white;
+  background: var(--white);
   border: 1px solid var(--input-bg);
   border-radius: 16px;
   padding: 14px;
@@ -833,7 +833,7 @@ th {
 .saved-actions button:hover,
 .saved-actions button:focus-visible {
   background: var(--purple);
-  color: white;
+  color: var(--white);
   outline: none;
 }
 
