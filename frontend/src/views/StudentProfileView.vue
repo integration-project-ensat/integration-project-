@@ -2199,7 +2199,6 @@ watch(profileId, async () => {
   background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
-=======
 .profile-feedback--success {
   background: #ecfdf5;
   color: #047857;
@@ -2218,7 +2217,6 @@ watch(profileId, async () => {
   background: #f0f2f8;
   overflow-x: hidden;
 }
->>>>>>> 96083081d9a2fd2c28d842e2cb6a0e803f93f210
 
 .content {
   width: 100%;
@@ -2976,7 +2974,6 @@ watch(profileId, async () => {
 }
 
 .cancel-btn {
->>>>>>> 96083081d9a2fd2c28d842e2cb6a0e803f93f210
   min-height: 42px;
   padding: 0 22px;
   border-radius: 100px;
