@@ -30,12 +30,10 @@
           autour de portfolios fiables, de recommandations qualifiees et
           d'opportunites concretes.
         </p>
-
         <div class="hero-actions">
           <RouterLink to="/signup" class="primary-action">Commencer</RouterLink>
           <RouterLink to="/login" class="secondary-action">Inscription</RouterLink>
         </div>
-
         <div class="connect-list" aria-label="Types de profils connectes">
           <strong>Connecter entre :</strong>
           <span>Etudiant</span>
@@ -80,7 +78,6 @@
           avec une lecture rapide, un style professionnel et des actions simples.
         </p>
       </div>
-
       <div class="feature-grid">
         <article v-for="feature in features" :key="feature.title" class="feature-card">
           <div class="feature-icon">{{ feature.icon }}</div>
@@ -92,80 +89,68 @@
 
     <section id="partenaires" class="content-section partners-section">
       <div class="section-heading compact">
-        <span>Partenaires marocains</span>
-        <h2>Des acteurs nationaux mis en avant.</h2>
+        <span>Partenaires institutionnels</span>
+        <h2>Soutenus par des acteurs de reference.</h2>
       </div>
-
       <div class="partners-grid">
-        <a
-          v-for="partner in partners"
-          :key="partner.name"
-          :href="partner.href"
-          class="partner-logo"
-          target="_blank"
-          rel="noopener"
-        >
-          <span>{{ partner.logo }}</span>
-          <small>{{ partner.name }}</small>
+        <a href="https://www.men.gov.ma" class="partner-card" target="_blank" rel="noopener">
+          <img src="@/assets/ministere.jpg" alt="Ministere de l'Education Nationale" />
+          <small>Ministere de l'Education Nationale</small>
+        </a>
+        <a href="https://ensa.uae.ac.ma" class="partner-card" target="_blank" rel="noopener">
+          <img src="@/assets/ensaLogo.jpg" alt="ENSA Tanger" />
+          <small>ENSA Tanger</small>
         </a>
       </div>
     </section>
 
-    <section id="liens" class="content-section links-section">
-      <div class="links-panel">
-        <div>
-          <span class="section-kicker">Liens utiles</span>
-          <h2>Retrouvez PheraCore et sa communaute.</h2>
-          <p>
-            Tous les points d'entree essentiels sont regroupes ici : comptes
-            officiels, espaces communaute et contact direct.
-          </p>
-
-          <div class="phone-card">
-            <span>Telephone</span>
-            <a href="tel:+212600000000">+212 600 000 000</a>
+    <footer id="liens" class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand-col">
+          <div class="footer-brand">
+            <img src="@/assets/PheraCoreLogo.svg" alt="" />
+            <span>PheraCore</span>
           </div>
+          <p class="footer-tagline">
+            La premiere plateforme de portfolio academique et professionnel
+            pour les etudiants du Nord Maroc.
+          </p>
         </div>
 
-        <div class="links-grid">
-          <article class="links-group">
-            <h3>Nos comptes</h3>
-            <a v-for="link in accountLinks" :key="link.label" :href="link.href" target="_blank" rel="noopener">
-              {{ link.label }}
-            </a>
-            <a href="mailto:contact@pheracore.ma">contact@pheracore.ma</a>
-          </article>
+        <div class="footer-col">
+          <h4>PheraCore</h4>
+          <RouterLink to="/signup">Creer un compte</RouterLink>
+          <RouterLink to="/login">Se connecter</RouterLink>
+          <RouterLink to="/explore">Explorer les profils</RouterLink>
+        </div>
 
-          <article class="links-group">
-            <h3>Communaute</h3>
-            <a v-for="link in communityLinks" :key="link.label" :href="link.href" target="_blank" rel="noopener">
-              {{ link.label }}
-            </a>
-          </article>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <a href="mailto:contact@pheracore.ma">contact@pheracore.ma</a>
+          <a href="tel:+212600000000">+212 600 000 000</a>
+        </div>
 
-          <article class="links-group">
-            <h3>Acces rapides</h3>
-            <RouterLink to="/signup">Creer un compte</RouterLink>
-            <RouterLink to="/login">Se connecter</RouterLink>
-            <RouterLink to="/explore">Explorer les profils</RouterLink>
-          </article>
+        <div class="footer-col">
+          <h4>Reseaux sociaux</h4>
+          <a href="https://www.linkedin.com" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://www.instagram.com" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
         </div>
       </div>
-    </section>
 
-    <footer class="welcome-footer">
-      <div class="footer-brand">
-        <img src="@/assets/PheraCoreLogo.svg" alt="" />
-        <span>PheraCore</span>
+      <div class="footer-bottom">
+        <p>© {{ currentYear }} PheraCore. Tous droits reserves.</p>
       </div>
-
-      <p>© {{ currentYear }} PheraCore. Tous droits reserves.</p>
     </footer>
+
   </main>
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
+import photo1 from "@/assets/photo1.jpg";
+import photo2 from "@/assets/photo2.jpg";
+import photo3 from "@/assets/photo3.jpg";
 
 const currentYear = new Date().getFullYear();
 
@@ -179,60 +164,24 @@ const features = [
   {
     icon: "01",
     title: "Portfolio vivant",
-    description:
-      "Centralisez les projets, stages, certifications et competences dans une interface lisible et moderne.",
+    description: "Centralisez les projets, stages, certifications et competences dans une interface lisible et moderne.",
   },
   {
     icon: "02",
     title: "Recommandations fiables",
-    description:
-      "Donnez de la valeur au profil grace aux retours des professeurs, encadrants et professionnels.",
+    description: "Donnez de la valeur au profil grace aux retours des professeurs, encadrants et professionnels.",
   },
   {
     icon: "03",
     title: "Passerelle entreprise",
-    description:
-      "Facilitez la rencontre entre les talents et les organisations qui recrutent ou accompagnent les jeunes profils.",
+    description: "Facilitez la rencontre entre les talents et les organisations qui recrutent ou accompagnent les jeunes profils.",
   },
 ];
 
 const studentPhotos = [
-  {
-    alt: "Etudiante souriante tenant un cahier",
-    className: "photo-top",
-    src: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=420&q=85",
-  },
-  {
-    alt: "Etudiante lisant avec ses camarades",
-    className: "photo-left",
-    src: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=420&q=85",
-  },
-  {
-    alt: "Etudiant souriant avec un livre",
-    className: "photo-right",
-    src: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=420&q=85",
-  },
-];
-
-const partners = [
-  { logo: "OCP", name: "OCP Group", href: "https://www.ocpgroup.ma" },
-  { logo: "Maroc Telecom", name: "Maroc Telecom", href: "https://www.iam.ma" },
-  { logo: "Attijariwafa bank", name: "Attijariwafa bank", href: "https://www.attijariwafabank.com" },
-  { logo: "Royal Air Maroc", name: "Royal Air Maroc", href: "https://www.royalairmaroc.com" },
-  { logo: "inwi", name: "Inwi", href: "https://www.inwi.ma" },
-  { logo: "Bank of Africa", name: "Bank of Africa", href: "https://www.bankofafrica.ma" },
-];
-
-const accountLinks = [
-  { label: "LinkedIn", href: "https://www.linkedin.com" },
-  { label: "Instagram", href: "https://www.instagram.com" },
-  { label: "GitHub", href: "https://github.com" },
-];
-
-const communityLinks = [
-  { label: "Forum etudiants", href: "https://community.pheraCore.ma" },
-  { label: "Espace professeurs", href: "https://community.pheraCore.ma/professeurs" },
-  { label: "Club partenaires", href: "https://community.pheraCore.ma/partenaires" },
+  { alt: "Etudiante souriante tenant un cahier", className: "photo-top",   src: photo1 },
+  { alt: "Etudiante lisant avec ses camarades",  className: "photo-left",  src: photo2 },
+  { alt: "Etudiant souriant avec un livre",      className: "photo-right", src: photo3 },
 ];
 </script>
 
@@ -242,7 +191,6 @@ const communityLinks = [
   --bg-soft: #162340;
   --blue: #06b6d4;
   --purple: #5548f3;
-  --purple-soft: #6c63ff;
   --orange: #e28b20;
   --green: #4e9a75;
   --text: #ffffff;
@@ -263,7 +211,7 @@ const communityLinks = [
 .hero-section,
 .stats-section,
 .content-section,
-.welcome-footer {
+.site-footer {
   position: relative;
   z-index: 2;
 }
@@ -279,27 +227,16 @@ const communityLinks = [
   gap: 28px;
 }
 
-.brand,
-.footer-brand {
+.brand {
   display: inline-flex;
   align-items: center;
   color: #ffffff;
   font-family: var(--font-head), system-ui, sans-serif;
   font-weight: 800;
-  letter-spacing: 0;
 }
 
-.brand img,
-.footer-brand img {
-  width: 42px;
-  height: 42px;
-}
-
-.brand span,
-.footer-brand span {
-  margin-left: -4px;
-  font-size: 1.55rem;
-}
+.brand img { width: 42px; height: 42px; }
+.brand span { margin-left: 0.1px; font-size: 1.55rem; }
 
 .nav-links {
   display: flex;
@@ -315,11 +252,7 @@ const communityLinks = [
   transition: color .22s ease;
 }
 
-.nav-links a:hover,
-.nav-links a:focus-visible {
-  color: var(--blue);
-  outline: none;
-}
+.nav-links a:hover { color: var(--blue); }
 
 .login-link,
 .primary-action,
@@ -331,7 +264,7 @@ const communityLinks = [
   justify-content: center;
   font-family: var(--font-head), system-ui, sans-serif;
   font-weight: 800;
-  transition: transform .22s ease, box-shadow .22s ease, background .22s ease;
+  transition: transform .22s ease, box-shadow .22s ease;
 }
 
 .login-link {
@@ -343,9 +276,7 @@ const communityLinks = [
 
 .login-link:hover,
 .primary-action:hover,
-.secondary-action:hover {
-  transform: translateY(-2px);
-}
+.secondary-action:hover { transform: translateY(-2px); }
 
 .hero-section {
   width: min(100%, 1180px);
@@ -358,15 +289,11 @@ const communityLinks = [
   gap: clamp(48px, 8vw, 96px);
 }
 
-.hero-copy {
-  max-width: 590px;
-}
+.hero-copy { max-width: 590px; }
 
 .hero-dot {
-  width: 12px;
-  height: 12px;
-  display: block;
-  margin-bottom: 24px;
+  width: 12px; height: 12px;
+  display: block; margin-bottom: 24px;
   border-radius: 50%;
   background: var(--blue);
   box-shadow: 0 0 0 8px rgba(6, 182, 212, .1);
@@ -390,7 +317,6 @@ const communityLinks = [
   font-size: clamp(52px, 6vw, 84px);
   font-weight: 800;
   line-height: .98;
-  letter-spacing: 0;
   text-wrap: balance;
 }
 
@@ -439,110 +365,58 @@ const communityLinks = [
   font-size: 1.05rem;
 }
 
-.connect-list span {
-  font-size: .82rem;
-  color: #eef2ff;
-}
+.connect-list span { font-size: .82rem; color: #eef2ff; }
 
+/* ── HERO VISUAL — valeurs inchangees ─────────────── */
 .hero-visual {
   position: relative;
-  min-height: 590px;
+  min-height: 620px;
+  margin-top: -600px;
 }
 
 .visual-pill {
   position: absolute;
-  width: 112px;
+  width: 140px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(90, 137, 237, .34), rgba(90, 137, 237, .18));
+  background: linear-gradient(180deg, rgba(90, 137, 237, .38), rgba(90, 137, 237, .18));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
   animation: pillarDrift 11s ease-in-out infinite;
 }
 
-.pill-left {
-  left: 11%;
-  top: 58px;
-  height: 268px;
-}
-
-.pill-center {
-  left: 42%;
-  top: 232px;
-  height: 266px;
-  animation-name: pillarDriftReverse;
-  animation-delay: -2.5s;
-}
-
-.pill-right {
-  right: 11%;
-  top: 58px;
-  height: 268px;
-  animation-delay: -4.5s;
-}
+.pill-left   { left: 8%;              top: 640px; height: 380px; }
+.pill-center { left: calc(50% - 70px); top: 430px; height: 380px; animation-name: pillarDriftReverse; animation-delay: -2.5s; }
+.pill-right  { right: 8%;             top: 640px; height: 380px; animation-delay: -4.5s; }
 
 .student-photo {
   position: absolute;
   z-index: 2;
-  width: 112px;
-  height: 210px;
+  width: 140px;
+  height: 380px;
   border-radius: 999px;
   object-fit: cover;
-  display: block;
-  overflow: hidden;
+  object-position: center top;
   border: 1px solid rgba(255, 255, 255, .1);
   box-shadow: 0 24px 50px rgba(0, 0, 0, .28);
   animation: photoFloat 10s ease-in-out infinite;
 }
 
-.photo-top {
-  left: 29%;
-  top: -34px;
-  object-position: center top;
-}
+.photo-top   { left: calc(50% - 70px); top: 0; }
+.photo-left  { left: 8%;  top: 240px; animation-delay: -2.2s; }
+.photo-right { right: 8%; top: 240px; animation-delay: -4.4s; }
 
-.photo-left {
-  left: 11%;
-  bottom: -12px;
-  object-position: 44% center;
-  animation-delay: -2.2s;
-}
-
-.photo-right {
-  right: 11%;
-  bottom: -12px;
-  object-position: center;
-  animation-delay: -4.4s;
-}
-
+/* sparks — valeurs inchangees */
 .spark {
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   border-radius: 50%;
   animation: softBlink 5.5s ease-in-out infinite;
 }
 
-.spark-cyan {
-  left: 4%;
-  top: 20%;
-  width: 13px;
-  height: 13px;
-  background: var(--blue);
-}
+.spark-cyan   { left: 4%;   top: 20%;    width: 13px; height: 13px; background: var(--blue); }
+.spark-orange { right: 10%; top: 170%;   background: var(--orange); animation-delay: -1.6s; }
+.spark-green  { right: 4%;  bottom: 28%; background: var(--green);  animation-delay: -3s; }
 
-.spark-orange {
-  right: 10%;
-  top: 7%;
-  background: var(--orange);
-  animation-delay: -1.6s;
-}
-
-.spark-green {
-  right: 4%;
-  bottom: 28%;
-  background: var(--green);
-  animation-delay: -3s;
-}
-
+/* ── STATS ────────────────────────────────────────── */
 .stats-section {
   width: min(1124px, calc(100% - 56px));
   margin: -34px auto 0;
@@ -552,19 +426,15 @@ const communityLinks = [
 }
 
 .stat-card,
-.feature-card,
-.links-panel {
+.feature-card {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, .065);
   box-shadow: 0 20px 46px rgba(0, 0, 0, .16);
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 
-.stat-card {
-  padding: 22px;
-}
+.stat-card { padding: 22px; }
 
 .stat-card strong {
   display: block;
@@ -574,10 +444,9 @@ const communityLinks = [
   margin-bottom: 4px;
 }
 
-.stat-card span {
-  color: var(--muted);
-}
+.stat-card span { color: var(--muted); }
 
+/* ── SECTIONS ─────────────────────────────────────── */
 .content-section {
   width: min(1180px, 100%);
   margin: 0 auto;
@@ -590,25 +459,16 @@ const communityLinks = [
   text-align: center;
 }
 
-.section-heading.compact {
-  max-width: 560px;
-}
+.section-heading.compact { max-width: 560px; }
 
-.section-heading h2,
-.links-panel h2 {
+.section-heading h2 {
   margin: 12px 0 12px;
   font-family: var(--font-head), system-ui, sans-serif;
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.12;
-  letter-spacing: 0;
 }
 
-.section-heading p,
-.links-panel p {
-  color: var(--muted);
-  font-size: 1rem;
-  line-height: 1.7;
-}
+.section-heading p { color: var(--muted); font-size: 1rem; line-height: 1.7; }
 
 .feature-grid {
   display: grid;
@@ -627,164 +487,141 @@ const communityLinks = [
 }
 
 .feature-icon {
-  width: 46px;
-  height: 46px;
+  width: 46px; height: 46px;
   margin-bottom: 22px;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   color: #ffffff;
   background: linear-gradient(135deg, var(--purple), #06b6d4);
   font-family: var(--font-head), system-ui, sans-serif;
   font-weight: 900;
 }
 
-.feature-card h3 {
-  margin-bottom: 12px;
-  font-family: var(--font-head), system-ui, sans-serif;
-  font-size: 1.08rem;
-}
+.feature-card h3 { margin-bottom: 12px; font-family: var(--font-head), system-ui, sans-serif; font-size: 1.08rem; }
+.feature-card p  { color: var(--muted); line-height: 1.65; }
 
-.feature-card p {
-  color: var(--muted);
-  line-height: 1.65;
-}
+/* ── PARTENAIRES ──────────────────────────────────── */
+.partners-section { padding-bottom: 80px; }
 
 .partners-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 80px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.partner-logo {
-  min-height: 82px;
+.partner-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 7px;
+  gap: 14px;
+  transition: transform .24s ease;
+}
+
+.partner-card:hover { transform: translateY(-4px); }
+
+.partner-card img {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: rgba(255,255,255,.08);
+  padding: 14px;
+  border: 1px solid var(--line);
+}
+
+.partner-card small {
+  color: var(--muted);
+  font-size: .85rem;
+  font-weight: 700;
   text-align: center;
-  color: #ffffff;
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .16));
-  transition: transform .24s ease, opacity .24s ease;
+  max-width: 160px;
 }
 
-.partner-logo:hover,
-.partner-logo:focus-visible {
-  transform: translateY(-4px);
-  opacity: .92;
-  outline: none;
+/* ── FOOTER PROFESSIONNEL ─────────────────────────── */
+.site-footer {
+  margin-top: 80px;
+  border-top: 1px solid var(--line);
+  background: rgba(10, 15, 30, .6);
+  backdrop-filter: blur(14px);
 }
 
-.partner-logo span {
-  font-family: var(--font-head), system-ui, sans-serif;
-  font-weight: 900;
-  font-size: clamp(1.04rem, 2vw, 1.55rem);
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.partner-logo small {
-  color: rgba(226, 232, 240, .72);
-  font-size: .74rem;
-  font-weight: 700;
-}
-
-.links-section {
-  padding-bottom: 84px;
-}
-
-.links-panel {
-  padding: clamp(24px, 4vw, 42px);
+.footer-inner {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 60px 28px 40px;
   display: grid;
-  grid-template-columns: .82fr 1.18fr;
-  gap: 36px;
-  align-items: start;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 40px;
 }
 
-.phone-card {
-  width: fit-content;
-  margin-top: 26px;
-  padding: 14px 18px;
-  border: 1px solid rgba(255, 255, 255, .14);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .065);
-}
-
-.phone-card span {
-  display: block;
-  color: var(--blue);
-  font-size: .76rem;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.phone-card a {
+.footer-brand-col .footer-brand {
+  display: inline-flex;
+  align-items: center;
   color: #ffffff;
   font-family: var(--font-head), system-ui, sans-serif;
-  font-weight: 900;
+  font-weight: 800;
+  margin-bottom: 16px;
 }
 
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+.footer-brand img  { width: 36px; height: 36px; }
+.footer-brand span { margin-left: 8px; font-size: 1.3rem; }
+
+.footer-tagline {
+  color: var(--muted);
+  font-size: .88rem;
+  line-height: 1.65;
+  max-width: 260px;
 }
 
-.links-group {
-  min-height: 190px;
-  padding: 22px;
-  border: 1px solid rgba(255, 255, 255, .12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .045);
-  display: grid;
-  align-content: start;
+.footer-col {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.links-group h3 {
+.footer-col h4 {
   color: #ffffff;
   font-family: var(--font-head), system-ui, sans-serif;
-  font-size: 1rem;
+  font-size: .9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
   margin-bottom: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
 }
 
-.links-group a {
+.footer-col a {
   color: var(--muted);
-  font-weight: 700;
+  font-size: .9rem;
+  font-weight: 500;
   transition: color .2s ease, transform .2s ease;
+  display: inline-block;
 }
 
-.links-group a:hover,
-.links-group a:focus-visible {
+.footer-col a:hover {
   color: var(--blue);
   transform: translateX(3px);
-  outline: none;
 }
 
-.welcome-footer {
+.footer-bottom {
   width: min(1180px, 100%);
   margin: 0 auto;
-  padding: 26px 28px 34px;
+  padding: 20px 28px;
   border-top: 1px solid var(--line);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  color: var(--muted);
+  justify-content: center;
 }
 
-.footer-brand img {
-  width: 34px;
-  height: 34px;
+.footer-bottom p {
+  color: rgba(203, 213, 225, .5);
+  font-size: .82rem;
 }
 
-.footer-brand span {
-  font-size: 1.25rem;
-}
-
+/* ── AMBIENT ──────────────────────────────────────── */
 .ambient {
   position: fixed;
   z-index: 0;
@@ -795,236 +632,68 @@ const communityLinks = [
   animation: glowBlink 8.5s ease-in-out infinite;
 }
 
-.ambient-one {
-  width: 460px;
-  height: 460px;
-  left: -170px;
-  top: 80px;
-}
-
-.ambient-two {
-  width: 560px;
-  height: 560px;
-  right: -210px;
-  top: 260px;
-  animation-delay: -2.6s;
-}
-
-.ambient-three {
-  width: 420px;
-  height: 420px;
-  left: 22%;
-  bottom: -230px;
-  animation-delay: -5.2s;
-}
+.ambient-one   { width: 460px; height: 460px; left: -170px; top: 80px; }
+.ambient-two   { width: 560px; height: 560px; right: -210px; top: 260px; animation-delay: -2.6s; }
+.ambient-three { width: 420px; height: 420px; left: 22%; bottom: -230px; animation-delay: -5.2s; }
 
 @keyframes pillarDrift {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(30px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(30px); }
 }
-
 @keyframes pillarDriftReverse {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-28px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-28px); }
 }
-
 @keyframes photoFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(18px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(18px); }
 }
-
 @keyframes softBlink {
-  0%,
-  100% {
-    opacity: .5;
-    transform: scale(.9);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
+  0%, 100% { opacity: .5; transform: scale(.9); }
+  50%       { opacity: 1;  transform: scale(1.08); }
 }
-
 @keyframes glowBlink {
-  0%,
-  100% {
-    opacity: .18;
-    transform: scale(.94);
-  }
-
-  50% {
-    opacity: .48;
-    transform: scale(1.04);
-  }
+  0%, 100% { opacity: .18; transform: scale(.94); }
+  50%       { opacity: .48; transform: scale(1.04); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: .001ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
     transition-duration: .001ms !important;
   }
 }
 
 @media (max-width: 980px) {
-  .topbar {
-    grid-template-columns: 1fr auto;
-  }
-
-  .nav-links {
-    grid-column: 1 / -1;
-    order: 3;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
-
-  .hero-section {
-    grid-template-columns: 1fr;
-    min-height: auto;
-    padding-top: 36px;
-  }
-
-  .hero-visual {
-    min-height: 510px;
-    max-width: 620px;
-    width: 100%;
-    margin: 0 auto;
-  }
-
-  .stats-section,
-  .feature-grid,
-  .links-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .links-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .partners-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .topbar { grid-template-columns: 1fr auto; }
+  .nav-links { grid-column: 1 / -1; order: 3; justify-content: flex-start; overflow-x: auto; }
+  .hero-section { grid-template-columns: 1fr; min-height: auto; padding-top: 36px; }
+  .hero-visual { min-height: 580px; max-width: 620px; width: 100%; margin: 0 auto; }
+  .stats-section, .feature-grid { grid-template-columns: 1fr; }
+  .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .footer-brand-col { grid-column: 1 / -1; }
 }
 
 @media (max-width: 640px) {
-  .topbar {
-    padding: 16px 18px;
-  }
-
-  .brand img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .brand span {
-    font-size: 1.28rem;
-  }
-
-  .login-link {
-    min-height: 38px;
-    padding: 0 16px;
-  }
-
-  .hero-section,
-  .content-section {
-    padding-left: 18px;
-    padding-right: 18px;
-  }
-
-  .hero-copy h1 {
-    font-size: clamp(42px, 14vw, 58px);
-  }
-
-  .hero-actions {
-    margin-bottom: 46px;
-  }
-
-  .primary-action,
-  .secondary-action {
-    width: 100%;
-  }
-
-  .hero-visual {
-    min-height: 390px;
-  }
-
-  .visual-pill {
-    width: 76px;
-  }
-
-  .pill-left,
-  .pill-right {
-    height: 196px;
-    top: 48px;
-  }
-
-  .pill-left,
-  .photo-left {
-    left: 5%;
-  }
-
-  .pill-right,
-  .photo-right {
-    right: 5%;
-  }
-
-  .pill-center {
-    left: calc(50% - 38px);
-    top: 170px;
-    height: 178px;
-  }
-
-  .student-photo {
-    width: 78px;
-    height: 150px;
-  }
-
-  .photo-top {
-    left: calc(50% - 39px);
-    top: -18px;
-  }
-
-  .photo-left,
-  .photo-right {
-    bottom: 0;
-  }
-
-  .stats-section {
-    width: calc(100% - 36px);
-  }
-
-  .links-grid,
-  .partners-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .welcome-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    padding-inline: 18px;
-  }
+  .topbar { padding: 16px 18px; }
+  .brand img { width: 36px; height: 36px; }
+  .brand span { font-size: 1.28rem; }
+  .login-link { min-height: 38px; padding: 0 16px; }
+  .hero-section, .content-section { padding-left: 18px; padding-right: 18px; }
+  .hero-copy h1 { font-size: clamp(42px, 14vw, 58px); }
+  .hero-actions { margin-bottom: 46px; }
+  .primary-action, .secondary-action { width: 100%; }
+  .hero-visual { min-height: 460px; }
+  .visual-pill { width: 90px; }
+  .pill-left, .pill-right { height: 260px; top: 0; }
+  .pill-left, .photo-left { left: 5%; }
+  .pill-right, .photo-right { right: 5%; }
+  .pill-center { left: calc(50% - 45px); top: 190px; height: 220px; }
+  .student-photo { width: 90px; height: 170px; }
+  .photo-top { left: calc(50% - 45px); top: -10px; }
+  .photo-left, .photo-right { bottom: 0; }
+  .stats-section { width: calc(100% - 36px); }
+  .footer-inner { grid-template-columns: 1fr; gap: 24px; }
+  .footer-brand-col { grid-column: auto; }
 }
 </style>
