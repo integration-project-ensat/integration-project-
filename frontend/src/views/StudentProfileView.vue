@@ -2182,6 +2182,25 @@ watch(profileId, async () => {
 }
 
 .profile-feedback--success {
+  background: var(--success-bg);
+  color: var(--success-dark);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+}
+
+.profile-feedback--error {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger-light) 35%, transparent);
+}
+
+.body-area {
+  position: relative;
+  min-height: calc(100vh - 60px);
+  background: var(--bg-soft-purple);
+  overflow-x: hidden;
+}
+=======
+.profile-feedback--success {
   background: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
@@ -2199,6 +2218,7 @@ watch(profileId, async () => {
   background: #f0f2f8;
   overflow-x: hidden;
 }
+>>>>>>> 96083081d9a2fd2c28d842e2cb6a0e803f93f210
 
 .content {
   width: 100%;
@@ -2956,6 +2976,7 @@ watch(profileId, async () => {
 }
 
 .cancel-btn {
+>>>>>>> 96083081d9a2fd2c28d842e2cb6a0e803f93f210
   min-height: 42px;
   padding: 0 22px;
   border-radius: 100px;

@@ -18,6 +18,7 @@
   --navy: #111827;
   --navy-mid: #243559;
   --purple: #4f46e5;
+  --purple-hover: #4338ca;
   --purple-light: #5a89ed; /*ou bien ce coleur*/
   --indigo: #6366f1;
   --blue: #2563eb;
@@ -131,10 +132,6 @@ select {
 a {
   text-decoration: none;
 }
-:root {
-  --purple-hover: #4338ca;
-}
-
 .avatar-fallback {
   --avatar-bg-1: #4285f4;
   --avatar-bg-2: #34a853;

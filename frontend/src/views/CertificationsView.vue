@@ -282,12 +282,8 @@ watch(
 
 .cert-list { padding: 16px 28px 28px; display: flex; flex-direction: column; gap: 14px; }
 .cert-card { display: flex; gap: 16px; padding: 18px; border: 1px solid var(--input-bg); border-radius: var(--radius-card); transition: var(--ease); }
-<<<<<<< HEAD
-.cert-card:hover { box-shadow: 0 4px 16px var(--overlay-purple-12); border-color: var(--overlay-purple-20); }
-=======
 .cert-card.is-highlighted { box-shadow: 0 10px 24px rgba(79, 70, 229, 0.14); border-color: var(--purple); }
 .cert-card:hover { box-shadow: 0 4px 16px rgba(79,70,229,0.12); border-color: rgba(79,70,229,0.2); }
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
 .cert-left { width: 48px; height: 48px; border-radius: 12px; border: 1px solid; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cert-body { flex: 1; min-width: 0; }
 .cert-header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
