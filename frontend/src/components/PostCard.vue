@@ -387,13 +387,12 @@ function avatarColorClass(name: string) {
   color: var(--text-dark, var(--text-heading));
 }
 
-<<<<<<< HEAD
 .post-subtitle {
   font-size: .78rem;
   color: var(--text-muted, var(--text-slate));
   margin-top: 2px;
 }
-=======
+
 .post-subtitle {
   font-size: .78rem;
   color: var(--text-muted, #64748b);
@@ -653,7 +652,6 @@ function avatarColorClass(name: string) {
 .avatar-purple { --avatar-bg: var(--tech-deep-purple); }
 .avatar-slate { --avatar-bg: var(--tech-periwinkle); }
 </style>
-=======
 .avatar-blue { --avatar-bg: #039be5; }
 .avatar-orange { --avatar-bg: #f57c00; }
 .avatar-indigo { --avatar-bg: #5e6ad2; }
@@ -663,4 +661,3 @@ function avatarColorClass(name: string) {
 .avatar-purple { --avatar-bg: #5e35b1; }
 .avatar-slate { --avatar-bg: #5c6bc0; }
 </style>
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
