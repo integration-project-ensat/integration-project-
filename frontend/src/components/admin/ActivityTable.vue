@@ -93,10 +93,10 @@ const initials = (name) =>
  
 <style scoped>
 .activity-card {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px var(--overlay-black-04);
   padding: 24px;
 }
  
@@ -112,12 +112,12 @@ const initials = (name) =>
 .section-title {
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
   margin: 0 0 2px;
 }
 .section-sub {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
 }
  
@@ -131,17 +131,17 @@ const initials = (name) =>
   align-items: center;
   gap: 5px;
   padding: 7px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   background: transparent;
   font-size: 12.5px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s;
 }
 .btn-outline:hover {
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
  
 .activity-table {
@@ -150,7 +150,7 @@ const initials = (name) =>
 }
  
 .activity-table thead tr {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--surface-muted);
 }
  
 .activity-table th {
@@ -158,20 +158,20 @@ const initials = (name) =>
   padding: 10px 12px;
   font-size: 11.5px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-light);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
  
 .activity-row {
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface-subtle);
   transition: background 0.15s;
 }
 .activity-row:last-child {
   border-bottom: none;
 }
 .activity-row:hover {
-  background: #fafbff;
+  background: var(--surface-admin);
 }
  
 .activity-table td {
@@ -194,44 +194,44 @@ const initials = (name) =>
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-body);
   flex-shrink: 0;
 }
  
 .user-name {
   font-size: 13.5px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-heading);
   margin: 0 0 2px;
 }
 .user-email {
   font-size: 11.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
 }
  
 .action-cell {
   font-size: 13px;
-  color: #475569;
+  color: var(--text-muted);
 }
  
 .date-cell {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   white-space: nowrap;
 }
  
 .action-btn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-light);
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
   transition: background 0.15s, color 0.15s;
 }
 .action-btn:hover {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--surface-muted);
+  color: var(--text-muted);
 }
 </style>

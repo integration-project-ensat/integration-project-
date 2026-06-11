@@ -314,7 +314,7 @@ function avatarColorClass(name: string) {
 
 <style scoped>
 .post-card {
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 16px;
@@ -331,8 +331,8 @@ function avatarColorClass(name: string) {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--avatar-bg, #039be5);
-  color: #ffffff;
+  background: var(--avatar-bg, var(--sky));
+  color: var(--white);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -352,12 +352,12 @@ function avatarColorClass(name: string) {
 .post-author {
   font-size: .9rem;
   font-weight: 600;
-  color: var(--text-dark, #1e293b);
+  color: var(--text-dark, var(--text-heading));
 }
 
 .post-subtitle {
   font-size: .78rem;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted, var(--text-slate));
   margin-top: 2px;
 }
 
@@ -369,7 +369,7 @@ function avatarColorClass(name: string) {
 }
 
 .more {
-  color: var(--purple, #6366f1);
+  color: var(--purple, var(--indigo));
   cursor: pointer;
   font-weight: 600;
 }
@@ -398,7 +398,7 @@ function avatarColorClass(name: string) {
 }
 
 .media-frame iframe {
-  background: white;
+  background: var(--white);
 }
 
 .file-preview {
@@ -417,8 +417,8 @@ function avatarColorClass(name: string) {
   width: 58px;
   height: 58px;
   border-radius: 8px;
-  background: var(--purple, #6366f1);
-  color: white;
+  background: var(--purple, var(--indigo));
+  color: var(--white);
   font-family: var(--font-head);
   font-weight: 800;
   display: flex;
@@ -434,7 +434,7 @@ function avatarColorClass(name: string) {
   height: 46px;
   transform: translateY(-50%);
   background: rgba(17, 24, 39, .68);
-  color: white;
+  color: var(--white);
   font-size: 2rem;
   line-height: 1;
   display: flex;
@@ -468,7 +468,7 @@ function avatarColorClass(name: string) {
 }
 
 .media-dot.active {
-  background: var(--purple, #6366f1);
+  background: var(--purple, var(--indigo));
 }
 
 .empty-media {
@@ -494,8 +494,8 @@ function avatarColorClass(name: string) {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--surface-muted);
+  color: var(--text-slate);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -505,39 +505,39 @@ function avatarColorClass(name: string) {
 }
 
 .action-btn:hover {
-  background: #e2e8f0;
-  color: #1e293b;
+  background: var(--border-light);
+  color: var(--text-heading);
 }
 
 /* État actif déclencheur de la boîte de com */
 .comment-trigger-btn.is-active {
-  background: var(--purple, #6366f1);
-  color: white;
+  background: var(--purple, var(--indigo));
+  color: var(--white);
 }
 
 /* État J'aime Rempli (Rouge) */
 .like-btn.is-liked {
-  background: #ef4444;
-  color: white;
+  background: var(--danger-light);
+  color: var(--white);
 }
 .like-btn.is-liked:hover {
-  background: #dc2626;
+  background: var(--danger);
 }
 
 /* État Republier Activé (Vert) */
 .repost-btn.is-reposted {
   background: #10b981;
-  color: white;
+  color: var(--white);
 }
 .repost-btn.is-reposted:hover {
-  background: #059669;
+  background: var(--success-strong);
 }
 
 /* --- Bloc commentaires --- */
 .comment-section {
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--surface-muted);
 }
 
 .comment-input-wrapper {
@@ -557,14 +557,14 @@ function avatarColorClass(name: string) {
 }
 
 .comment-input-wrapper input:focus {
-  border-color: var(--purple, #6366f1);
+  border-color: var(--purple, var(--indigo));
 }
 
 .send-comment-btn {
   padding: 8px 16px;
   border-radius: 18px;
-  background: var(--purple, #6366f1);
-  color: white;
+  background: var(--purple, var(--indigo));
+  color: var(--white);
   font-size: 0.8rem;
   font-weight: 600;
   border: none;
@@ -574,17 +574,17 @@ function avatarColorClass(name: string) {
 
 .send-comment-btn:disabled {
   background: #cbd5e1;
-  color: #94a3b8;
+  color: var(--text-light);
   cursor: not-allowed;
 }
 
 /* Couleurs dynamiques des avatars */
-.avatar-blue { --avatar-bg: #039be5; }
-.avatar-orange { --avatar-bg: #f57c00; }
-.avatar-indigo { --avatar-bg: #5e6ad2; }
-.avatar-green { --avatar-bg: #43a047; }
-.avatar-deep-blue { --avatar-bg: #0277bd; }
-.avatar-brown { --avatar-bg: #8d6e63; }
-.avatar-purple { --avatar-bg: #5e35b1; }
-.avatar-slate { --avatar-bg: #5c6bc0; }
+.avatar-blue { --avatar-bg: var(--sky); }
+.avatar-orange { --avatar-bg: var(--tech-amber); }
+.avatar-indigo { --avatar-bg: var(--tech-slate); }
+.avatar-green { --avatar-bg: var(--tech-green); }
+.avatar-deep-blue { --avatar-bg: var(--tech-blue); }
+.avatar-brown { --avatar-bg: var(--tech-brown); }
+.avatar-purple { --avatar-bg: var(--tech-deep-purple); }
+.avatar-slate { --avatar-bg: var(--tech-periwinkle); }
 </style>

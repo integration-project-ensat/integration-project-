@@ -87,8 +87,8 @@ onMounted(() => {
   left: 0px;
   right: 26px;
   height: 56px;
-  background: #fff;
-  border-bottom: 1px solid #e8eaf0;
+  background: var(--white);
+  border-bottom: 1px solid var(--border-admin);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -96,17 +96,17 @@ onMounted(() => {
   z-index: 10;
   transition: left 0.25s ease;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px var(--overlay-black-04);
 }
  
 /* Se décale quand la sidebar est ouverte */
-.subbar.sidebar-open { left: 185px;box-shadow: 0 1px 0 #e8eaf0, 0 2px 8px rgba(0,0,0,0.04); }
+.subbar.sidebar-open { left: 185px;box-shadow: 0 1px 0 var(--border-admin), 0 2px 8px var(--overlay-black-04); }
  
 /* ── Title ── */
 .page-title {
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-heading);
   margin: 0;
   white-space: nowrap;
 }
@@ -125,7 +125,7 @@ onMounted(() => {
   align-items: center;
   gap: 7px;
   background: #ebebeb;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 20px;
   padding: 7px 14px;
   width: 290px;
@@ -134,20 +134,20 @@ onMounted(() => {
 }
 .search-box:focus-within {
   width: 290px;
-  border-color: #6366f1;
-  /*background: #fff;*/
+  border-color: var(--indigo);
+  /*background: var(--white);*/
   box-shadow: 0 0 0 3px rgba(99,102,241,0.10);
 }
-.si       { color: #94a3b8; flex-shrink: 0; }
+.si       { color: var(--text-light); flex-shrink: 0; }
 .si-input {
   background: transparent;
   border: none;
   outline: none;
   font-size: 13px;
-  color: #334155;
+  color: var(--text-body);
   width: 100%;
 }
-.si-input::placeholder { color: #94a3b8; }
+.si-input::placeholder { color: var(--text-light); }
 .si-input::-webkit-search-cancel-button { display: none; }
  
 /* Icon btn */
@@ -161,15 +161,15 @@ onMounted(() => {
   border: 0;
   border-radius: 9999px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   box-shadow: 0 8px 18px var(--text-gray);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 .icon-btn svg {
-  stroke: white;
+  stroke: var(--white);
 }
-.icon-btn:hover { background: #f1f5f9;
+.icon-btn:hover { background: var(--surface-muted);
   border-radius: 8px;}
  
 .notif-dot {
@@ -178,8 +178,8 @@ onMounted(() => {
   right: 5px;
   width: 8px;
   height: 8px;
-  background: #ef4444;
-  border: 2px solid #fff;
+  background: var(--danger-light);
+  border: 2px solid var(--white);
   border-radius: 50%;
 }
  
@@ -196,12 +196,12 @@ onMounted(() => {
   border: 0;
   border-radius: 9999px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   box-shadow: 0 8px 18px var(--text-gray);
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.avatar-wrapper:hover .avatar { border-color: #6366f1; }
+.avatar-wrapper:hover .avatar { border-color: var(--indigo); }
 .avatar.sm {
   width: 30px; height: 30px;
   font-size: 10px;
@@ -215,8 +215,8 @@ onMounted(() => {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--white);
+  border: 1px solid var(--border-light);
   border-radius: 13px;
   padding: 8px;
   min-width: 196px;
@@ -231,21 +231,21 @@ onMounted(() => {
   display: flex; align-items: center; gap: 9px;
   padding: 5px 8px 10px;
 }
-.dd-name { font-size: 13px; font-weight: 700; color: #0f172a; margin: 0 0 2px; }
-.dd-role { font-size: 11px; color: #94a3b8; margin: 0; }
+.dd-name { font-size: 13px; font-weight: 700; color: var(--text-strong); margin: 0 0 2px; }
+.dd-role { font-size: 11px; color: var(--text-light); margin: 0; }
  
-.dd-sep { border: none; border-top: 1px solid #f1f5f9; margin: 3px 0; }
+.dd-sep { border: none; border-top: 1px solid var(--surface-muted); margin: 3px 0; }
  
 .dd-item {
   display: flex; align-items: center; gap: 9px;
   width: 100%; background: none; border: none;
   padding: 9px 10px; border-radius: 8px;
-  font-size: 13px; color: #475569;
+  font-size: 13px; color: var(--text-muted);
   cursor: pointer; text-align: left;
   transition: background 0.12s, color 0.12s;
 }
-.dd-item:hover { background: #f8fafc; color: #1e293b; }
-.dd-item.danger { color: #ef4444; }
-.dd-item.danger:hover { background: #fef2f2; color: #dc2626; }
+.dd-item:hover { background: var(--surface-subtle); color: var(--text-heading); }
+.dd-item.danger { color: var(--danger-light); }
+.dd-item.danger:hover { background: var(--danger-bg); color: var(--danger); }
 </style>
  

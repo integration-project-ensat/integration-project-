@@ -386,10 +386,10 @@ onMounted(async () => {
 .result-card,
 .info-card,
 .roadmap-card {
-  background: white;
+  background: var(--white);
   border-radius: var(--radius-card);
-  box-shadow: 0 18px 35px rgba(17, 24, 39, 0.08);
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: 0 18px 35px var(--overlay-navy-08);
+  border: 1px solid var(--overlay-navy-08);
 }
 
 .hero-card {
@@ -432,7 +432,7 @@ h1 {
 
 .hero-badge,
 .prediction {
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   border-radius: var(--radius-pill);
   padding: 12px 18px;
@@ -471,14 +471,14 @@ h1 {
 .pill-btn {
   border: 1px solid #9aa4b2;
   color: var(--navy-mid);
-  background: white;
+  background: var(--white);
   padding: 10px 18px;
 }
 
 .pill-btn.active,
 .primary-btn {
   background: var(--purple);
-  color: white;
+  color: var(--white);
   box-shadow: 0 12px 26px rgba(79, 70, 229, 0.22);
 }
 
@@ -505,7 +505,7 @@ h1 {
   width: 100%;
   border: 1px solid #d7dce5;
   border-radius: 16px;
-  background: white;
+  background: var(--white);
   color: var(--navy);
   padding: 14px 16px;
   font: inherit;
@@ -516,7 +516,7 @@ h1 {
 
 .career-field input:focus {
   border-color: var(--purple);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 4px var(--overlay-purple-12);
 }
 
 .career-field small {
@@ -525,7 +525,7 @@ h1 {
 }
 
 .chips span {
-  background: white;
+  background: var(--white);
   color: var(--purple);
   border-radius: var(--radius-pill);
   padding: 8px 12px;
@@ -549,7 +549,7 @@ h1 {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.45);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -583,7 +583,7 @@ h1 {
 }
 
 .detected-domains span {
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   border-radius: var(--radius-pill);
   padding: 6px 10px;
@@ -613,7 +613,7 @@ h1 {
 }
 
 .analysis-debug span {
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   border-radius: var(--radius-pill);
   padding: 6px 10px;
@@ -673,7 +673,7 @@ h1 {
   display: grid;
   place-items: center;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-family: var(--font-head);
   font-weight: 900;
   flex: 0 0 auto;

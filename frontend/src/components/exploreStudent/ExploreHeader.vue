@@ -729,7 +729,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: white;
+  background: var(--white);
   border-bottom: 1px solid var(--input-bg);
   transform: translateY(0);
   transition:
@@ -882,7 +882,7 @@ onMounted(() => {
   right: -8px;
   width: 520px;
   max-width: calc(100vw - 40px);
-  background: white;
+  background: var(--white);
   overflow-x: hidden;
   overflow-y: visible;
 }
@@ -979,7 +979,7 @@ onMounted(() => {
 }
 
 .explore-notif-item:hover {
-  background: #eeecff;
+  background: var(--purple-soft);
 }
 
 .explore-notif-item:focus-visible {
@@ -988,11 +988,11 @@ onMounted(() => {
 }
 
 .explore-notif-item.is-unread {
-  background: white;
+  background: var(--white);
 }
 
 .explore-notif-item.is-unread:hover {
-  background: #eeecff;
+  background: var(--purple-soft);
 }
 
 .explore-notif-item:active,
@@ -1090,7 +1090,7 @@ onMounted(() => {
 }
 
 .explore-language-menu {
-  background: white;
+  background: var(--white);
   min-width: 96px;
   padding: 6px;
 }
@@ -1109,12 +1109,12 @@ onMounted(() => {
 }
 
 .explore-language-option:hover {
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--text-dark);
 }
 
 .explore-language-option.is-selected {
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--text-dark);
 }
 

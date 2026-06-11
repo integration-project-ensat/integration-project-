@@ -312,8 +312,8 @@ input:focus {
   top: calc(100% + 6px);
   z-index: 20;
   list-style: none;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--white);
+  border: 1px solid var(--input-bg);
   border-radius: 14px;
   padding: 6px;
   box-shadow: 0 18px 35px rgba(17, 24, 39, .14);
@@ -336,7 +336,7 @@ input:focus {
 
 .btn {
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-size: .9rem;
   font-weight: 600;
   font-family: var(--font-head);
@@ -365,7 +365,7 @@ input:focus {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, .3);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
@@ -401,7 +401,7 @@ input:focus {
   height: 46px;
   border-radius: 50%;
   background: var(--blue-w);
-  color: white;
+  color: var(--white);
   font-weight: 700;
   display: flex;
   align-items: center;

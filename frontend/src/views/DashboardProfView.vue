@@ -661,7 +661,7 @@ onMounted(() => {
 .dashboard-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -710,8 +710,8 @@ onMounted(() => {
 .page-error {
   margin-bottom: 16px;
   border-radius: 16px;
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
   padding: 12px 16px;
   font-weight: 700;
 }
@@ -738,9 +738,9 @@ onMounted(() => {
 .status-panel,
 .request-row,
 .details-modal {
-  background: white;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-06);
+  box-shadow: 0 14px 32px var(--overlay-slate-08);
 }
 
 .stat-card {
@@ -778,7 +778,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid var(--overlay-slate-border-soft);
   padding: 16px;
 }
 
@@ -791,7 +791,7 @@ onMounted(() => {
 
 .status-title span {
   border-radius: var(--radius-pill);
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   padding: 6px 11px;
   font-weight: 800;
@@ -839,7 +839,7 @@ onMounted(() => {
 }
 
 .request-content p {
-  color: #475569;
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 700;
   margin-top: 3px;
@@ -860,18 +860,18 @@ onMounted(() => {
 }
 
 .status-badge.is-pending {
-  background: #fff7ed;
+  background: var(--warning-bg);
   color: #c2410c;
 }
 
 .status-badge.is-valid {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--success-bg);
+  color: var(--success-dark);
 }
 
 .status-badge.is-refused {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .modal-backdrop {
@@ -928,9 +928,9 @@ onMounted(() => {
 
 .details-grid div,
 .details-section {
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid var(--overlay-slate-border);
   border-radius: 16px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   padding: 12px 14px;
 }
 
@@ -963,7 +963,7 @@ onMounted(() => {
 }
 
 .details-section p {
-  color: #475569;
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.55;
@@ -972,7 +972,7 @@ onMounted(() => {
 .letter-field textarea {
   width: 100%;
   border-radius: 16px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   border: 1px solid rgba(148, 163, 184, 0.3);
   color: var(--text-dark);
   padding: 12px 14px;
@@ -990,7 +990,7 @@ onMounted(() => {
 
 .attachment-list a {
   border-radius: var(--radius-pill);
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   padding: 7px 12px;
   font-size: 12px;
@@ -1011,12 +1011,12 @@ onMounted(() => {
 
 .action-btn.primary {
   background: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .action-btn.danger {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .action-btn.muted {

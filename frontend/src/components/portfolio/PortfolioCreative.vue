@@ -373,7 +373,7 @@ const getInitials = (name: string) =>
 /* ── Palette ── */
 :root {
   --c-bg: #f7f6f3;
-  --c-surface: #ffffff;
+  --c-surface: var(--white);
   --c-border: #e4e2db;
   --c-text: #1a1916;
   --c-muted: #6b6860;
@@ -429,13 +429,13 @@ const getInitials = (name: string) =>
   height: 26px;
   margin-left: -6px;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.6rem;
   font-weight: 700;
-  color: white;
+  color: var(--white);
   background: var(--c-accent);
 }
 
@@ -772,7 +772,7 @@ h1 {
 
 .project-actions button {
   background: var(--c-accent);
-  color: white;
+  color: var(--white);
   border: none;
 }
 
@@ -1082,12 +1082,12 @@ h1 {
 }
 
 /* ── Avatar color classes (kept from original) ── */
-.avatar-blue { background: #039be5; }
-.avatar-orange { background: #f57c00; }
-.avatar-indigo { background: #5e6ad2; }
-.avatar-green { background: #43a047; }
-.avatar-deep-blue { background: #0277bd; }
-.avatar-brown { background: #8d6e63; }
-.avatar-purple { background: #5e35b1; }
-.avatar-slate { background: #5c6bc0; }
+.avatar-blue { background: var(--sky); }
+.avatar-orange { background: var(--tech-amber); }
+.avatar-indigo { background: var(--tech-slate); }
+.avatar-green { background: var(--tech-green); }
+.avatar-deep-blue { background: var(--tech-blue); }
+.avatar-brown { background: var(--tech-brown); }
+.avatar-purple { background: var(--tech-deep-purple); }
+.avatar-slate { background: var(--tech-periwinkle); }
 </style>

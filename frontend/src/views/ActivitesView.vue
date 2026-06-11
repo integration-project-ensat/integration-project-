@@ -281,15 +281,15 @@ onMounted(() => {
 .page { height: 100vh; width: 100vw; overflow: hidden; background: var(--input-bg); padding-top: 50px; font-family: var(--font-body); }
 .shell { height: calc(100vh - 50px); padding: 20px; overflow-y: auto; transition: var(--ease); }
 .shellShift { padding-left: 238px; }
-.content-panel { width: 100%; max-width: none; margin: 0; background: #fff; border-radius: var(--radius-card); box-shadow: 0 4px 24px rgba(17,24,39,0.08); overflow: hidden; }
+.content-panel { width: 100%; max-width: none; margin: 0; background: var(--white); border-radius: var(--radius-card); box-shadow: 0 4px 24px var(--overlay-navy-08); overflow: hidden; }
 
 .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid var(--input-bg); }
 .header-left { display: flex; align-items: center; gap: 14px; }
-.header-icon { width: 44px; height: 44px; background: rgba(79,70,229,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--purple); }
+.header-icon { width: 44px; height: 44px; background: var(--overlay-purple-10); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--purple); }
 .panel-title { font-size: 1.25rem; font-weight: 700; color: var(--text-dark); margin: 0; font-family: var(--font-head); }
 .panel-subtitle { font-size: 0.78rem; color: var(--text-gray); margin: 2px 0 0; }
 
-.btn-add { display: flex; align-items: center; gap: 6px; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-pill); padding: 9px 18px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: var(--ease); font-family: var(--font-head); }
+.btn-add { display: flex; align-items: center; gap: 6px; background: var(--purple); color: var(--white); border: none; border-radius: var(--radius-pill); padding: 9px 18px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: var(--ease); font-family: var(--font-head); }
 .btn-add:hover { background: var(--navy-mid); }
 
 .form-card { margin: 20px 28px; padding: 22px; background: rgba(79,70,229,0.04); border: 1px solid rgba(79,70,229,0.15); border-radius: var(--radius-card); }
@@ -300,21 +300,21 @@ onMounted(() => {
 .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--text-gray); font-family: var(--font-head); }
 .form-group input,
 .form-group select,
-.form-group textarea { border: 1px solid var(--input-bg); border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; color: var(--text-dark); background: #fff; outline: none; resize: vertical; font-family: var(--font-body); transition: var(--ease); }
+.form-group textarea { border: 1px solid var(--input-bg); border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; color: var(--text-dark); background: var(--white); outline: none; resize: vertical; font-family: var(--font-body); transition: var(--ease); }
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+.form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--overlay-purple-12); }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
-.btn-cancel { padding: 8px 16px; border-radius: var(--radius-pill); border: 1px solid var(--input-bg); background: #fff; color: var(--text-gray); font-size: 0.85rem; cursor: pointer; font-family: var(--font-head); transition: var(--ease); }
+.btn-cancel { padding: 8px 16px; border-radius: var(--radius-pill); border: 1px solid var(--input-bg); background: var(--white); color: var(--text-gray); font-size: 0.85rem; cursor: pointer; font-family: var(--font-head); transition: var(--ease); }
 .btn-cancel:hover { background: var(--input-bg); }
-.btn-save { padding: 8px 20px; border-radius: var(--radius-pill); border: none; background: var(--purple); color: #fff; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: var(--font-head); transition: var(--ease); }
+.btn-save { padding: 8px 20px; border-radius: var(--radius-pill); border: none; background: var(--purple); color: var(--white); font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: var(--font-head); transition: var(--ease); }
 .btn-save:hover { background: var(--navy-mid); }
 
 .empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 60px 20px; color: var(--text-gray); font-size: 0.9rem; }
 
 .activites-list { padding: 16px 28px 28px; display: flex; flex-direction: column; gap: 14px; }
 .activite-card { display: flex; gap: 16px; padding: 18px; border: 1px solid var(--input-bg); border-radius: var(--radius-card); transition: var(--ease); }
-.activite-card:hover { box-shadow: 0 4px 16px rgba(79,70,229,0.12); border-color: rgba(79,70,229,0.2); }
+.activite-card:hover { box-shadow: 0 4px 16px var(--overlay-purple-12); border-color: var(--overlay-purple-20); }
 
 .cat-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .card-body { flex: 1; min-width: 0; }
@@ -324,7 +324,7 @@ onMounted(() => {
 .card-right-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .cat-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); font-family: var(--font-head); }
 .btn-delete { background: none; border: none; cursor: pointer; color: var(--input-bg); padding: 4px; border-radius: 6px; transition: var(--ease); }
-.btn-delete:hover { color: var(--error); background: rgba(223,30,33,0.08); }
+.btn-delete:hover { color: var(--error); background: var(--overlay-danger-08); }
 .card-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .meta-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--input-bg); color: var(--text-gray); font-size: 0.75rem; padding: 3px 10px; border-radius: var(--radius-pill); font-family: var(--font-body); }
 .card-desc { font-size: 0.83rem; color: var(--text-gray); line-height: 1.6; margin: 6px 0 0; font-family: var(--font-body); }

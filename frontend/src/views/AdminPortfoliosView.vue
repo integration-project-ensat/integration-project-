@@ -467,7 +467,7 @@ const refresh = () => {
 .breadcrumb {
   font-size: 13px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-heading);
   margin: 0;
 }
 
@@ -479,8 +479,8 @@ const refresh = () => {
 }
 
 .kpi-card {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 12px;
   padding: 16px 18px;
   display: flex;
@@ -495,7 +495,7 @@ const refresh = () => {
 
 .kpi-label {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-light);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -505,7 +505,7 @@ const refresh = () => {
 .kpi-value {
   font-size: 24px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-strong);
   margin: 0;
   letter-spacing: -0.5px;
 }
@@ -524,8 +524,8 @@ const refresh = () => {
 
 /* ══ Filters bar ═════════════════════════════════ */
 .filters-bar {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
@@ -537,19 +537,19 @@ const refresh = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 9px;
   padding: 7px 12px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   flex: 1;
   transition: border-color 0.15s;
 }
 .search-input:focus-within {
-  border-color: #6366f1;
-  background: #fff;
+  border-color: var(--indigo);
+  background: var(--white);
 }
 .search-input .si {
-  color: #94a3b8;
+  color: var(--text-light);
   flex-shrink: 0;
 }
 .search-input input {
@@ -557,11 +557,11 @@ const refresh = () => {
   border: none;
   outline: none;
   font-size: 13px;
-  color: #334155;
+  color: var(--text-body);
   width: 100%;
 }
 .search-input input::placeholder {
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .select-wrapper {
@@ -571,35 +571,35 @@ const refresh = () => {
 }
 .select-wrapper select {
   appearance: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 9px;
   padding: 7px 32px 7px 12px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   font-size: 13px;
-  color: #334155;
+  color: var(--text-body);
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s;
   min-width: 160px;
 }
 .select-wrapper select:focus {
-  border-color: #6366f1;
-  background: #fff;
+  border-color: var(--indigo);
+  background: var(--white);
 }
 .select-wrapper .sa {
   position: absolute;
   right: 10px;
-  color: #94a3b8;
+  color: var(--text-light);
   pointer-events: none;
 }
 
 .view-toggle {
   display: flex;
   gap: 2px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 9px;
   padding: 3px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 .view-toggle button {
   width: 32px;
@@ -610,16 +610,16 @@ const refresh = () => {
   background: transparent;
   border: none;
   border-radius: 7px;
-  color: #94a3b8;
+  color: var(--text-light);
   cursor: pointer;
   transition:
     background 0.15s,
     color 0.15s;
 }
 .view-toggle button.active {
-  background: #fff;
-  color: #6366f1;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: var(--white);
+  color: var(--indigo);
+  box-shadow: 0 1px 4px var(--overlay-black-08);
 }
 
 /* ══ Portfolio grid ══════════════════════════════ */
@@ -641,8 +641,8 @@ const refresh = () => {
 }
 
 .portfolio-card {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 14px;
   overflow: hidden;
   transition:
@@ -694,16 +694,16 @@ const refresh = () => {
   font-weight: 600;
 }
 .status-chip.verified {
-  background: #ecfdf5;
-  color: #16a34a;
+  background: var(--success-bg);
+  color: var(--success);
 }
 .status-chip.pending {
-  background: #fff7ed;
-  color: #ea580c;
+  background: var(--warning-bg);
+  color: var(--warning-strong);
 }
 .status-chip.revision {
   background: #eff6ff;
-  color: #2563eb;
+  color: var(--blue);
 }
 
 .status-chip.inline {
@@ -728,7 +728,7 @@ const refresh = () => {
 .card-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-heading);
   margin: 0;
   line-height: 1.4;
   flex: 1;
@@ -742,7 +742,7 @@ const refresh = () => {
 
 .card-category {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
   font-weight: 500;
 }
@@ -763,19 +763,19 @@ const refresh = () => {
   justify-content: center;
   font-size: 10px;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-body);
   flex-shrink: 0;
 }
 
 .author-name {
   font-size: 12.5px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-body);
   margin: 0 0 1px;
 }
 .author-date {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
 }
 
@@ -794,23 +794,23 @@ const refresh = () => {
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  color: #94a3b8;
+  color: var(--text-light);
   transition:
     background 0.12s,
     color 0.12s;
   flex-shrink: 0;
 }
 .more-btn:hover {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--surface-muted);
+  color: var(--text-muted);
 }
 
 .card-menu {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--white);
+  border: 1px solid var(--border-light);
   border-radius: 10px;
   padding: 6px;
   min-width: 148px;
@@ -828,26 +828,26 @@ const refresh = () => {
   padding: 7px 9px;
   border-radius: 7px;
   font-size: 12.5px;
-  color: #475569;
+  color: var(--text-muted);
   cursor: pointer;
   text-align: left;
   transition: background 0.1s;
 }
 .menu-item:hover {
-  background: #f8fafc;
-  color: #1e293b;
+  background: var(--surface-subtle);
+  color: var(--text-heading);
 }
 .menu-item.danger {
-  color: #ef4444;
+  color: var(--danger-light);
 }
 .menu-item.danger:hover {
-  background: #fef2f2;
+  background: var(--danger-bg);
 }
 
 /* ══ List view ═══════════════════════════════════ */
 .portfolio-list {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 14px;
   overflow: hidden;
 }
@@ -857,27 +857,27 @@ const refresh = () => {
   border-collapse: collapse;
 }
 .list-table thead tr {
-  background: #fafbff;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--surface-admin);
+  border-bottom: 1px solid var(--surface-muted);
 }
 .list-table th {
   text-align: left;
   padding: 10px 16px;
   font-size: 11px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--text-light);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 .list-row {
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface-subtle);
   transition: background 0.12s;
 }
 .list-row:last-child {
   border-bottom: none;
 }
 .list-row:hover {
-  background: #fafbff;
+  background: var(--surface-admin);
 }
 .list-table td {
   padding: 13px 16px;
@@ -887,15 +887,15 @@ const refresh = () => {
 .list-title {
   font-size: 13.5px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-heading);
 }
 .list-cat {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
 }
 .list-date {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   white-space: nowrap;
 }
 
@@ -904,7 +904,7 @@ const refresh = () => {
   align-items: center;
   gap: 7px;
   font-size: 13px;
-  color: #334155;
+  color: var(--text-body);
   font-weight: 500;
 }
 
@@ -923,25 +923,25 @@ const refresh = () => {
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  color: #94a3b8;
+  color: var(--text-light);
   transition:
     background 0.12s,
     color 0.12s;
 }
 .action-icon:hover {
-  background: #f1f5f9;
-  color: #16a34a;
+  background: var(--surface-muted);
+  color: var(--success);
 }
 .action-icon.danger:hover {
-  background: #fef2f2;
-  color: #ef4444;
+  background: var(--danger-bg);
+  color: var(--danger-light);
 }
 
 /* ══ Empty / End state ═══════════════════════════ */
 .empty-state,
 .end-hint {
-  background: #fff;
-  border: 1px dashed #e2e8f0;
+  background: var(--white);
+  border: 1px dashed var(--border-light);
   border-radius: 14px;
   padding: 40px 24px;
   display: flex;
@@ -954,12 +954,12 @@ const refresh = () => {
 .empty-icon {
   width: 56px;
   height: 56px;
-  background: #ede9fe;
+  background: var(--indigo-soft);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6366f1;
+  color: var(--indigo);
 }
 .empty-icon.sm {
   width: 44px;
@@ -971,14 +971,14 @@ const refresh = () => {
 .end-hint h3 {
   font-size: 15px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-heading);
   margin: 4px 0 0;
 }
 
 .empty-state p,
 .end-hint p {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-light);
   max-width: 400px;
   line-height: 1.6;
   margin: 0;
@@ -987,17 +987,17 @@ const refresh = () => {
 .btn-refresh {
   margin-top: 6px;
   padding: 8px 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 9px;
   background: transparent;
   font-size: 13px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s;
 }
 .btn-refresh:hover {
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 /* ══ KPI grid responsive ════════════════════════ */
@@ -1014,8 +1014,8 @@ const refresh = () => {
   align-items: center;
   padding: 12px 0;
   font-size: 12px;
-  color: #94a3b8;
-  border-top: 1px solid #e8eaf0;
+  color: var(--text-light);
+  border-top: 1px solid var(--border-admin);
   margin-top: auto;
 }
 .footer-links {
@@ -1023,15 +1023,15 @@ const refresh = () => {
   gap: 16px;
 }
 .footer-links a {
-  color: #94a3b8;
+  color: var(--text-light);
   text-decoration: none;
   transition: color 0.15s;
 }
 .footer-links a:hover {
-  color: #475569;
+  color: var(--text-muted);
 }
 .templates-section {
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   padding: 20px;
   margin-top: 20px;
@@ -1045,15 +1045,15 @@ const refresh = () => {
 }
 
 .template-card {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--input-bg);
   border-radius: 12px;
   padding: 15px;
 }
 
 .delete-btn {
   margin-top: 10px;
-  background: #ef4444;
-  color: white;
+  background: var(--danger-light);
+  color: var(--white);
   border: none;
   padding: 8px 12px;
   border-radius: 8px;

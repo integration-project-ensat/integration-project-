@@ -867,7 +867,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 </template>
 
 <style scoped>
-.page { min-height: 100vh; background: #f0f2f8; }
+.page { min-height: 100vh; background: var(--bg-soft-purple); }
 
 .body-area {
   position: relative;
@@ -900,15 +900,15 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   font-family: var(--font-head);
 }
-.toast.success { background: #2e7d32; color: white; }
-.toast.error   { background: var(--error); color: white; }
+.toast.success { background: #2e7d32; color: var(--white); }
+.toast.error   { background: var(--error); color: var(--white); }
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-12px); }
 
 /* ── Cards ── */
 .profile-card,
 .section-card {
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.07);
   overflow: hidden;
@@ -949,7 +949,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 
 .color-pick {
   width: 30px; height: 30px;
-  border: 2px solid white;
+  border: 2px solid var(--white);
   border-radius: 50%;
   cursor: pointer;
   padding: 0;
@@ -970,9 +970,9 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 .avatar {
   width: 88px; height: 88px;
   border-radius: 50%;
-  border: 4px solid white;
+  border: 4px solid var(--white);
   display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 700; color: white;
+  font-size: 28px; font-weight: 700; color: var(--white);
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
@@ -984,9 +984,9 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   width: 28px; height: 28px;
   background: var(--purple);
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid var(--white);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: white;
+  cursor: pointer; color: var(--white);
 }
 .avatar-cam input { display: none; }
 
@@ -1016,17 +1016,17 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 6px 14px;
   border-radius: var(--radius-pill);
   border: 1.5px solid var(--purple);
-  background: white; color: var(--purple);
+  background: var(--white); color: var(--purple);
   font-size: 0.78rem; font-weight: 700;
   cursor: pointer; font-family: var(--font-head);
   transition: var(--ease);
 }
-.btn-edit:hover { background: var(--purple); color: white; }
+.btn-edit:hover { background: var(--purple); color: var(--white); }
 
 .btn-add {
   padding: 6px 14px;
   border-radius: var(--radius-pill);
-  background: var(--purple); color: white;
+  background: var(--purple); color: var(--white);
   border: none; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; font-family: var(--font-head);
   transition: var(--ease);
@@ -1038,7 +1038,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 6px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--input-bg);
-  background: white; color: var(--text-gray);
+  background: var(--white); color: var(--text-gray);
   font-size: 0.75rem; font-weight: 700;
   cursor: pointer; font-family: var(--font-head);
 }
@@ -1051,16 +1051,16 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   cursor: pointer; font-family: var(--font-head);
   transition: var(--ease);
 }
-.btn-sm.outline { border: 1.5px solid var(--purple); background: white; color: var(--purple); }
-.btn-sm.outline:hover { background: var(--purple); color: white; }
+.btn-sm.outline { border: 1.5px solid var(--purple); background: var(--white); color: var(--purple); }
+.btn-sm.outline:hover { background: var(--purple); color: var(--white); }
 .btn-sm.danger  { border: none; background: none; color: var(--error); }
-.btn-sm.danger:hover { background: rgba(223,30,33,0.08); }
+.btn-sm.danger:hover { background: var(--overlay-danger-08); }
 
 /* ── Info display ── */
 .info-display { display: flex; flex-direction: column; gap: 4px; }
 .info-name-row { display: flex; align-items: center; gap: 10px; }
 .info-name-row h1 { font-size: 1.35rem; font-weight: 800; color: var(--text-dark); font-family: var(--font-head); margin: 0; }
-.score-badge { background: var(--error); color: white; font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
+.score-badge { background: var(--error); color: var(--white); font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
 .info-title { font-size: 0.95rem; color: var(--text-gray); margin: 2px 0; }
 .info-meta { display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; color: var(--text-gray); margin: 0; }
 
@@ -1090,7 +1090,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   font-size: 0.8rem; font-weight: 700;
   font-family: var(--font-head);
 }
-.chip.tech { background: rgba(79,70,229,0.1); color: var(--purple); }
+.chip.tech { background: var(--overlay-purple-10); color: var(--purple); }
 .chip.soft { background: rgba(6,182,212,0.1); color: #0891b2; }
 .chip.editable button { background: none; border: none; cursor: pointer; font-size: 0.68rem; opacity: 0.6; padding: 0; }
 .chip.editable button:hover { opacity: 1; color: var(--error); }
@@ -1104,7 +1104,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 .skill-add-row input:focus { border-color: var(--purple); }
 .btn-add-skill {
   padding: 8px 14px; border-radius: var(--radius-pill);
-  background: var(--purple); color: white; border: none;
+  background: var(--purple); color: var(--white); border: none;
   font-size: 0.8rem; font-weight: 700; cursor: pointer;
 }
 
@@ -1150,7 +1150,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 16px;
   transition: var(--ease);
 }
-.pub-card:hover { box-shadow: 0 4px 14px rgba(79,70,229,0.1); border-color: rgba(79,70,229,0.2); }
+.pub-card:hover { box-shadow: 0 4px 14px var(--overlay-purple-10); border-color: var(--overlay-purple-20); }
 
 .pub-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
 .pub-meta { display: flex; gap: 10px; align-items: center; }
@@ -1187,7 +1187,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 9px 12px;
   font-size: 0.85rem;
   color: var(--text-dark);
-  background: white;
+  background: var(--white);
   outline: none;
   resize: vertical;
   font-family: var(--font-body);
@@ -1195,14 +1195,14 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 }
 .fg input:focus, .fg textarea:focus, .fg select:focus {
   border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 3px var(--overlay-purple-12);
 }
 
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 
 .btn-cancel {
   padding: 8px 18px; border-radius: var(--radius-pill);
-  border: 1px solid var(--input-bg); background: white;
+  border: 1px solid var(--input-bg); background: var(--white);
   color: var(--text-gray); font-size: 0.85rem; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
@@ -1210,7 +1210,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 
 .btn-save {
   padding: 8px 20px; border-radius: var(--radius-pill);
-  border: none; background: var(--purple); color: white;
+  border: none; background: var(--purple); color: var(--white);
   font-size: 0.85rem; font-weight: 700; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
@@ -1220,7 +1220,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 /* ── Mini avatar ── */
 .mini-avatar {
   width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(79,70,229,0.12); color: var(--purple);
+  background: var(--overlay-purple-12); color: var(--purple);
   font-family: var(--font-head); font-weight: 800; font-size: 0.82rem;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; overflow: hidden;
@@ -1239,7 +1239,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 }
 
 .entry-modal {
-  background: white; border-radius: 16px;
+  background: var(--white); border-radius: 16px;
   width: 100%; max-width: 560px; max-height: 88vh;
   display: flex; flex-direction: column;
   box-shadow: 0 24px 60px rgba(17,24,39,0.2);
@@ -1283,7 +1283,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 .remove-img-btn {
   position: absolute; top: -6px; right: -6px;
   width: 20px; height: 20px; border-radius: 50%;
-  background: var(--error); color: white;
+  background: var(--error); color: var(--white);
   border: none; cursor: pointer; font-size: 0.65rem;
   display: flex; align-items: center; justify-content: center;
 }

@@ -228,7 +228,7 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
 .top-profiles-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -253,10 +253,10 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
 .page-heading,
 .profiles-table-card,
 .stat-card {
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
 }
 
 .page-heading {
@@ -320,7 +320,7 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
   height: 36px;
   border-radius: 100px 180px 0px 100px;
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 0 14px;
   font-weight: 900;
@@ -329,7 +329,7 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
 .filter-toggle.active {
   background: var(--purple);
   border-color: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .filter-icon {
@@ -357,7 +357,7 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
 .filters-panel input {
   height: 36px;
   border-radius: var(--radius-pill);
-  background: white;
+  background: var(--white);
   color: var(--text-dark);
   padding: 0 14px;
   font-weight: 800;
@@ -410,7 +410,7 @@ th {
 
 .score-pill {
   border-radius: var(--radius-pill);
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
   padding: 7px 12px;
 }
@@ -423,14 +423,14 @@ th {
 .action-row button {
   border-radius: 100px 180px 0px 100px;
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 8px 12px;
   font-weight: 800;
 }
 
 .action-row button:hover {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
 }
 
 .action-row button:disabled {

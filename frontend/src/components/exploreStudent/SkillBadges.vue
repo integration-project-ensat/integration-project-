@@ -87,7 +87,7 @@ const badgeMeaning = (badge: string) => badgeMeanings[badgeKey(badge)] ?? badge;
 
 .skill-badge-hackathon-participant {
   border-color: rgba(79, 70, 229, 0.16);
-  background: rgba(79, 70, 229, 0.1);
+  background: var(--overlay-purple-10);
   color: var(--purple);
 }
 </style>

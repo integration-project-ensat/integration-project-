@@ -10,7 +10,7 @@
   padding: 12px;
   border-radius: 20px;
   border: none;
-  color: white;
+  color: var(--white);
   cursor: pointer;
 }
 </style>
