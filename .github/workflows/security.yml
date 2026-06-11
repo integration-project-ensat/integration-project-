@@ -72,21 +72,12 @@ jobs:
 
       - name: "Demarrer Staging"
         run: |
-          sudo sysctl -w vm.max_map_count=262144
           echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
+
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
             up -d --build
-
-      - name: "Creer base sonarqube"
-        run: |
-          timeout 60 bash -c \
-            'until docker exec integration-project--postgres-1 pg_isready -U postgres; \
-            do sleep 2; done'
-          docker exec integration-project--postgres-1 \
-            psql -U postgres -c "CREATE DATABASE sonarqube;" || true
-          echo "Sonarqube database ready"
 
       - name: "Attendre SonarQube"
         run: |
@@ -120,10 +111,9 @@ jobs:
 
       - name: "Attendre Backend"
         run: |
-          timeout 120 bash -c \
+          timeout 60 bash -c \
             'until curl -sf http://127.0.0.1:3000; \
-            do sleep 3; done' || \
-            (docker logs integration-project--backend-1 --tail 50 2>&1; exit 1)
+            do sleep 3; done'
           echo "Backend pret"
 
       - name: "Scanner images Docker avec Trivy"
