@@ -32,7 +32,7 @@
     <div class="profile-info">
       <div class="name-row">
         <h1>{{ profile.name }}</h1>
-        <span class="score">{{ profile.score }}+</span>
+        <span v-if="showScore" class="score">{{ profile.score }}+</span>
       </div>
 
       <p class="title">{{ profile.title }}</p>
@@ -325,6 +325,7 @@ const selectedSkill = ref<SelectedSkillState | null>(null)
 
 const props = defineProps<{
   profile: {
+    id?: number | string | null
     name: string
     score: number
     title: string
@@ -354,8 +355,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'open-recos'): void
-  (e: 'avatar-changed', value: string): void
-  (e: 'banner-changed', value: string): void
+  (e: 'avatar-selected', file: File): void
+  (e: 'banner-selected', file: File): void
 }>()
 
 const localAvatar = ref<string | null>(null)
@@ -394,26 +395,36 @@ function tabClass(tab: string) {
   }
 }
 
-function onAvatarChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
+function previewImage(file: File, callback: (value: string) => void) {
   const reader = new FileReader()
   reader.onload = () => {
-    localAvatar.value = reader.result as string
-    emit('avatar-changed', reader.result as string)
+    if (typeof reader.result === 'string') callback(reader.result)
   }
   reader.readAsDataURL(file)
 }
 
-function onBannerChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+async function onAvatarChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) return
-  const reader = new FileReader()
-  reader.onload = () => {
-    localBanner.value = reader.result as string
-    emit('banner-changed', reader.result as string)
-  }
-  reader.readAsDataURL(file)
+
+  previewImage(file, (value) => {
+    localAvatar.value = value
+  })
+  emit('avatar-selected', file)
+  input.value = ''
+}
+
+async function onBannerChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  previewImage(file, (value) => {
+    localBanner.value = value
+  })
+  emit('banner-selected', file)
+  input.value = ''
 }
 
 const technicalSkills = computed(() => props.profile.technicalSkills ?? [])
@@ -436,6 +447,7 @@ const latestStudentReco = computed(() => props.recentRecommendations?.find((reco
 const initials = computed(() => getInitials(props.profile.name))
 const connectionLabel = computed(() => props.connectionLabel || 'Connecter')
 const recommendationLabel = computed(() => props.recommendationLabel || 'Recommander')
+const showScore = computed(() => props.profileRole === 'student' || !props.profileRole)
 const fallbackTab = computed(() => {
   if (tabList.value.includes('Modifier bio')) return 'Portfolio'
   if (tabList.value.includes('Modifier info')) return 'Portfolio'

@@ -7,6 +7,8 @@ import { profileService } from '../services/profile.service'
 
 const router = useRouter()
 const sidebarOpen = ref(false)
+type ProfileRole = 'student' | 'teacher' | 'professional'
+const profileRole = ref<ProfileRole>('student')
 
 // ── Sections edit toggles ──
 const editingInfo    = ref(false)
@@ -44,6 +46,7 @@ const profile = reactive({
 })
 
 function applyBackendProfile(data: any) {
+  profileRole.value = normalizeProfileRole(data?.raw?.role)
   profile.id = Number(data?.id ?? 0) || null
   profile.name = data?.name || profile.name
   profile.title = data?.title || profile.title
@@ -59,6 +62,13 @@ function applyBackendProfile(data: any) {
   profile.github = data?.github || ''
   profile.avatar = data?.avatar || null
   profile.banner = data?.banner || null
+}
+
+function normalizeProfileRole(roleRaw: unknown): ProfileRole {
+  const role = String(roleRaw || '').trim().toUpperCase()
+  if (role === 'PROFESSEUR' || role === 'TEACHER') return 'teacher'
+  if (role === 'PROFESSIONNEL' || role === 'PROFESSIONAL') return 'professional'
+  return 'student'
 }
 
 async function loadProfile() {
@@ -230,17 +240,49 @@ const langueForm = reactive({ nom: '', niveau: 'Intermédiaire' })
 function onAvatarChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  let settled = false
   const reader = new FileReader()
-  reader.onload = ev => { profile.avatar = ev.target?.result as string }
+  reader.onload = ev => {
+    if (!settled) profile.avatar = ev.target?.result as string
+  }
   reader.readAsDataURL(file)
+  showToast("Upload de la photo...", 'success')
+  profileService.uploadAvatar(profile.id, file).then(photoUrl => {
+    settled = true
+    if (photoUrl) {
+      profile.avatar = photoUrl
+      showToast('Photo enregistrée', 'success')
+    } else {
+      showToast("Erreur : l'URL retournée est vide", 'error')
+    }
+  }).catch(error => {
+    settled = true
+    console.warn("Erreur lors de l'upload de la photo", error)
+    showToast("Erreur lors de l'upload de la photo", 'error')
+  })
 }
 
 function onBannerChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  let settled = false
   const reader = new FileReader()
-  reader.onload = ev => { profile.banner = ev.target?.result as string }
+  reader.onload = ev => { if (!settled) profile.banner = ev.target?.result as string }
   reader.readAsDataURL(file)
+  showToast("Upload de la bannière...", 'success')
+  profileService.uploadBanner(profile.id, file).then(photoUrl => {
+    settled = true
+    if (photoUrl) {
+      profile.banner = photoUrl
+      showToast('Bannière enregistrée', 'success')
+    } else {
+      showToast("Erreur : l'URL retournée est vide", 'error')
+    }
+  }).catch(error => {
+    settled = true
+    console.warn("Erreur lors de l'upload de la bannière", error)
+    showToast("Erreur lors de l'upload de la bannière", 'error')
+  })
 }
 
 const bannerStyle = computed(() =>
@@ -248,6 +290,7 @@ const bannerStyle = computed(() =>
     ? { backgroundImage: `url(${profile.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : { background: `linear-gradient(135deg, ${profile.bannerColor} 0%, #2e6da4 100%)` }
 )
+const showScore = computed(() => profileRole.value === 'student')
 
 const initials = computed(() =>
   profile.name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
@@ -465,7 +508,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
           <div v-if="!editingInfo" class="info-display">
             <div class="info-name-row">
               <h1>{{ profile.name }}</h1>
-              <span class="score-badge">{{ profile.score }}+</span>
+              <span v-if="showScore" class="score-badge">{{ profile.score }}+</span>
             </div>
             <p class="info-title">{{ profile.title }}</p>
             <p class="info-meta">{{ profile.school }}</p>

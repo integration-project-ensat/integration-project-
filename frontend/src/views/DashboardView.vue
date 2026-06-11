@@ -27,7 +27,7 @@
               <button type="button" class="ghost-action" :disabled="isLoading" @click="loadDashboard">
                 Actualiser
               </button>
-              <button type="button" class="primary-action" @click="goTo('/profile/edit')">
+              <button type="button" class="primary-action" @click="router.push({ name: 'profile' })">
                 Compléter mon profil
               </button>
             </div>
@@ -82,26 +82,6 @@
           </section>
 
           <section class="dashboard-grid">
-            <article class="panel progress-panel">
-              <h2>Progression du profil</h2>
-              <div class="progress-row">
-                <span>Portfolio</span>
-                <strong>{{ profileProgress }}%</strong>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill" :style="{ width: profileProgress + '%' }"></div>
-              </div>
-              <ul>
-                <li
-                  v-for="section in progressChecklist"
-                  :key="section.label"
-                  :class="{ completed: section.completed }"
-                >
-                  {{ section.label }}
-                </li>
-              </ul>
-            </article>
-
             <article class="panel">
               <h2>Activité récente</h2>
               <div class="activity-list">
@@ -179,11 +159,9 @@ const router = useRouter();
 const openFilter = ref<FilterKey | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const profileProgress = ref(0);
 const profileName = ref("");
 const profileFiliere = ref("");
 const activities = ref<string[]>([]);
-const progressSections = ref<Record<string, { completed: boolean; percentage: number }>>({});
 const profiles = ref<Array<{ id: string; name: string; role: string; city: string; company: string; skill: string; sector: string; photo?: string }>>([]);
 
 const filters = reactive<Record<FilterKey, string>>({
@@ -209,33 +187,6 @@ const studentStats = ref([
   { label: "Compétences", value: "0", color: "#d4537e" },
 ]);
 
-const progressLabels: Record<string, string> = {
-  personalInfo: "Informations personnelles",
-  education: "Parcours académique",
-  skills: "Compétences",
-  projects: "Projets",
-  portfolio: "Portfolio",
-};
-
-const progressChecklist = computed(() => {
-  const entries = Object.entries(progressSections.value);
-
-  if (!entries.length) {
-    return [
-      { label: "Informations personnelles", completed: false },
-      { label: "Parcours académique", completed: false },
-      { label: "Compétences", completed: false },
-      { label: "Projets", completed: false },
-      { label: "Portfolio", completed: false },
-    ];
-  }
-
-  return entries.map(([key, section]) => ({
-    label: progressLabels[key] || key,
-    completed: section.completed,
-  }));
-});
-
 const filteredProfiles = computed(() =>
   profiles.value.filter((profile) => {
     const matchCategory = filters.category === "Tous" || profile.role.includes(filters.category);
@@ -252,15 +203,13 @@ const loadDashboard = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const [dashboardResponse, opportunitiesResponse, profileProgressResponse] = await Promise.all([
+    const [dashboardResponse, opportunitiesResponse] = await Promise.all([
       studentApi.getStudentDashboard(),
       studentApi.getOpportunities(),
-      studentApi.getProfileProgress().catch(() => null),
     ]);
 
     if (dashboardResponse.data.success) {
       const data = dashboardResponse.data.data;
-      profileProgress.value = data.profileProgress ?? 0;
       profileName.value = data.profile?.nom || "";
       profileFiliere.value = data.profile?.filiere || "";
 
@@ -291,10 +240,6 @@ const loadDashboard = async () => {
       }));
     }
 
-    if (profileProgressResponse?.data.success) {
-      profileProgress.value = Math.round(profileProgressResponse.data.data.totalScore ?? profileProgress.value);
-      progressSections.value = profileProgressResponse.data.data.sections || {};
-    }
   } catch (err: any) {
     console.error("Erreur lors du chargement du dashboard:", err);
     error.value = err.response?.data?.message || "Erreur lors du chargement des données";
@@ -615,41 +560,6 @@ function goTo(path: string) {
   font-size: 1rem;
   color: var(--text-dark);
   margin-bottom: 18px;
-}
-
-.progress-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: .9rem;
-  margin-bottom: 10px;
-}
-
-.progress-track {
-  width: 100%;
-  height: 10px;
-  background: #e5e7eb;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #5b4fcf, #9c6fe4);
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-.progress-panel ul {
-  padding-left: 22px;
-  display: grid;
-  gap: 8px;
-  font-size: .88rem;
-}
-
-.progress-panel li.completed {
-  color: #0f9e74;
-  font-weight: 700;
 }
 
 .activity-list {

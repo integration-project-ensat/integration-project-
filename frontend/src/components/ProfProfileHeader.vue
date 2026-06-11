@@ -14,7 +14,6 @@
     <div class="profile-info">
       <div class="name-row">
         <h1>{{ profile.name }}</h1>
-        <span v-if="profile.score !== undefined" class="score">{{ profile.score }}+</span>
       </div>
 
       <p class="title">{{ profile.title }}</p>
