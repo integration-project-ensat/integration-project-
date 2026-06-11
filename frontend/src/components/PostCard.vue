@@ -652,12 +652,3 @@ function avatarColorClass(name: string) {
 .avatar-purple { --avatar-bg: var(--tech-deep-purple); }
 .avatar-slate { --avatar-bg: var(--tech-periwinkle); }
 </style>
-.avatar-blue { --avatar-bg: #039be5; }
-.avatar-orange { --avatar-bg: #f57c00; }
-.avatar-indigo { --avatar-bg: #5e6ad2; }
-.avatar-green { --avatar-bg: #43a047; }
-.avatar-deep-blue { --avatar-bg: #0277bd; }
-.avatar-brown { --avatar-bg: #8d6e63; }
-.avatar-purple { --avatar-bg: #5e35b1; }
-.avatar-slate { --avatar-bg: #5c6bc0; }
-</style>
