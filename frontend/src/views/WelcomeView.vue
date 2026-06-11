@@ -47,14 +47,6 @@
         <div class="visual-pill pill-center"></div>
         <div class="visual-pill pill-right"></div>
 
-        <img
-          v-for="photo in studentPhotos"
-          :key="photo.alt"
-          :src="photo.src"
-          :alt="photo.alt"
-          :class="['student-photo', photo.className]"
-          loading="lazy"
-        />
 
         <span class="spark spark-cyan"></span>
         <span class="spark spark-orange"></span>
@@ -94,11 +86,11 @@
       </div>
       <div class="partners-grid">
         <a href="https://www.men.gov.ma" class="partner-card" target="_blank" rel="noopener">
-          <img src="@/assets/ministere.jpg" alt="Ministere de l'Education Nationale" />
+          <div class="partner-placeholder">MEN</div>
           <small>Ministere de l'Education Nationale</small>
         </a>
         <a href="https://ensa.uae.ac.ma" class="partner-card" target="_blank" rel="noopener">
-          <img src="@/assets/ensaLogo.jpg" alt="ENSA Tanger" />
+          <div class="partner-placeholder">ENSA</div>
           <small>ENSA Tanger</small>
         </a>
       </div>
@@ -148,9 +140,6 @@
 
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
-import photo1 from "@/assets/photo1.jpg";
-import photo2 from "@/assets/photo2.jpg";
-import photo3 from "@/assets/photo3.jpg";
 
 const currentYear = new Date().getFullYear();
 
@@ -178,11 +167,6 @@ const features = [
   },
 ];
 
-const studentPhotos = [
-  { alt: "Etudiante souriante tenant un cahier", className: "photo-top",   src: photo1 },
-  { alt: "Etudiante lisant avec ses camarades",  className: "photo-left",  src: photo2 },
-  { alt: "Etudiant souriant avec un livre",      className: "photo-right", src: photo3 },
-];
 </script>
 
 <style scoped>
@@ -537,6 +521,22 @@ const studentPhotos = [
   font-weight: 700;
   text-align: center;
   max-width: 160px;
+}
+
+.partner-placeholder {
+  width: 130px;
+  height: 130px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--blue);
+  letter-spacing: .04em;
 }
 
 /* ── FOOTER PROFESSIONNEL ─────────────────────────── */
