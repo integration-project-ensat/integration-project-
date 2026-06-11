@@ -1,4 +1,5 @@
 import { computed, ref } from "vue";
+import api from "@/services/api.js";
 
 export interface SavedProfile {
   id: string;
@@ -15,22 +16,38 @@ export interface SavedProfile {
   portfolioPath: string;
 }
 
-const savedProfiles = ref<SavedProfile[]>([
-  {
-    id: "khadija-bennani",
-    name: "Khadija Bennani",
-    school: "ENSA Tanger",
-    field: "GINF",
-    city: "Tanger",
-    score: 90,
-    recommendations: 500,
-    badges: ["🌐 Web Developer", "🔐 Security Aware"],
-    hasPortfolio: true,
-    savedAt: "Aujourd'hui",
-    profilePath: "/profile/student/7?from=pro",
-    portfolioPath: "/portfolio/7?from=pro",
-  },
-]);
+const savedProfiles = ref<SavedProfile[]>([]);
+const isLoadingSavedProfiles = ref(false);
+const savedProfilesError = ref("");
+
+const formatSavedDate = (value?: string) => {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("fr-FR");
+};
+
+const mapBackendSavedProfile = (saved: any): SavedProfile => {
+  const student = saved.etudiant ?? {};
+  const studentInfo = student.etudiant ?? {};
+  const id = String(student.id_utilisateur ?? saved.id);
+  const name = [student.prenom, student.nom].filter(Boolean).join(" ").trim();
+
+  return {
+    id,
+    name: name || "Etudiant",
+    school: studentInfo.etablissement || "Etablissement non renseigne",
+    field: studentInfo.filiere || "-",
+    city: student.profil?.adresse || "-",
+    score: Number(studentInfo.score_credibilite?.score_total ?? 0),
+    recommendations: Number(student.nb_recommandations ?? 0),
+    badges: Array.isArray(studentInfo.badges)
+      ? studentInfo.badges.map((item: any) => item.badge?.nom).filter(Boolean)
+      : [],
+    hasPortfolio: Boolean(studentInfo.score_credibilite),
+    savedAt: formatSavedDate(saved.date_sauvegarde),
+    profilePath: `/profile/student/${id}?from=pro`,
+    portfolioPath: `/portfolio/${id}?from=pro`,
+  };
+};
 
 export const useProSavedProfiles = () => {
   const totalSaved = computed(() => savedProfiles.value.length);
@@ -55,37 +72,51 @@ export const useProSavedProfiles = () => {
   const isSaved = (id: string) =>
     savedProfiles.value.some((profile) => profile.id === id);
 
-  const saveProfile = (profile: Omit<SavedProfile, "savedAt">) => {
+  const loadSavedProfiles = async () => {
+    isLoadingSavedProfiles.value = true;
+    savedProfilesError.value = "";
+
+    try {
+      const { data } = await api.get("/profil/saved");
+      savedProfiles.value = Array.isArray(data?.data)
+        ? data.data.map(mapBackendSavedProfile)
+        : [];
+    } catch (err: any) {
+      savedProfilesError.value =
+        err.response?.data?.message ||
+        "Impossible de charger les profils sauvegardes.";
+    } finally {
+      isLoadingSavedProfiles.value = false;
+    }
+  };
+
+  const saveProfile = async (profile: Omit<SavedProfile, "savedAt">) => {
     if (isSaved(profile.id)) {
-      savedProfiles.value = savedProfiles.value.filter(
-        (savedProfile) => savedProfile.id !== profile.id,
-      );
+      await api.delete(`/profil/${profile.id}/save`);
+      await loadSavedProfiles();
       return false;
     }
 
-    savedProfiles.value = [
-      ...savedProfiles.value,
-      {
-        ...profile,
-        savedAt: "À l'instant",
-      },
-    ];
+    await api.post(`/profil/${profile.id}/save`);
+    await loadSavedProfiles();
     return true;
   };
 
-  const removeProfile = (id: string) => {
-    savedProfiles.value = savedProfiles.value.filter(
-      (profile) => profile.id !== id,
-    );
+  const removeProfile = async (id: string) => {
+    await api.delete(`/profil/${id}/save`);
+    await loadSavedProfiles();
   };
 
   return {
     savedProfiles,
+    isLoadingSavedProfiles,
+    savedProfilesError,
     totalSaved,
     averageScore,
     totalRecommendations,
     profilesWithPortfolio,
     isSaved,
+    loadSavedProfiles,
     saveProfile,
     removeProfile,
   };

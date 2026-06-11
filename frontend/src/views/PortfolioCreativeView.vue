@@ -451,6 +451,11 @@ function mapRecommendations(items: any[]) {
   profile.value.recos = `${items.length}+`;
 }
 
+function isValidatedProject(project: any) {
+  const status = String(project?.statut || project?.status || "").toUpperCase();
+  return ["VALIDE", "ACCEPTE", "APPROUVE"].includes(status);
+}
+
 function mapProjects(items: any[]) {
   projects.value = items.map((post: any, i: number) => {
     const s = parseStructuredContent(post?.contenu || "");
@@ -530,6 +535,9 @@ async function loadPortfolio() {
       return;
     }
 
+    const validatedProjects = Array.isArray(profileResponse?.projectsData)
+      ? profileResponse.projectsData.filter((project: any) => isValidatedProject(project))
+      : [];
     const posts = Array.isArray(postsResponse?.data?.data)
       ? postsResponse.data.data.filter((p: any) =>
           Number(p?.auteur?.id_utilisateur ?? p?.id_auteur ?? 0) === Number(profileStudentId.value))
@@ -537,10 +545,11 @@ async function loadPortfolio() {
     const projets = responseList(projetsResponse);
     const activites = responseList(activitesResponse);
     const stages = responseList(stagesResponse);
+    const projectSource = projets.length ? projets : validatedProjects;
 
     projects.value = [
-  ...projets.map(mapBackendProject),
-  ...(projets.length ? [] : posts.map((post: any, index: number) => {
+  ...projectSource.map(mapBackendProject),
+  ...(projectSource.length ? [] : posts.map((post: any, index: number) => {
     const structured = parseStructuredContent(post?.contenu || "");
 
     return {
@@ -878,7 +887,7 @@ onBeforeUnmount(() => observer?.disconnect());
   justify-content: center;
   font-size: 0.6rem;
   font-weight: 800;
-  color: #fff !important;
+  color: var(--white) !important;
   margin-left: -8px;
 }
 .portfolio-page .recos-avatar:first-child { margin-left: 0; }
@@ -1328,14 +1337,14 @@ onBeforeUnmount(() => observer?.disconnect());
 }
 
 /* ── AVATAR COLORS ──────────────────────────────────────── */
-.portfolio-page .avatar-blue      { background-color: #039be5 !important; }
-.portfolio-page .avatar-orange    { background-color: #f57c00 !important; }
+.portfolio-page .avatar-blue      { background-color: var(--sky) !important; }
+.portfolio-page .avatar-orange    { background-color: var(--tech-amber) !important; }
 .portfolio-page .avatar-indigo    { background-color: #5263F0 !important; }
 .portfolio-page .avatar-green     { background-color: #C8F135 !important; color: #0D0D0D !important; }
-.portfolio-page .avatar-deep-blue { background-color: #0277bd !important; }
-.portfolio-page .avatar-brown     { background-color: #8d6e63 !important; }
-.portfolio-page .avatar-purple    { background-color: #5e35b1 !important; }
-.portfolio-page .avatar-slate     { background-color: #5c6bc0 !important; }
+.portfolio-page .avatar-deep-blue { background-color: var(--tech-blue) !important; }
+.portfolio-page .avatar-brown     { background-color: var(--tech-brown) !important; }
+.portfolio-page .avatar-purple    { background-color: var(--tech-deep-purple) !important; }
+.portfolio-page .avatar-slate     { background-color: var(--tech-periwinkle) !important; }
 
 /* ── RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1100px) {

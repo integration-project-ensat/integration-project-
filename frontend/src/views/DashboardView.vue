@@ -82,26 +82,6 @@
           </section>
 
           <section class="dashboard-grid">
-            <article class="panel progress-panel">
-              <h2>Progression du profil</h2>
-              <div class="progress-row">
-                <span>Portfolio</span>
-                <strong>{{ profileProgress }}%</strong>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill" :style="{ width: profileProgress + '%' }"></div>
-              </div>
-              <ul>
-                <li
-                  v-for="section in progressChecklist"
-                  :key="section.label"
-                  :class="{ completed: section.completed }"
-                >
-                  {{ section.label }}
-                </li>
-              </ul>
-            </article>
-
             <article class="panel">
               <h2>Activité récente</h2>
               <div class="activity-list">
@@ -179,11 +159,9 @@ const router = useRouter();
 const openFilter = ref<FilterKey | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const profileProgress = ref(0);
 const profileName = ref("");
 const profileFiliere = ref("");
 const activities = ref<string[]>([]);
-const progressSections = ref<Record<string, { completed: boolean; percentage: number }>>({});
 const profiles = ref<Array<{ id: string; name: string; role: string; city: string; company: string; skill: string; sector: string; photo?: string }>>([]);
 
 const filters = reactive<Record<FilterKey, string>>({
@@ -209,31 +187,6 @@ const studentStats = ref([
   { label: "Compétences", value: "0", color: "#d4537e" },
 ]);
 
-const progressLabels: Record<string, string> = {
-  personalInfo: "Informations personnelles",
-  education: "Parcours académique",
-  skills: "Compétences",
-  projects: "Projets",
-  portfolio: "Portfolio",
-};
-
-const progressChecklist = computed(() => {
-  const entries = Object.entries(progressSections.value);
-
-  if (!entries.length) {
-    return [
-      { label: "Informations personnelles", completed: profileProgress.value >= 15 },
-      { label: "Compétences et projets", completed: profileProgress.value >= 50 },
-      { label: "Portfolio", completed: profileProgress.value >= 80 },
-    ];
-  }
-
-  return entries.map(([key, section]) => ({
-    label: progressLabels[key] || key,
-    completed: section.completed,
-  }));
-});
-
 const filteredProfiles = computed(() =>
   profiles.value.filter((profile) => {
     const matchCategory = filters.category === "Tous" || profile.role.includes(filters.category);
@@ -250,15 +203,13 @@ const loadDashboard = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const [dashboardResponse, opportunitiesResponse, profileProgressResponse] = await Promise.all([
+    const [dashboardResponse, opportunitiesResponse] = await Promise.all([
       studentApi.getStudentDashboard(),
       studentApi.getOpportunities(),
-      studentApi.getProfileProgress().catch(() => null),
     ]);
 
     if (dashboardResponse.data.success) {
       const data = dashboardResponse.data.data;
-      profileProgress.value = data.profileProgress ?? 0;
       profileName.value = data.profile?.nom || "";
       profileFiliere.value = data.profile?.filiere || "";
 
@@ -289,10 +240,6 @@ const loadDashboard = async () => {
       }));
     }
 
-    if (profileProgressResponse?.data.success) {
-      profileProgress.value = Math.round(profileProgressResponse.data.data.totalScore ?? profileProgress.value);
-      progressSections.value = profileProgressResponse.data.data.sections || {};
-    }
   } catch (err: any) {
     console.error("Erreur lors du chargement du dashboard:", err);
     error.value = err.response?.data?.message || "Erreur lors du chargement des données";
@@ -335,14 +282,14 @@ function goTo(path: string) {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   padding-top: 60px;
 }
 
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
 
@@ -367,11 +314,11 @@ function goTo(path: string) {
   left: 8px;
   right: 8px;
   bottom: 24px;
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   z-index: 0;
   box-shadow:
-    0 2px 8px rgba(17, 24, 39, 0.06),
+    0 2px 8px var(--overlay-navy-06),
     0 0 0 1px rgba(17, 24, 39, 0.03);
 }
 
@@ -431,9 +378,9 @@ function goTo(path: string) {
 }
 
 .ghost-action {
-  background: #ffffff;
+  background: var(--white);
   color: var(--text-dark);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--input-bg);
 }
 
 .ghost-action:disabled {
@@ -443,7 +390,7 @@ function goTo(path: string) {
 
 .primary-action {
   background: var(--purple);
-  color: #ffffff;
+  color: var(--white);
   border: 1px solid var(--purple);
 }
 
@@ -461,13 +408,13 @@ function goTo(path: string) {
 }
 
 .stat-card {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   padding: 20px;
   border: none;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
-    0 4px 14px rgba(17, 24, 39, 0.08);
+    0 1px 3px var(--overlay-navy-06),
+    0 4px 14px var(--overlay-navy-08);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -491,7 +438,7 @@ function goTo(path: string) {
 }
 
 .filters-card {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -499,7 +446,7 @@ function goTo(path: string) {
   padding: 18px;
   margin-bottom: 20px;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
+    0 1px 3px var(--overlay-navy-06),
     0 4px 14px rgba(17, 24, 39, 0.07);
   overflow: visible;
   position: relative;
@@ -560,8 +507,8 @@ function goTo(path: string) {
   left: 0;
   right: 0;
   z-index: 150;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--white);
+  border: 1px solid var(--input-bg);
   border-radius: 14px;
   padding: 10px 0;
   overflow: hidden;
@@ -573,7 +520,7 @@ function goTo(path: string) {
   min-height: 42px;
   padding: 0 26px;
   border-radius: 0;
-  background: white;
+  background: var(--white);
   color: var(--text-gray);
   display: flex;
   align-items: center;
@@ -597,14 +544,14 @@ function goTo(path: string) {
 }
 
 .panel {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   padding: 24px;
   min-height: 238px;
   border: none;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
-    0 4px 14px rgba(17, 24, 39, 0.08);
+    0 1px 3px var(--overlay-navy-06),
+    0 4px 14px var(--overlay-navy-08);
 }
 
 .panel h2,
@@ -613,41 +560,6 @@ function goTo(path: string) {
   font-size: 1rem;
   color: var(--text-dark);
   margin-bottom: 18px;
-}
-
-.progress-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: .9rem;
-  margin-bottom: 10px;
-}
-
-.progress-track {
-  width: 100%;
-  height: 10px;
-  background: #e5e7eb;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #5b4fcf, #9c6fe4);
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-.progress-panel ul {
-  padding-left: 22px;
-  display: grid;
-  gap: 8px;
-  font-size: .88rem;
-}
-
-.progress-panel li.completed {
-  color: #0f9e74;
-  font-weight: 700;
 }
 
 .activity-list {
@@ -675,7 +587,7 @@ function goTo(path: string) {
 
 .opportunity {
   padding: 14px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-neutral);
 }
 
 .opportunity:last-child { border-bottom: none; }
@@ -707,13 +619,13 @@ function goTo(path: string) {
 .opp-badge.coral { background: #faece7; color: #993c1d; }
 
 .results-card {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   padding: 24px;
   border: none;
   box-shadow:
-    0 1px 3px rgba(17, 24, 39, 0.06),
-    0 4px 14px rgba(17, 24, 39, 0.08);
+    0 1px 3px var(--overlay-navy-06),
+    0 4px 14px var(--overlay-navy-08);
 }
 
 .results-head {
@@ -750,7 +662,7 @@ function goTo(path: string) {
 
 .profile-card:hover,
 .profile-card:focus-visible {
-  background: #ffffff;
+  background: var(--white);
   box-shadow: 0 4px 16px rgba(91, 79, 207, 0.10);
   outline: none;
   transform: translateY(-1px);
@@ -771,8 +683,8 @@ function goTo(path: string) {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--avatar-bg, #039be5);
-  color: white;
+  background: var(--avatar-bg, var(--sky));
+  color: var(--white);
   font-family: var(--font-head);
   font-size: .9rem;
   font-weight: 700;
@@ -782,14 +694,14 @@ function goTo(path: string) {
   flex-shrink: 0;
 }
 
-.avatar-blue      { --avatar-bg: #039be5; }
-.avatar-orange    { --avatar-bg: #f57c00; }
-.avatar-indigo    { --avatar-bg: #5e6ad2; }
-.avatar-green     { --avatar-bg: #43a047; }
-.avatar-deep-blue { --avatar-bg: #0277bd; }
-.avatar-brown     { --avatar-bg: #8d6e63; }
-.avatar-purple    { --avatar-bg: #5e35b1; }
-.avatar-slate     { --avatar-bg: #5c6bc0; }
+.avatar-blue      { --avatar-bg: var(--sky); }
+.avatar-orange    { --avatar-bg: var(--tech-amber); }
+.avatar-indigo    { --avatar-bg: var(--tech-slate); }
+.avatar-green     { --avatar-bg: var(--tech-green); }
+.avatar-deep-blue { --avatar-bg: var(--tech-blue); }
+.avatar-brown     { --avatar-bg: var(--tech-brown); }
+.avatar-purple    { --avatar-bg: var(--tech-deep-purple); }
+.avatar-slate     { --avatar-bg: var(--tech-periwinkle); }
 
 @media (max-width: 1200px) {
   .stats-grid,

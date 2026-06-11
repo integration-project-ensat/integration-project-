@@ -36,7 +36,7 @@ services:
     depends_on:
       - postgres
       - ai-service
-    command: sh -c "npm install && npx prisma generate && npx prisma migrate deploy && npx nodemon server.js"
+    command: sh -c "npm install && npx prisma generate && npx prisma migrate deploy &&npm run seed && npx nodemon server.js"
 
   ai-service:
     build: ./ai-service

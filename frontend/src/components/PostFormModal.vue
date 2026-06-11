@@ -211,7 +211,7 @@ function save() {
 }
 
 .modal {
-  background: white;
+  background: var(--white);
   border-radius: 18px;
   width: 100%;
   max-width: 640px;
@@ -284,7 +284,7 @@ function save() {
   padding: 9px 12px;
   font-size: 0.85rem;
   color: var(--text-dark);
-  background: white;
+  background: var(--white);
   outline: none;
   resize: vertical;
   font-family: var(--font-body);
@@ -294,7 +294,7 @@ function save() {
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 3px var(--overlay-purple-12);
 }
 
 /* ── Image ── */
@@ -338,7 +338,7 @@ function save() {
   padding: 6px 14px;
   border-radius: var(--radius-pill);
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
@@ -407,7 +407,7 @@ function save() {
   padding: 8px 16px;
   border-radius: var(--radius-pill);
   background: var(--purple);
-  color: white;
+  color: var(--white);
   border: none;
   font-size: 0.82rem;
   font-weight: 700;
@@ -431,7 +431,7 @@ function save() {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(79, 70, 229, 0.1);
+  background: var(--overlay-purple-10);
   color: var(--purple);
   font-size: 0.78rem;
   font-weight: 700;
@@ -465,7 +465,7 @@ function save() {
   padding: 9px 18px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--input-bg);
-  background: white;
+  background: var(--white);
   color: var(--text-gray);
   font-size: 0.85rem;
   cursor: pointer;
@@ -479,7 +479,7 @@ function save() {
   border-radius: var(--radius-pill);
   border: none;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;

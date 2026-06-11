@@ -41,11 +41,11 @@
         @click="handleNavigation('/prof/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </component>
       <button type="button" class="nav-item logout logout-btn" @click="logout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </button>
     </div>
   </aside>
@@ -69,12 +69,12 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 const currentUser = computed(() => ({
-  name: auth.user?.name || 'Nom Prenom',
+  name: auth.user?.name || 'Nom Prénom',
   email: auth.user?.email || 'Exemple.exemple@univ.etu.ac.ma',
 }));
 
 const initials = computed(() => {
-  const name = currentUser.value.name || 'Nom Prenom'
+  const name = currentUser.value.name || 'Nom Prénom'
   return name
     .split(' ')
     .map((part: string) => part[0] || '')
@@ -83,7 +83,7 @@ const initials = computed(() => {
     .toUpperCase()
 });
 
-const profileLink = computed(() => '/profile');
+const profileLink = computed(() => '/prof/profile');
 
 function normalizedPath(path: string) {
   return path.split('?')[0]
@@ -140,7 +140,7 @@ const navItems = [
 <style scoped>
 .sidebar {
   width: 220px;
-  background: white;
+  background: var(--white);
   font-family: var(--font-body);
   display: flex;
   flex-direction: column;
@@ -150,7 +150,7 @@ const navItems = [
   top: 50px;
   bottom: 0;
   z-index: 99;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 2px 0 12px var(--overlay-black-06);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
 }
@@ -164,7 +164,7 @@ const navItems = [
   align-items: center;
   gap: 10px;
   padding: 16px 14px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-neutral);
   text-decoration: none;
   color: inherit;
 }
@@ -173,7 +173,7 @@ const navItems = [
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #e0e0e0;
+  background: var(--surface-neutral-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,7 +191,7 @@ const navItems = [
 .user-name {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -199,7 +199,7 @@ const navItems = [
 
 .user-email {
   font-size: 0.65rem;
-  color: #64748b;
+  color: var(--text-slate);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -227,14 +227,14 @@ const navItems = [
 }
 
 .nav-item:hover {
-  color: #0f172a;
+  color: var(--text-strong);
   background: #f5f5ff;
 }
 
 .nav-item.active {
-  color: #6c5ce7;
-  background: #eeecff;
-  border-left: 6px solid #6c5ce7;
+  color: var(--violet);
+  background: var(--purple-soft);
+  border-left: 6px solid var(--violet);
   font-weight: 600;
   border-radius: 5px 0 0 5px;
 }
@@ -247,7 +247,7 @@ const navItems = [
 
 .sidebar-bottom {
   padding: 8px 0;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-neutral);
 }
 
 .logout {

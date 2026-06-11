@@ -4,19 +4,32 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  headers: { 'Content-Type': 'application/json' }
+  headers: { Accept: 'application/json' },
+  withCredentials: true
 })
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (token && token !== 'undefined' && token !== 'null') {
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status
+    const requestUrl = err.config?.url || ''
+    const message = err.response?.data?.message || ''
+    const shouldClearSession =
+      status === 401 &&
+      (
+        requestUrl.includes('/auth/me') ||
+        /session expir|session invalid|token invalide/i.test(message)
+      )
+
+    if (shouldClearSession) {
       localStorage.removeItem('token')
       localStorage.removeItem('role')
       localStorage.removeItem('user')

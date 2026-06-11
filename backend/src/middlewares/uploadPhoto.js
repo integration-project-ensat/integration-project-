@@ -5,7 +5,7 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { multerFileFilter, MAX_SIZE_BYTES } = require('../validators/photo.validator');
 
-const UPLOAD_DIR = path.resolve(__dirname, '../uploads/photos');
+const UPLOAD_DIR = path.resolve(__dirname, '../../uploads/photos');
 
 // Créer le dossier s'il n'existe pas
 if (!fs.existsSync(UPLOAD_DIR)) {

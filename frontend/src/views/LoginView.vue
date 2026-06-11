@@ -7,7 +7,7 @@
         <input v-model="email"    type="email"    placeholder="Adresse e-mail" />
         <div class="pass-block">
           <input v-model="password" type="password" placeholder="Mot de passe" />
-          <RouterLink to="/forgot" class="forgot">Oubliez-vous le mot de passe?</RouterLink>
+          <RouterLink to="/forgot" class="forgot">Mot de passe oublié ?</RouterLink>
         </div>
 
         <p v-if="error" class="err">{{ error }}</p>
@@ -46,8 +46,8 @@
       </div>
 
       <p class="switch">
-        Vous ne vous etes pas reinscrit auparavant?
-        <RouterLink to="/signup">_s'inscrire</RouterLink>
+        Vous n'avez pas encore de compte ?
+        <RouterLink to="/signup">S'inscrire</RouterLink>
       </p>
     </div>
   </AuthLayout>
@@ -92,7 +92,7 @@ async function submit() {
     if (errors && errors.length > 0) {
       error.value = errors[0].message
     } else {
-      error.value = e.response?.data?.message || 'Erreur de connexion'
+      error.value = e.response?.data?.message || e.message || 'Erreur de connexion'
     }
   } finally {
     loading.value = false
@@ -164,7 +164,7 @@ input:focus {
 .btn {
   width: 100%;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-size: .9rem;
   font-weight: 600;
   font-family: var(--font-head);
@@ -192,7 +192,7 @@ input:focus {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, .3);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
@@ -235,7 +235,7 @@ input:focus {
 .s-btn.gh,
 .s-btn.gg {
   background: var(--blue-w);
-  color: white;
+  color: var(--white);
 }
 
 .switch {

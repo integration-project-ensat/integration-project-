@@ -118,6 +118,14 @@ const redirectExploreByRole = () => {
   return "/login";
 };
 
+const isUsableToken = (token: string | null) =>
+  Boolean(
+    token &&
+      token.trim() &&
+      token !== "undefined" &&
+      token !== "null",
+  );
+
 const redirectSettingsByRole = () => {
   const role = localStorage.getItem("role");
   if (role === "teacher") return "/prof/settings";
@@ -214,7 +222,7 @@ const router = createRouter({
       component: Placeholder,
       meta: { requiresAuth: true },
     },
-    { path: "/profile", name: "profile", component: StudentProfileView },
+    { path: "/profile", name: "profile", component: StudentProfileView, meta: { requiresAuth: true } },
     { path: "/profile/edit", name: "profile-edit", component: ProfileEditView },
     { path: "/dashboard", name: "dashboard", component: DashboardProView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
@@ -514,6 +522,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresRole: "student" },
     },
     {
+      path: "/student/profile",
+      name: "student-profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true, requiresRole: "student" },
+    },
+    {
       path: "/student/ai-recommendation",
       name: "student-ai-recommendation",
       component: StudentAIRecommendationView,
@@ -536,6 +550,12 @@ const router = createRouter({
       path: "/prof/dashboard",
       name: "prof-dashboard",
       component: DashboardProfView,
+      meta: { requiresAuth: true, requiresRole: "teacher" },
+    },
+    {
+      path: "/prof/profile",
+      name: "prof-profile",
+      component: StudentProfileView,
       meta: { requiresAuth: true, requiresRole: "teacher" },
     },
     {
@@ -573,6 +593,12 @@ const router = createRouter({
       path: "/pro/dashboard",
       name: "pro-dashboard",
       component: DashboardProView,
+    },
+    {
+      path: "/pro/profile",
+      name: "pro-profile",
+      component: StudentProfileView,
+      meta: { requiresAuth: true, requiresRole: "professional" },
     },
     { path: "/pro/feed", name: "pro-feed", component: FeedView },
     {
@@ -669,11 +695,11 @@ router.beforeEach((to) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  if (to.meta.requiresAuth && !token) {
+  if (to.meta.requiresAuth && !isUsableToken(token)) {
     return "/login";
   }
 
-  if (token && to.meta.requiresRole && to.meta.requiresRole !== role) {
+  if (isUsableToken(token) && to.meta.requiresRole && to.meta.requiresRole !== role) {
     return redirectByRole();
   }
 });

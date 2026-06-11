@@ -142,7 +142,7 @@ async function logout() {
 
 .sidebar {
   width: 220px;
-  background: white;
+  background: var(--white);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -165,14 +165,14 @@ async function logout() {
   align-items: center;
   gap: 10px;
   padding: 16px 14px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-neutral);
 }
  
 .avatar-sm {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #e0e0e0;
+  background: var(--surface-neutral-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,7 +229,7 @@ async function logout() {
 .nav-item:hover { color: var(--text-dark); background: #f5f5ff; }
 .nav-item.active {
   color: var(--purple);
-  background: #eeecff;
+  background: var(--purple-soft);
   border-left: 3px solid var(--purple);
   font-weight: 600;
 }
@@ -238,7 +238,7 @@ async function logout() {
  
 .sidebar-bottom {
   padding: 8px 0;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-neutral);
 }
  
 .logout { color: #e53e3e; }

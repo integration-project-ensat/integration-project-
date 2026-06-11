@@ -7,7 +7,21 @@ const userSelect = {
   email: true,
   role: true,
   profil: true,
-  etudiant: { select: { filiere: true } },
+  etudiant: {
+    select: {
+      filiere: true,
+      badges: {
+        select: {
+          badge: {
+            select: {
+              nom: true,
+              icone_url: true,
+            },
+          },
+        },
+      },
+    },
+  },
 };
 
 const includeUsers = {

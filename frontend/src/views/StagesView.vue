@@ -7,6 +7,7 @@ import { stageService } from "../services/stage.service";
 interface Stage {
   id: number;
   entreprise: string;
+  etablissement: string;
   poste: string;
   lieu: string;
   dateDebut: string;
@@ -16,23 +17,13 @@ interface Stage {
 }
 
 const sidebarOpen = ref(true);
-const showForm = ref(false);
 const stages = ref<Stage[]>([]);
-
-const newStage = ref({
-  entreprise: "",
-  poste: "",
-  lieu: "",
-  dateDebut: "",
-  dateFin: "",
-  description: "",
-  competences: "",
-});
 
 function mapStage(item: any): Stage {
   return {
     id: Number(item?.id_stage),
     entreprise: item?.entreprise || "Entreprise",
+    etablissement: item?.etablissement || "",
     poste: item?.poste || "Stage",
     lieu: "",
     dateDebut: item?.date_debut ? String(item.date_debut).slice(0, 7) : "",
@@ -50,33 +41,6 @@ async function loadStages() {
   } catch (error) {
     console.warn("Chargement des stages impossible", error);
     stages.value = [];
-  }
-}
-
-async function ajouterStage() {
-  if (!newStage.value.entreprise || !newStage.value.poste) return;
-  try {
-    await stageService.createStage({
-      entreprise: newStage.value.entreprise,
-      poste: newStage.value.poste,
-      missions: newStage.value.description,
-      technologies: newStage.value.competences,
-      date_debut: newStage.value.dateDebut ? `${newStage.value.dateDebut}-01` : undefined,
-      date_fin: newStage.value.dateFin ? `${newStage.value.dateFin}-01` : undefined,
-    });
-    newStage.value = {
-      entreprise: "",
-      poste: "",
-      lieu: "",
-      dateDebut: "",
-      dateFin: "",
-      description: "",
-      competences: "",
-    };
-    showForm.value = false;
-    await loadStages();
-  } catch (error) {
-    console.warn("Creation du stage impossible", error);
   }
 }
 
@@ -123,61 +87,14 @@ onMounted(() => {
               <p class="panel-subtitle">{{ stages.length }} stage{{ stages.length > 1 ? 's' : '' }} enregistré{{ stages.length > 1 ? 's' : '' }}</p>
             </div>
           </div>
-          <button class="btn-add" @click="showForm = !showForm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Ajouter un stage
-          </button>
         </div>
 
-        <!-- Formulaire d'ajout -->
-        <div v-if="showForm" class="form-card">
-          <h2 class="form-title">Nouveau stage</h2>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Entreprise *</label>
-              <input v-model="newStage.entreprise" placeholder="Ex: Google, OCP, Maroc Telecom..." />
-            </div>
-            <div class="form-group">
-              <label>Poste *</label>
-              <input v-model="newStage.poste" placeholder="Ex: Développeur Full Stack" />
-            </div>
-            <div class="form-group">
-              <label>Lieu</label>
-              <input v-model="newStage.lieu" placeholder="Ex: Casablanca, Maroc" />
-            </div>
-            <div class="form-group">
-              <label>Compétences acquises</label>
-              <input v-model="newStage.competences" placeholder="Ex: Vue 3, Python, Docker (séparées par des virgules)" />
-            </div>
-            <div class="form-group">
-              <label>Date de début</label>
-              <input type="month" v-model="newStage.dateDebut" />
-            </div>
-            <div class="form-group">
-              <label>Date de fin</label>
-              <input type="month" v-model="newStage.dateFin" />
-            </div>
-          </div>
-          <div class="form-group full">
-            <label>Description</label>
-            <textarea v-model="newStage.description" placeholder="Décrivez vos missions et réalisations..." rows="3" />
-          </div>
-          <div class="form-actions">
-            <button class="btn-cancel" @click="showForm = false">Annuler</button>
-            <button class="btn-save" @click="ajouterStage">Enregistrer</button>
-          </div>
-        </div>
-
-        <!-- Liste des stages -->
-        <div v-if="stages.length === 0 && !showForm" class="empty-state">
+        <div v-if="stages.length === 0" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5">
             <rect x="2" y="7" width="20" height="14" rx="2"/>
             <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
           </svg>
           <p>Aucun stage enregistré pour le moment.</p>
-          <button class="btn-add" @click="showForm = true">Ajouter votre premier stage</button>
         </div>
 
         <div class="stages-list">
@@ -198,6 +115,9 @@ onMounted(() => {
                 </button>
               </div>
               <div class="card-meta">
+                <span v-if="stage.etablissement" class="meta-chip">
+                  {{ stage.etablissement }}
+                </span>
                 <span v-if="stage.lieu" class="meta-chip">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   {{ stage.lieu }}
@@ -246,9 +166,9 @@ onMounted(() => {
   width: 100%;
   max-width: none;
   margin: 0;
-  background: #fff;
+  background: var(--white);
   border-radius: var(--radius-card);
-  box-shadow: 0 4px 24px rgba(17,24,39,0.08);
+  box-shadow: 0 4px 24px var(--overlay-navy-08);
   overflow: hidden;
 }
 
@@ -264,7 +184,7 @@ onMounted(() => {
 
 .header-icon {
   width: 44px; height: 44px;
-  background: rgba(79, 70, 229, 0.1);
+  background: var(--overlay-purple-10);
   border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   color: var(--purple);
@@ -275,7 +195,7 @@ onMounted(() => {
 
 .btn-add {
   display: flex; align-items: center; gap: 6px;
-  background: var(--purple); color: #fff;
+  background: var(--purple); color: var(--white);
   border: none; border-radius: var(--radius-pill);
   padding: 9px 18px; font-size: 0.85rem; font-weight: 700;
   cursor: pointer; transition: var(--ease);
@@ -296,30 +216,32 @@ onMounted(() => {
 .form-group.full { margin: 12px 0 0; }
 .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--text-gray); font-family: var(--font-head); }
 .form-group input,
+.form-group select,
 .form-group textarea {
   border: 1px solid var(--input-bg);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 0.85rem;
   color: var(--text-dark);
-  background: #fff;
+  background: var(--white);
   outline: none;
   resize: vertical;
   font-family: var(--font-body);
   transition: var(--ease);
 }
 .form-group input:focus,
-.form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--overlay-purple-12); }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 .btn-cancel {
   padding: 8px 16px; border-radius: var(--radius-pill); border: 1px solid var(--input-bg);
-  background: #fff; color: var(--text-gray); font-size: 0.85rem; cursor: pointer;
+  background: var(--white); color: var(--text-gray); font-size: 0.85rem; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
 .btn-cancel:hover { background: var(--input-bg); }
 .btn-save {
   padding: 8px 20px; border-radius: var(--radius-pill); border: none;
-  background: var(--purple); color: #fff; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  background: var(--purple); color: var(--white); font-size: 0.85rem; font-weight: 700; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
 .btn-save:hover { background: var(--navy-mid); }
@@ -338,13 +260,13 @@ onMounted(() => {
   border-radius: var(--radius-card);
   transition: var(--ease);
 }
-.stage-card:hover { box-shadow: 0 4px 16px rgba(79,70,229,0.12); border-color: rgba(79,70,229,0.2); }
+.stage-card:hover { box-shadow: 0 4px 16px var(--overlay-purple-12); border-color: var(--overlay-purple-20); }
 
 .company-logo {
   width: 46px; height: 46px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--purple), var(--purple-light));
-  color: #fff;
+  color: var(--white);
   font-size: 1.2rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -366,7 +288,7 @@ onMounted(() => {
   color: var(--input-bg); padding: 4px;
   border-radius: 6px; transition: var(--ease);
 }
-.btn-delete:hover { color: var(--error); background: rgba(223,30,33,0.08); }
+.btn-delete:hover { color: var(--error); background: var(--overlay-danger-08); }
 
 .card-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .meta-chip {
@@ -381,7 +303,7 @@ onMounted(() => {
 
 .skills-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .skill-tag {
-  background: rgba(79, 70, 229, 0.1); color: var(--purple);
+  background: var(--overlay-purple-10); color: var(--purple);
   font-size: 0.72rem; font-weight: 700;
   padding: 3px 10px; border-radius: var(--radius-pill);
   font-family: var(--font-head);

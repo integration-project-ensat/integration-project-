@@ -107,6 +107,7 @@ async function main() {
           etudiant: {
             create: {
               filiere: pick(filieres),
+              etablissement: pick(etablissements),
               // score_credibilite : si modèle séparé
               score_credibilite: {
                 create: {

@@ -1,6 +1,10 @@
 import api from './api'
 
 export const lettreService = {
+  requestRecommendationLetter(payload) {
+    return api.post('/lettres', payload)
+  },
+
   getMesLettres(studentId) {
     return api.get(`/lettres/${studentId}`)
   },

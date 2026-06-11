@@ -13,12 +13,6 @@
             <h1>Mes Projets</h1>
             <p>Tous vos projets personnels, académiques et de formation.</p>
           </div>
-          <button class="btn-add" @click="openModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Ajouter un projet
-          </button>
         </section>
 
         <!-- Filters bar -->
@@ -49,6 +43,8 @@
             v-for="project in filteredProjects"
             :key="project.id"
             class="project-card"
+            :id="`project-${project.id}`"
+            :class="{ 'is-highlighted': highlightedProjectId === project.id }"
           >
             <!-- Card top color bar -->
             <div class="card-bar" :style="{ background: categoryColor(project.category) }"></div>
@@ -125,7 +121,6 @@
         <div v-else class="empty-state">
           <div class="empty-icon">🗂️</div>
           <p>Aucun projet trouvé.</p>
-          <button class="btn-add" @click="openModal()">Ajouter votre premier projet</button>
         </div>
 
       </main>
@@ -137,7 +132,7 @@
         <div class="modal-content">
 
           <div class="modal-header">
-            <h2>{{ isEditing ? 'Modifier le projet' : 'Nouveau projet' }}</h2>
+            <h2>Modifier le projet</h2>
             <button class="btn-close" @click="closeModal">✕</button>
           </div>
 
@@ -226,7 +221,7 @@
 
           <div class="modal-footer">
             <button class="btn-save" @click="saveProject" :disabled="!form.name || !form.category || !form.completedAt">
-              {{ isEditing ? 'Enregistrer les modifications' : 'Ajouter le projet' }}
+              Enregistrer les modifications
             </button>
             <button class="btn-secondary" @click="closeModal">Annuler</button>
           </div>
@@ -238,12 +233,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
 import { projetService } from '../services/projet.service'
 
 const sidebarOpen = ref(true)
+const route = useRoute()
 const userRole = 'student'
 const currentUser = { name: 'Nom Prenom', email: 'Exemple.exemple@univ.etu.ac.ma', avatar: '' }
 
@@ -321,29 +318,45 @@ function mapProject(item: any): Project {
 const projects = ref([] as Project[])
 const activeCategory = ref('all')
 const searchQuery = ref('')
+const highlightedProjectId = ref<number | null>(null)
 const showModal = ref(false)
-const isEditing = ref(false)
 const editingId = ref<number | null>(null)
 const techInput = ref('')
 const memberInput = ref('')
 
-const emptyForm = (): Omit<Project, 'id'> => ({
+const form = reactive<Omit<Project, 'id'>>({
   name: '', description: '', category: 'personal',
   technologies: [], supervisor: '', teamMembers: [],
   completedAt: '', url: '',
 })
-
-const form = reactive<Omit<Project, 'id'>>(emptyForm())
 
 async function loadProjects() {
   try {
     const { data } = await projetService.getMesProjets()
     const raw = Array.isArray(data?.data) ? data.data : []
     projects.value = raw.map(mapProject)
+    await scrollToHighlightedProject()
   } catch (error) {
     console.warn('Chargement des projets impossible', error)
     projects.value = []
   }
+}
+
+const syncHighlightedProject = () => {
+  const rawHighlight = route.query.highlight ?? route.query.id
+  const value = Array.isArray(rawHighlight) ? rawHighlight[0] : rawHighlight
+  const parsed = Number(String(value || ''))
+  highlightedProjectId.value = Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+async function scrollToHighlightedProject() {
+  await nextTick()
+  const id = highlightedProjectId.value
+  if (!id) return
+  document.getElementById(`project-${id}`)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  })
 }
 
 const filteredProjects = computed(() => {
@@ -362,25 +375,18 @@ function countByCategory(cat: string) {
   return projects.value.filter(p => p.category === cat).length
 }
 
-function openModal(project?: Project) {
-  if (project) {
-    isEditing.value = true
-    editingId.value = project.id
-    Object.assign(form, {
-      name: project.name,
-      description: project.description,
-      category: project.category,
-      technologies: [...project.technologies],
-      supervisor: project.supervisor,
-      teamMembers: [...project.teamMembers],
-      completedAt: project.completedAt,
-      url: project.url,
-    })
-  } else {
-    isEditing.value = false
-    editingId.value = null
-    Object.assign(form, emptyForm())
-  }
+function openModal(project: Project) {
+  editingId.value = project.id
+  Object.assign(form, {
+    name: project.name,
+    description: project.description,
+    category: project.category,
+    technologies: [...project.technologies],
+    supervisor: project.supervisor,
+    teamMembers: [...project.teamMembers],
+    completedAt: project.completedAt,
+    url: project.url,
+  })
   techInput.value = ''
   memberInput.value = ''
   showModal.value = true
@@ -403,11 +409,8 @@ async function saveProject() {
   }
 
   try {
-    if (isEditing.value && editingId.value !== null) {
-      await projetService.updateProjet(editingId.value, payload)
-    } else {
-      await projetService.createProjet(payload)
-    }
+    if (editingId.value === null) return
+    await projetService.updateProjet(editingId.value, payload)
     closeModal()
     await loadProjects()
   } catch (error) {
@@ -454,22 +457,31 @@ function getInitials(name: string) {
 }
 
 onMounted(() => {
+  syncHighlightedProject()
   loadProjects()
 })
+
+watch(
+  () => route.query.highlight,
+  async () => {
+    syncHighlightedProject()
+    await scrollToHighlightedProject()
+  },
+)
 </script>
 
 <style scoped>
 /* ── Layout ───────────────────────────────────────────────────────────────── */
 .page {
   min-height: 100vh;
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   padding-top: 60px;
 }
 
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
 
@@ -478,7 +490,7 @@ onMounted(() => {
   min-width: 0;
   padding: 24px 26px;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   transition: padding-left 0.3s ease;
 }
 
@@ -491,7 +503,7 @@ onMounted(() => {
   left: 8px;
   right: 8px;
   bottom: 24px;
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   z-index: 0;
   box-shadow:
@@ -532,7 +544,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   border: none;
   padding: 0 20px;
   height: 42px;
@@ -562,12 +574,12 @@ onMounted(() => {
   padding: 0 16px;
   height: 38px;
   border-radius: 999px;
-  background: white;
+  background: var(--white);
   border: none; /* Remplacement de la bordure par une ombre douce */
   box-shadow: 0 2px 6px rgba(17, 24, 39, 0.04);
   font-size: .84rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-neutral);
   cursor: pointer;
   transition: all .2s ease;
 }
@@ -586,8 +598,8 @@ onMounted(() => {
 }
 
 .cat-count {
-  background: #f0f2f8;
-  color: #9ca3af;
+  background: var(--bg-soft-purple);
+  color: var(--text-subtle);
   font-size: .75rem;
   padding: 1px 7px;
   border-radius: 999px;
@@ -603,13 +615,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
+  background: var(--white);
   border: none; /* Remplacement de la bordure par une ombre douce */
   box-shadow: 0 2px 6px rgba(17, 24, 39, 0.04);
   border-radius: 999px;
   padding: 0 16px;
   height: 38px;
-  color: #9ca3af;
+  color: var(--text-subtle);
   transition: all .2s ease;
 }
 
@@ -635,7 +647,7 @@ onMounted(() => {
 }
 
 .project-card {
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   border: none; /* Suppression du cadre pâle */
   box-shadow: 0 4px 16px rgba(17, 24, 39, 0.05); /* Ombre douce moderne */
@@ -643,6 +655,11 @@ onMounted(() => {
   transition: box-shadow .25s ease, transform .25s ease;
   display: flex;
   flex-direction: column;
+}
+
+.project-card.is-highlighted {
+  box-shadow: 0 10px 30px rgba(91, 79, 207, 0.2);
+  outline: 2px solid rgba(91, 79, 207, 0.35);
 }
 
 .project-card:hover {
@@ -670,7 +687,7 @@ onMounted(() => {
   letter-spacing: .02em;
 }
 
-.card-date { font-size: .78rem; color: #9ca3af; }
+.card-date { font-size: .78rem; color: var(--text-subtle); }
 
 /* Title */
 .project-title {
@@ -683,7 +700,7 @@ onMounted(() => {
 
 .project-desc {
   font-size: .85rem;
-  color: #6b7280;
+  color: var(--text-neutral);
   line-height: 1.6;
   flex: 1;
 }
@@ -692,15 +709,15 @@ onMounted(() => {
 .tech-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .tech-tag {
-  background: #f0f2f8;
-  color: #374151;
+  background: var(--bg-soft-purple);
+  color: var(--text-charcoal);
   font-size: .75rem;
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 6px;
 }
 
-.card-divider { height: 1px; background: #f3f4f6; margin: 4px 0; }
+.card-divider { height: 1px; background: var(--surface-neutral); margin: 4px 0; }
 
 /* Meta bottom */
 .card-meta-bottom { display: flex; flex-direction: column; gap: 8px; }
@@ -710,10 +727,10 @@ onMounted(() => {
   align-items: center;
   gap: 7px;
   font-size: .82rem;
-  color: #6b7280;
+  color: var(--text-neutral);
 }
 
-.meta-row svg { flex-shrink: 0; color: #9ca3af; }
+.meta-row svg { flex-shrink: 0; color: var(--text-subtle); }
 
 /* Team avatars */
 .team-avatars { display: flex; gap: 4px; }
@@ -722,20 +739,20 @@ onMounted(() => {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #ede9fe;
+  background: var(--indigo-soft);
   color: var(--purple);
   font-size: .65rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid white;
+  border: 2px solid var(--white);
   margin-left: -4px;
   cursor: default;
 }
 
 .team-avatar:first-child { margin-left: 0; }
-.team-avatar.more { background: #f3f4f6; color: #6b7280; }
+.team-avatar.more { background: var(--surface-neutral); color: var(--text-neutral); }
 
 /* Card actions */
 .card-actions { display: flex; gap: 8px; margin-top: 4px; }
@@ -756,20 +773,20 @@ onMounted(() => {
 .btn-edit { background: #f0eeff; color: var(--purple); }
 .btn-edit:hover { background: #ddd6fe; }
 
-.btn-delete { background: #fef2f2; color: #dc2626; }
-.btn-delete:hover { background: #fee2e2; }
+.btn-delete { background: var(--danger-bg); color: var(--danger); }
+.btn-delete:hover { background: var(--surface-danger-soft); }
 
 /* ── Empty state ──────────────────────────────────────────────────────────── */
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(17, 24, 39, 0.05);
 }
 
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-.empty-state p { color: #9ca3af; margin-bottom: 1.5rem; }
+.empty-state p { color: var(--text-subtle); margin-bottom: 1.5rem; }
 
 /* ── Modal ────────────────────────────────────────────────────────────────── */
 .modal-overlay {
@@ -785,7 +802,7 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--white);
   border-radius: 16px;
   width: 100%;
   max-width: 700px;
@@ -802,7 +819,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 1.4rem 1.6rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--input-bg);
 }
 
 .modal-header h2 {
@@ -813,20 +830,20 @@ onMounted(() => {
 }
 
 .btn-close {
-  background: #f3f4f6;
+  background: var(--surface-neutral);
   border: none;
   border-radius: 8px;
   width: 34px;
   height: 34px;
   cursor: pointer;
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--text-neutral);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-close:hover { background: #e5e7eb; }
+.btn-close:hover { background: var(--input-bg); }
 
 .modal-body { padding: 1.5rem 1.6rem; overflow-y: auto; flex: 1; }
 
@@ -845,12 +862,12 @@ onMounted(() => {
   color: var(--text-dark);
 }
 
-.required { color: #dc2626; }
+.required { color: var(--danger); }
 
 .form-field input,
 .form-field select,
 .form-field textarea {
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--input-bg);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: .88rem;
@@ -866,14 +883,14 @@ onMounted(() => {
 .form-field select:focus,
 .form-field textarea:focus {
   border-color: var(--purple);
-  background: white;
+  background: var(--white);
 }
 
 .tag-input-wrapper {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--input-bg);
   border-radius: 10px;
   padding: 8px 10px;
   background: #fafafa;
@@ -884,7 +901,7 @@ onMounted(() => {
 
 .tag-input-wrapper:focus-within {
   border-color: var(--purple);
-  background: white;
+  background: var(--white);
 }
 
 .tag-input-wrapper input {
@@ -908,8 +925,8 @@ onMounted(() => {
   font-weight: 600;
 }
 
-.tech-tag.editable { background: #f0f2f8; color: #374151; }
-.member-tag.editable { background: #ede9fe; color: var(--purple); }
+.tech-tag.editable { background: var(--bg-soft-purple); color: var(--text-charcoal); }
+.member-tag.editable { background: var(--indigo-soft); color: var(--purple); }
 
 .tech-tag.editable button,
 .member-tag.editable button {
@@ -931,12 +948,12 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 1.2rem 1.6rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--input-bg);
 }
 
 .btn-save {
   background: var(--purple);
-  color: white;
+  color: var(--white);
   border: none;
   padding: 0 24px;
   height: 42px;
@@ -952,8 +969,8 @@ onMounted(() => {
 .btn-save:disabled { opacity: .45; cursor: not-allowed; }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--surface-neutral);
+  color: var(--text-charcoal);
   border: none;
   padding: 0 20px;
   height: 42px;
@@ -963,7 +980,7 @@ onMounted(() => {
   transition: background .15s;
 }
 
-.btn-secondary:hover { background: #e5e7eb; }
+.btn-secondary:hover { background: var(--input-bg); }
 
 @media (max-width: 900px) {
   .content, .content.shifted { padding: 16px; }

@@ -1,4 +1,5 @@
 const { prisma, toBigInt } = require('../models/prisma')
+const { recalculerScore } = require('./score.service')
 
 const includeRecommendation = {
   auteur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } },
@@ -76,11 +77,15 @@ const recommendationService = {
       },
     })
 
-    return prisma.recommandation.update({
+    const updatedRecommendation = await prisma.recommandation.update({
       where: { id_recommandation: BigInt(id) },
       data: { statut },
       include: includeRecommendation,
     })
+
+    await recalculerScore(recommendation.id_etudiant_cible)
+
+    return updatedRecommendation
   },
 
   async ajouterAuPortfolio(id, data) {

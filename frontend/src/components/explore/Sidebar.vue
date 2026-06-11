@@ -53,5 +53,5 @@ const navItems = [
 
 <style scoped>
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
+::-webkit-scrollbar-thumb { background: var(--overlay-slate-border); border-radius: 9999px; }
 </style>

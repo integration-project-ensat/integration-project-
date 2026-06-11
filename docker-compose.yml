@@ -13,8 +13,14 @@ services:
 
   backend:
     build: ./backend
-    command: sh -c "npm run seed && node server.js"
-    ports:
+    command: >
+      sh -c "
+        sleep 10 &&
+        npx prisma migrate deploy &&
+        npm run seed &&
+        npm run start
+      "
+    ports:  
       - "3000:3000"
     env_file:
       - ./.env

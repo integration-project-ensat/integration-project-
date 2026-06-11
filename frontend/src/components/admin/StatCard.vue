@@ -34,8 +34,8 @@ const formattedValue = computed(() =>
  
 <style scoped>
 .stat-card {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 14px;
   padding: 20px 22px;
   display: flex;
@@ -43,7 +43,7 @@ const formattedValue = computed(() =>
   gap: 14px;
   flex: 1;
   min-width: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px var(--overlay-black-04);
   transition: box-shadow 0.2s, transform 0.2s;
 }
 .stat-card:hover {
@@ -65,7 +65,7 @@ const formattedValue = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6366f1;
+  color: var(--indigo);
 }
  
 .stat-badge {
@@ -78,17 +78,17 @@ const formattedValue = computed(() =>
   border-radius: 20px;
 }
 .stat-badge.positive {
-  background: #ecfdf5;
-  color: #16a34a;
+  background: var(--success-bg);
+  color: var(--success);
 }
 .stat-badge.negative {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
  
 .stat-label {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   font-weight: 500;
   margin: 0 0 4px;
   text-transform: uppercase;
@@ -97,7 +97,7 @@ const formattedValue = computed(() =>
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
   margin: 0;
   letter-spacing: -0.5px;
 }

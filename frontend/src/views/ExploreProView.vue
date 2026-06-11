@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { Bookmark } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
@@ -15,7 +15,7 @@ import {
   type ProfilExplore
 } from '../services/profilApi'
 import { mapExploreProfileCard } from '../utils/exploreProfileCard'
-// ─── State ────────────────────────────────────
+// â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const searchQuery    = ref('')
 const sidebarOpen    = ref(true)
 const loading        = ref(false)
@@ -53,7 +53,7 @@ const writeLocalSavedProfiles = (items: any[]) => {
 const toSavedProfile = (profile: ProfilExplore) => ({
   id: String(profile.id_utilisateur),
   name: `${profile.prenom ?? ""} ${profile.nom ?? ""}`.trim() || "Profil",
-  school: profile.etudiant?.diplomes?.[0]?.etablissement ?? profile.etudiant?.filiere ?? "Etudiant",
+  school: profile.etudiant?.diplomes?.[0]?.etablissement ?? profile.etudiant?.filiere ?? "Étudiant",
   field: profile.etudiant?.filiere ?? "",
   city: profile.profil?.adresse ?? "",
   score: Number(profile.etudiant?.score_credibilite?.score_total ?? 0),
@@ -77,7 +77,7 @@ const removeLocalSavedProfile = (id: string) => {
   writeLocalSavedProfiles(readLocalSavedProfiles().filter((item: any) => item.id !== id))
 }
 
-// ─── Charger les profils ──────────────────────
+// â”€â”€â”€ Charger les profils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const chargerProfils = async () => {
   loading.value = true
   error.value   = null
@@ -101,7 +101,7 @@ const chargerProfils = async () => {
   }
 }
 
-// ─── Charger les sauvegardes existantes ───────
+// â”€â”€â”€ Charger les sauvegardes existantes â”€â”€â”€â”€â”€â”€â”€
 const chargerSauvegardes = async () => {
   const localIds = readLocalSavedProfiles().map((item: any) => String(item.id))
 
@@ -116,7 +116,7 @@ const chargerSauvegardes = async () => {
   }
 }
 
-// ─── Debounce sur la recherche ────────────────
+// â”€â”€â”€ Debounce sur la recherche â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const debouncedSearch = useDebounceFn(() => {
   pagination.value.page = 1
   chargerProfils()
@@ -124,19 +124,19 @@ const debouncedSearch = useDebounceFn(() => {
 
 watch(searchQuery, debouncedSearch)
 
-// ─── Watch filtres ────────────────────────────
+// â”€â”€â”€ Watch filtres â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 watch(filters, () => {
   pagination.value.page = 1
   chargerProfils()
 }, { deep: true })
 
-// ─── Init ─────────────────────────────────────
+// â”€â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 onMounted(() => {
   chargerProfils()
   chargerSauvegardes()
 })
 
-// ─── Sauvegarder / retirer ────────────────────
+// â”€â”€â”€ Sauvegarder / retirer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const toggleSavedProfile = async (profile: ProfilExplore) => {
   const id = profile.id_utilisateur
   try {
@@ -159,16 +159,16 @@ const toggleSavedProfile = async (profile: ProfilExplore) => {
   }
 }
 
-// ─── Pagination ───────────────────────────────
+// â”€â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const changerPage = (page: number) => {
   pagination.value.page = page
   chargerProfils()
 }
 
-// ─── Adapter le profil pour ProfileCard ───────
+// â”€â”€â”€ Adapter le profil pour ProfileCard â”€â”€â”€â”€â”€â”€â”€
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'pro')
 
-// ─── Helpers ──────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const profileId = (profile: ProfilExplore) => profile.id_utilisateur
 const isSaved = (id: string) => savedIds.value.has(id)
 
@@ -276,8 +276,8 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: #eef1fb;
-  color: rgb(15 23 42);
+  background: var(--surface-page);
+  color: var(--text-strong);
   padding-top: 50px;
 }
 .explore-shell {
@@ -306,9 +306,9 @@ const handleUpdateFilters = (next: Record<string, any>) => {
 .explore-middle-inner { margin: 0; width: 100%; max-width: none; padding: 0; }
 .explore-panel {
   border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-06);
+  box-shadow: 0 18px 40px var(--overlay-slate-09);
   overflow: hidden;
 }
 .explore-feed {
@@ -316,12 +316,12 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   flex-direction: column;
   gap: 20px;
   padding: 16px 18px 18px;
-  background: #ffffff;
+  background: var(--white);
 }
 .explore-state {
   padding: 40px;
   text-align: center;
-  color: rgb(100 116 139);
+  color: var(--text-slate);
   font-size: 14px;
 }
 .explore-state--error { color: #e11d48; }
@@ -334,7 +334,7 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   width: 36px;
   height: 36px;
   border-radius: 9999px;
-  background: white;
+  background: var(--white);
   border: 1px solid rgba(15, 23, 42, 0.1);
   box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
   display: inline-flex;
@@ -343,7 +343,7 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.save-profile-btn.saved { background: #6c5ce7; border-color: #6c5ce7; color: white; }
+.save-profile-btn.saved { background: var(--violet); border-color: var(--violet); color: var(--white); }
 .save-icon { width: 18px; height: 18px; }
 .save-feedback {
   position: absolute;
@@ -351,13 +351,16 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   top: 22px;
   z-index: 6;
   border-radius: 9999px;
-  background: rgb(15 23 42);
-  color: white;
+  background: var(--text-strong);
+  color: var(--white);
   padding: 7px 12px;
   font-size: 12px;
   font-weight: 800;
   box-shadow: 0 10px 24px rgba(17, 24, 39, 0.2);
 }
 </style>
+
+
+
 
 

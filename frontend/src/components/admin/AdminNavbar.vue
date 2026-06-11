@@ -46,7 +46,7 @@ defineEmits(['toggleSidebar', 'toggleTheme'])
   left: 0;
   right: 0;
   z-index: 200;
-  box-shadow: 0 1px 0 #e8eaf0, 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 0 var(--border-admin), 0 2px 8px rgba(0,0,0,0.06);
 }
  
 .left {
@@ -62,7 +62,7 @@ defineEmits(['toggleSidebar', 'toggleTheme'])
   font-family: var(--font-head);
   font-size: 1.05rem;
   font-weight: 700;
-  color: white;
+  color: var(--white);
 }
 .logo img {
   height: 32px;
@@ -72,7 +72,7 @@ defineEmits(['toggleSidebar', 'toggleTheme'])
  
 .burger-btn {
   background: transparent;
-  color: white;
+  color: var(--white);
   border: none;
   cursor: pointer;
   display: flex;

@@ -1,5 +1,25 @@
 const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
+const { recalculerScore } = require('./score.service')
+
+async function ensureAttachedProfessorStudent(professorId, studentId) {
+  const attached = await prisma.professeurEtudiant.findUnique({
+    where: {
+      id_professeur_id_etudiant: {
+        id_professeur: toBigInt(professorId),
+        id_etudiant: toBigInt(studentId),
+      },
+    },
+    select: { id_professeur: true },
+  })
+
+  if (!attached) {
+    throw {
+      statusCode: 403,
+      message: "Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.",
+    }
+  }
+}
 
 const stageService = {
   async findAll(filters = {}) {
@@ -12,7 +32,8 @@ const stageService = {
       where,
       include: {
         etudiant: { include: { utilisateur: { select: { nom: true, prenom: true, email: true } } } },
-        encadrant: { include: { utilisateur: { select: { nom: true, prenom: true } } } }
+        encadrant: { include: { utilisateur: { select: { nom: true, prenom: true } } } },
+        professionnel: { include: { utilisateur: { select: { nom: true, prenom: true } } } }
       },
       orderBy: { id_stage: 'desc' }
     })
@@ -23,16 +44,28 @@ const stageService = {
       where: { id_stage: BigInt(id) },
       include: {
         etudiant: { include: { utilisateur: { select: { nom: true, prenom: true, email: true } } } },
-        encadrant: { include: { utilisateur: { select: { nom: true, prenom: true } } } }
+        encadrant: { include: { utilisateur: { select: { nom: true, prenom: true } } } },
+        professionnel: { include: { utilisateur: { select: { nom: true, prenom: true } } } }
       }
     })
   },
 
   async create(data, etudiantId) {
-    const { entreprise, poste, duree_semaines, missions, technologies, date_debut, date_fin, id_encadrant } = data
+    const { entreprise, etablissement, poste, duree_semaines, missions, technologies, date_debut, date_fin, id_encadrant, id_professionnel } = data
+    const professionnel = id_professionnel
+      ? await prisma.professionnel.findUnique({
+          where: { id_utilisateur: BigInt(id_professionnel) },
+          select: { entreprise: true },
+        })
+      : null
+    if (id_professionnel && !professionnel) {
+      throw { statusCode: 400, message: 'Professionnel introuvable' }
+    }
+
     const stage = await prisma.stage.create({
       data: {
-        entreprise,
+        entreprise: professionnel?.entreprise || entreprise,
+        etablissement: etablissement || null,
         poste,
         duree_semaines,
         missions,
@@ -41,6 +74,7 @@ const stageService = {
         date_fin: date_fin ? new Date(date_fin) : null,
         id_etudiant: BigInt(etudiantId),
         ...(id_encadrant && { id_encadrant: BigInt(id_encadrant) }),
+        ...(id_professionnel && { id_professionnel: BigInt(id_professionnel) }),
         statut: 'EN_ATTENTE'
       }
     })
@@ -65,11 +99,22 @@ const stageService = {
     if (!stage) return null
     if (stage.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
 
-    const { entreprise, poste, duree_semaines, missions, technologies, date_debut, date_fin, id_encadrant } = data
+    const { entreprise, etablissement, poste, duree_semaines, missions, technologies, date_debut, date_fin, id_encadrant, id_professionnel } = data
+    const professionnel = id_professionnel
+      ? await prisma.professionnel.findUnique({
+          where: { id_utilisateur: BigInt(id_professionnel) },
+          select: { entreprise: true },
+        })
+      : null
+    if (id_professionnel && !professionnel) {
+      throw { statusCode: 400, message: 'Professionnel introuvable' }
+    }
+
     return prisma.stage.update({
       where: { id_stage: BigInt(id) },
       data: {
-        ...(entreprise && { entreprise }),
+        ...((professionnel?.entreprise || entreprise) && { entreprise: professionnel?.entreprise || entreprise }),
+        ...(etablissement !== undefined && { etablissement: etablissement || null }),
         ...(poste !== undefined && { poste }),
         ...(duree_semaines !== undefined && { duree_semaines }),
         ...(missions !== undefined && { missions }),
@@ -77,6 +122,7 @@ const stageService = {
         ...(date_debut && { date_debut: new Date(date_debut) }),
         ...(date_fin && { date_fin: new Date(date_fin) }),
         ...(id_encadrant && { id_encadrant: BigInt(id_encadrant) }),
+        ...(id_professionnel && { id_professionnel: BigInt(id_professionnel) }),
       }
     })
   },
@@ -104,6 +150,8 @@ const stageService = {
     if (stage.id_encadrant && stage.id_encadrant !== BigInt(validateurId)) {
       throw { statusCode: 403, message: 'Accès refusé' }
     }
+
+    await ensureAttachedProfessorStudent(validateurId, stage.id_etudiant)
 
     const existingElement = await prisma.elementValidable.findFirst({
       where: { type: 'STAGE', reference_id: stage.id_stage }
@@ -146,13 +194,17 @@ const stageService = {
       })
     } catch (e) {}
 
-    return prisma.stage.update({
+    const updatedStage = await prisma.stage.update({
       where: { id_stage: BigInt(id) },
       data: {
         statut,
         ...(commentaire_prof !== undefined && { commentaire_prof })
       }
     })
+
+    await recalculerScore(stage.id_etudiant)
+
+    return updatedStage
   },
 
   async getHistorique(id) {

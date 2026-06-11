@@ -85,9 +85,9 @@ const handleLogout = async () => {
   bottom: 0;
   width: 220px;
  
-  background: #fff;
-  border-right: 1px solid #e8eaf0;
-  box-shadow: 2px 0 12px rgba(0,0,0,0.04);
+  background: var(--white);
+  border-right: 1px solid var(--border-admin);
+  box-shadow: 2px 0 12px var(--overlay-black-04);
   /*
     Flex column : nav pousse vers le haut,
     spacer prend tout l'espace libre,
@@ -127,7 +127,7 @@ const handleLogout = async () => {
   flex-direction: column;
   gap: 2px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--surface-muted);
   /* flex-shrink: 0 garantit qu'il ne sera jamais compressé */
   flex-shrink: 0;
 }
@@ -141,7 +141,7 @@ const handleLogout = async () => {
   border-radius: 0px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-slate);
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
   cursor: pointer;
@@ -153,16 +153,16 @@ const handleLogout = async () => {
 }
  
 .nav-item:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--surface-muted);
+  color: var(--text-heading);
 }
  
 .nav-item.active {
-  background: #ede9fe;
-  color: #6366f1;
+  background: var(--indigo-soft);
+  color: var(--indigo);
   font-weight: 600;
   border-radius: 0;                        /* supprimer le border-radius */
-  border-left: 3px solid #6366f1;         /* barre violette à gauche */
+  border-left: 3px solid var(--indigo);         /* barre violette à gauche */
   padding-left: 8px;  
 }
  
@@ -172,7 +172,7 @@ const handleLogout = async () => {
 }
  
 /* ── Logout ─────────────────────────────────────── */
-.logout { color: #ef4444; }
-.logout:hover { background: #fef2f2; color: #dc2626; }
+.logout { color: var(--danger-light); }
+.logout:hover { background: var(--danger-bg); color: var(--danger); }
 </style>
  

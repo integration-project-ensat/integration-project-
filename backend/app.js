@@ -4,6 +4,9 @@ const passport = require('./src/config/passport');
 const path = require('path')
 const express = require('express')
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./src/config/swagger.config');
+
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
@@ -44,6 +47,7 @@ const accountRoutes = require('./src/routes/account.routes')
 // const attestationRoutes = require('./src/routes/attestation.routes')
 
 const app = express()
+app.set('trust proxy', 1)
 const projetRoutes = require('./src/routes/projet.routes')
 const stageRoutes = require('./src/routes/stage.routes')
 const activiteRoutes = require('./src/routes/activite.routes')
@@ -56,6 +60,12 @@ const profStudentRoutes = require('./src/routes/profStudent.routes');
 // Fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
 // Sécurité & CORS
 app.use(securityHeaders)
 app.use(corsMiddleware)
@@ -63,6 +73,9 @@ app.use(passport.initialize());
 // Body parser
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
+
+
+
 
 app.use(
   "/api/ai",

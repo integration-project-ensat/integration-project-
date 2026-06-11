@@ -71,7 +71,7 @@ defineEmits<{
   font-family: var(--font-head);
   font-size: 1.05rem;
   font-weight: 700;
-  color: white;
+  color: var(--white);
 }
 
 .logo img {
@@ -83,7 +83,7 @@ defineEmits<{
 
 .burger-btn {
   background: transparent;
-  color: white;
+  color: var(--white);
   border: none;
   cursor: pointer;
   display: flex;
@@ -111,6 +111,6 @@ defineEmits<{
 }
 
 .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--overlay-white-08);
 }
 </style>

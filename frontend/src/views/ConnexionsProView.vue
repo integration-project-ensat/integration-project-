@@ -7,6 +7,7 @@ import SidebarStudent from "../components/exploreStudent/Sidebar.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { connexionService } from "../services/connexion.service";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 const router = useRouter();
 const route = useRoute();
@@ -23,6 +24,7 @@ interface ProConnectionRequest {
   name: string;
   school: string;
   field: string;
+  badges: string[];
   message: string;
   time: string;
   status: ProConnectionStatus;
@@ -66,8 +68,8 @@ const visibleRequests = computed(() =>
 
 const emptyStateMessage = computed(() =>
   activeTab.value === "accepted"
-    ? "Aucune connexion acceptee pour le moment."
-    : "Aucune demande dans cette categorie.",
+    ? "Aucune connexion acceptée pour le moment."
+    : "Aucune demande dans cette catégorie.",
 );
 
 const hasAcceptedConnections = computed(() => acceptedRequests.value.length > 0);
@@ -89,14 +91,13 @@ const formatRelativeDate = (dateValue?: string | null) => {
   return `Il y a ${diffDays} jours`;
 };
 
-const connectionBadges = (field: string) => {
-  const normalized = field.toLowerCase();
-  if (normalized.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (normalized.includes("data")) return ["🧠 AI / Data"];
-  if (normalized.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (normalized.includes("cyber")) return ["🔐 Security Aware"];
-  return ["🌐 Web Developer"];
-};
+const pickBadges = (user: any, field: string, school: string) =>
+  resolveProfileBadges({
+    badges: user?.etudiant?.badges,
+    filiere: field,
+    school,
+    field,
+  });
 
 const toInitials = (name: string) =>
   name
@@ -142,6 +143,7 @@ const mapPendingRequest = (
     name,
     school: getSchoolLabel(sourceUser),
     field: getFieldLabel(sourceUser),
+    badges: pickBadges(sourceUser, getFieldLabel(sourceUser), getSchoolLabel(sourceUser)),
     message: isSentByCurrentUser ? "Demande envoyée" : "Demande de connexion étudiant",
     time: formatRelativeDate(connexion.date_demande),
     status: isSentByCurrentUser ? "sent" : "pending",
@@ -171,6 +173,7 @@ const mapAcceptedRequest = (
     name,
     school: getSchoolLabel(otherUser),
     field: getFieldLabel(otherUser),
+    badges: pickBadges(otherUser, getFieldLabel(otherUser), getSchoolLabel(otherUser)),
     message: "Connexion acceptée",
     time: formatRelativeDate(connexion.date_reponse || connexion.date_demande),
     status: "accepted",
@@ -251,7 +254,10 @@ const loadConnections = async () => {
 
   } catch (err: any) {
     if (err?.response?.status === 401) {
-      router.push("/login");
+      error.value =
+        err?.response?.data?.message ||
+        "Impossible de charger les connexions pour cette session.";
+      rawConnexionData.value = err?.response?.data ?? null;
       return;
     }
     error.value =
@@ -351,7 +357,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
                 {{ request.name }}
               </button>
               <p>{{ request.school }} · {{ request.field }}</p>
-              <SkillBadges :badges="connectionBadges(request.field)" compact />
+              <SkillBadges :badges="request.badges" compact />
               <span>{{ request.message }}</span>
               <small>{{ request.time }}</small>
 
@@ -419,7 +425,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .connexions-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -439,10 +445,10 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .connexions-panel,
 .page-heading,
 .request-card {
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
 }
 
 .connexions-panel {
@@ -482,7 +488,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .request-actions button {
   border-radius: 100px 180px 0px 100px;
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 8px 14px;
   font-weight: 900;
@@ -492,7 +498,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .request-actions button:first-child {
   background: var(--purple);
   border-color: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .requests-grid {
@@ -559,7 +565,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
   margin-top: 12px;
   border-radius: 999px;
   border: 1px solid rgba(17, 24, 39, 0.18);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 8px 14px;
   font-weight: 900;

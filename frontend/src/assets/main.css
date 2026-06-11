@@ -13,16 +13,79 @@
 }
 
 :root {
+  --white: #ffffff;
+  --black: #000000;
   --navy: #111827;
   --navy-mid: #243559;
   --purple: #4f46e5;
+  --purple-hover: #4338ca;
   --purple-light: #5a89ed; /*ou bien ce coleur*/
+  --indigo: #6366f1;
+  --blue: #2563eb;
+  --sky: #039be5;
+  --violet: #6c5ce7;
+  --indigo-soft: #ede9fe;
+  --purple-soft: #eeecff;
   --blue-w: #06b6d4;
   --text-dark: #111827;
+  --text-strong: #0f172a;
+  --text-heading: #1e293b;
+  --text-body: #334155;
+  --text-charcoal: #374151;
+  --text-muted: #475569;
+  --text-slate: #64748b;
+  --text-dim: #666666;
+  --text-light: #94a3b8;
+  --text-subtle: #9ca3af;
+  --text-neutral: #6b7280;
   --text-gray: #7a7f88;
   --input-bg: #e5e7eb;
+  --border-light: #e2e8f0;
+  --border-admin: #e8eaf0;
+  --border-neutral: #f0f0f0;
+  --surface-white: #ffffff;
+  --surface-subtle: #f8fafc;
+  --surface-muted: #f1f5f9;
+  --surface-admin: #fafbff;
+  --surface-neutral: #f3f4f6;
+  --surface-neutral-strong: #e0e0e0;
+  --surface-page: #eef1fb;
+  --surface-danger-soft: #fee2e2;
   --bg-soft-purple: #f0f2f8;
+  --success: #16a34a;
+  --success-bg: #ecfdf5;
+  --success-strong: #059669;
+  --success-dark: #047857;
+  --warning: #f59e0b;
+  --warning-strong: #ea580c;
+  --warning-bg: #fff7ed;
   --error: #df1e21;
+  --danger: #dc2626;
+  --danger-light: #ef4444;
+  --danger-bg: #fef2f2;
+  --brand-whatsapp: #25d366;
+  --tech-amber: #f57c00;
+  --tech-blue: #0277bd;
+  --tech-brown: #8d6e63;
+  --tech-deep-purple: #5e35b1;
+  --tech-periwinkle: #5c6bc0;
+  --tech-slate: #5e6ad2;
+  --tech-green: #43a047;
+  --overlay-navy-08: rgba(17, 24, 39, 0.08);
+  --overlay-navy-06: rgba(17, 24, 39, 0.06);
+  --overlay-slate-06: rgba(15, 23, 42, 0.06);
+  --overlay-slate-08: rgba(15, 23, 42, 0.08);
+  --overlay-slate-09: rgba(15, 23, 42, 0.09);
+  --overlay-slate-border: rgba(148, 163, 184, 0.25);
+  --overlay-slate-border-soft: rgba(148, 163, 184, 0.2);
+  --overlay-purple-10: rgba(79, 70, 229, 0.1);
+  --overlay-purple-12: rgba(79, 70, 229, 0.12);
+  --overlay-purple-20: rgba(79, 70, 229, 0.2);
+  --overlay-danger-08: rgba(223, 30, 33, 0.08);
+  --overlay-black-04: rgba(0, 0, 0, 0.04);
+  --overlay-black-06: rgba(0, 0, 0, 0.06);
+  --overlay-black-08: rgba(0, 0, 0, 0.08);
+  --overlay-white-08: rgba(255, 255, 255, 0.08);
   --font-head: "Inter", sans-serif;
   --font-body: "DM Sans", sans-serif;
   --radius-pill: 50px;
@@ -40,7 +103,7 @@ body,
 
 body {
   margin: 0;
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
 }
 
 #app {
@@ -69,10 +132,6 @@ select {
 a {
   text-decoration: none;
 }
-:root {
-  --purple-hover: #4338ca;
-}
-
 .avatar-fallback {
   --avatar-bg-1: #4285f4;
   --avatar-bg-2: #34a853;

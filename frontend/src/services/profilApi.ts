@@ -25,6 +25,7 @@ export interface ProfilExplore {
   } | null
   etudiant: {
     filiere:             string | null
+    etablissement:       string | null
     annee_universitaire: string | null
     score_credibilite: {
       score_total: number | null

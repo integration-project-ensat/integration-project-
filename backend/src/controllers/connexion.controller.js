@@ -15,7 +15,9 @@ const connexionController = {
       if (e.statusCode === 400)
         return res.status(400).json(ApiResponse.conflict(e.message));
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
+      if (e.statusCode === 404)
+        return res.status(404).json(ApiResponse.notFound("Utilisateur"));
       if (e.statusCode === 409)
         return res.status(409).json(ApiResponse.conflict(e.message));
       return res.status(500).json(ApiResponse.serverError());
@@ -35,7 +37,6 @@ const connexionController = {
       return res.status(500).json(ApiResponse.serverError());
     }
   },
-
   async accepter(req, res) {
     try {
       const connexion = await connexionService.changerStatut(
@@ -48,7 +49,7 @@ const connexionController = {
       return res.json(ApiResponse.success(connexion, "Connexion acceptÃ©e"));
     } catch (e) {
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
       if (e.statusCode === 400)
         return res.status(400).json(ApiResponse.conflict(e.message));
       if (e.statusCode === 409)
@@ -69,7 +70,7 @@ const connexionController = {
       return res.json(ApiResponse.success(connexion, "Connexion refusÃ©e"));
     } catch (e) {
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
       if (e.statusCode === 400)
         return res.status(400).json(ApiResponse.conflict(e.message));
       return res.status(500).json(ApiResponse.serverError());
@@ -137,7 +138,7 @@ const connexionController = {
       );
     } catch (e) {
       if (e.statusCode === 403)
-        return res.status(403).json(ApiResponse.forbidden());
+        return res.status(403).json(ApiResponse.forbidden(e.message));
       if (e.statusCode === 404)
         return res.status(404).json(ApiResponse.notFound("Connexion"));
       if (e.statusCode === 422)

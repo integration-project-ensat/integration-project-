@@ -31,19 +31,19 @@ const labels = {
   white-space: nowrap;
 }
 .status-badge.pending {
-  background: #fff7ed;
-  color: #ea580c;
+  background: var(--warning-bg);
+  color: var(--warning-strong);
 }
 .status-badge.completed {
-  background: #ecfdf5;
-  color: #16a34a;
+  background: var(--success-bg);
+  color: var(--success);
 }
 .status-badge.cancelled {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 .status-badge.verified {
   background: #eff6ff;
-  color: #2563eb;
+  color: var(--blue);
 }
 </style>

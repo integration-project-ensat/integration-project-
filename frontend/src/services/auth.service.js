@@ -38,9 +38,18 @@ function normalizeBackendRole(role) {
 
 function persistSession(user, token) {
   const role = normalizeBackendRole(user?.role)
+  const usableToken =
+    typeof token === 'string' &&
+    token.trim() &&
+    token !== 'undefined' &&
+    token !== 'null'
 
   if (!role) {
     throw new Error(`Role inconnu : ${user?.role}`)
+  }
+
+  if (!usableToken) {
+    throw new Error("Le backend n'a pas renvoye de token de session")
   }
 
   const normalizedUser = {

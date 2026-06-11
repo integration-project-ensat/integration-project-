@@ -5,28 +5,45 @@ import SidebarProf from "../components/exploreProf/SidebarProf.vue";
 import SkillBadges from "../components/exploreStudent/SkillBadges.vue";
 import Topbar from "../components/exploreStudent/Topbar.vue";
 import { useProfValidationRequests } from "../store/profValidationRequests";
+import { profileService } from "../services/profile.service";
+import { resolveProfileBadges } from "../utils/profileBadges";
 
 const route = useRoute();
 const router = useRouter();
 const sidebarOpen = ref(true);
+const backendProfile = ref<any | null>(null);
 const { findStudentRequests } = useProfValidationRequests();
 
 const studentId = computed(() => String(route.params.id ?? ""));
+const numericStudentId = computed(() => (/^\d+$/.test(studentId.value) ? studentId.value : null));
 const studentRequests = computed(() => findStudentRequests(studentId.value));
 const student = computed(() => studentRequests.value[0]);
 
 const profileBadges = computed(() => {
-  const title = studentRequests.value.map((request) => request.title).join(" ").toLowerCase();
-  if (title.includes("devops")) return ["🌊 DevOps", "🔐 Security Aware"];
-  if (title.includes("cloud")) return ["🧠 AI / Data", "🌐 Web Developer"];
-  if (title.includes("mobile")) return ["🌐 Web Developer", "🏆 Hackathon Participant"];
-  return ["🌐 Web Developer"];
+  const rawProfile = backendProfile.value;
+  return resolveProfileBadges({
+    badges: rawProfile?.badgesData,
+    competences: rawProfile?.competences,
+    filiere: rawProfile?.title,
+    bio: rawProfile?.bio,
+    school: rawProfile?.school,
+    field: rawProfile?.title,
+  });
 });
 
-onMounted(() => {
+onMounted(async () => {
   console.log('[ProfStudentProfileView] route.params.id =', route.params.id)
   console.log('[ProfStudentProfileView] studentRequests =', studentRequests.value)
+
+  try {
+    backendProfile.value = numericStudentId.value
+      ? await profileService.getProfile(numericStudentId.value)
+      : null
+  } catch (error) {
+    backendProfile.value = null
+  }
 })
+
 </script>
 
 <template>
@@ -79,7 +96,7 @@ onMounted(() => {
 .profile-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -98,14 +115,14 @@ onMounted(() => {
   max-width: 900px;
   margin: 0 auto;
   border-radius: var(--radius-card);
-  background: white;
+  background: var(--white);
   padding: 26px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  box-shadow: 0 18px 40px var(--overlay-slate-09);
 }
 
 .back-btn {
   border-radius: var(--radius-pill);
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   padding: 9px 14px;
   font-weight: 800;
@@ -147,7 +164,7 @@ h1 {
 
 .profile-hero p,
 .profile-card > p {
-  color: #475569;
+  color: var(--text-muted);
   font-weight: 700;
 }
 
@@ -157,7 +174,7 @@ h1 {
 }
 
 .request-card {
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid var(--overlay-slate-border);
   border-radius: 16px;
   padding: 16px;
 }
@@ -177,7 +194,7 @@ h1 {
 }
 
 .request-card p {
-  color: #475569;
+  color: var(--text-muted);
   font-weight: 700;
   margin-bottom: 8px;
 }

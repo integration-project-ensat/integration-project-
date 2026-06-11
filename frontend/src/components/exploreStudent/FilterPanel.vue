@@ -45,21 +45,16 @@ const sections = [
     title: "Filiere",
     key: "field",
     options: [
-      "GINF",
-      "GSTR",
-      "GSEA",
-      "GIL",
-      "GTR",
-      "IID",
+      "Informatique",
+      "Reseaux et Telecoms",
       "Data Science",
-      "Cybersecurity",
+      "Cybersecurite",
       "IA",
+      "Developpement",
       "DevOps",
       "Cloud",
-      "Big Data",
-      "Web",
-      "Mobile",
-      "Réseaux",
+      "Marketing",
+      "Design",
     ],
   },
   {
@@ -345,11 +340,11 @@ const isExpanded = (key: SectionKey) => {
 .fp-card {
   width: 100%;
   height: 100%;
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-08);
   border-radius: 0;
   padding: 8px 14px 0;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 30px var(--overlay-slate-08);
   max-height: 100%;
   overflow-y: auto;
 }
@@ -392,13 +387,13 @@ const isExpanded = (key: SectionKey) => {
   height: 24px;
   padding: 0 14px;
   border-radius: 100px 180px 0px 100px;
-  border: 1px solid rgb(148 163 184);
-  background: #ffffff;
-  color: rgb(71 85 105);
+  border: 1px solid var(--text-light);
+  background: var(--white);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px var(--overlay-black-06);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -406,15 +401,15 @@ const isExpanded = (key: SectionKey) => {
 }
 
 .fp-pill:hover {
-  border-color: rgb(100 116 139);
-  color: rgb(15 23 42);
+  border-color: var(--text-slate);
+  color: var(--text-strong);
 }
 
 .fp-pillActive {
   border: 2px solid #5b4dff;
   background: #f1f1f5;
-  color: #111827;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  color: var(--navy);
+  box-shadow: 0 2px 8px var(--overlay-slate-08);
   font-weight: 900;
 }
 
@@ -436,7 +431,7 @@ const isExpanded = (key: SectionKey) => {
   gap: 6px;
   justify-content: flex-start;
   padding-left: 14px;
-  color: #6b7280;
+  color: var(--text-neutral);
   background: transparent;
 }
 

@@ -11,8 +11,8 @@
         <span>{{ initials }}</span>
       </div>
       <div class="user-info">
-        <p class="user-name">Nom Prenom</p>
-        <p class="user-email">Exemple.exemple@univ.etu.ac.ma</p>
+        <p class="user-name">{{ userName }}</p>
+        <p class="user-email">{{ userEmail }}</p>
       </div>
     </component>
 
@@ -44,11 +44,11 @@
         @click="handleNavigation('/student/settings', $event)"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </component>
       <a href="/login" class="nav-item logout" @click="handleLogout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </a>
     </div>
   </aside>
@@ -72,7 +72,25 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
-const initials = computed(() => "NP");
+const userName = computed(() => {
+  const user = auth.user
+  const fullName = user?.name || [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
+  return fullName || 'Étudiant'
+})
+
+const userEmail = computed(() => auth.user?.email || '')
+
+const initials = computed(() => {
+  const words = userName.value.split(/\s+/).filter(Boolean)
+  const letters = words.length > 1
+    ? [words[0], words[words.length - 1]]
+    : [words[0]]
+
+  return letters
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 2) || 'E'
+})
 
 function normalizedPath(path: string) {
   return path.split("?")[0];
@@ -194,19 +212,19 @@ const navItems = [
   },
   {
     path: "/portfolio",
-    label: "My Portfolio",
+    label: "Mon portfolio",
     icon: icons.portfolio,
     activeIcon: icons.portfolioFill,
   },
   {
     path: "/ai-analyzer",
-    label: "AI Portfolio",
+    label: "Portfolio IA",
     icon: icons.ai,
     activeIcon: icons.aiFill,
   },
   {
     path: "/lettres",
-    label: "Lettres de Recos",
+    label: "Lettres de recommandation",
     icon: icons.letter,
     activeIcon: icons.letterFill,
   },
@@ -216,7 +234,7 @@ const navItems = [
 <style scoped>
 .sidebar {
   width: 220px;
-  background: white;
+  background: var(--white);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -225,7 +243,7 @@ const navItems = [
   top: 50px;
   bottom: 0;
   z-index: 99;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 2px 0 12px var(--overlay-black-06);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
 }
@@ -239,7 +257,7 @@ const navItems = [
   align-items: center;
   gap: 10px;
   padding: 16px 14px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-neutral);
   text-decoration: none;
   color: inherit;
 }
@@ -248,7 +266,7 @@ const navItems = [
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #e0e0e0;
+  background: var(--surface-neutral-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -266,7 +284,7 @@ const navItems = [
 .user-name {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -274,7 +292,7 @@ const navItems = [
 
 .user-email {
   font-size: 0.65rem;
-  color: #64748b;
+  color: var(--text-slate);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -294,7 +312,7 @@ const navItems = [
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  color: #64748b;
+  color: var(--text-slate);
   font-size: 0.88rem;
   text-decoration: none;
   transition: 0.2s ease;
@@ -302,14 +320,14 @@ const navItems = [
 }
 
 .nav-item:hover {
-  color: #0f172a;
+  color: var(--text-strong);
   background: #f5f5ff;
 }
 
 .nav-item.active {
-  color: #6c5ce7;
-  background: #eeecff;
-  border-left: 3px solid #6c5ce7;
+  color: var(--violet);
+  background: var(--purple-soft);
+  border-left: 3px solid var(--violet);
   font-weight: 600;
 }
 
@@ -321,7 +339,7 @@ const navItems = [
 
 .sidebar-bottom {
   padding: 8px 0;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-neutral);
 }
 
 .logout {

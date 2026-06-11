@@ -1,6 +1,29 @@
 const prisma = require('../../prisma/client')
 const asyncHandler = require('../middlewares/asyncHandler');
 
+/**
+ * Checks whether a portfolio record is truly complete.
+ * A portfolio is considered complete only when the student has
+ * actually filled in meaningful content — not just when an empty
+ * auto-created row exists.
+ *
+ * @param {Object|null} portfolio - The portfolio record from Prisma
+ * @returns {boolean}
+ */
+function isPortfolioComplete(portfolio) {
+  if (!portfolio) return false
+
+  // Empty auto-created record — no title filled in
+  if (!portfolio.titre || portfolio.titre.trim() === '') return false
+
+  // Must have a published/public URL
+  if (!portfolio.url_public || portfolio.url_public.trim() === '') return false
+
+  // Defensive: soft-delete check (for future schema migrations)
+  if (portfolio.deleted_at !== null && portfolio.deleted_at !== undefined) return false
+
+  return true
+}
 
 // ==================== DASHBOARD ÉTUDIANT ====================
 
@@ -50,7 +73,7 @@ const getDashboard = asyncHandler(async (req, res) => {
   if (etudiant.diplomes.length > 0)     profileProgress += 20
   if (etudiant.competences.length > 0)  profileProgress += 20
   if (etudiant.projets.length > 0)      profileProgress += 15
-  if (etudiant.portfolio)               profileProgress += 20
+  if (isPortfolioComplete(etudiant.portfolio)) profileProgress += 20
   if (etudiant.utilisateur.email)       profileProgress += 10
   profileProgress = Math.min(profileProgress, 100)
 
@@ -65,7 +88,7 @@ const getDashboard = asyncHandler(async (req, res) => {
         stages:          etudiant.stages.length,
         badges:          etudiant.badges.length,
         competences:     etudiant.competences.length,
-        portfolio:       etudiant.portfolio ? 1 : 0,
+        portfolio:       isPortfolioComplete(etudiant.portfolio) ? 1 : 0,
       },
       profileProgress,
       activities: activiteRecente.map(log => ({
@@ -122,8 +145,8 @@ const getProfileProgress = asyncHandler(async (req, res) => {
       percentage: etudiant.projets.length > 0 ? 100 : 0
     },
     portfolio: {
-      completed:  !!etudiant.portfolio,
-      percentage: etudiant.portfolio ? 100 : 0
+      completed:  isPortfolioComplete(etudiant.portfolio),
+      percentage: isPortfolioComplete(etudiant.portfolio) ? 100 : 0
     }
   }
 
@@ -191,6 +214,36 @@ const getOpportunities = asyncHandler(async (req, res) => {
   })
 })
 
+const getProfessionnels = asyncHandler(async (req, res) => {
+  const professionnels = await prisma.utilisateur.findMany({
+    where: {
+      role: 'PROFESSIONNEL',
+      est_actif: true,
+      professionnel: { est_valide: true }
+    },
+    select: {
+      id_utilisateur: true,
+      nom: true,
+      prenom: true,
+      profil: { select: { photo_profil: true, adresse: true } },
+      professionnel: { select: { entreprise: true, poste: true, secteur: true } }
+    },
+    orderBy: [{ nom: 'asc' }, { prenom: 'asc' }]
+  })
+
+  res.json({
+    success: true,
+    data: professionnels.map(p => ({
+      id: p.id_utilisateur.toString(),
+      nom: `${p.prenom} ${p.nom}`,
+      poste: p.professionnel?.poste,
+      entreprise: p.professionnel?.entreprise,
+      secteur: p.professionnel?.secteur,
+      photo: p.profil?.photo_profil ?? null
+    }))
+  })
+})
+
 // ==================== ACTIVITÉ RÉCENTE ====================
 
 const getRecentActivity = asyncHandler(async (req, res) => {
@@ -239,5 +292,6 @@ module.exports = {
   getDashboard,
   getProfileProgress,
   getOpportunities,
+  getProfessionnels,
   getRecentActivity
 }

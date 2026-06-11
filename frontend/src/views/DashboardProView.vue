@@ -59,52 +59,10 @@ const publishedOffers = ref(0);
 const profileName = ref("Bienvenue, professionnel");
 const totalSaved = computed(() => savedProfiles.value.length);
 const isSubmittingStage = ref(false);
+const isLoadingDashboard = ref(false);
+const dashboardError = ref("");
 
-const interns = ref<Intern[]>([
-  {
-    id: "yassine-el-amrani",
-    initials: "YE",
-    name: "Yassine El Amrani",
-    school: "ENSA Tanger",
-    field: "DevOps",
-    city: "Tanger",
-    score: 85,
-    startDate: "12/05/2026",
-    badges: ["🌊 DevOps", "🔐 Security Aware"],
-    status: "Actif",
-    profilePath: "/profile/student/yassine-el-amrani",
-    portfolioPath: "/projects/stage-devops",
-  },
-  {
-    id: "sara-alaoui",
-    initials: "SA",
-    name: "Sara Alaoui",
-    school: "ENSA Tanger",
-    field: "Cloud",
-    city: "Tanger",
-    score: 95,
-    startDate: "02/04/2026",
-    badges: ["🧠 AI / Data", "🌐 Web Developer"],
-    status: "Actif",
-    profilePath: "/profile/student/sara-alaoui",
-    portfolioPath: "/projects/cloud-dashboard",
-  },
-  {
-    id: "nora-tazi",
-    initials: "NT",
-    name: "Nora Tazi",
-    school: "FST Fès",
-    field: "Mobile",
-    city: "Fès",
-    score: 80,
-    startDate: "15/02/2026",
-
-    badges: ["🌐 Web Developer", "🏆 Hackathon Participant"],
-    status: "Terminé",
-    profilePath: "/profile/student/nora-tazi",
-    portfolioPath: "/projects/mobile-ensa",
-  },
-]);
+const interns = ref<Intern[]>([]);
 
 const newStage = ref({
   title: "",
@@ -132,6 +90,7 @@ const stats = computed(() => [
     value: pendingRequests.value,
     info: "À traiter",
     icon: UserPlus,
+    path: "/pro/connexions?tab=pending",
   },
   {
     title: "Profils sauvegardés",
@@ -178,12 +137,15 @@ const schoolDistribution = computed(() => {
 });
 
 const connectionAnalytics = computed(() => [
-  { label: "Acceptées", value: acceptedRequests.value },
+  { label: "Acceptées", value: acceptedRequests.value, path: "/pro/connexions?tab=accepted" },
   { label: "Refusées", value: refusedRequests.value },
-  { label: "En attente", value: pendingRequests.value },
+  { label: "En attente", value: pendingRequests.value, path: "/pro/connexions?tab=pending" },
 ]);
 
 const loadDashboard = async () => {
+  isLoadingDashboard.value = true;
+  dashboardError.value = "";
+
   try {
     const response = await profApi.getProDashboard();
     if (response.data?.success) {
@@ -209,6 +171,11 @@ const loadDashboard = async () => {
     }
   } catch (err: any) {
     console.error("Erreur chargement dashboard professionnel", err);
+    dashboardError.value =
+      err.response?.data?.message ||
+      "Impossible de charger le dashboard professionnel.";
+  } finally {
+    isLoadingDashboard.value = false;
   }
 };
 
@@ -289,7 +256,17 @@ const submitStage = async () => {
       </section>
 
       <section class="stats-grid">
-        <article v-for="stat in stats" :key="stat.title" class="stat-card">
+        <article
+          v-for="stat in stats"
+          :key="stat.title"
+          class="stat-card"
+          :class="{ 'stat-cardAction': stat.path }"
+          :tabindex="stat.path ? 0 : undefined"
+          :role="stat.path ? 'button' : undefined"
+          @click="stat.path && openPath(stat.path)"
+          @keydown.enter="stat.path && openPath(stat.path)"
+          @keydown.space.prevent="stat.path && openPath(stat.path)"
+        >
           <div class="stat-icon">
             <component :is="stat.icon" />
           </div>
@@ -326,6 +303,17 @@ const submitStage = async () => {
                 </tr>
               </thead>
               <tbody>
+                <tr v-if="isLoadingDashboard">
+                  <td colspan="8" class="table-state">Chargement du dashboard...</td>
+                </tr>
+                <tr v-else-if="dashboardError">
+                  <td colspan="8" class="table-state error-state">{{ dashboardError }}</td>
+                </tr>
+                <tr v-else-if="!interns.length">
+                  <td colspan="8" class="table-state">
+                    Aucun stagiaire lié pour le moment.
+                  </td>
+                </tr>
                 <tr v-for="intern in interns" :key="intern.id">
                   <td>
                     <button
@@ -383,12 +371,10 @@ const submitStage = async () => {
           </div>
 
           <div class="saved-list">
-            <button
+            <article
               v-for="profile in savedProfiles.slice(0, 4)"
               :key="profile.id"
-              type="button"
               class="saved-card"
-              @click="openPath(profile.profilePath)"
             >
               <span>{{ profile.name.slice(0, 2).toUpperCase() }}</span>
               <div>
@@ -400,8 +386,20 @@ const submitStage = async () => {
                 <small>{{
                   profile.hasPortfolio ? "Portfolio disponible" : "Sans portfolio"
                 }}</small>
+                <div class="saved-actions">
+                  <button type="button" @click="openPath(profile.profilePath)">
+                    Voir profil
+                  </button>
+                  <button
+                    v-if="profile.hasPortfolio"
+                    type="button"
+                    @click="openPath(profile.portfolioPath)"
+                  >
+                    Portfolio
+                  </button>
+                </div>
               </div>
-            </button>
+            </article>
             <p v-if="!savedProfiles.length" class="empty-state">
               Aucun profil sauvegardé.
             </p>
@@ -438,10 +436,21 @@ const submitStage = async () => {
             </div>
             <div>
               <h3>Connexions</h3>
-              <p v-for="item in connectionAnalytics" :key="item.label">
-                <span>{{ item.label }}</span>
-                <strong>{{ item.value }}</strong>
-              </p>
+              <template v-for="item in connectionAnalytics" :key="item.label">
+                <button
+                  v-if="item.path"
+                  type="button"
+                  class="connection-row"
+                  @click="openPath(item.path)"
+                >
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                </button>
+                <p v-else>
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                </p>
+              </template>
             </div>
           </div>
         </article>
@@ -489,7 +498,6 @@ const submitStage = async () => {
             <button type="submit" :disabled="isSubmittingStage">
               {{ isSubmittingStage ? 'Publication...' : 'Publier l’offre' }}
             </button>
-            <button type="submit">Publier l?offre</button>
           </div>
         </form>
       </section>
@@ -501,7 +509,7 @@ const submitStage = async () => {
 .pro-dashboard-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -522,10 +530,10 @@ const submitStage = async () => {
 .stat-card,
 .panel,
 .stage-modal {
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
 }
 
 .dashboard-header-card {
@@ -569,7 +577,7 @@ const submitStage = async () => {
   align-items: center;
   gap: 8px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   padding: 12px 18px;
 }
 
@@ -592,11 +600,27 @@ const submitStage = async () => {
   padding: 16px;
 }
 
+.stat-cardAction {
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.stat-cardAction:hover,
+.stat-cardAction:focus-visible {
+  border-color: rgba(79, 70, 229, 0.38);
+  box-shadow: 0 16px 34px rgba(79, 70, 229, 0.16);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .stat-icon {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
   display: inline-flex;
   align-items: center;
@@ -660,7 +684,7 @@ const submitStage = async () => {
 
 .section-heading > span {
   border-radius: var(--radius-pill);
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
   padding: 8px 12px;
   font-weight: 900;
@@ -721,7 +745,7 @@ th {
 }
 
 .score-pill {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
   color: var(--purple);
 }
 
@@ -744,14 +768,14 @@ th {
 .open-connections,
 .modal-actions button:first-child {
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 8px 12px;
 }
 
 .row-actions button:hover,
 .open-connections:hover {
-  background: rgba(79, 70, 229, 0.12);
+  background: var(--overlay-purple-12);
 }
 
 .request-list,
@@ -764,13 +788,17 @@ th {
 .saved-card {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
-  background: white;
+  background: var(--white);
   border: 1px solid var(--input-bg);
   border-radius: 16px;
   padding: 14px;
   text-align: left;
+}
+
+.saved-card > div {
+  min-width: 0;
 }
 
 .saved-card strong {
@@ -782,6 +810,31 @@ th {
 .saved-card small {
   color: var(--text-gray);
   font-weight: 800;
+}
+
+.saved-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.saved-actions button {
+  border: 1px solid rgba(79, 70, 229, 0.22);
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.08);
+  color: var(--purple);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
+.saved-actions button:hover,
+.saved-actions button:focus-visible {
+  background: var(--purple);
+  color: var(--white);
+  outline: none;
 }
 
 .open-connections {
@@ -840,7 +893,8 @@ th {
   padding: 14px;
 }
 
-.mini-chart-grid p {
+.mini-chart-grid p,
+.connection-row {
   display: flex;
   justify-content: space-between;
   color: var(--navy-mid);
@@ -848,7 +902,28 @@ th {
   margin-top: 8px;
 }
 
-.mini-chart-grid strong {
+.connection-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.connection-row:hover span,
+.connection-row:focus-visible span {
+  color: var(--purple);
+}
+
+.connection-row:focus-visible {
+  outline: 2px solid rgba(79, 70, 229, 0.28);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.mini-chart-grid strong,
+.connection-row strong {
   color: var(--purple);
 }
 
@@ -856,6 +931,17 @@ th {
   color: var(--text-gray);
   font-weight: 800;
   padding: 8px;
+}
+
+.table-state {
+  color: var(--text-gray);
+  font-weight: 900;
+  text-align: center;
+  padding: 28px 14px;
+}
+
+.error-state {
+  color: var(--error);
 }
 
 .modal-backdrop {

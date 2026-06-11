@@ -199,14 +199,14 @@ onMounted(() => {
 /* â”€â”€ Layout identique Ã  DashboardView â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page {
   min-height: 100vh;
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   padding-top: 60px;
 }
 
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
 
@@ -214,7 +214,7 @@ onMounted(() => {
   width: 100%;
   padding: 24px 26px;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   transition: padding-left 0.3s ease;
 }
 
@@ -229,11 +229,11 @@ onMounted(() => {
   left: 8px;
   right: 8px;
   bottom: 24px;
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   z-index: 0;
   box-shadow:
-    0 2px 8px rgba(17, 24, 39, 0.06),
+    0 2px 8px var(--overlay-navy-06),
     0 0 0 1px rgba(17, 24, 39, 0.03);
 }
 
@@ -263,7 +263,7 @@ onMounted(() => {
 }
 
 .header-badge {
-  background: #ede9fe;
+  background: var(--indigo-soft);
   color: var(--purple);
   font-weight: 600;
   font-size: 0.85rem;
@@ -279,10 +279,10 @@ onMounted(() => {
 }
 
 .letter-card {
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px var(--overlay-black-08);
   padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
@@ -320,7 +320,7 @@ onMounted(() => {
 }
 
 .avatar-initials {
-  color: white;
+  color: var(--white);
   font-weight: 700;
   font-size: 0.9rem;
   font-family: var(--font-head);
@@ -341,13 +341,13 @@ onMounted(() => {
 
 .author-role {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: var(--text-neutral);
   margin: 0.1rem 0 0.35rem;
 }
 
 .letter-preview {
   font-size: 0.88rem;
-  color: #9ca3af;
+  color: var(--text-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -365,7 +365,7 @@ onMounted(() => {
 
 .letter-date {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--text-subtle);
 }
 
 .letter-actions {
@@ -388,18 +388,18 @@ onMounted(() => {
 }
 
 .btn-read {
-  background: #ede9fe;
+  background: var(--indigo-soft);
   color: var(--purple);
 }
 
 .btn-read:hover { background: #ddd6fe; }
 
 .btn-download {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--surface-neutral);
+  color: var(--text-charcoal);
 }
 
-.btn-download:hover { background: #e5e7eb; }
+.btn-download:hover { background: var(--input-bg); }
 
 /* â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay {
@@ -414,7 +414,7 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--white);
   border-radius: 16px;
   width: 100%;
   max-width: 680px;
@@ -430,7 +430,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--input-bg);
 }
 
 .modal-author {
@@ -441,25 +441,25 @@ onMounted(() => {
 
 .letter-date-modal {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--text-subtle);
   margin-top: 0.2rem;
 }
 
 .btn-close {
-  background: #f3f4f6;
+  background: var(--surface-neutral);
   border: none;
   border-radius: 8px;
   width: 34px;
   height: 34px;
   cursor: pointer;
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--text-neutral);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-close:hover { background: #e5e7eb; }
+.btn-close:hover { background: var(--input-bg); }
 
 .modal-body {
   padding: 1.5rem;
@@ -476,7 +476,7 @@ onMounted(() => {
 
 .letter-content {
   font-size: 0.95rem;
-  color: #374151;
+  color: var(--text-charcoal);
   line-height: 1.75;
 }
 
@@ -485,7 +485,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--input-bg);
 }
 
 .btn-download-modal {
@@ -493,7 +493,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.4rem;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   border: none;
   padding: 0.6rem 1.5rem;
   border-radius: 10px;
@@ -506,8 +506,8 @@ onMounted(() => {
 .btn-download-modal:hover { background: #5b21b6; }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--surface-neutral);
+  color: var(--text-charcoal);
   border: none;
   padding: 0.6rem 1.25rem;
   border-radius: 10px;
@@ -515,17 +515,17 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.btn-secondary:hover { background: #e5e7eb; }
+.btn-secondary:hover { background: var(--input-bg); }
 
 /* â”€â”€ Empty â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: #9ca3af;
-  background: white;
+  color: var(--text-subtle);
+  background: var(--white);
   border-radius: 8px;
   border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px var(--overlay-black-08);
 }
 
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; }

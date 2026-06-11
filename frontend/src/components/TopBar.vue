@@ -48,7 +48,7 @@
   font-family: var(--font-head);
   font-size: 1.1rem;
   font-weight: 700;
-  color: white;
+  color: var(--white);
 }
 
 .logo img {
@@ -59,7 +59,7 @@
 
 .burger-btn {
   background: transparent;
-  color: white;
+  color: var(--white);
   border: none;
   cursor: pointer;
   display: flex;
@@ -76,5 +76,5 @@
   border: none;
   cursor: pointer;
 }
-.theme-btn:hover { color: white; }
+.theme-btn:hover { color: var(--white); }
 </style>

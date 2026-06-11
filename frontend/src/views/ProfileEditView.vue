@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
+import { profileService } from '../services/profile.service'
 
 const router = useRouter()
 const sidebarOpen = ref(false)
+type ProfileRole = 'student' | 'teacher' | 'professional'
+const profileRole = ref<ProfileRole>('student')
 
 // ── Sections edit toggles ──
 const editingInfo    = ref(false)
@@ -24,11 +27,12 @@ function showToast(msg: string, type: 'success' | 'error' = 'success') {
 // Données profil
 // ──────────────────────────────────────────────
 const profile = reactive({
+  id:        null as number | null,
   name:      'Nom Prénom',
   title:     'Développeur Full Stack',
   school:    'ENSA Tanger',
-  location:  'Tanger, Maroc',
-  score:     90,
+  location:  '',
+  score:     0,
   recos:     '500+',
   bio:       'Étudiant motivé, passionné par le développement web et les projets collaboratifs.',
   email:     'exemple@univ.etu.ac.ma',
@@ -40,6 +44,54 @@ const profile = reactive({
   banner:    null as string | null,
   bannerColor: '#1a3c5e',
 })
+
+function applyBackendProfile(data: any) {
+  profileRole.value = normalizeProfileRole(data?.raw?.role)
+  profile.id = Number(data?.id ?? 0) || null
+  profile.name = data?.name || profile.name
+  profile.title = data?.title || profile.title
+  profile.school = data?.school || profile.school
+  profile.location = data?.location || profile.location
+  profile.score = Number(data?.score ?? 0)
+  profile.recos = data?.recos || profile.recos
+  profile.bio = data?.bio || ''
+  profile.email = data?.email || ''
+  profile.phone = data?.phone || ''
+  profile.website = data?.website || ''
+  profile.linkedin = data?.linkedin || ''
+  profile.github = data?.github || ''
+  profile.avatar = data?.avatar || null
+  profile.banner = data?.banner || null
+}
+
+function normalizeProfileRole(roleRaw: unknown): ProfileRole {
+  const role = String(roleRaw || '').trim().toUpperCase()
+  if (role === 'PROFESSEUR' || role === 'TEACHER') return 'teacher'
+  if (role === 'PROFESSIONNEL' || role === 'PROFESSIONAL') return 'professional'
+  return 'student'
+}
+
+async function loadProfile() {
+  try {
+    applyBackendProfile(await profileService.getCurrentUser())
+  } catch (error) {
+    console.warn('Chargement du profil impossible', error)
+    showToast('Impossible de charger le profil', 'error')
+  }
+}
+
+async function persistProfile(payload: Record<string, unknown>) {
+  await profileService.updateProfile(profile.id, payload)
+  applyBackendProfile(await profileService.getCurrentUser())
+}
+
+function buildContactPayload() {
+  const payload: Record<string, string> = {}
+  if (contactForm.phone.trim()) payload.telephone = contactForm.phone.trim()
+  if (contactForm.email.trim()) payload.email_professionnel = contactForm.email.trim()
+  if (contactForm.linkedin.trim()) payload.linkedin_url = contactForm.linkedin.trim()
+  return payload
+}
 
 // Skills
 const techSkills = ref(['Vue.js', 'TypeScript', 'Node.js', 'Docker', 'PostgreSQL'])
@@ -188,17 +240,49 @@ const langueForm = reactive({ nom: '', niveau: 'Intermédiaire' })
 function onAvatarChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  let settled = false
   const reader = new FileReader()
-  reader.onload = ev => { profile.avatar = ev.target?.result as string }
+  reader.onload = ev => {
+    if (!settled) profile.avatar = ev.target?.result as string
+  }
   reader.readAsDataURL(file)
+  showToast("Upload de la photo...", 'success')
+  profileService.uploadAvatar(profile.id, file).then(photoUrl => {
+    settled = true
+    if (photoUrl) {
+      profile.avatar = photoUrl
+      showToast('Photo enregistrée', 'success')
+    } else {
+      showToast("Erreur : l'URL retournée est vide", 'error')
+    }
+  }).catch(error => {
+    settled = true
+    console.warn("Erreur lors de l'upload de la photo", error)
+    showToast("Erreur lors de l'upload de la photo", 'error')
+  })
 }
 
 function onBannerChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  let settled = false
   const reader = new FileReader()
-  reader.onload = ev => { profile.banner = ev.target?.result as string }
+  reader.onload = ev => { if (!settled) profile.banner = ev.target?.result as string }
   reader.readAsDataURL(file)
+  showToast("Upload de la bannière...", 'success')
+  profileService.uploadBanner(profile.id, file).then(photoUrl => {
+    settled = true
+    if (photoUrl) {
+      profile.banner = photoUrl
+      showToast('Bannière enregistrée', 'success')
+    } else {
+      showToast("Erreur : l'URL retournée est vide", 'error')
+    }
+  }).catch(error => {
+    settled = true
+    console.warn("Erreur lors de l'upload de la bannière", error)
+    showToast("Erreur lors de l'upload de la bannière", 'error')
+  })
 }
 
 const bannerStyle = computed(() =>
@@ -206,10 +290,13 @@ const bannerStyle = computed(() =>
     ? { backgroundImage: `url(${profile.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : { background: `linear-gradient(135deg, ${profile.bannerColor} 0%, #2e6da4 100%)` }
 )
+const showScore = computed(() => profileRole.value === 'student')
 
 const initials = computed(() =>
   profile.name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
 )
+
+onMounted(loadProfile)
 
 // ──────────────────────────────────────────────
 // Section save helpers
@@ -218,20 +305,49 @@ function openEditInfo() {
   Object.assign(infoForm, { name: profile.name, title: profile.title, school: profile.school, location: profile.location, score: profile.score })
   editingInfo.value = true
 }
-function saveInfo() {
-  Object.assign(profile, infoForm)
-  editingInfo.value = false
-  showToast('Informations enregistrées')
+async function saveInfo() {
+  try {
+    Object.assign(profile, infoForm)
+    await persistProfile({
+      adresse: infoForm.location,
+      etablissement: infoForm.school,
+    })
+    editingInfo.value = false
+    showToast('Informations enregistrées')
+  } catch (error) {
+    console.warn('Sauvegarde informations impossible', error)
+    showToast('Erreur lors de la sauvegarde', 'error')
+  }
 }
 
 function openEditAbout() { aboutForm.bio = profile.bio; editingAbout.value = true }
-function saveAbout() { profile.bio = aboutForm.bio; editingAbout.value = false; showToast('Bio enregistrée') }
+async function saveAbout() {
+  try {
+    profile.bio = aboutForm.bio
+    await persistProfile({ bio: aboutForm.bio })
+    editingAbout.value = false
+    showToast('Bio enregistrée')
+  } catch (error) {
+    console.warn('Sauvegarde bio impossible', error)
+    showToast('Erreur lors de la sauvegarde', 'error')
+  }
+}
 
 function openEditContact() {
   Object.assign(contactForm, { email: profile.email, phone: profile.phone, website: profile.website, linkedin: profile.linkedin, github: profile.github })
   editingContact.value = true
 }
-function saveContact() { Object.assign(profile, contactForm); editingContact.value = false; showToast('Contact enregistré') }
+async function saveContact() {
+  try {
+    Object.assign(profile, contactForm)
+    await persistProfile(buildContactPayload())
+    editingContact.value = false
+    showToast('Contact enregistré')
+  } catch (error) {
+    console.warn('Sauvegarde contact impossible', error)
+    showToast('Erreur lors de la sauvegarde', 'error')
+  }
+}
 
 function openEditSkills() {
   skillsForm.tech = [...techSkills.value]
@@ -392,7 +508,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
           <div v-if="!editingInfo" class="info-display">
             <div class="info-name-row">
               <h1>{{ profile.name }}</h1>
-              <span class="score-badge">{{ profile.score }}+</span>
+              <span v-if="showScore" class="score-badge">{{ profile.score }}+</span>
             </div>
             <p class="info-title">{{ profile.title }}</p>
             <p class="info-meta">{{ profile.school }}</p>
@@ -794,7 +910,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 </template>
 
 <style scoped>
-.page { min-height: 100vh; background: #f0f2f8; }
+.page { min-height: 100vh; background: var(--bg-soft-purple); }
 
 .body-area {
   position: relative;
@@ -827,15 +943,15 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   font-family: var(--font-head);
 }
-.toast.success { background: #2e7d32; color: white; }
-.toast.error   { background: var(--error); color: white; }
+.toast.success { background: #2e7d32; color: var(--white); }
+.toast.error   { background: var(--error); color: var(--white); }
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-12px); }
 
 /* ── Cards ── */
 .profile-card,
 .section-card {
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.07);
   overflow: hidden;
@@ -876,7 +992,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 
 .color-pick {
   width: 30px; height: 30px;
-  border: 2px solid white;
+  border: 2px solid var(--white);
   border-radius: 50%;
   cursor: pointer;
   padding: 0;
@@ -897,9 +1013,9 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 .avatar {
   width: 88px; height: 88px;
   border-radius: 50%;
-  border: 4px solid white;
+  border: 4px solid var(--white);
   display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 700; color: white;
+  font-size: 28px; font-weight: 700; color: var(--white);
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
@@ -911,9 +1027,9 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   width: 28px; height: 28px;
   background: var(--purple);
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid var(--white);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: white;
+  cursor: pointer; color: var(--white);
 }
 .avatar-cam input { display: none; }
 
@@ -943,17 +1059,17 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 6px 14px;
   border-radius: var(--radius-pill);
   border: 1.5px solid var(--purple);
-  background: white; color: var(--purple);
+  background: var(--white); color: var(--purple);
   font-size: 0.78rem; font-weight: 700;
   cursor: pointer; font-family: var(--font-head);
   transition: var(--ease);
 }
-.btn-edit:hover { background: var(--purple); color: white; }
+.btn-edit:hover { background: var(--purple); color: var(--white); }
 
 .btn-add {
   padding: 6px 14px;
   border-radius: var(--radius-pill);
-  background: var(--purple); color: white;
+  background: var(--purple); color: var(--white);
   border: none; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; font-family: var(--font-head);
   transition: var(--ease);
@@ -965,7 +1081,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 6px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--input-bg);
-  background: white; color: var(--text-gray);
+  background: var(--white); color: var(--text-gray);
   font-size: 0.75rem; font-weight: 700;
   cursor: pointer; font-family: var(--font-head);
 }
@@ -978,16 +1094,16 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   cursor: pointer; font-family: var(--font-head);
   transition: var(--ease);
 }
-.btn-sm.outline { border: 1.5px solid var(--purple); background: white; color: var(--purple); }
-.btn-sm.outline:hover { background: var(--purple); color: white; }
+.btn-sm.outline { border: 1.5px solid var(--purple); background: var(--white); color: var(--purple); }
+.btn-sm.outline:hover { background: var(--purple); color: var(--white); }
 .btn-sm.danger  { border: none; background: none; color: var(--error); }
-.btn-sm.danger:hover { background: rgba(223,30,33,0.08); }
+.btn-sm.danger:hover { background: var(--overlay-danger-08); }
 
 /* ── Info display ── */
 .info-display { display: flex; flex-direction: column; gap: 4px; }
 .info-name-row { display: flex; align-items: center; gap: 10px; }
 .info-name-row h1 { font-size: 1.35rem; font-weight: 800; color: var(--text-dark); font-family: var(--font-head); margin: 0; }
-.score-badge { background: var(--error); color: white; font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
+.score-badge { background: var(--error); color: var(--white); font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
 .info-title { font-size: 0.95rem; color: var(--text-gray); margin: 2px 0; }
 .info-meta { display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; color: var(--text-gray); margin: 0; }
 
@@ -1017,7 +1133,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   font-size: 0.8rem; font-weight: 700;
   font-family: var(--font-head);
 }
-.chip.tech { background: rgba(79,70,229,0.1); color: var(--purple); }
+.chip.tech { background: var(--overlay-purple-10); color: var(--purple); }
 .chip.soft { background: rgba(6,182,212,0.1); color: #0891b2; }
 .chip.editable button { background: none; border: none; cursor: pointer; font-size: 0.68rem; opacity: 0.6; padding: 0; }
 .chip.editable button:hover { opacity: 1; color: var(--error); }
@@ -1031,7 +1147,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 .skill-add-row input:focus { border-color: var(--purple); }
 .btn-add-skill {
   padding: 8px 14px; border-radius: var(--radius-pill);
-  background: var(--purple); color: white; border: none;
+  background: var(--purple); color: var(--white); border: none;
   font-size: 0.8rem; font-weight: 700; cursor: pointer;
 }
 
@@ -1077,7 +1193,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 16px;
   transition: var(--ease);
 }
-.pub-card:hover { box-shadow: 0 4px 14px rgba(79,70,229,0.1); border-color: rgba(79,70,229,0.2); }
+.pub-card:hover { box-shadow: 0 4px 14px var(--overlay-purple-10); border-color: var(--overlay-purple-20); }
 
 .pub-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
 .pub-meta { display: flex; gap: 10px; align-items: center; }
@@ -1114,7 +1230,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
   padding: 9px 12px;
   font-size: 0.85rem;
   color: var(--text-dark);
-  background: white;
+  background: var(--white);
   outline: none;
   resize: vertical;
   font-family: var(--font-body);
@@ -1122,14 +1238,14 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 }
 .fg input:focus, .fg textarea:focus, .fg select:focus {
   border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 3px var(--overlay-purple-12);
 }
 
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 
 .btn-cancel {
   padding: 8px 18px; border-radius: var(--radius-pill);
-  border: 1px solid var(--input-bg); background: white;
+  border: 1px solid var(--input-bg); background: var(--white);
   color: var(--text-gray); font-size: 0.85rem; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
@@ -1137,7 +1253,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 
 .btn-save {
   padding: 8px 20px; border-radius: var(--radius-pill);
-  border: none; background: var(--purple); color: white;
+  border: none; background: var(--purple); color: var(--white);
   font-size: 0.85rem; font-weight: 700; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
@@ -1147,7 +1263,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 /* ── Mini avatar ── */
 .mini-avatar {
   width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(79,70,229,0.12); color: var(--purple);
+  background: var(--overlay-purple-12); color: var(--purple);
   font-family: var(--font-head); font-weight: 800; font-size: 0.82rem;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; overflow: hidden;
@@ -1166,7 +1282,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 }
 
 .entry-modal {
-  background: white; border-radius: 16px;
+  background: var(--white); border-radius: 16px;
   width: 100%; max-width: 560px; max-height: 88vh;
   display: flex; flex-direction: column;
   box-shadow: 0 24px 60px rgba(17,24,39,0.2);
@@ -1210,7 +1326,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 .remove-img-btn {
   position: absolute; top: -6px; right: -6px;
   width: 20px; height: 20px; border-radius: 50%;
-  background: var(--error); color: white;
+  background: var(--error); color: var(--white);
   border: none; cursor: pointer; font-size: 0.65rem;
   display: flex; align-items: center; justify-content: center;
 }

@@ -26,6 +26,7 @@ async function main() {
         create: {
           numero_etudiant: 'ETU-2024-001',
           filiere: 'Informatique',
+          etablissement: 'ENSA Tanger',
           annee_universitaire: '2024/2025',
         }
       }
@@ -122,6 +123,7 @@ async function main() {
         create: {
           numero_etudiant: 'ETU-EXPIRE-001',
           filiere: 'Test',
+          etablissement: 'Etablissement QA',
           annee_universitaire: '2020/2021',
         }
       }
