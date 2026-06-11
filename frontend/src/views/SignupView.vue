@@ -200,6 +200,11 @@ async function submit() {
 
   try {
     await authService.signup({ ...form })
+    sessionStorage.setItem('pendingSignup', JSON.stringify({
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      role: form.role
+    }))
     console.log('email avant push:', form.email) // ← ajoute ici
     router.push({ path: '/verify-code', query: { email: form.email } })
  } catch(e) {

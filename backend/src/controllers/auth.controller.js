@@ -246,14 +246,29 @@ const verifierCode = asyncHandler(async (req, res) => {
 
  if(user.role==='ETUDIANT' || user.role==='PROFESSEUR'){
     updateData.est_actif=true;
- }
-    await prisma.utilisateur.update({
+  }
+    const updatedUser = await prisma.utilisateur.update({
         where: { id_utilisateur: user.id_utilisateur },
         data: updateData
     });
     
     const message = user.role === 'PROFESSIONNEL'?'Email vérifié! Votre compte est en attente de validation par un administrateur.'
     :'Email vérifié et compte activé! Vous pouvez maintenant vous connecter.';
+
+    if (updatedUser.role === 'ETUDIANT' || updatedUser.role === 'PROFESSEUR') {
+      const token = generateToken(updatedUser);
+      setAuthCookie(res, token);
+
+      return res.json({
+        success: true,
+        message,
+        data: {
+          token,
+          user: sanitizeUser(updatedUser)
+        }
+      });
+    }
+
     res.json({
         success: true,
         message
