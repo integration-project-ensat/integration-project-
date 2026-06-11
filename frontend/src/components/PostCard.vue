@@ -425,7 +425,6 @@ function avatarColorClass(name: string) {
   border-color: rgba(220, 38, 38, .2);
   background: #fff5f5;
 }
->>>>>>> a062242619048820d9654a2daf97487c3f101f72
 
 .post-desc {
   font-size: .83rem;
@@ -645,7 +644,6 @@ function avatarColorClass(name: string) {
 }
 
 /* Couleurs dynamiques des avatars */
-<<<<<<< HEAD
 .avatar-blue { --avatar-bg: var(--sky); }
 .avatar-orange { --avatar-bg: var(--tech-amber); }
 .avatar-indigo { --avatar-bg: var(--tech-slate); }
