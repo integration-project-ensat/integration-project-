@@ -1,35 +1,48 @@
-/**
- * app.js
- * Configuration de l'application Express
- * 
- * Responsabilités :
- * - Configurer les middlewares globaux (CORS, JSON parsing)
- * - Monter les routes de l'API
- * - Exporter l'instance app pour les tests et le démarrage
- * 
- * Ne démarre PAS le serveur (voir server.js pour le démarrage)
- */
 require('dotenv').config()
 BigInt.prototype.toJSON = function () { return this.toString() }
+const passport = require('./src/config/passport');
+const path = require('path')
 const express = require('express')
+
 const securityHeaders = require('./src/middlewares/securityHeaders.middleware')
 const corsMiddleware = require('./src/middlewares/cors.middleware')
 
-const{apiLimiter,authLimiter,passwordLimiter} = require('./src/middlewares/rateLimiter.middleware')
+const { apiLimiter, authLimiter, passwordLimiter,profilLimiter,diplomeLimiter } = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
 
+// Routes existantes
 const authRoutes = require('./src/routes/auth.routes')
-// const competenceRoutes = require('./src/routes/competence.routes')
-const app = express()
+const competenceRoutes = require('./src/routes/competence.routes')
+const profileRoutes = require('./src/routes/profil.routes')
+const diplomeRoutes = require('./src/routes/diplome.routes')
+const photoRoutes = require('./src/routes/photo.routes')
+const aiRoutes = require('./src/routes/ai.routes')
 
-//securite(headers, CORS, rate )
+// Routes à venir (décommenter au fur et à mesure)
+// const projetRoutes = require('./src/routes/projet.routes')
+// const stageRoutes = require('./src/routes/stage.routes')
+// const activiteRoutes = require('./src/routes/activite.routes')
+// const attestationRoutes = require('./src/routes/attestation.routes')
+
+const app = express()
+const projetRoutes = require('./src/routes/projet.routes')
+const stageRoutes = require('./src/routes/stage.routes')
+
+const activiteRoutes = require('./src/routes/activite.routes')
+const attestationRoutes = require('./src/routes/attestation.routes')
+
+// Fichiers statiques
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+
+// Sécurité & CORS
 app.use(securityHeaders)
 app.use(corsMiddleware)
+app.use(passport.initialize());
+// Body parser
+app.use(express.json({ limit: '10Kb' }))
+app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
 
-//body parser
-app.use(express.json({limit:'10Kb'}))
-app.use(express.urlencoded({extended:true, limit:'10Kb'}))
-
+// Rate limiting
 app.use('/api', apiLimiter)
 app.use('/api/auth/seconnecter', authLimiter)
 app.use('/api/auth/sinscrire', authLimiter)
@@ -38,31 +51,38 @@ app.use('/api/auth/verifier-code', passwordLimiter)
 app.use('/api/auth/mot-de-passe-oublie', passwordLimiter)
 app.use('/api/auth/reinitialiser-mot-de-passe', passwordLimiter)
 
-
-//health check
+// Health check
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Backend is running',
     timestamp: new Date().toISOString()
-  })
-})
+  });
+});
 
+// Routes
+app.use('/api/auth', authRoutes)
+app.use('/api/competences', competenceRoutes)
+app.use('/api/profil', diplomeLimiter, profileRoutes)
+app.use('/api/profil/photo', photoRoutes)
+app.use('/api/diplomes', diplomeLimiter, diplomeRoutes)
+app.use('/api/ai', aiRoutes)
 
-// Auth routes
-app.use('/api/auth', authRoutes) 
-// Competence routes
-// app.use('/api/competences', competenceRoutes)
-//404 not found handler (doit être après toutes les routes)
-app.use((req,res) => {
+app.use('/api/projets', projetRoutes)
+app.use('/api/stages', stageRoutes)
+app.use('/api/activites', activiteRoutes)
+app.use('/api/attestations', attestationRoutes)
+
+// 404
+app.use((req, res) => {
   res.status(404).json({
-    success:false,
-    statusCode:404,
+    success: false,
+    statusCode: 404,
     message: `Route ${req.method} ${req.originalUrl} not found`
   })
 })
 
-
+// error middleware LAST
 app.use(errorMiddleware)
 
 module.exports = app

@@ -21,24 +21,35 @@ beforeEach(async () => {
   })
 })
 
+// Utilitaire : ouvrir le dropdown et sélectionner un rôle
+async function selectRole(value) {
+  await wrapper.find('.dropdown-btn').trigger('click')
+  const items = wrapper.findAll('.dropdown-menu li')
+  const item = items.find(li => {
+    const labelMap = { student: 'Étudiant', Prof: 'Professeur', Professional: 'Professionel' }
+    return li.text() === labelMap[value]
+  })
+  await item.trigger('click')
+}
+
 describe('SignupView', () => {
 
   it("affiche le titre S'inscrire", () => {
     expect(wrapper.find('h1').exists()).toBe(true)
   })
 
-  it('affiche le dropdown de rôle', () => {
-    expect(wrapper.find('select').exists()).toBe(true)
+  it('affiche le dropdown de rôle (bouton .dropdown-btn)', () => {
+    expect(wrapper.find('.dropdown-btn').exists()).toBe(true)
   })
 
   it('affiche les champs étudiant quand rôle = student', async () => {
-    await wrapper.find('select').setValue('student')
+    await selectRole('student')
     expect(wrapper.find('input[placeholder="APOGEE"]').exists()).toBe(true)
     expect(wrapper.find('input[placeholder="Filière"]').exists()).toBe(true)
   })
 
   it('affiche les champs prof quand rôle = Prof', async () => {
-    await wrapper.find('select').setValue('Prof')
+    await selectRole('Prof')
     expect(wrapper.find('input[placeholder="Département"]').exists()).toBe(true)
   })
 

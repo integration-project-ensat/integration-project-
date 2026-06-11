@@ -272,6 +272,13 @@ if (!user.est_actif) {
   return res.status(403).json({ message: 'En attente de validation administrative.' });
 }
 
+if (user.auth_provider === 'GOOGLE') {
+  return res.status(400).json({
+    success: false,
+    message: 'Ce compte utilise Google Sign-In'
+  });
+}
+
 // Vérification du mot de passe par la fonction compare de bcrypt
   const isValid = await bcrypt.compare(mot_de_passe, user.mot_de_passe_hashe);
   if (!isValid) {
@@ -296,6 +303,224 @@ if (!user.est_actif) {
     }
   });
 });
+
+const googleCallback = asyncHandler(async (req, res) => {
+  const { googleId, email, nom, prenom } = req.user;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Google n’a pas fourni d’email'
+    });
+  }
+
+  const existingUser = await prisma.utilisateur.findUnique({
+    where: { email },
+    include: {
+      etudiant: true,
+      professeur: true,
+      professionnel: true,
+      administrateur: true,
+      profil: true
+    }
+  });
+
+  // CAS 1 : compte existe en LOCAL
+  if (existingUser && existingUser.auth_provider !== 'GOOGLE') {
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/login?error=email_exists_local`
+    );
+  }
+
+  // CAS 2 : compte Google existant
+  if (existingUser && existingUser.auth_provider === 'GOOGLE') {
+    await prisma.utilisateur.update({
+      where: { id_utilisateur: existingUser.id_utilisateur },
+      data: { derniere_connexion: new Date() }
+    });
+
+    const token = generateToken(existingUser);
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/oauth-success?token=${token}`
+    );
+  }
+
+  // CAS 3 : nouveau compte Google
+  const tempToken = jwt.sign(
+    {
+      email,
+      nom,
+      prenom,
+      googleId,
+      tempGoogleSignup: true
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  return res.redirect(
+    `${process.env.FRONTEND_URL}/complete-profile?token=${tempToken}`
+  );
+});
+
+const completeGoogleSignup = asyncHandler(async (req, res) => {
+  const { token, role, ...specificData } = req.body;
+
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      message: 'Token temporaire manquant'
+    });
+  }
+
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token invalide ou expiré'
+    });
+  }
+
+  if (!decoded.tempGoogleSignup) {
+    return res.status(403).json({
+      success: false,
+      message: 'Token non autorisé'
+    });
+  }
+
+  if (!isValidPublicRole(role)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Rôle invalide'
+    });
+  }
+
+  const existing = await prisma.utilisateur.findUnique({
+    where: { email: decoded.email }
+  });
+
+  if (existing) {
+    return res.status(409).json({
+      success: false,
+      message: 'Compte déjà existant'
+    });
+  }
+
+  const isProfessional = role === 'PROFESSIONNEL';
+
+  let adminActionToken = null;
+  let adminActionTokenHash = null;
+  let adminActionExpiresAt = null;
+
+  if (isProfessional) {
+    adminActionToken = generateAdminActionToken();
+    adminActionTokenHash = hashToken(adminActionToken);
+    adminActionExpiresAt = new Date(
+      Date.now() + ADMIN_LINK_EXPIRY_HOURS * 60 * 60 * 1000
+    );
+  }
+
+  const user = await prisma.$transaction(async (tx) => {
+    const newUser = await tx.utilisateur.create({
+      data: {
+        email: decoded.email,
+        nom: decoded.nom,
+        prenom: decoded.prenom,
+        role,
+        google_id: decoded.googleId,
+        auth_provider: 'GOOGLE',
+
+        mot_de_passe_hashe: null,
+
+        email_verifie: true,
+        est_actif: !isProfessional,
+
+        ...(isProfessional && {
+          admin_action_token: adminActionTokenHash,
+          admin_action_expires_at: adminActionExpiresAt
+        })
+      }
+    });
+
+    await tx.profil.create({
+      data: {
+        id_utilisateur: newUser.id_utilisateur
+      }
+    });
+
+    if (role === 'ETUDIANT') {
+      await tx.etudiant.create({
+        data: {
+          id_utilisateur: newUser.id_utilisateur,
+          numero_etudiant: specificData.numero_etudiant,
+          filiere: specificData.filiere,
+          annee_universitaire: specificData.annee_universitaire
+        }
+      });
+    }
+
+    if (role === 'PROFESSEUR') {
+      await tx.professeur.create({
+        data: {
+          id_utilisateur: newUser.id_utilisateur,
+          code_administratif: specificData.code_administratif,
+          departement: specificData.departement,
+          specialite: specificData.specialite
+        }
+      });
+    }
+
+    if (role === 'PROFESSIONNEL') {
+      await tx.professionnel.create({
+        data: {
+          id_utilisateur: newUser.id_utilisateur,
+          entreprise: specificData.entreprise,
+          poste: specificData.poste,
+          secteur: specificData.secteur,
+          est_valide: false
+        }
+      });
+    }
+
+    return newUser;
+  });
+
+  if (isProfessional) {
+    const proComplet = await prisma.utilisateur.findUnique({
+      where: { id_utilisateur: user.id_utilisateur },
+      include: { professionnel: true }
+    });
+
+    await sendAdminValidationRequest(proComplet, adminActionToken);
+  }
+
+  const fullUser = await prisma.utilisateur.findUnique({
+  where: { id_utilisateur: user.id_utilisateur },
+  include: {
+    etudiant: true,
+    professeur: true,
+    professionnel: true,
+    administrateur: true,
+    profil: true
+  }
+});
+
+const finalToken = generateToken(fullUser);
+
+  res.status(201).json({
+    success: true,
+    message: 'Compte Google créé avec succès',
+    data: {
+      token: finalToken,
+      user: sanitizeUser(fullUser)
+    }
+  });
+});
+
 
 // ==================== PROFIL ====================
 
@@ -624,6 +849,8 @@ function renderWarningPage(title, message, submessage) {
 module.exports = {
     register,
     login,
+    googleCallback,
+    completeGoogleSignup,
     verifierCode,
     renvoyerCode, 
     getCurrentUser,

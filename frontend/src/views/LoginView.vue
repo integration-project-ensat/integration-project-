@@ -28,7 +28,12 @@
           </svg>
         </button>
         <!-- Google -->
-        <button class="s-btn gg" aria-label="Google">
+        <button
+          class="s-btn gg"
+          aria-label="Google"
+          type="button"
+          @click="startGoogleLogin"
+        >
           <svg width="26" height="28" viewBox="0 0 26 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M13.2678 11.6032H25.7927C25.9309 12.3909 26 13.1433 26 13.8604C26 16.4115 25.476 18.6892 24.4279 20.6936C23.3798 22.698 21.8855 24.2645 19.9448 25.3931C18.0042 26.5217 15.7785 27.086 13.2678 27.086C11.4596 27.086 9.73776 26.7304 8.10233 26.0191C6.46689 25.3079 5.05604 24.3468 3.86977 23.1359C2.6835 21.9251 1.74197 20.485 1.04518 18.8156C0.348394 17.1462 0 15.3887 0 13.543C0 11.6973 0.348394 9.93976 1.04518 8.2704C1.74197 6.60103 2.6835 5.16091 3.86977 3.95004C5.05604 2.73916 6.46689 1.77811 8.10233 1.06686C9.73776 0.355621 11.4596 0 13.2678 0C16.7229 0 19.6886 1.18149 22.1648 3.54446L18.5542 7.08891C17.1375 5.68994 15.3754 4.99045 13.2678 4.99045C11.7821 4.99045 10.4086 5.37252 9.14751 6.13667C7.88638 6.90081 6.88726 7.93829 6.15017 9.24909C5.41307 10.5599 5.04452 11.9912 5.04452 13.543C5.04452 15.0948 5.41307 16.5261 6.15017 17.8369C6.88726 19.1477 7.88638 20.1852 9.14751 20.9493C10.4086 21.7135 11.7821 22.0955 13.2678 22.0955C14.2698 22.0955 15.1911 21.9545 16.0319 21.6723C16.8726 21.3902 17.5637 21.0375 18.105 20.6143C18.6463 20.1911 19.1185 19.7091 19.5216 19.1683C19.9247 18.6275 20.2213 18.1161 20.4113 17.6341C20.6013 17.1521 20.7309 16.6936 20.8 16.2586H13.2678V11.6032Z" fill="white"/>
           </svg>
@@ -48,6 +53,11 @@ import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
+
+function startGoogleLogin() {
+  window.location.href =
+    `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/google`
+}
 
 const router   = useRouter()
 const email    = ref('')
@@ -78,40 +88,55 @@ async function submit() {
 <style scoped>
 .form-wrap {
   width: 100%;
-  max-width: 340px;
+  max-width: 370px;
   margin: 0 auto;
 }
 
 h1 {
+  font-family: var(--font-head);
   font-size: 2rem;
   font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 32px;
-  font-family: 'Inter', sans-serif;
-
-
+  margin-bottom: 40px;
+  letter-spacing: 0;
 }
 
-form { display: flex; flex-direction: column; gap: 14px; }
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
 input {
   width: 100%;
   background: var(--input-bg);
   border: 2px solid transparent;
-  border-radius: 50px;
-  padding: 13px 20px;
-  font-size: .87rem;
+  border-radius: var(--radius-pill);
+  padding: 12px 20px;
+  font-size: .85rem;
   color: var(--text-dark);
+  font-family: var(--font-body);
   transition: var(--ease);
+  appearance: none;
 }
-input::placeholder { color: #aab2bf; }
-input:focus { border-color: var(--purple); }
 
-.pass-block { display: flex; flex-direction: column; gap: 5px; }
+input::placeholder {
+  color: var(--text-gray);
+}
+
+input:focus {
+  border-color: var(--purple);
+}
+
+.pass-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
 
 .forgot {
   font-size: .76rem;
-  color: var(--error);
+  color: var(--text-dark);
   padding-left: 6px;
 }
 
@@ -124,52 +149,92 @@ input:focus { border-color: var(--purple); }
 .btn {
   width: 100%;
   background: var(--purple);
-  color: rgb(255, 255, 255);
-  font-size: .93rem;
+  color: white;
+  font-size: .9rem;
   font-weight: 600;
-  padding: 14px;
-  border-radius: 50px 50px 0px 50px;
+  font-family: var(--font-head);
+  padding: 12px 22px;
+  border-radius: 100px 180px 0 100px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: var(--ease);
-  min-height: 48px;
-  display: flex; align-items: center; justify-content: center;
 }
+
 .btn:hover:not(:disabled) {
   background: var(--purple-hover);
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(91,63,212,.32);
+  box-shadow: 0 8px 22px rgba(91, 63, 212, .32);
 }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
 
-/* spinner */
+.btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
 .spin {
-  width: 18px; height: 18px;
-  border: 2px solid rgba(255,255,255,.3);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, .3);
   border-top-color: white;
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .or {
   text-align: center;
   font-size: .82rem;
   color: var(--text-dark);
-  margin: 22px 0 14px;
+  margin: 18px 0 14px;
 }
 
-.socials { display: flex; justify-content: center; gap: 14px; margin-bottom: 22px; }
+.socials {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
 
 .s-btn {
-  width: 46px; height: 46px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: var(--ease);
 }
-.s-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
-.s-btn.gh { background: var(--blue-w); color: white; }
-.s-btn.gg { background:var(--blue-w); }
 
-.switch { text-align: center; font-size: .79rem; color: var(--text-muted); }
-.switch a { color: var(--purple); font-weight: 600; }
-.switch a:hover { text-decoration: underline; }
+.s-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+}
+
+.s-btn.gh,
+.s-btn.gg {
+  background: var(--blue-w);
+  color: white;
+}
+
+.switch {
+  text-align: center;
+  font-size: .79rem;
+  color: var(--text-muted);
+}
+
+.switch a {
+  color: var(--purple);
+  font-weight: 600;
+}
+
+.switch a:hover {
+  text-decoration: underline;
+}
 </style>

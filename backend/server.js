@@ -68,3 +68,4 @@ process.on('SIGINT', async () => {
 })
 //Démarre le serveur après avoir établi la connexion à la base de données.
 startServer()
+

@@ -55,7 +55,12 @@ export default {
     localStorage.setItem('token', data.token)
     return data
   },
+  startGoogleAuth() {
+  const baseURL =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
+  window.location.href = `${baseURL}/auth/google`
+  },
   async forgotPassword(email) {
     return api.post('/auth/mot-de-passe-oublie', { email })
   },
@@ -69,7 +74,7 @@ export default {
   },
 
   async resetPassword(payload) {
-    // payload: { email, code, newPassword }
+     // payload: { email, code, newPassword }
     return api.post('/auth/reinitialiser-mot-de-passe', {
       token:payload.token,
       nouveau_mot_de_passe:payload.newPassword,

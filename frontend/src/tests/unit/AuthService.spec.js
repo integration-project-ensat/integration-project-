@@ -21,8 +21,8 @@ describe('auth.service', () => {
 
   // ── LOGIN ──
   it('login réussit et sauvegarde le token', async () => {
-   
-    mock.onPost('/login').replyOnce(200, {
+
+    mock.onPost('/auth/seconnecter').replyOnce(200, {
       token: 'fake-token-123',
       user: { id: '1', email: 'test@test.com', role: 'student' }
     })
@@ -35,7 +35,7 @@ describe('auth.service', () => {
 
   it('login échoue avec mauvais identifiants', async () => {
     
-    mock.onPost('/login').replyOnce(401, {
+    mock.onPost('/auth/seconnecter').replyOnce(401, {
       message: 'Identifiants invalides'
     })
 
@@ -48,7 +48,7 @@ describe('auth.service', () => {
 
   // ── SIGNUP ──
   it('signup réussit et sauvegarde le token', async () => {
-    mock.onPost('/sinscrire').reply(201, {
+    mock.onPost('/auth/sinscrire').reply(201, {
       token: 'signup-token-456',
       user: { id: '2', email: 'new@test.com', role: 'student' }
     })
@@ -66,7 +66,7 @@ describe('auth.service', () => {
   })
 
   it('signup échoue si email déjà utilisé', async () => {
-    mock.onPost('/sinscrire').reply(409, {
+    mock.onPost('/auth/sinscrire').reply(409, {
       message: 'Email déjà utilisé'
     })
 

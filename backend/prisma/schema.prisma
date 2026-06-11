@@ -173,8 +173,10 @@ model Utilisateur {
   nom                String  @db.VarChar(100)
   prenom             String  @db.VarChar(100)
   email              String  @unique @db.VarChar(255)
-  mot_de_passe_hashe String
+  mot_de_passe_hashe String?
   role               RoleUtilisateur
+  google_id          String? @unique
+  auth_provider      String @default("LOCAL")
   est_actif          Boolean          @default(true)
   est_valide         Boolean          @default(false)
   date_creation      DateTime         @default(now())
@@ -297,7 +299,7 @@ model Profil {
   id_utilisateur          BigInt            @unique
   photo_profil            String?           @db.VarChar(500)
   telephone               String?           @db.VarChar(20)
-  pays                    String?           @db.VarChar(100)
+  adresse                 String?           @db.VarChar(100)
   email_professionnel String?  @db.VarChar(255)
   bio                String?          @db.Text
   linkedin_url            String?
