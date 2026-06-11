@@ -244,7 +244,7 @@ const verifierCode = asyncHandler(async (req, res) => {
     token_expires_at:null
  };
 
- if(user.role==='ETUDIANT' || user.role==='PROFESSEUR'){
+ if(user.role==='ETUDIANT' || user.role==='PROFESSEUR' || user.role==='PROFESSIONNEL'){
     updateData.est_actif=true;
   }
     const updatedUser = await prisma.utilisateur.update({
@@ -252,10 +252,13 @@ const verifierCode = asyncHandler(async (req, res) => {
         data: updateData
     });
     
-    const message = user.role === 'PROFESSIONNEL'?'Email vérifié! Votre compte est en attente de validation par un administrateur.'
-    :'Email vérifié et compte activé! Vous pouvez maintenant vous connecter.';
+    const message = 'Email vérifié et compte activé!';
 
-    if (updatedUser.role === 'ETUDIANT' || updatedUser.role === 'PROFESSEUR') {
+    if (
+      updatedUser.role === 'ETUDIANT' ||
+      updatedUser.role === 'PROFESSEUR' ||
+      updatedUser.role === 'PROFESSIONNEL'
+    ) {
       const token = generateToken(updatedUser);
       setAuthCookie(res, token);
 

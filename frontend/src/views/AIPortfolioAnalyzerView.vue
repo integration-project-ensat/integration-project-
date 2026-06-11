@@ -1,6 +1,6 @@
 ﻿<template>
   <div class="ai-page">
-    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" @toggleTheme="undefined" />
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
     <Sidebar :is-open="sidebarOpen" />
 
     <main class="ai-content" :class="{ shifted: sidebarOpen }">

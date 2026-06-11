@@ -58,13 +58,13 @@
         <template v-if="form.role === 'Prof'">
           <input v-model="form.departement" type="text" placeholder="Département" />
           <input v-model="form.codeAdmin" type="text" placeholder="Code administration" />
-          <input v-model="form.sec" type="url" placeholder="Specialité" />
+          <input v-model="form.sec" type="text" placeholder="Specialité" />
         </template>
 
         <template v-if="form.role === 'Professional'">
           <input v-model="form.post" type="text" placeholder="Post" />
           <input v-model="form.company" type="text" placeholder="Entreprise" />
-          <input v-model="form.specialty" type="url" placeholder="Secteur" />
+          <input v-model="form.specialty" type="text" placeholder="Secteur" />
         </template>
 
         <p v-if="error" class="err">{{ error }}</p>
