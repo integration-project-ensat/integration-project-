@@ -72,8 +72,8 @@ jobs:
 
       - name: "Demarrer Staging"
         run: |
+          sudo sysctl -w vm.max_map_count=262144
           echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
-
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
