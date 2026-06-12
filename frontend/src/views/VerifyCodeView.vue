@@ -99,9 +99,17 @@ const countdown = ref(60)
 const code   = reactive(['', '', '', '', '', ''])
 const inputs = ref<HTMLInputElement[]>([])
 
+function clearLocalSession() {
+  auth.logout()
+  localStorage.removeItem('token')
+  localStorage.removeItem('role')
+  localStorage.removeItem('user')
+}
+
 // countdown timer
 let timer: ReturnType<typeof setInterval>
 onMounted(() => {
+  clearLocalSession()
   inputs.value[0]?.focus()
   startCountdown()
 })
@@ -138,19 +146,7 @@ function onPaste(e: ClipboardEvent) {
 }
 
 function redirectByRole(role: string | null | undefined) {
-  if (role === 'admin') {
-    router.push('/admin')
-    return
-  }
-  if (role === 'teacher') {
-    router.push('/explore-prof')
-    return
-  }
-  if (role === 'professional') {
-    router.push('/explore-pro')
-    return
-  }
-  router.push('/student/explore')
+  router.push('/dashboard')
 }
 
 function getPendingSignup(): PendingSignup | null {
@@ -208,7 +204,7 @@ async function submit() {
       }
 
       sessionStorage.removeItem('pendingSignup')
-      router.push('/login')
+      router.push({ path: '/reset-password', query: { email } })
     }, 1000)
   } catch(e) {
     error.value = getApiErrorMessage(e, 'Code incorrect ou expiré.')

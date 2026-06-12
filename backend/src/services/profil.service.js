@@ -429,6 +429,8 @@ class ProfilService {
       search,
       filiere,
       ville,
+      year,
+      school,
       competences,
       score,
       recommandations,
@@ -453,13 +455,70 @@ class ProfilService {
       ];
     }
 
-    if (filiere || competences || score || recommandations) {
+    if (filiere || year || school || competences || score || recommandations) {
       where.etudiant = {};
 
       if (filiere) {
-        where.etudiant.OR = filiereFilterVariants(filiere).map((item) => ({
-          filiere: { equals: item, mode: 'insensitive' }
-        }));
+        where.etudiant.AND = [
+          ...(where.etudiant.AND || []),
+          {
+            OR: filiereFilterVariants(filiere).map((item) => ({
+              filiere: { equals: item, mode: 'insensitive' }
+            }))
+          }
+        ];
+      }
+
+      if (year) {
+        const yearValue = String(year).trim();
+        const yearNumber = Number.parseInt(yearValue, 10);
+
+        where.etudiant.AND = [
+          ...(where.etudiant.AND || []),
+          {
+            OR: [
+              {
+                annee_universitaire: {
+                  contains: yearValue,
+                  mode: 'insensitive'
+                }
+              },
+              ...(Number.isFinite(yearNumber)
+                ? [
+                    {
+                      diplomes: {
+                        some: {
+                          OR: [
+                            { annee_debut: yearNumber },
+                            { annee_fin: yearNumber }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                : [])
+            ]
+          }
+        ];
+      }
+
+      if (school) {
+        const schoolValue = String(school).trim();
+        where.etudiant.AND = [
+          ...(where.etudiant.AND || []),
+          {
+            OR: [
+              { etablissement: { startsWith: schoolValue, mode: 'insensitive' } },
+              {
+                diplomes: {
+                  some: {
+                    etablissement: { startsWith: schoolValue, mode: 'insensitive' }
+                  }
+                }
+              }
+            ]
+          }
+        ];
       }
 
       if (competences) {

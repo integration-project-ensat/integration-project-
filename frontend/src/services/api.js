@@ -1,9 +1,10 @@
 // Instance Axios centralisée. Configure la baseURL vers le backend et injecte automatiquement le token JWT Bearer dans chaque requête via un intercepteur.
 // Contenu type
 import axios from 'axios'
+import { getApiBase } from '../utils/apiBase.js'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api',
+  baseURL: getApiBase(),
   headers: { Accept: 'application/json' },
   withCredentials: true
 })

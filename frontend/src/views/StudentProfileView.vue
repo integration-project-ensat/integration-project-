@@ -14,6 +14,11 @@
         :force-navigation="true"
       />
       <SidebarPro
+        v-else-if="userRole === 'professional'"
+        :isOpen="sidebarOpen"
+        :force-navigation="true"
+      />
+      <SidebarStudent
         v-else
         :isOpen="sidebarOpen"
         :force-navigation="true"
@@ -21,7 +26,7 @@
 
       <main class="content" :class="{ shifted: sidebarOpen }">
 
-        <!-- Ã‰tat chargement / erreur -->
+        <!-- État chargement / erreur -->
         <div v-if="profileLoading" class="page-state">
           Chargement du profil...
         </div>
@@ -65,13 +70,13 @@
               </div>
               <div class="connection-actions">
                 <template v-if="connectionStatus.isConnected">
-                  <button type="button" class="connect-btn connected" disabled>DÃ©jà connectÃ©</button>
+                  <button type="button" class="connect-btn connected" disabled>Déjà connecté</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="removeConnection">
                     {{ connectionLoading ? 'Traitement...' : 'Supprimer' }}
                   </button>
                 </template>
                 <template v-else-if="connectionStatus.requestSent">
-                  <button type="button" class="connect-btn pending" disabled>Demande envoyÃ©e</button>
+                  <button type="button" class="connect-btn pending" disabled>Demande envoyée</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="cancelConnectionRequest">
                     {{ connectionLoading ? 'Traitement...' : 'Annuler' }}
                   </button>
@@ -93,12 +98,12 @@
             </div>
           </section>
 
-          <!-- Action enseignant : attacher l'Ã©tudiant -->
+          <!-- Action enseignant : attacher l'étudiant -->
           <section v-if="canAttachStudent" class="teacher-actions">
             <div class="teacher-actions__content">
               <div>
-                <h3>Ajouter cet Ã©tudiant</h3>
-                <p>Ajoutez cet Ã©tudiant à votre liste pour pouvoir valider ses demandes.</p>
+                <h3>Ajouter cet étudiant</h3>
+                <p>Ajoutez cet étudiant à votre liste pour pouvoir valider ses demandes.</p>
               </div>
               <button
                 type="button"
@@ -110,8 +115,8 @@
                   attachingStudent
                     ? 'Ajout...'
                     : studentAttached
-                      ? 'DÃ©jà ajoutÃ©'
-                      : 'Ajouter à mes Ã©tudiants'
+                      ? 'Déjà ajouté'
+                      : 'Ajouter à mes étudiants'
                 }}
               </button>
             </div>
@@ -138,17 +143,17 @@
               <div class="post-composer__head">
                 <div>
                   <h3>Publier un post</h3>
-                  <p>Partagez une actualitÃ©, une expertise ou une opportunitÃ© avec votre rÃ©seau.</p>
+                  <p>Partagez une actualité, une expertise ou une opportunité avec votre réseau.</p>
                 </div>
                 <span class="post-composer__badge">{{ viewedProfileLabel }}</span>
               </div>
               <textarea
                 v-model="newPostForm.content"
                 class="bio-textarea"
-                placeholder="Ã‰crivez votre publication..."
+                placeholder="Écrivez votre publication..."
               />
               <div v-if="newPostForm.imagePreview" class="composer-preview">
-                <img :src="newPostForm.imagePreview" alt="AperÃ§u du post" />
+                <img :src="newPostForm.imagePreview" alt="Aperçu du post" />
                 <button type="button" class="remove-photo-btn" @click="clearNewPostImage">
                   Supprimer l'image
                 </button>
@@ -273,7 +278,7 @@
           >
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>A propos</h3>
+                <h3>À propos</h3>
                 <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
                   Modifier
                 </button>
@@ -355,27 +360,27 @@
                 <div class="role-overview role-overview--edit">
                   <article class="role-overview-card">
                     <span>Nom complet</span>
-                    <strong>{{ profile.name || 'Non renseignÃ©' }}</strong>
+                    <strong>{{ profile.name || 'Non renseigné' }}</strong>
                   </article>
                   <article class="role-overview-card">
                     <span>Titre</span>
-                    <strong>{{ profile.title || 'Non renseignÃ©' }}</strong>
+                    <strong>{{ profile.title || 'Non renseigné' }}</strong>
                   </article>
                   <article class="role-overview-card">
-                    <span>Ã‰tablissement</span>
-                    <strong>{{ profile.school || 'Non renseignÃ©' }}</strong>
+                    <span>Établissement</span>
+                    <strong>{{ profile.school || 'Non renseigné' }}</strong>
                   </article>
                   <article class="role-overview-card">
                     <span>Ville</span>
-                    <strong>{{ profile.location || 'Non renseignÃ©e' }}</strong>
+                    <strong>{{ profile.location || 'Non renseignée' }}</strong>
                   </article>
                 </div>
               </template>
               <template v-else>
                 <div class="contact-form">
-                  <div class="form-field"><label>Nom complet</label><input v-model="infoForm.name" type="text" placeholder="Nom PrÃ©nom" /></div>
-                  <div class="form-field"><label>Titre</label><input v-model="infoForm.title" type="text" placeholder="Ex: GÃ©nie Informatique" /></div>
-                  <div class="form-field"><label>Ã‰tablissement</label><input v-model="infoForm.school" type="text" placeholder="ENSA Tanger" /></div>
+                  <div class="form-field"><label>Nom complet</label><input v-model="infoForm.name" type="text" placeholder="Nom Prénom" /></div>
+                  <div class="form-field"><label>Titre</label><input v-model="infoForm.title" type="text" placeholder="Ex: Génie Informatique" /></div>
+                  <div class="form-field"><label>Établissement</label><input v-model="infoForm.school" type="text" placeholder="ENSA Tanger" /></div>
                   <div class="form-field"><label>Ville</label><input v-model="infoForm.location" type="text" placeholder="Tanger" /></div>
                 </div>
                 <div class="pedit-row-actions">
@@ -387,19 +392,19 @@
               </template>
             </div>
 
-            <!-- Ã€ propos -->
+            <!-- À propos -->
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>Ã€ propos</h3>
+                <h3>À propos</h3>
                 <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
                   Modifier
                 </button>
               </div>
               <template v-if="!editingAbout">
-                <p class="pedit-bio-text">{{ profile.bio || 'Aucune biographie renseignÃ©e.' }}</p>
+                <p class="pedit-bio-text">{{ profile.bio || 'Aucune biographie renseignée.' }}</p>
               </template>
               <template v-else>
-                <textarea v-model="bioForm" class="bio-textarea" placeholder="DÃ©crivez-vous en quelques mots..." />
+                <textarea v-model="bioForm" class="bio-textarea" placeholder="Décrivez-vous en quelques mots..." />
                 <div class="pedit-row-actions">
                   <button type="button" class="send-btn" :disabled="savingProfile" @click="saveBio">
                     {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
@@ -445,7 +450,7 @@
               <template v-else>
                 <div class="contact-form">
                   <div class="form-field"><label>Email</label><input v-model="contactForm.email" type="email" placeholder="exemple@univ.ac.ma" /></div>
-                  <div class="form-field"><label>TÃ©lÃ©phone</label><input v-model="contactForm.phone" type="tel" placeholder="+212 6 00 00 00 00" /></div>
+                  <div class="form-field"><label>Téléphone</label><input v-model="contactForm.phone" type="tel" placeholder="+212 6 00 00 00 00" /></div>
                   <div class="form-field"><label>Site web</label><input v-model="contactForm.website" type="url" placeholder="https://portfolio.example.com" /></div>
                   <div class="form-field"><label>LinkedIn</label><input v-model="contactForm.linkedin" type="url" placeholder="https://linkedin.com/in/..." /></div>
                   <div class="form-field"><label>GitHub</label><input v-model="contactForm.github" type="url" placeholder="https://github.com/..." /></div>
@@ -459,10 +464,10 @@
               </template>
             </div>
 
-            <!-- CompÃ©tences -->
+            <!-- Compétences -->
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>CompÃ©tences</h3>
+                <h3>Compétences</h3>
                 <button v-if="!editingSkills && isStudentProfile" type="button" class="btn-modifier" @click="openEditSkills">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Modifier
@@ -487,11 +492,11 @@
                   <p class="skills-label">Techniques</p>
                   <div class="skills-chips editable">
                     <span v-for="(s, i) in skillForms.tech" :key="i" class="skill-chip tech editable">
-                      {{ s }}<button type="button" @click="skillForms.tech.splice(i, 1)">Ã—</button>
+                      {{ s }}<button type="button" @click="skillForms.tech.splice(i, 1)">×</button>
                     </span>
                   </div>
                   <div class="skill-add-row">
-                    <input v-model="skillForms.newTech" placeholder="Ajouter une compÃ©tence..." @keyup.enter="addTechSkill" />
+                    <input v-model="skillForms.newTech" placeholder="Ajouter une compétence..." @keyup.enter="addTechSkill" />
                     <button type="button" class="btn-add-skill" @click="addTechSkill">+</button>
                   </div>
                 </div>
@@ -499,11 +504,11 @@
                   <p class="skills-label">Comportementales</p>
                   <div class="skills-chips editable">
                     <span v-for="(s, i) in skillForms.soft" :key="i" class="skill-chip soft editable">
-                      {{ s }}<button type="button" @click="skillForms.soft.splice(i, 1)">Ã—</button>
+                      {{ s }}<button type="button" @click="skillForms.soft.splice(i, 1)">×</button>
                     </span>
                   </div>
                   <div class="skill-add-row">
-                    <input v-model="skillForms.newSoft" placeholder="Ajouter une compÃ©tence..." @keyup.enter="addSoftSkill" />
+                    <input v-model="skillForms.newSoft" placeholder="Ajouter une compétence..." @keyup.enter="addSoftSkill" />
                     <button type="button" class="btn-add-skill" @click="addSoftSkill">+</button>
                   </div>
                 </div>
@@ -762,7 +767,7 @@
                 <textarea
                   v-model="recommendationMessage"
                   class="bio-textarea"
-                  placeholder="Ã‰crivez votre recommandation..."
+                  placeholder="Écrivez votre recommandation..."
                 />
                 <div class="share-actions">
                   <button type="button" class="send-btn" @click="sendRecommendation">
@@ -822,13 +827,13 @@
               </div>
               <div class="connection-actions">
                 <template v-if="connectionStatus.isConnected">
-                  <button type="button" class="connect-btn connected" disabled>DÃ©jà connectÃ©</button>
+                  <button type="button" class="connect-btn connected" disabled>Déjà connecté</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="removeConnection">
                     Retirer la connexion
                   </button>
                 </template>
                 <template v-else-if="connectionStatus.requestSent">
-                  <button type="button" class="connect-btn pending" disabled>Demande envoyÃ©e</button>
+                  <button type="button" class="connect-btn pending" disabled>Demande envoyée</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="cancelConnectionRequest">
                     Annuler la demande
                   </button>
@@ -855,7 +860,7 @@
             <div class="share-card">
               <div>
                 <h3>Partager ce profil</h3>
-                <p>Copiez le lien ou partagez directement avec votre rÃ©seau.</p>
+                <p>Copiez le lien ou partagez directement avec votre réseau.</p>
               </div>
               <div class="link-box">
                 <span>{{ profileUrl }}</span>
@@ -881,7 +886,7 @@
       <div class="entry-modal">
         <div class="modal-head">
           <h3>{{ editingEntryId !== null ? 'Modifier' : 'Ajouter' }} {{ entryModalTitle }}</h3>
-          <button type="button" @click="activeEntryModal = null">Ã—</button>
+          <button type="button" @click="activeEntryModal = null">×</button>
         </div>
         <div class="entry-modal-body">
           <template v-if="activeEntryModal === 'exp'">
@@ -895,7 +900,7 @@
           </template>
           <template v-if="activeEntryModal === 'form'">
             <div class="form-field"><label>DiplÃ´me</label><input v-model="formForm.diplome" placeholder="IngÃ©nierie Informatique" /></div>
-            <div class="form-field"><label>Ã‰tablissement</label><input v-model="formForm.etablissement" placeholder="Nom de l'Ã©cole" /></div>
+            <div class="form-field"><label>Établissement</label><input v-model="formForm.etablissement" placeholder="Nom de l'école" /></div>
             <div class="form-field-row">
               <div class="form-field"><label>DÃ©but</label><input v-model="formForm.debut" placeholder="2022" /></div>
               <div class="form-field"><label>Fin</label><input v-model="formForm.fin" placeholder="2025" /></div>
@@ -932,7 +937,7 @@
       <div class="post-edit-modal">
         <div class="modal-head">
           <h3>Modifier le post</h3>
-          <button type="button" @click="showEditModal = false">Ã—</button>
+          <button type="button" @click="showEditModal = false">×</button>
         </div>
         <div class="post-edit-body">
           <label class="field-label">Description</label>
@@ -977,7 +982,7 @@
       <div class="recos-modal">
         <div class="modal-head">
           <h3>Personnes qui ont recommandÃ© {{ profile.name }}</h3>
-          <button type="button" @click="showRecosModal = false">Ã—</button>
+          <button type="button" @click="showRecosModal = false">×</button>
         </div>
         <div class="recommenders-list">
           <div v-for="recommendation in recommendations" :key="recommendation.id" class="recommender">
@@ -1085,7 +1090,7 @@ const profileSaveError = ref('')
 
 const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | null>(() => {
   const storedRole = localStorage.getItem('role')
-  const role = String(auth.role || storedRole || '').trim().toUpperCase()
+  const role = String(auth.role || auth.user?.role || storedRole || '').trim().toUpperCase()
   if (role === 'TEACHER' || role === 'PROFESSEUR') return 'teacher'
   if (role === 'PROFESSIONAL' || role === 'PROFESSIONNEL') return 'professional'
   if (role === 'STUDENT' || role === 'ETUDIANT') return 'student'
@@ -1113,7 +1118,7 @@ const userRole = computed<'student' | 'teacher' | 'professional'>(
 
 // â”€â”€â”€ Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'CompÃ©tances', 'Ã€ propos', 'Partager', 'Modifier bio', 'Modifier info'])
+const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'Compétences', 'À propos', 'Partager', 'Modifier bio', 'Modifier info'])
 
 const getRouteTab = () => {
   const rawTab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'
@@ -1127,8 +1132,8 @@ const activeTab = ref(getRouteTab())
 
 function resolveDefaultTab() {
   if (isOwnProfile.value) return isStudentProfile.value ? getRouteTab() : 'Portfolio'
-  if (isTeacherProfile.value) return canOpenProfessorRequests.value ? 'Demandes' : canRequestLetterValidation.value ? 'Recommander' : 'Ã€ propos'
-  if (isProfessionalProfile.value) return 'Ã€ propos'
+  if (isTeacherProfile.value) return canOpenProfessorRequests.value ? 'Demandes' : canRequestLetterValidation.value ? 'Recommander' : 'À propos'
+  if (isProfessionalProfile.value) return 'À propos'
   return getRouteTab()
 }
 
@@ -1209,12 +1214,16 @@ const roleOverviewCards = computed(() => {
 const showRolePostsSection = computed(() => {
   if (isStudentProfile.value) return false
   if (isOwnProfile.value) return activeTab.value !== 'Modifier info'
-  return activeTab.value === 'Ã€ propos'
+  return activeTab.value === 'À propos'
 })
 const profileHeaderTabs = computed(() => {
-  if (isOwnProfile.value) return undefined
-  if (isTeacherProfile.value) return ['Demandes', 'Connecter', 'Ã€ propos', 'Partager']
-  if (isProfessionalProfile.value) return ['Connecter', 'Ã€ propos', 'Partager']
+  if (isOwnProfile.value) {
+    return isStudentProfile.value
+      ? ['Modifier bio', 'Partager']
+      : ['Modifier info', 'Partager']
+  }
+  if (isTeacherProfile.value) return ['Demandes', 'Connecter', 'À propos', 'Partager']
+  if (isProfessionalProfile.value) return ['Connecter', 'À propos', 'Partager']
   return undefined
 })
 const showRecommendationsSummary = computed(
@@ -1274,6 +1283,7 @@ const profileStudentId = computed<number | undefined>(() => {
 })
 
 const profileId = computed(() => profileStudentId.value || profile.value.id)
+const isOwnProfileRoute = computed(() => !profileStudentId.value)
 
 const currentUserId = computed(() => {
   const rawUser = localStorage.getItem('user')
@@ -1288,7 +1298,9 @@ const currentUserId = computed(() => {
 })
 
 const isOwnProfile = computed(() =>
-  Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
+  isOwnProfileRoute.value
+    ? Boolean(currentUserId.value)
+    : Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
 )
 
 function syncCurrentUserAssets(avatar: string | null, banner: string | null) {
@@ -1335,9 +1347,9 @@ const connectionActionMessage = ref('')
 
 const connectionTabLabel = computed(() => {
   if (isOwnProfile.value) return 'Connecter'
-  if (connectionStatus.value.isConnected) return 'DÃ©jà connectÃ©'
-  if (connectionStatus.value.requestSent) return 'Demande envoyÃ©e'
-  if (connectionStatus.value.requestReceived) return 'RÃ©pondre'
+  if (connectionStatus.value.isConnected) return 'Déjà connecté'
+  if (connectionStatus.value.requestSent) return 'Demande envoyée'
+  if (connectionStatus.value.requestReceived) return 'Répondre'
   return 'Connecter'
 })
 
@@ -1354,24 +1366,24 @@ const recommendationTabTitle = computed(() => {
 
 const recommendationTabDescription = computed(() => {
   if (canRequestLetterValidation.value) {
-    return `Envoyez une demande de lettre de recommandation Ãƒ  ${profile.value.name}.`
+    return `Envoyez une demande de lettre de recommandation à ${profile.value.name}.`
   }
   if (canSendRecommendation.value) {
     return `Partagez une recommandation utile pour renforcer le profil de ${profile.value.name}.`
   }
-  return "Ce profil ne propose pas d'action de recommandation pour votre rÃ´le."
+  return "Ce profil ne propose pas d'action de recommandation pour votre rôle."
 })
 
 const connectionPanelTitle = computed(() => {
-  if (connectionStatus.value.isConnected) return 'DÃ©jà connectÃ©'
-  if (connectionStatus.value.requestSent) return 'Demande envoyÃ©e'
-  if (connectionStatus.value.requestReceived) return 'Demande reÃ§ue'
+  if (connectionStatus.value.isConnected) return 'Déjà connecté'
+  if (connectionStatus.value.requestSent) return 'Demande envoyée'
+  if (connectionStatus.value.requestReceived) return 'Demande reçue'
   return 'Demande de connexion'
 })
 
 const connectionPanelDescription = computed(() => {
   if (isOwnProfile.value) return 'Vous consultez votre propre profil.'
-  if (connectionStatus.value.isConnected) return `Vous Ãªtes connectÃ© avec ${profile.value.name}.`
+  if (connectionStatus.value.isConnected) return `Vous êtes connecté avec ${profile.value.name}.`
   if (connectionStatus.value.requestSent) return `Votre demande à ${profile.value.name} est en attente.`
   if (connectionStatus.value.requestReceived) return `${profile.value.name} vous a envoyÃ© une demande de connexion.`
   return `Envoyez une demande de connexion à ${profile.value.name} pour rester en contact.`
@@ -1420,7 +1432,7 @@ async function sendConnectionRequest() {
   if (!profileId.value || isOwnProfile.value) return
   await runConnectionAction(
     () => connexionService.createConnexion({ id_destinataire: profileId.value, message: `Demande de connexion vers ${profile.value.name}` }),
-    'Demande envoyÃ©e.',
+    'Demande envoyée.',
     "Impossible d'envoyer la demande."
   )
 }
@@ -1955,7 +1967,9 @@ async function submitProjectValidationRequest() {
     window.setTimeout(() => { projectRequestSuccess.value = '' }, 3000)
   } catch (error: any) {
     projectRequestError.value =
-      error?.response?.data?.message || 'Impossible denvoyer cette demande de projet.'
+      error?.response?.data?.errors?.[0]?.message ||
+      error?.response?.data?.message ||
+      'Impossible denvoyer cette demande de projet.'
   } finally {
     projectRequestLoading.value = false
   }
@@ -2092,7 +2106,9 @@ async function loadProfile() {
       : await profileService.getCurrentUser()
 
     profileRaw.value = backendProfile?.raw ?? null
-    viewedProfileRole.value = normalizeBackendRole(backendProfile?.raw?.role)
+    viewedProfileRole.value = isOwnProfileRoute.value && normalizedAuthRole.value
+      ? normalizedAuthRole.value
+      : normalizeBackendRole(backendProfile?.raw?.role)
 
     const rawStudent = backendProfile?.raw?.etudiant || {}
     const rawCompetences = Array.isArray(rawStudent?.competences) ? rawStudent.competences : []
@@ -2102,7 +2118,7 @@ async function loadProfile() {
       .map((item: any) => ({
         name: item?.competence?.nom || 'CompÃ©tence',
         level: Number(item?.niveau_maitrise ?? 75),
-        description: 'CompÃ©tence issue du profil Ã©tudiant.',
+        description: 'Compétence issue du profil étudiant.',
         projectsCount: 0
       }))
 
@@ -2111,7 +2127,7 @@ async function loadProfile() {
       .map((item: any) => ({
         name: item?.competence?.nom || 'CompÃ©tence',
         level: Number(item?.niveau_maitrise ?? 75),
-        description: 'CompÃ©tence comportementale issue du profil Ã©tudiant.',
+        description: 'Compétence comportementale issue du profil étudiant.',
         projectsCount: 0
       }))
 
@@ -2215,7 +2231,7 @@ async function loadAttachedStatus() {
     const { data } = await profApi.getAttachedStudentStatus(profileId.value)
     studentAttached.value = Boolean(data?.data?.attached)
   } catch (error) {
-    console.warn('Chargement statut Ã©tudiant liÃ© impossible', error)
+    console.warn('Chargement statut étudiant lié impossible', error)
   }
 }
 
@@ -2226,9 +2242,9 @@ async function attachCurrentStudent() {
   try {
     const { data } = await profApi.attachStudent({ id_etudiant: profileId.value })
     studentAttached.value = true
-    attachMessage.value = data?.created ? 'Ã‰tudiant ajoutÃ© à votre liste.' : 'Cet Ã©tudiant est dÃ©jà dans votre liste.'
+    attachMessage.value = data?.created ? 'Étudiant ajouté à votre liste.' : 'Cet étudiant est déjà dans votre liste.'
   } catch (error: any) {
-    attachMessage.value = error?.response?.data?.message || "Impossible d'ajouter cet Ã©tudiant."
+    attachMessage.value = error?.response?.data?.message || "Impossible d'ajouter cet étudiant."
   } finally {
     attachingStudent.value = false
   }

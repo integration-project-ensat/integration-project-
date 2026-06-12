@@ -27,9 +27,11 @@ const pagination     = ref({ total: 0, page: 1, limit: 10, pages: 1 })
 const filters = ref({
   filiere:         '',
   ville:           '',
+  year:            undefined as number | undefined,
+  school:          '',
   competences:     [] as string[],
-  score:           undefined as number | undefined,
-  recommandations: false
+  score:           undefined as string | undefined,
+  recommandations: undefined as string | undefined
 })
 
 const savedProfilesStorageKey = "proSavedProfiles"
@@ -85,9 +87,11 @@ const chargerProfils = async () => {
       search:          searchQuery.value || undefined,
       filiere:         filters.value.filiere         || undefined,
       ville:           filters.value.ville           || undefined,
+      year:            filters.value.year            || undefined,
+      school:          filters.value.school          || undefined,
       competences:     filters.value.competences.length ? filters.value.competences : undefined,
-      score:           filters.value.score           || undefined,
-      recommandations: filters.value.recommandations || undefined,
+      score:           toNumberFilter(filters.value.score) || undefined,
+      recommandations: filters.value.recommandations ? true : undefined,
       page:            pagination.value.page,
       limit:           pagination.value.limit
     })
@@ -171,17 +175,29 @@ const changerPage = (page: number) => {
 // --- Adapter le profil pour ProfileCard -------
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'pro')
 
+const toNumberFilter = (value: unknown) => {
+  if (typeof value === 'number') return value
+  const parsed = Number(String(value ?? '').replace('+', ''))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+}
+
 // --- Helpers ----------------------------------
 const profileId = (profile: ProfilExplore) => profile.id_utilisateur
 const isSaved = (id: string) => savedIds.value.has(id)
 
 const handleUpdateFilters = (next: Record<string, any>) => {
   filters.value = {
-    filiere: next.filiere ?? '',
-    ville: next.ville ?? '',
-    competences: next.competences ?? [],
-    score: next.score,
-    recommandations: next.recommandations ?? false
+    filiere: String(next.filiere ?? next.field ?? ''),
+    ville: String(next.ville ?? next.city ?? ''),
+    year: toNumberFilter(next.year),
+    school: String(next.school ?? next.university ?? next.universite ?? next.etablissement ?? ''),
+    competences: Array.isArray(next.competences)
+      ? next.competences
+      : Array.isArray(next.skills)
+        ? next.skills
+        : [],
+    score: next.score ? String(next.score) : undefined,
+    recommandations: next.recommandations ?? next.recommendations ?? undefined
   }
 }
 </script>
@@ -246,7 +262,7 @@ const handleUpdateFilters = (next: Record<string, any>) => {
 
                 <ProfileCard
                   :profile="adapterProfil(profile)"
-                  :show-score="false"
+                  :show-score="true"
                   :default-expanded="profile.id_utilisateur === profiles[0]?.id_utilisateur"
                 />
               </div>

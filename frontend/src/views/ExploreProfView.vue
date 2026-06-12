@@ -14,11 +14,11 @@ type ExploreFilterState = {
   year: number | undefined
   school: string
   competences: string[]
-  score: number | undefined
-  recommandations: boolean
+  score: string | undefined
+  recommandations: string | undefined
 }
 
-// â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// State
 const searchQuery = ref('')
 const sidebarOpen = ref(true)
 const loading     = ref(false)
@@ -32,11 +32,11 @@ const filters = ref<ExploreFilterState>({
   year:            undefined as number | undefined,
   school:          '',
   competences:     [] as string[],
-  score:           undefined as number | undefined,
-  recommandations: false
+  score:           undefined,
+  recommandations: undefined
 })
 
-// â”€â”€â”€ Charger les profils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Charger les profils
 const chargerProfils = async () => {
   loading.value = true
   error.value   = null
@@ -48,8 +48,8 @@ const chargerProfils = async () => {
       year:            filters.value.year            || undefined,
       school:          filters.value.school          || undefined,
       competences:     filters.value.competences.length ? filters.value.competences : undefined,
-      score:           filters.value.score           || undefined,
-      recommandations: filters.value.recommandations || undefined,
+      score:           toNumberFilter(filters.value.score) || undefined,
+      recommandations: filters.value.recommandations ? true : undefined,
       page:            pagination.value.page,
       limit:           pagination.value.limit
     })
@@ -62,7 +62,7 @@ const chargerProfils = async () => {
   }
 }
 
-// â”€â”€â”€ Debounce recherche â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Debounce recherche
 let searchDebounceTimer: number | undefined
 const debouncedSearch = () => {
   if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
@@ -80,31 +80,36 @@ watch(filters, () => {
 
 onMounted(chargerProfils)
 
-// â”€â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Pagination
 const changerPage = (page: number) => {
   pagination.value.page = page
   chargerProfils()
 }
 
-// â”€â”€â”€ Adapter le profil pour ProfileCard â”€â”€â”€â”€â”€â”€â”€
+// Adapter le profil pour ProfileCard
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'prof')
+
+const toNumberFilter = (value: unknown) => {
+  if (typeof value === 'number') return value
+  const parsed = Number(String(value ?? '').replace('+', ''))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+}
 
 const handleUpdateFilters = (
   next: Record<string, any>
 ) => {
   filters.value = {
-    ...filters.value,
-    filiere: String(next.filiere ?? next.field ?? filters.value.filiere ?? ''),
-    ville: String(next.ville ?? next.city ?? filters.value.ville ?? ''),
-    year: next.year ?? filters.value.year,
-    school: String(next.school ?? next.university ?? next.universite ?? next.etablissement ?? filters.value.school ?? ''),
+    filiere: String(next.filiere ?? next.field ?? ''),
+    ville: String(next.ville ?? next.city ?? ''),
+    year: toNumberFilter(next.year),
+    school: String(next.school ?? next.university ?? next.universite ?? next.etablissement ?? ''),
     competences: Array.isArray(next.competences)
       ? next.competences
       : Array.isArray(next.skills)
         ? next.skills
-        : filters.value.competences,
-    score: typeof next.score === 'number' ? next.score : filters.value.score,
-    recommandations: Boolean(next.recommandations ?? next.recommendations ?? filters.value.recommandations)
+        : [],
+    score: next.score ? String(next.score) : undefined,
+    recommandations: next.recommandations ?? next.recommendations ?? undefined
   }
 }
 </script>
@@ -130,9 +135,9 @@ const handleUpdateFilters = (
               {{ error }}
             </div>
 
-            <!-- Aucun rÃ©sultat -->
+            <!-- Aucun résultat -->
             <div v-else-if="profiles.length === 0" class="explore-state">
-              Aucun profil trouvÃ©
+              Aucun profil trouvé
             </div>
 
             <!-- Liste -->
@@ -141,7 +146,7 @@ const handleUpdateFilters = (
                 v-for="profile in profiles"
                 :key="profile.id_utilisateur"
                 :profile="adapterProfil(profile)"
-                :show-score="false"
+                :show-score="true"
                 :default-expanded="profile.id_utilisateur === profiles[0]?.id_utilisateur"
               />
             </div>

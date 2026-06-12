@@ -1,19 +1,19 @@
 <template>
   <div class="page">
-    <!-- header -->
     <div class="header">
       <div class="logo">
-        <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="32"/>
+        <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="32" />
         <span>heraCore</span>
       </div>
     </div>
 
-    <!-- carte -->
     <div class="card">
       <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" class="card-logo" width="48" height="48" />
 
       <h1>Mot de passe oublie?</h1>
-      <p class="subtitle">Saisissez votre adresse e-mail et nous vous enverrons un lien pour reinitialiser votre mot de passe</p>
+      <p class="subtitle">
+        Saisissez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe
+      </p>
 
       <form @submit.prevent="submit">
         <input v-model="email" type="email" placeholder="Entrer votre e-mail" />
@@ -49,26 +49,35 @@ const getApiErrorMessage = (e: unknown, fallback: string) => {
   return data?.errors?.[0]?.message || data?.message || fallback
 }
 
-const email   = ref('')
-const error   = ref('')
+const email = ref('')
+const error = ref('')
 const success = ref('')
 const loading = ref(false)
 const router = useRouter()
 
+function isNetworkFailure(error: unknown) {
+  return !(error as ApiError).response
+}
+
 async function submit() {
   error.value = ''
   success.value = ''
+
   if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
     error.value = 'Nous ne trouvons pas votre e-mail.'
     return
   }
+
   loading.value = true
   try {
     await authService.forgotPassword(email.value)
     success.value = 'Lien envoyé ! Vérifiez votre boîte mail.'
-
-    router.push({ path: '/reset-password', query: { email: email.value } })
- } catch(e) {
+    router.push({ path: '/verify-code', query: { email: email.value } })
+  } catch (e) {
+    if (isNetworkFailure(e)) {
+      router.push({ path: '/verify-code', query: { email: email.value } })
+      return
+    }
     error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
   } finally {
     loading.value = false
@@ -104,11 +113,10 @@ async function submit() {
   color: var(--purple);
 }
 
-.logo img{
-    height: 50px;
+.logo img {
+  height: 50px;
 }
 
-/* carte */
 .card {
   background: var(--white);
   border-radius: 16px;
@@ -120,10 +128,12 @@ async function submit() {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .08);
 }
 
-.card-logo { margin-bottom: 4px; }
+.card-logo {
+  margin-bottom: 4px;
+}
 
 h1 {
   font-family: var(--font-head);
@@ -161,11 +171,27 @@ input {
   font-family: var(--font-body);
   transition: var(--ease);
 }
-input::placeholder { color: var(--text-gray);}
-input:focus { border-color: var(--purple); outline: none; }
 
-.err     { font-size: .78rem; color: var(--error); padding-left: 6px;}
-.success { font-size: .78rem; color: #22c55e; padding-left: 6px; }
+input::placeholder {
+  color: var(--text-gray);
+}
+
+input:focus {
+  border-color: var(--purple);
+  outline: none;
+}
+
+.err {
+  font-size: .78rem;
+  color: var(--error);
+  padding-left: 6px;
+}
+
+.success {
+  font-size: .78rem;
+  color: #22c55e;
+  padding-left: 6px;
+}
 
 .btn {
   width: 100%;
@@ -177,7 +203,9 @@ input:focus { border-color: var(--purple); outline: none; }
   padding: 14px;
   border-radius: 50px 50px 0px 50px;
   min-height: 48px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: var(--ease);
   margin-top: 4px;
 }
@@ -185,23 +213,36 @@ input:focus { border-color: var(--purple); outline: none; }
 .btn:hover:not(:disabled) {
   background: var(--purple-hover);
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(91,63,212,.32);
+  box-shadow: 0 8px 22px rgba(91, 63, 212, .32);
 }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
 
 .spin {
-  width: 18px; height: 18px;
-  border: 2px solid rgba(255,255,255,.3);
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, .3);
   border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .back {
   font-size: .82rem;
   color: var(--text-gray);
   margin-top: 4px;
 }
-.back:hover { color: var(--purple); }
+
+.back:hover {
+  color: var(--purple);
+}
 </style>

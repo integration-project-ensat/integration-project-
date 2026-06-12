@@ -100,8 +100,17 @@ const resolveLegacyProfileTarget = (
   return appendQuery(target, serializeQuery(query));
 };
 
+const normalizeStoredRole = (role: string | null) => {
+  const value = String(role ?? "").trim().toUpperCase();
+  if (value === "STUDENT" || value === "ETUDIANT") return "student";
+  if (value === "TEACHER" || value === "PROF" || value === "PROFESSEUR") return "teacher";
+  if (value === "PROFESSIONAL" || value === "PROFESSIONNEL") return "professional";
+  if (value === "ADMIN" || value === "ADMINISTRATEUR") return "admin";
+  return value ? value.toLowerCase() : null;
+};
+
 const redirectByRole = () => {
-  const role = localStorage.getItem("role");
+  const role = normalizeStoredRole(localStorage.getItem("role"));
   if (role === "student") return "/student/dashboard";
   if (role === "teacher") return "/prof/dashboard";
   if (role === "professional") return "/pro/dashboard";
@@ -110,7 +119,7 @@ const redirectByRole = () => {
 };
 
 const redirectExploreByRole = () => {
-  const role = localStorage.getItem("role");
+  const role = normalizeStoredRole(localStorage.getItem("role"));
   if (role === "teacher") return "/explore-prof";
   if (role === "professional") return "/explore-pro";
   if (role === "student") return "/student/explore";
@@ -126,7 +135,7 @@ const isUsableToken = (token: string | null) =>
   );
 
 const redirectSettingsByRole = () => {
-  const role = localStorage.getItem("role");
+  const role = normalizeStoredRole(localStorage.getItem("role"));
   if (role === "teacher") return "/prof/settings";
   if (role === "professional") return "/pro/settings";
   if (role === "student") return "/student/settings";
@@ -136,7 +145,7 @@ const redirectSettingsByRole = () => {
 const router = createRouter({
   history: createWebHistory("/"),
   routes: [
-    { path: "/", name: "welcome", component: WelcomeView },
+    { path: "/", redirect: "/login" },
     { path: "/login", name: "login", component: LoginView },
     { path: "/signup", name: "signup", component: SignupView },
     {
@@ -169,7 +178,7 @@ const router = createRouter({
       path: "/dashboard",
       name: "dashboard",
       redirect: () => {
-        const role = localStorage.getItem("role");
+        const role = normalizeStoredRole(localStorage.getItem("role"));
         if (role === "student") return "/student/dashboard";
         if (role === "teacher") return "/prof/dashboard";
         if (role === "professional") return "/pro/dashboard";
@@ -227,7 +236,7 @@ const router = createRouter({
       name: "profile-edit",
       redirect: "/profile?tab=Modifier%20bio",
     },
-    { path: "/dashboard", name: "dashboard", component: DashboardProView },
+    { path: "/legacy/pro-dashboard-entry", name: "legacy-pro-dashboard-entry", component: DashboardProView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },
     { path: "/projets", name: "projets", component: ProjectsView },
@@ -264,7 +273,7 @@ const router = createRouter({
       component: CertificationsView,
     },
     { path: "/activites", name: "activites", component: ActivitesView },
-    { path: "/dashboard", redirect: "/pro/dashboard" },
+    { path: "/legacy/dashboard-pro-redirect", redirect: "/pro/dashboard" },
     {
       path: "/pro/dashboard",
       name: "pro-dashboard",
@@ -323,7 +332,7 @@ const router = createRouter({
       path: "/top-profiles",
       name: "top-profiles",
       redirect: () => {
-        const role = localStorage.getItem("role");
+        const role = normalizeStoredRole(localStorage.getItem("role"));
         if (role === "professional") return "/pro/top-profiles";
         return "/student/dashboard";
       },
@@ -392,8 +401,8 @@ const router = createRouter({
     },
 
     {
-      path: "/dashboard",
-      name: "dashboard",
+      path: "/legacy/dashboard-role-redirect",
+      name: "legacy-dashboard-role-redirect",
       redirect: redirectByRole,
       meta: { requiresAuth: true },
     },
@@ -618,7 +627,7 @@ const router = createRouter({
     {
       path: "/feed",
       redirect: () => {
-        const role = localStorage.getItem("role");
+        const role = normalizeStoredRole(localStorage.getItem("role"));
         if (role === "teacher") return "/prof/feed";
         if (role === "professional") return "/pro/feed";
         if (role === "student") return "/student/feed";
@@ -628,7 +637,7 @@ const router = createRouter({
     {
       path: "/top-profiles",
       redirect: () => {
-        const role = localStorage.getItem("role");
+        const role = normalizeStoredRole(localStorage.getItem("role"));
         if (role === "professional") return "/pro/top-profiles";
         return "/student/dashboard";
       },
@@ -696,7 +705,7 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const role = normalizeStoredRole(localStorage.getItem("role"));
 
   if (to.meta.requiresAuth && !isUsableToken(token)) {
     return "/login";

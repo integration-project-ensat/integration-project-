@@ -4,7 +4,13 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const backendTarget = process.env.VITE_BACKEND_URL || env.VITE_BACKEND_URL || 'http://backend:3000'
+  const backendTarget =
+    process.env.VITE_PROXY_TARGET ||
+    env.VITE_PROXY_TARGET ||
+    process.env.VITE_BACKEND_URL ||
+    env.VITE_BACKEND_URL ||
+    env.BACKEND_URL ||
+    'http://localhost:3000'
 
   return {
   base: '/',

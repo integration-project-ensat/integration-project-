@@ -8,6 +8,8 @@ services:
       dockerfile: dockerfile
     expose:
       - "80"
+    environment:
+      - VITE_BACKEND_URL=http://backend:3000
     depends_on:
       - backend
 
@@ -28,6 +30,7 @@ services:
       - ./.env
     environment:
       - PORT=3000
+      - RUNNING_IN_DOCKER=true
       - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}

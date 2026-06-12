@@ -554,6 +554,7 @@ function tabClass(tab: string) {
     competances: tab === 'Compétences',
     about: tab === 'À propos',
     share: tab === 'Partager',
+    partager: tab === 'Partager',
     'modifier-bio': tab === 'Modifier bio' || tab === 'Modifier info',
   }
 }
@@ -596,7 +597,7 @@ const latestStudentReco = computed(() => props.recentRecommendations?.find((reco
 const initials = computed(() => getInitials(profile.value.name))
 const connectionLabel = computed(() => props.connectionLabel || 'Connecter')
 const recommendationLabel = computed(() => props.recommendationLabel || 'Recommander')
-const showScore = computed(() => (props.profileRole === 'student' || !props.profileRole) && profile.value.score > 0)
+const showScore = computed(() => props.profileRole === 'student' || !props.profileRole)
 const fallbackTab = computed(() => {
   if (tabList.value.includes('Modifier bio')) return 'Portfolio'
   if (tabList.value.includes('Modifier info')) return 'Portfolio'

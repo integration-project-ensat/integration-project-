@@ -1,19 +1,9 @@
-const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+import { getApiBase, getApiOrigin } from './apiBase.js'
+
+const apiBase = getApiBase()
 
 function getBackendOrigin() {
-  if (typeof window === 'undefined') {
-    return ''
-  }
-
-  if (/^https?:\/\//i.test(apiBase)) {
-    try {
-      return new URL(apiBase, window.location.origin).origin
-    } catch {
-      return window.location.origin
-    }
-  }
-
-  return window.location.origin
+  return getApiOrigin()
 }
 
 export function resolveBackendAsset(path) {
@@ -27,4 +17,3 @@ export function resolveBackendAsset(path) {
 
   return ''
 }
-
