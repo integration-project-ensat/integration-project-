@@ -35,6 +35,43 @@ const FILIERES = [
   { label: 'Design', variants: ['Design'] }
 ];
 
+function resolveFrontendBaseUrl(req) {
+  const configuredUrl = String(process.env.FRONTEND_URL || '').trim();
+  const fallbackOrigin = `${req.protocol}://${req.get('host')}`;
+
+  if (!configuredUrl) {
+    return fallbackOrigin;
+  }
+
+  try {
+    const url = new URL(configuredUrl, fallbackOrigin);
+    const normalizedPath = url.pathname.replace(/\/+$/, '');
+
+    if (normalizedPath === '/api') {
+      url.pathname = '';
+    }
+
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return fallbackOrigin;
+  }
+}
+
+function redirectToFrontend(req, res, path, query = {}) {
+  const frontendBaseUrl = resolveFrontendBaseUrl(req);
+  const targetUrl = new URL(path, `${frontendBaseUrl.replace(/\/+$/, '')}/`);
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    targetUrl.searchParams.set(key, String(value));
+  });
+
+  return res.redirect(targetUrl.toString());
+}
+
 function normalizeFiliere(value) {
   const normalized = normalizeText(value);
   const match = FILIERES.find((item) =>
@@ -437,17 +474,17 @@ const handleOAuthCallback = async (req, res, provider) => {
 
   // CAS 1 : compte existe avec un autre provider
   if (existingUser && existingUser.auth_provider !== provider) {
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/login?error=email_exists_${existingUser.auth_provider.toLowerCase()}`
-    );
+    return redirectToFrontend(req, res, '/login', {
+      error: `email_exists_${existingUser.auth_provider.toLowerCase()}`
+    });
   }
 
   // CAS 2 : compte OAuth existant
   if (existingUser && existingUser.auth_provider === provider) {
     if (provider === 'GITHUB' && existingUser.role !== ROLES.ETUDIANT) {
-      return res.redirect(
-        `${process.env.FRONTEND_URL}/login?error=github_students_only`
-      );
+      return redirectToFrontend(req, res, '/login', {
+        error: 'github_students_only'
+      });
     }
 
     await prisma.utilisateur.update({
@@ -467,9 +504,7 @@ const handleOAuthCallback = async (req, res, provider) => {
     const token = generateToken(existingUser);
     setAuthCookie(res, token);
 
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/oauth-success?token=${encodeURIComponent(token)}`
-    );
+    return redirectToFrontend(req, res, '/oauth-success', { token });
   }
 
   // CAS 3 : nouveau compte OAuth
@@ -486,9 +521,10 @@ const handleOAuthCallback = async (req, res, provider) => {
     { expiresIn: '15m' }
   );
 
-  return res.redirect(
-    `${process.env.FRONTEND_URL}/complete-profile?provider=${provider.toLowerCase()}&token=${tempToken}`
-  );
+  return redirectToFrontend(req, res, '/complete-profile', {
+    provider: provider.toLowerCase(),
+    token: tempToken
+  });
 };
 
 const googleCallback = asyncHandler(async (req, res) => {
