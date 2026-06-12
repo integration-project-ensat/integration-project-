@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="page">
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
@@ -1332,7 +1332,7 @@ const recommendationTabTitle = computed(() => {
 
 const recommendationTabDescription = computed(() => {
   if (canRequestLetterValidation.value) {
-    return `Envoyez une demande de lettre de recommandation Ã  ${profile.value.name}.`
+    return `Envoyez une demande de lettre de recommandation à ${profile.value.name}.`
   }
   if (canSendRecommendation.value) {
     return `Partagez une recommandation utile pour renforcer le profil de ${profile.value.name}.`

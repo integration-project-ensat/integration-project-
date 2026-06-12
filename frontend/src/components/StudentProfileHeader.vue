@@ -8,7 +8,7 @@
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
-            Modifier la banniÃ¨re
+            Modifier la bannière
           </label>
           <input id="banner-file-input" type="file" accept="image/*" class="sr-only" @change="onBannerChange" />
         </template>
@@ -40,7 +40,7 @@
       <p class="location">
         {{ profile.location }}
         <button type="button" class="contact" @click="showContact = !showContact">
-          â€¢ Contact info
+          • Contact info
         </button>
       </p>
 
@@ -110,14 +110,14 @@
       </div>
 
       <div v-if="showAbout" class="about-section">
-        <h3>Ã€ propos</h3>
+        <h3>À propos</h3>
         <p v-if="profile.bio" class="bio">{{ profile.bio }}</p>
-        <p v-else class="bio muted">Aucune bio pour lâ€™instant.</p>
+        <p v-else class="bio muted">Aucune bio pour l’instant.</p>
       </div>
 
       <div v-if="showCompetances" class="competances-dropdown">
         <div class="competances-section">
-          <h3>CompÃ©tances Techniques</h3>
+          <h3>Compétances Techniques</h3>
           <div class="skills-flex-list">
             <span
               v-for="skill in technicalSkills"
@@ -131,7 +131,7 @@
         </div>
 
         <div class="competances-section">
-          <h3>CompÃ©tances Comportementales</h3>
+          <h3>Compétances Comportementales</h3>
           <div class="skills-flex-list">
             <span
               v-for="skill in softSkills"
@@ -148,12 +148,12 @@
       <div v-if="showShare" class="share-dropdown">
         <div class="share-card-internal">
           <h3>Partager ce profil</h3>
-          <p class="share-subtitle">Copiez le lien ou partagez directement avec votre rÃ©seau.</p>
+          <p class="share-subtitle">Copiez le lien ou partagez directement avec votre réseau.</p>
 
           <div class="link-box">
             <span>{{ profileUrl }}</span>
             <button type="button" class="copy-btn" @click="copyProfileLink">
-              {{ copied ? 'CopiÃ©' : 'Copier' }}
+              {{ copied ? 'Copié' : 'Copier' }}
             </button>
           </div>
 
@@ -191,7 +191,7 @@
 
       <div v-if="showRecommendationsSummary !== false" class="recos-section">
         <div class="reco-card">
-          <p class="reco-label">Reco plus rÃ©cent de profs</p>
+          <p class="reco-label">Reco plus récent de profs</p>
 
           <div v-if="latestTeacherReco" class="reco-item">
             <span class="reco-avatar" :class="avatarColorClass(latestTeacherReco.author)">
@@ -203,12 +203,12 @@
 
           <div v-else class="reco-item muted">
             <span class="dot" />
-            <span>Aucune recommandation rÃ©cente.</span>
+            <span>Aucune recommandation récente.</span>
           </div>
         </div>
 
         <div class="reco-card">
-          <p class="reco-label">Reco plus rÃ©cent de professionnels</p>
+          <p class="reco-label">Reco plus récent de professionnels</p>
 
           <div v-if="latestProfessionalReco" class="reco-item">
             <span class="reco-avatar" :class="avatarColorClass(latestProfessionalReco.author)">
@@ -220,12 +220,12 @@
 
           <div v-else class="reco-item muted">
             <span class="dot" />
-            <span>Aucune recommandation rÃ©cente.</span>
+            <span>Aucune recommandation récente.</span>
           </div>
         </div>
 
         <div class="reco-card">
-          <p class="reco-label">Reco plus rÃ©cent d'Ã©tudiants</p>
+          <p class="reco-label">Reco plus récent d'étudiants</p>
 
           <div v-if="latestStudentReco" class="reco-item">
             <span class="reco-avatar" :class="avatarColorClass(latestStudentReco.author)">
@@ -237,7 +237,7 @@
 
           <div v-else class="reco-item muted">
             <span class="dot" />
-            <span>Aucune recommandation rÃ©cente.</span>
+            <span>Aucune recommandation récente.</span>
           </div>
         </div>
       </div>
@@ -255,7 +255,7 @@
               {{ selectedSkill.name }}
             </span>
           </div>
-          <button type="button" class="close-modal-btn" @click="showSkillModal = false">Ã—</button>
+          <button type="button" class="close-modal-btn" @click="showSkillModal = false">×</button>
         </div>
 
         <div class="modal-body">
@@ -278,7 +278,7 @@
             <div class="skill-meta-info">
               <div class="meta-item">
                 <span class="meta-icon">ðŸ“</span>
-                <span>UtilisÃ© activement dans <strong>{{ selectedSkill.projectsCount }} projet(s)</strong> portfolio</span>
+                <span>Utilisé activement dans <strong>{{ selectedSkill.projectsCount }} projet(s)</strong> portfolio</span>
               </div>
             </div>
           </div>
@@ -318,7 +318,7 @@ const showContact = ref(false)
 const showShare = ref(false)
 const copied = ref(false)
 
-// Gestion du pop-up des compÃ©tences
+// Gestion du pop-up des compétences
 const showSkillModal = ref(false)
 const selectedSkill = ref<SelectedSkillState | null>(null)
 
@@ -368,7 +368,7 @@ const tabList = computed(() => {
     return ['Modifier info', 'Partager']
   }
 
-  return ['Portfolio', 'Recommander', 'Connecter', 'CompÃ©tences', 'Ã€ propos', 'Partager']
+  return ['Portfolio', 'Recommander', 'Connecter', 'Compétences', 'À propos', 'Partager']
 })
 
 const localBannerStyle = computed(() => {
@@ -387,8 +387,8 @@ function tabClass(tab: string) {
     portfolio: tab === 'Portfolio',
     recommendation: tab === 'Recommander',
     connect: tab === 'Connecter',
-    competances: tab === 'CompÃ©tances',
-    about: tab === 'Ã€ propos',
+    competances: tab === 'Compétances',
+    about: tab === 'À propos',
     share: tab === 'Partager',
     'modifier-bio': tab === 'Modifier bio' || tab === 'Modifier info',
   }
@@ -432,7 +432,7 @@ const softSkills = computed(() => props.profile.softSkills ?? [])
 // Liens de Partage Dynamiques
 const profileUrl = computed(() => window.location.href)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
-const encodedShareText = computed(() => encodeURIComponent(`DÃ©couvrez le profil de ${props.profile.name}`))
+const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${props.profile.name}`))
 
 const gmailShareUrl = computed(() => `mailto:?subject=${encodedShareText.value}&body=${encodedShareText.value}%0A${encodedProfileUrl.value}`)
 const linkedinShareUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodedProfileUrl.value}`)
@@ -451,7 +451,7 @@ const fallbackTab = computed(() => {
   if (tabList.value.includes('Modifier bio')) return 'Portfolio'
   if (tabList.value.includes('Modifier info')) return 'Portfolio'
   if (tabList.value.includes('Portfolio')) return 'Portfolio'
-  if (tabList.value.includes('Ã€ propos')) return 'Ã€ propos'
+  if (tabList.value.includes('À propos')) return 'À propos'
   return tabList.value[0] || ''
 })
 
@@ -848,7 +848,7 @@ h1 {
   color: var(--text-muted);
 }
 
-/* Grille des compÃ©tences */
+/* Grille des compétences */
 .competances-dropdown {
   display: grid;
   grid-template-columns: 1fr 1fr;

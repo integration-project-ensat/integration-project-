@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -112,10 +112,10 @@ const statusClass = (status: ValidationStatus) => ({
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "ValidÃ©" || status === "ValidÃƒÂ©") {
+  if (status === "Validé") {
     return "Validé";
   }
-  if (status === "Refusé" || status === "RefusÃ©" || status === "RefusÃƒÂ©") {
+  if (status === "Refusé") {
     return "Refusé";
   }
   return "En attente";
@@ -125,16 +125,12 @@ const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
   if (
-    status === "Acceptée" ||
-    status === "AcceptÃ©e" ||
-    status === "AcceptÃƒÂ©e"
+    status === "Acceptée"
   ) {
     return "Acceptée";
   }
   if (
-    status === "Refusée" ||
-    status === "RefusÃ©e" ||
-    status === "RefusÃƒÂ©e"
+    status === "Refusée"
   ) {
     return "Refusée";
   }

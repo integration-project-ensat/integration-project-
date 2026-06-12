@@ -34,9 +34,9 @@ export default {
 
   updateValidationStatus(request, status) {
     let normalizedStatus = 'EN_ATTENTE'
-    if (status === 'Validé' || status === 'ValidÃ©' || status === 'ValidÃƒÂ©') {
+    if (status === 'Validé') {
       normalizedStatus = 'VALIDE'
-    } else if (status === 'Refusé' || status === 'RefusÃ©' || status === 'RefusÃƒÂ©') {
+    } else if (status === 'Refusé') {
       normalizedStatus = 'REFUSE'
     }
 
@@ -57,9 +57,9 @@ export default {
 
   updateRecommendationStatus(letterId, status, payload = {}) {
     let normalizedStatus = 'EN_ATTENTE'
-    if (status === 'Acceptée' || status === 'AcceptÃ©e' || status === 'AcceptÃƒÂ©e') {
+    if (status === 'Acceptée') {
       normalizedStatus = 'REDIGEE'
-    } else if (status === 'Refusée' || status === 'RefusÃ©e' || status === 'RefusÃƒÂ©e') {
+    } else if (status === 'Refusée') {
       normalizedStatus = 'REFUSEE'
     }
 

@@ -181,7 +181,7 @@ const createRequest = async ({
 }
 
 const getLettres = async (id_etudiant, demandeurId) => {
-  // PropriÃ©taire voit toutes ses lettres
+  // Propriétaire voit toutes ses lettres
   if (toBigInt(demandeurId) === toBigInt(id_etudiant)) {
     return prisma.lettreRecommandation.findMany({
       where: { id_etudiant: toBigInt(id_etudiant) },
@@ -190,7 +190,7 @@ const getLettres = async (id_etudiant, demandeurId) => {
     })
   }
 
-  // Visiteur non authentifiÃ© ou autre utilisateur ne voit que les lettres publiques
+  // Visiteur non authentifié ou autre utilisateur ne voit que les lettres publiques
   return prisma.lettreRecommandation.findMany({
     where: { id_etudiant: toBigInt(id_etudiant), visibilite: 'PUBLIC' },
     include: { professeur: { include: { utilisateur: true } } },
