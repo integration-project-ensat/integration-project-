@@ -425,7 +425,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .connexions-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -445,10 +445,10 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .connexions-panel,
 .page-heading,
 .request-card {
-  background: white;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: var(--white);
+  border: 1px solid var(--overlay-navy-08);
   border-radius: var(--radius-card);
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 32px var(--overlay-navy-08);
 }
 
 .connexions-panel {
@@ -488,7 +488,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .request-actions button {
   border-radius: 100px 180px 0px 100px;
   border: 1px solid rgba(17, 24, 39, 0.35);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 8px 14px;
   font-weight: 900;
@@ -498,7 +498,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
 .request-actions button:first-child {
   background: var(--purple);
   border-color: var(--purple);
-  color: white;
+  color: var(--white);
 }
 
 .requests-grid {
@@ -565,7 +565,7 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
   margin-top: 12px;
   border-radius: 999px;
   border: 1px solid rgba(17, 24, 39, 0.18);
-  background: white;
+  background: var(--white);
   color: var(--navy-mid);
   padding: 8px 14px;
   font-weight: 900;

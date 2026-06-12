@@ -43,8 +43,8 @@
             :show-recommendations-summary="showRecommendationsSummary"
             @open-recos="showRecosModal = true"
             @open-portfolio="openPortfolio"
-            @avatar-changed="profile.avatar = $event"
-            @banner-changed="profile.banner = $event"
+            @avatar-selected="uploadProfileAvatar"
+            @banner-selected="uploadProfileBanner"
           />
 
           <p v-if="profileSuccess" class="profile-feedback profile-feedback--success">
@@ -1907,6 +1907,54 @@ function openPortfolio() {
   if (!targetId) return
   const from = userRole.value === 'teacher' ? 'prof' : userRole.value === 'professional' ? 'pro' : 'student'
   router.push(`/portfolio/${targetId}?from=${from}`)
+}
+
+async function uploadProfileAvatar(file: File) {
+  if (!isOwnProfile.value) return
+
+  profileSaveError.value = ''
+  profileSuccess.value = ''
+  savingProfile.value = true
+
+  try {
+    const uploadedUrl = await profileService.uploadAvatar(profile.value.id, file)
+    if (!uploadedUrl) throw new Error('Photo upload response is empty')
+
+    profile.value.avatar = uploadedUrl
+    await loadProfile()
+    profileSuccess.value = 'Photo de profil enregistree.'
+    window.setTimeout(() => { profileSuccess.value = '' }, 3000)
+  } catch (error: any) {
+    console.warn('Upload de la photo de profil impossible', error)
+    profileSaveError.value =
+      error?.response?.data?.message || 'Impossible denregistrer la photo de profil.'
+  } finally {
+    savingProfile.value = false
+  }
+}
+
+async function uploadProfileBanner(file: File) {
+  if (!isOwnProfile.value) return
+
+  profileSaveError.value = ''
+  profileSuccess.value = ''
+  savingProfile.value = true
+
+  try {
+    const uploadedUrl = await profileService.uploadBanner(profile.value.id, file)
+    if (!uploadedUrl) throw new Error('Banner upload response is empty')
+
+    profile.value.banner = uploadedUrl
+    await loadProfile()
+    profileSuccess.value = 'Banniere de profil enregistree.'
+    window.setTimeout(() => { profileSuccess.value = '' }, 3000)
+  } catch (error: any) {
+    console.warn('Upload de la banniere de profil impossible', error)
+    profileSaveError.value =
+      error?.response?.data?.message || 'Impossible denregistrer la banniere de profil.'
+  } finally {
+    savingProfile.value = false
+  }
 }
 
 // ─── API loaders ──────────────────────────────────────────────────────────────

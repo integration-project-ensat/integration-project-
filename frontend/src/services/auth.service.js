@@ -136,7 +136,20 @@ export default {
   },
 
   async verifyCode(email, code) {
-    return api.post('/auth/verifier-code', { email, code })
+    const { data } = await api.post('/auth/verifier-code', { email, code })
+
+    const token = data.data?.token
+    const user = data.data?.user
+
+    if (token && user) {
+      const session = persistSession(user, token)
+
+      if (data.data?.user) {
+        data.data.user = session.user
+      }
+    }
+
+    return data
   },
 
   async resendCode(email) {

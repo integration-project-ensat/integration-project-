@@ -164,7 +164,7 @@ input:focus {
 .btn {
   width: 100%;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-size: .9rem;
   font-weight: 600;
   font-family: var(--font-head);
@@ -192,7 +192,7 @@ input:focus {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, .3);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
@@ -235,7 +235,7 @@ input:focus {
 .s-btn.gh,
 .s-btn.gg {
   background: var(--blue-w);
-  color: white;
+  color: var(--white);
 }
 
 .switch {

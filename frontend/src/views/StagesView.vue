@@ -166,9 +166,9 @@ onMounted(() => {
   width: 100%;
   max-width: none;
   margin: 0;
-  background: #fff;
+  background: var(--white);
   border-radius: var(--radius-card);
-  box-shadow: 0 4px 24px rgba(17,24,39,0.08);
+  box-shadow: 0 4px 24px var(--overlay-navy-08);
   overflow: hidden;
 }
 
@@ -184,7 +184,7 @@ onMounted(() => {
 
 .header-icon {
   width: 44px; height: 44px;
-  background: rgba(79, 70, 229, 0.1);
+  background: var(--overlay-purple-10);
   border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   color: var(--purple);
@@ -195,7 +195,7 @@ onMounted(() => {
 
 .btn-add {
   display: flex; align-items: center; gap: 6px;
-  background: var(--purple); color: #fff;
+  background: var(--purple); color: var(--white);
   border: none; border-radius: var(--radius-pill);
   padding: 9px 18px; font-size: 0.85rem; font-weight: 700;
   cursor: pointer; transition: var(--ease);
@@ -223,7 +223,7 @@ onMounted(() => {
   padding: 9px 12px;
   font-size: 0.85rem;
   color: var(--text-dark);
-  background: #fff;
+  background: var(--white);
   outline: none;
   resize: vertical;
   font-family: var(--font-body);
@@ -231,17 +231,17 @@ onMounted(() => {
 }
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+.form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--overlay-purple-12); }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 .btn-cancel {
   padding: 8px 16px; border-radius: var(--radius-pill); border: 1px solid var(--input-bg);
-  background: #fff; color: var(--text-gray); font-size: 0.85rem; cursor: pointer;
+  background: var(--white); color: var(--text-gray); font-size: 0.85rem; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
 .btn-cancel:hover { background: var(--input-bg); }
 .btn-save {
   padding: 8px 20px; border-radius: var(--radius-pill); border: none;
-  background: var(--purple); color: #fff; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  background: var(--purple); color: var(--white); font-size: 0.85rem; font-weight: 700; cursor: pointer;
   font-family: var(--font-head); transition: var(--ease);
 }
 .btn-save:hover { background: var(--navy-mid); }
@@ -260,13 +260,13 @@ onMounted(() => {
   border-radius: var(--radius-card);
   transition: var(--ease);
 }
-.stage-card:hover { box-shadow: 0 4px 16px rgba(79,70,229,0.12); border-color: rgba(79,70,229,0.2); }
+.stage-card:hover { box-shadow: 0 4px 16px var(--overlay-purple-12); border-color: var(--overlay-purple-20); }
 
 .company-logo {
   width: 46px; height: 46px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--purple), var(--purple-light));
-  color: #fff;
+  color: var(--white);
   font-size: 1.2rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -288,7 +288,7 @@ onMounted(() => {
   color: var(--input-bg); padding: 4px;
   border-radius: 6px; transition: var(--ease);
 }
-.btn-delete:hover { color: var(--error); background: rgba(223,30,33,0.08); }
+.btn-delete:hover { color: var(--error); background: var(--overlay-danger-08); }
 
 .card-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .meta-chip {
@@ -303,7 +303,7 @@ onMounted(() => {
 
 .skills-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .skill-tag {
-  background: rgba(79, 70, 229, 0.1); color: var(--purple);
+  background: var(--overlay-purple-10); color: var(--purple);
   font-size: 0.72rem; font-weight: 700;
   padding: 3px 10px; border-radius: var(--radius-pill);
   font-family: var(--font-head);

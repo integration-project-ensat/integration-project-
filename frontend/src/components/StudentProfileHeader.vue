@@ -32,7 +32,7 @@
     <div class="profile-info">
       <div class="name-row">
         <h1>{{ profile.name }}</h1>
-        <span class="score">{{ profile.score }}+</span>
+        <span v-if="showScore" class="score">{{ profile.score }}+</span>
       </div>
 
       <p class="title">{{ profile.title }}</p>
@@ -325,6 +325,7 @@ const selectedSkill = ref<SelectedSkillState | null>(null)
 
 const props = defineProps<{
   profile: {
+    id?: number | string | null
     name: string
     score: number
     title: string
@@ -354,8 +355,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'open-recos'): void
-  (e: 'avatar-changed', value: string): void
-  (e: 'banner-changed', value: string): void
+  (e: 'avatar-selected', file: File): void
+  (e: 'banner-selected', file: File): void
 }>()
 
 const localAvatar = ref<string | null>(null)
@@ -394,26 +395,36 @@ function tabClass(tab: string) {
   }
 }
 
-function onAvatarChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
+function previewImage(file: File, callback: (value: string) => void) {
   const reader = new FileReader()
   reader.onload = () => {
-    localAvatar.value = reader.result as string
-    emit('avatar-changed', reader.result as string)
+    if (typeof reader.result === 'string') callback(reader.result)
   }
   reader.readAsDataURL(file)
 }
 
-function onBannerChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+async function onAvatarChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) return
-  const reader = new FileReader()
-  reader.onload = () => {
-    localBanner.value = reader.result as string
-    emit('banner-changed', reader.result as string)
-  }
-  reader.readAsDataURL(file)
+
+  previewImage(file, (value) => {
+    localAvatar.value = value
+  })
+  emit('avatar-selected', file)
+  input.value = ''
+}
+
+async function onBannerChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  previewImage(file, (value) => {
+    localBanner.value = value
+  })
+  emit('banner-selected', file)
+  input.value = ''
 }
 
 const technicalSkills = computed(() => props.profile.technicalSkills ?? [])
@@ -436,6 +447,7 @@ const latestStudentReco = computed(() => props.recentRecommendations?.find((reco
 const initials = computed(() => getInitials(props.profile.name))
 const connectionLabel = computed(() => props.connectionLabel || 'Connecter')
 const recommendationLabel = computed(() => props.recommendationLabel || 'Recommander')
+const showScore = computed(() => props.profileRole === 'student' || !props.profileRole)
 const fallbackTab = computed(() => {
   if (tabList.value.includes('Modifier bio')) return 'Portfolio'
   if (tabList.value.includes('Modifier info')) return 'Portfolio'
@@ -507,7 +519,7 @@ function getInitials(name: string) {
 
 <style scoped>
 .profile-header {
-  background: white;
+  background: var(--white);
   border-radius: 14px;
   margin-top: 35px;
   margin-bottom: 10px;
@@ -529,7 +541,7 @@ function getInitials(name: string) {
     linear-gradient(135deg, rgba(255, 255, 255, .9) 0%, rgba(255, 255, 255, .14) 38%, rgba(255, 255, 255, 0) 72%),
     radial-gradient(circle at 86% 18%, rgba(3, 155, 229, .34) 0%, rgba(3, 155, 229, .11) 36%, transparent 62%),
     radial-gradient(circle at 18% 78%, rgba(94, 53, 177, .2) 0%, rgba(94, 53, 177, .08) 42%, transparent 66%),
-    radial-gradient(#9ca3af .85px, transparent .85px),
+    radial-gradient(var(--text-subtle) .85px, transparent .85px),
     radial-gradient(#cbd5e1 .85px, transparent .85px),
     linear-gradient(120deg, #f8fbff 0%, #eaf4ff 46%, #f6f2ff 100%);
   background-size: 100% 100%, 100% 100%, 100% 100%, 22px 22px, 22px 22px, 100% 100%;
@@ -576,7 +588,7 @@ function getInitials(name: string) {
   height: 64px;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 78%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), var(--white) 78%);
 }
 
 .avatar-wrap {
@@ -596,9 +608,9 @@ function getInitials(name: string) {
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  border: 4px solid white;
-  background: var(--avatar-bg, #039be5);
-  color: #ffffff;
+  border: 4px solid var(--white);
+  background: var(--avatar-bg, var(--sky));
+  color: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -700,9 +712,9 @@ h1 {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--avatar-bg, #039be5);
-  border: 2px solid #ffffff;
-  color: #ffffff;
+  background: var(--avatar-bg, var(--sky));
+  border: 2px solid var(--white);
+  color: var(--white);
   font-family: var(--font-head);
   font-size: .58rem;
   font-weight: 700;
@@ -722,7 +734,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 18px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-neutral);
   padding-top: 10px;
   padding-bottom: 8px;
   overflow-x: auto;
@@ -732,9 +744,9 @@ h1 {
   min-width: 132px;
   height: 40px;
   padding: 0 26px;
-  background: #ffffff;
+  background: var(--white);
   border: 2px solid #8d8d8d;
-  color: #666666;
+  color: var(--text-dim);
   font-family: var(--font-head);
   font-size: .9rem;
   font-weight: 700;
@@ -749,7 +761,7 @@ h1 {
 .tab.portfolio {
   background: var(--purple);
   border-color: var(--purple);
-  color: #ffffff;
+  color: var(--white);
   border-radius: 100px 180px 0 100px;
 }
 
@@ -777,7 +789,7 @@ h1 {
 .about-section,
 .competances-dropdown,
 .share-dropdown {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-neutral);
   padding: 14px 0 18px;
 }
 
@@ -827,7 +839,7 @@ h1 {
 }
 
 .skill-tag {
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   font-size: .78rem;
   font-weight: 600;
@@ -839,7 +851,7 @@ h1 {
 
 .skill-tag.soft {
   background: #f0fdf4;
-  color: #16a34a;
+  color: var(--success);
 }
 
 .skill-tag.clickable {
@@ -849,12 +861,12 @@ h1 {
 
 .skill-tag.clickable:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px var(--overlay-black-08);
 }
 
 /* --- DESIGN PREMIUM ZONE DE PARTAGE --- */
 .share-card-internal {
-  background: white;
+  background: var(--white);
 }
 
 .share-subtitle {
@@ -867,8 +879,8 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
+  background: var(--surface-subtle);
+  border: 1px solid var(--input-bg);
   border-radius: 8px;
   padding: 6px 10px;
   margin-bottom: 20px;
@@ -889,7 +901,7 @@ h1 {
   padding: 0 16px;
   border-radius: 50px 50px 0 50px;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-family: var(--font-head);
   font-weight: 700;
   border: none;
@@ -912,7 +924,7 @@ h1 {
   gap: 10px;
   padding: 16px 12px;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--white);
   border: 1px solid #eef2f6;
   text-decoration: none;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -935,7 +947,7 @@ h1 {
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  color: white;
+  color: var(--white);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -953,10 +965,10 @@ h1 {
 .share-card-btn.linkedin:hover { border-color: #0077b5; background: #f4f9fc; }
 
 .share-card-btn.whatsapp .icon-wrapper {
-  background: linear-gradient(135deg, #25d366, #1ebd59);
+  background: linear-gradient(135deg, var(--brand-whatsapp), #1ebd59);
   box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
 }
-.share-card-btn.whatsapp:hover { border-color: #25d366; background: #f5fcf7; }
+.share-card-btn.whatsapp:hover { border-color: var(--brand-whatsapp); background: #f5fcf7; }
 
 .share-card-btn.x-twitter .icon-wrapper {
   background: linear-gradient(135deg, #2d3748, #0f1419);
@@ -969,7 +981,7 @@ h1 {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
 }
 .share-card-btn:hover .icon-wrapper { transform: scale(1.08); }
-.share-card-btn:hover span { color: #111827; }
+.share-card-btn:hover span { color: var(--navy); }
 
 /* Modales et Backdrops */
 .modal-backdrop {
@@ -985,7 +997,7 @@ h1 {
 
 .skill-detail-modal {
   width: min(440px, 92vw);
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   padding: 22px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -1012,14 +1024,14 @@ h1 {
   font-family: var(--font-head);
 }
 
-.modal-skill-badge.tech { background: #eeecff; color: var(--purple); }
-.modal-skill-badge.soft { background: #f0fdf4; color: #16a34a; }
+.modal-skill-badge.tech { background: var(--purple-soft); color: var(--purple); }
+.modal-skill-badge.soft { background: #f0fdf4; color: var(--success); }
 
 .close-modal-btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #f3f4f6;
+  background: var(--surface-neutral);
   font-size: 1.3rem;
   color: var(--text-dark);
   display: flex;
@@ -1029,7 +1041,7 @@ h1 {
   border: none;
 }
 
-.close-modal-btn:hover { background: #e5e7eb; }
+.close-modal-btn:hover { background: var(--input-bg); }
 
 .modal-level-section {
   display: flex;
@@ -1060,7 +1072,7 @@ h1 {
 
 .line-fill { height: 100%; border-radius: 4px; }
 .line-fill.tech { background: var(--purple); }
-.line-fill.soft { background: #16a34a; }
+.line-fill.soft { background: var(--success); }
 
 .percentage-text {
   font-size: 1rem;
@@ -1073,7 +1085,7 @@ h1 {
 
 .modal-separator {
   border: 0;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--surface-muted);
   margin: 16px 0;
 }
 
@@ -1093,7 +1105,7 @@ h1 {
 }
 
 .skill-meta-info {
-  background: #f8fafc;
+  background: var(--surface-subtle);
   border-radius: 6px;
   padding: 10px 12px;
 }
@@ -1110,17 +1122,17 @@ h1 {
   display: flex;
   gap: 12px;
   padding: 16px 0 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-neutral);
   margin-top: 8px;
 }
 
 .reco-card {
   flex: 1;
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   padding: 14px;
   min-height: 70px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+  box-shadow: 0 2px 8px var(--overlay-black-08);
 }
 
 .reco-label {
@@ -1144,8 +1156,8 @@ h1 {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--avatar-bg, #039be5);
-  color: #ffffff;
+  background: var(--avatar-bg, var(--sky));
+  color: var(--white);
   font-family: var(--font-head);
   font-size: .58rem;
   font-weight: 700;
@@ -1165,14 +1177,14 @@ h1 {
   flex-shrink: 0;
 }
 
-.avatar-blue { --avatar-bg: #039be5; }
-.avatar-orange { --avatar-bg: #f57c00; }
-.avatar-indigo { --avatar-bg: #5e6ad2; }
-.avatar-green { --avatar-bg: #43a047; }
-.avatar-deep-blue { --avatar-bg: #0277bd; }
-.avatar-brown { --avatar-bg: #8d6e63; }
-.avatar-purple { --avatar-bg: #5e35b1; }
-.avatar-slate { --avatar-bg: #5c6bc0; }
+.avatar-blue { --avatar-bg: var(--sky); }
+.avatar-orange { --avatar-bg: var(--tech-amber); }
+.avatar-indigo { --avatar-bg: var(--tech-slate); }
+.avatar-green { --avatar-bg: var(--tech-green); }
+.avatar-deep-blue { --avatar-bg: var(--tech-blue); }
+.avatar-brown { --avatar-bg: var(--tech-brown); }
+.avatar-purple { --avatar-bg: var(--tech-deep-purple); }
+.avatar-slate { --avatar-bg: var(--tech-periwinkle); }
 
 .sr-only {
   position: absolute;
@@ -1211,7 +1223,7 @@ h1 {
 }
 
 .banner-edit-overlay:hover {
-  background: white;
+  background: var(--white);
   transform: translateY(-1px);
 }
 
@@ -1222,7 +1234,7 @@ h1 {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.46);
-  color: white;
+  color: var(--white);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s ease;

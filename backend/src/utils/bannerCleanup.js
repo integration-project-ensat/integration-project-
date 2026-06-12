@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const UPLOAD_DIR = path.join(__dirname, '../uploads/banners')
+const UPLOAD_DIR = path.join(__dirname, '../../uploads/banners')
 
 function deleteOldBanner(oldBannerUrl) {
   if (!oldBannerUrl) return

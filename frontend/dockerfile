@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+RUN npm run build 2>&1 | tee build.log || (cat build.log && exit 1)
 
 # Stage 2: Just serve the files (no nginx)
 FROM node:20-alpine

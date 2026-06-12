@@ -22,22 +22,12 @@
         <span>heraCore</span>
       </div>
     </div>
-
-    <button class="icon-btn" @click="$emit('toggleTheme')" title="Changer le thème">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-        <path
-          d="M7.01074 1.42676C3.87305 1.67578 1.40625 4.30078 1.40625 7.5C1.40625 10.8662 4.13379 13.5938 7.5 13.5938C8.47559 13.5938 9.39551 13.3652 10.2129 12.958C7.18359 12.2725 4.92188 9.56543 4.92188 6.32812C4.92188 4.40039 5.72461 2.66309 7.01074 1.42676ZM0 7.5C0 3.35742 3.35742 0 7.5 0C8.06836 0 8.625 0.0644531 9.16113 0.18457C9.45117 0.249023 9.66797 0.492187 9.70313 0.785156C9.73828 1.07812 9.58594 1.36523 9.31934 1.5C7.54395 2.38477 6.32813 4.21582 6.32813 6.32812C6.32813 9.30469 8.74219 11.7188 11.7188 11.7188C11.8652 11.7188 12.0088 11.7129 12.1523 11.7012C12.4482 11.6777 12.7266 11.8418 12.8496 12.1143C12.9727 12.3867 12.9082 12.7031 12.6943 12.9082C11.3467 14.2031 9.51563 15 7.5 15C3.35742 15 0 11.6426 0 7.5Z"
-          fill="rgba(255,255,255,0.65)"
-        />
-      </svg>
-    </button>
   </header>
 </template>
 
 <script setup lang="ts">
 defineEmits<{
   toggleSidebar: [];
-  toggleTheme: [];
 }>();
 </script>
 
@@ -71,7 +61,7 @@ defineEmits<{
   font-family: var(--font-head);
   font-size: 1.05rem;
   font-weight: 700;
-  color: white;
+  color: var(--white);
 }
 
 .logo img {
@@ -83,7 +73,7 @@ defineEmits<{
 
 .burger-btn {
   background: transparent;
-  color: white;
+  color: var(--white);
   border: none;
   cursor: pointer;
   display: flex;
@@ -97,20 +87,4 @@ defineEmits<{
   background: rgba(255, 255, 255, 0.1);
 }
 
-.icon-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  transition: background 0.15s;
-}
-
-.icon-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
 </style>

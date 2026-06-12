@@ -215,9 +215,14 @@ export const profileService = {
   async uploadAvatar(userId, file) {
     const form = new FormData()
     form.append('photo', file)
-    const { data } = await api.post('/profil/photo', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    return data.photo_profil
+    const { data } = await api.post('/profil/photo', form)
+    return resolveBackendAsset(data?.data?.photo_profil || data?.photo_profil || '')
+  },
+
+  async uploadBanner(userId, file) {
+    const form = new FormData()
+    form.append('banner', file)
+    const { data } = await api.post('/profil/banner', form)
+    return resolveBackendAsset(data?.data?.banniere_profil || data?.banniere_profil || '')
   },
 }

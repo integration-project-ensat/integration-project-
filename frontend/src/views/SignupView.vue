@@ -58,13 +58,13 @@
         <template v-if="form.role === 'Prof'">
           <input v-model="form.departement" type="text" placeholder="Département" />
           <input v-model="form.codeAdmin" type="text" placeholder="Code administration" />
-          <input v-model="form.sec" type="url" placeholder="Specialité" />
+          <input v-model="form.sec" type="text" placeholder="Specialité" />
         </template>
 
         <template v-if="form.role === 'Professional'">
           <input v-model="form.post" type="text" placeholder="Post" />
           <input v-model="form.company" type="text" placeholder="Entreprise" />
-          <input v-model="form.specialty" type="url" placeholder="Secteur" />
+          <input v-model="form.specialty" type="text" placeholder="Secteur" />
         </template>
 
         <p v-if="error" class="err">{{ error }}</p>
@@ -200,6 +200,11 @@ async function submit() {
 
   try {
     await authService.signup({ ...form })
+    sessionStorage.setItem('pendingSignup', JSON.stringify({
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      role: form.role
+    }))
     console.log('email avant push:', form.email) // ← ajoute ici
     router.push({ path: '/verify-code', query: { email: form.email } })
  } catch(e) {
@@ -312,8 +317,8 @@ input:focus {
   top: calc(100% + 6px);
   z-index: 20;
   list-style: none;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--white);
+  border: 1px solid var(--input-bg);
   border-radius: 14px;
   padding: 6px;
   box-shadow: 0 18px 35px rgba(17, 24, 39, .14);
@@ -336,7 +341,7 @@ input:focus {
 
 .btn {
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-size: .9rem;
   font-weight: 600;
   font-family: var(--font-head);
@@ -365,7 +370,7 @@ input:focus {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, .3);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
@@ -401,7 +406,7 @@ input:focus {
   height: 46px;
   border-radius: 50%;
   background: var(--blue-w);
-  color: white;
+  color: var(--white);
   font-weight: 700;
   display: flex;
   align-items: center;

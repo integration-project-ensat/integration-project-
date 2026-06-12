@@ -122,7 +122,7 @@ const toggleDetails = () => {
 .pc-card {
   border: 1px solid rgba(222, 226, 238, 0.95);
   border-radius: 22px;
-  background: #ffffff;
+  background: var(--white);
   box-shadow: 0 16px 38px rgba(20, 27, 52, 0.08);
   overflow: hidden;
 }
@@ -140,7 +140,7 @@ const toggleDetails = () => {
   height: 100px;
   width: 100px;
   border-radius: 9999px;
-  background-color: #e5e7eb;
+  background-color: var(--input-bg);
   background-image:
     linear-gradient(45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%),
     linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%),
@@ -239,8 +239,8 @@ const toggleDetails = () => {
 }
 
 .pc-btnPrimary {
-  background: linear-gradient(135deg, #5f57f6 0%, #4f46e5 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #5f57f6 0%, var(--purple) 100%);
+  color: var(--white);
   border-radius: 100px 180px 0px 100px;
   box-shadow: 0 8px 20px rgba(95, 87, 246, 0.24);
 }
@@ -253,12 +253,12 @@ const toggleDetails = () => {
   background: rgba(255, 255, 255, 0.78);
   color: #607089;
   border: 1px solid rgba(145, 156, 182, 0.55);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 14px var(--overlay-slate-06);
 }
 
 .pc-btnOutline:hover {
-  border-color: rgb(100 116 139);
-  color: rgb(15 23 42);
+  border-color: var(--text-slate);
+  color: var(--text-strong);
 }
 
 .pc-detailsToggle {
@@ -271,14 +271,14 @@ const toggleDetails = () => {
   color: #55657d;
   font-weight: 900;
   font-size: 12px;
-  background: #ffffff;
+  background: var(--white);
   border-top: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .pc-chevron {
   height: 16px;
   width: 16px;
-  color: rgb(148 163 184);
+  color: var(--text-light);
   transition: transform 0.15s ease;
 }
 
@@ -288,7 +288,7 @@ const toggleDetails = () => {
 
 .pc-details {
   padding: 0 18px 16px;
-  background: #ffffff;
+  background: var(--white);
 }
 
 .pc-recosList {
@@ -298,10 +298,10 @@ const toggleDetails = () => {
 }
 
 .pc-recoCard {
-  background: #ffffff;
+  background: var(--white);
   border-radius: 14px;
   border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 24px var(--overlay-slate-06);
   padding: 12px 14px;
   display: grid;
   grid-template-columns: 32px 1fr;
@@ -313,7 +313,7 @@ const toggleDetails = () => {
   height: 32px;
   width: 32px;
   border-radius: 9999px;
-  background: rgba(148, 163, 184, 0.25);
+  background: var(--overlay-slate-border);
 }
 
 .pc-recoName {
@@ -339,7 +339,7 @@ const toggleDetails = () => {
 .pc-empty {
   padding-top: 8px;
   font-size: 12px;
-  color: rgb(100 116 139);
+  color: var(--text-slate);
   font-weight: 700;
 }
 

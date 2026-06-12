@@ -525,8 +525,8 @@ onBeforeUnmount(() => {
 }
 
 .chart-card {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 16px;
   padding: 22px 24px;
   display: flex;
@@ -544,29 +544,29 @@ onBeforeUnmount(() => {
 .section-title {
   font-size: 15px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
   margin: 0 0 3px;
 }
 .section-sub {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
 }
 
 .btn-outline {
   padding: 7px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   background: transparent;
   font-size: 12.5px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s;
 }
 .btn-outline:hover {
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .chart-area {
@@ -588,7 +588,7 @@ onBeforeUnmount(() => {
 }
 .chart-x-labels span {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .chart-legend {
@@ -604,12 +604,12 @@ onBeforeUnmount(() => {
   height: 3px;
   border-radius: 2px;
 }
-.legend-line.blue { background: #6366f1; }
-.legend-line.cyan  { background: #06b6d4; }
+.legend-line.blue { background: var(--indigo); }
+.legend-line.cyan  { background: var(--blue-w); }
 
 .legend-text {
   font-size: 11.5px;
-  color: #64748b;
+  color: var(--text-slate);
   margin-right: 8px;
 }
 
@@ -651,14 +651,14 @@ onBeforeUnmount(() => {
 
 .legend-label {
   font-size: 12.5px;
-  color: #475569;
+  color: var(--text-muted);
   flex: 1;
 }
 
 .legend-value {
   font-size: 12.5px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-strong);
 }
 
 @media (max-width: 1100px) {
@@ -677,8 +677,8 @@ onBeforeUnmount(() => {
 
 /* ── Connexions ─────────────────────────────────────────── */
 .conn-card {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -703,17 +703,17 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   padding: 7px 13px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   background: transparent;
   font-size: 12.5px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s;
 }
 .btn-export-conn:hover {
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .btn-refresh-conn {
@@ -724,7 +724,7 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 8px;
   background: #0d1b2a;
-  color: white;
+  color: var(--white);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
@@ -744,38 +744,38 @@ onBeforeUnmount(() => {
 
 .conn-select {
   appearance: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   padding: 7px 12px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   font-size: 13px;
-  color: #334155;
+  color: var(--text-body);
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s;
 }
 .conn-select:focus {
-  border-color: #6366f1;
+  border-color: var(--indigo);
 }
 
 .conn-search {
   display: flex;
   align-items: center;
   gap: 7px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   flex: 1;
   max-width: 280px;
   transition: border-color 0.15s;
 }
 .conn-search:focus-within {
-  border-color: #6366f1;
-  background: #fff;
+  border-color: var(--indigo);
+  background: var(--white);
 }
 .conn-search svg {
-  color: #94a3b8;
+  color: var(--text-light);
   flex-shrink: 0;
 }
 .conn-search input {
@@ -783,11 +783,11 @@ onBeforeUnmount(() => {
   border: none;
   outline: none;
   font-size: 13px;
-  color: #334155;
+  color: var(--text-body);
   width: 100%;
 }
 .conn-search input::placeholder {
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .conn-count {
@@ -796,13 +796,13 @@ onBeforeUnmount(() => {
   gap: 6px;
   font-size: 12.5px;
   font-weight: 600;
-  color: #ef4444;
+  color: var(--danger-light);
   margin-left: auto;
 }
 .suspect-dot {
   width: 8px;
   height: 8px;
-  background: #ef4444;
+  background: var(--danger-light);
   border-radius: 50%;
   animation: pulse 1.5s infinite;
 }
@@ -821,29 +821,29 @@ onBeforeUnmount(() => {
   min-width: 680px;
 }
 .conn-table thead tr {
-  background: #fafbff;
-  border-top: 1px solid #f1f5f9;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--surface-admin);
+  border-top: 1px solid var(--surface-muted);
+  border-bottom: 1px solid var(--surface-muted);
 }
 .conn-table th {
   text-align: left;
   padding: 10px 16px;
   font-size: 11px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--text-light);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
 
 .conn-row {
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface-subtle);
   transition: background 0.12s;
 }
 .conn-row:last-child { border-bottom: none; }
-.conn-row:hover { background: #fafbff; }
+.conn-row:hover { background: var(--surface-admin); }
 .conn-row.suspect { background: #fff5f5; }
-.conn-row.suspect:hover { background: #fee2e2; }
+.conn-row.suspect:hover { background: var(--surface-danger-soft); }
 
 .conn-table td {
   padding: 13px 16px;
@@ -864,42 +864,42 @@ onBeforeUnmount(() => {
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-body);
   flex-shrink: 0;
 }
 .conn-username {
   font-size: 13px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-heading);
   margin: 0 0 1px;
 }
 .conn-role {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
 }
 
 .conn-ip {
   font-size: 13px;
   font-family: 'Courier New', monospace;
-  color: #334155;
+  color: var(--text-body);
   display: flex;
   align-items: center;
   gap: 5px;
 }
 .conn-ip.ip-suspect {
-  color: #ef4444;
+  color: var(--danger-light);
   font-weight: 600;
 }
 .ip-flag {
   font-size: 12px;
-  color: #ef4444;
+  color: var(--danger-light);
 }
 
-.conn-agent { font-size: 12.5px; color: #64748b; }
+.conn-agent { font-size: 12.5px; color: var(--text-slate); }
 .conn-date {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   white-space: nowrap;
   font-family: 'Courier New', monospace;
 }
@@ -913,7 +913,7 @@ onBeforeUnmount(() => {
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
-.conn-badge.success  { background: #ecfdf5; color: #16a34a; }
-.conn-badge.erreur   { background: #fef2f2; color: #dc2626; }
-.conn-badge.termine  { background: #eff6ff; color: #2563eb; }
+.conn-badge.success  { background: var(--success-bg); color: var(--success); }
+.conn-badge.erreur   { background: var(--danger-bg); color: var(--danger); }
+.conn-badge.termine  { background: #eff6ff; color: var(--blue); }
 </style>

@@ -340,7 +340,7 @@ onMounted(() => {
 .validation-page {
   min-height: 100vh;
   width: 100vw;
-  background: #eef1fb;
+  background: var(--surface-page);
   color: var(--text-dark);
   font-family: var(--font-body);
   padding-top: 50px;
@@ -361,10 +361,10 @@ onMounted(() => {
 .validation-panel {
   max-width: none;
   margin: 0;
-  background: white;
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-06);
   border-radius: var(--radius-card);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+  box-shadow: 0 18px 40px var(--overlay-slate-09);
   overflow: hidden;
 }
 
@@ -374,7 +374,7 @@ onMounted(() => {
   justify-content: space-between;
   gap: 16px;
   padding: 28px 30px 22px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  border-bottom: 1px solid var(--overlay-slate-border);
 }
 
 .validation-kicker {
@@ -414,7 +414,7 @@ onMounted(() => {
   align-items: baseline;
   gap: 6px;
   border-radius: var(--radius-pill);
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   padding: 10px 16px;
   font-weight: 800;
@@ -422,7 +422,7 @@ onMounted(() => {
 
 .page-error {
   margin: 16px 30px 0;
-  color: #dc2626;
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -436,24 +436,24 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 12px;
   padding: 20px 30px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid var(--overlay-slate-border-soft);
 }
 
 .validation-tab {
   height: 40px;
   border: 1px solid rgba(15, 23, 42, 0.25);
   border-radius: 100px 180px 0px 100px;
-  background: white;
-  color: rgb(71 85 105);
+  background: var(--white);
+  color: var(--text-muted);
   padding: 0 22px;
   font-weight: 800;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 8px var(--overlay-slate-06);
 }
 
 .validation-tab.active {
   border: 2px solid #5b4dff;
   background: #f1f1f5;
-  color: #111827;
+  color: var(--navy);
 }
 
 .validation-list {
@@ -469,11 +469,11 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 54px 1fr;
   gap: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--overlay-slate-border-soft);
   border-radius: 18px;
-  background: white;
+  background: var(--white);
   padding: 18px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 28px var(--overlay-slate-06);
   cursor: pointer;
 }
 
@@ -528,7 +528,7 @@ onMounted(() => {
 }
 
 .validation-description {
-  color: #475569;
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.55;
@@ -544,18 +544,18 @@ onMounted(() => {
 }
 
 .status-badge.is-pending {
-  background: #fff7ed;
+  background: var(--warning-bg);
   color: #c2410c;
 }
 
 .status-badge.is-valid {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--success-bg);
+  color: var(--success-dark);
 }
 
 .status-badge.is-refused {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .validation-actions,
@@ -579,19 +579,19 @@ onMounted(() => {
 .action-btn.primary {
   background: var(--purple);
   border: 0;
-  color: white;
+  color: var(--white);
 }
 
 .action-btn.danger {
   background: transparent;
-  border: 1px solid rgb(148 163 184);
-  color: #dc2626;
+  border: 1px solid var(--text-light);
+  color: var(--danger);
 }
 
 .action-btn.muted {
   background: transparent;
-  border: 1px solid rgb(148 163 184);
-  color: rgb(71 85 105);
+  border: 1px solid var(--text-light);
+  color: var(--text-muted);
 }
 
 .modal-backdrop {
@@ -608,7 +608,7 @@ onMounted(() => {
 .letter-modal {
   width: min(640px, 100%);
   border-radius: 22px;
-  background: white;
+  background: var(--white);
   padding: 24px;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
 }
@@ -655,9 +655,9 @@ onMounted(() => {
 
 .details-grid div,
 .details-section {
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid var(--overlay-slate-border);
   border-radius: 16px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   padding: 12px 14px;
 }
 
@@ -683,7 +683,7 @@ onMounted(() => {
 }
 
 .details-section p {
-  color: #475569;
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.55;
@@ -697,7 +697,7 @@ onMounted(() => {
 
 .attachment-list a {
   border-radius: var(--radius-pill);
-  background: #eeecff;
+  background: var(--purple-soft);
   color: var(--purple);
   padding: 7px 12px;
   font-size: 12px;

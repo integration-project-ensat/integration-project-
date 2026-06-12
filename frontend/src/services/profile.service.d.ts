@@ -3,4 +3,5 @@ export const profileService: {
   getCurrentUser(): Promise<any>
   updateProfile(userId: number | string | null | undefined, payload: Record<string, unknown>): Promise<any>
   uploadAvatar(id?: number | string | null, file?: File): Promise<any>
+  uploadBanner(id?: number | string | null, file?: File): Promise<any>
 }

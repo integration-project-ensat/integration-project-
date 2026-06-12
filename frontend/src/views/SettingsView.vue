@@ -829,13 +829,13 @@ onMounted(loadAccount);
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   padding-top: 60px;
 }
 .body-area {
   position: relative;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   overflow-x: hidden;
 }
 .content {
@@ -843,7 +843,7 @@ onMounted(loadAccount);
   min-width: 0;
   padding: 24px 26px;
   min-height: calc(100vh - 60px);
-  background: #f0f2f8;
+  background: var(--bg-soft-purple);
   transition: padding-left 0.3s ease;
 }
 .content.shifted {
@@ -857,11 +857,11 @@ onMounted(loadAccount);
   left: 8px;
   right: 8px;
   bottom: 24px;
-  background: white;
+  background: var(--white);
   border-radius: 8px;
   z-index: 0;
   box-shadow:
-    0 2px 8px rgba(17, 24, 39, 0.06),
+    0 2px 8px var(--overlay-navy-06),
     0 0 0 1px rgba(17, 24, 39, 0.03);
 }
 
@@ -897,10 +897,10 @@ onMounted(loadAccount);
 }
 
 .settings-nav {
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px var(--overlay-black-08);
   overflow: hidden;
 }
 
@@ -915,7 +915,7 @@ onMounted(loadAccount);
   border-left: 3px solid transparent;
   font-family: var(--font-body);
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-neutral);
   cursor: pointer;
   transition: all 0.15s;
   text-align: left;
@@ -949,10 +949,10 @@ onMounted(loadAccount);
 }
 
 .settings-card {
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px var(--overlay-black-08);
   padding: 20px 24px;
   transition: box-shadow 0.2s ease;
 }
@@ -984,7 +984,7 @@ onMounted(loadAccount);
   color: #185fa5;
 }
 .lock-icon {
-  background: #ede9fe;
+  background: var(--indigo-soft);
   color: #5b4fcf;
 }
 
@@ -996,14 +996,14 @@ onMounted(loadAccount);
 }
 .current-value {
   font-size: 0.83rem;
-  color: #9ca3af;
+  color: var(--text-subtle);
 }
 
 .inline-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--surface-neutral);
   padding-top: 16px;
   margin-top: 12px;
 }
@@ -1019,7 +1019,7 @@ onMounted(loadAccount);
   color: var(--text-dark);
 }
 .form-field input {
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--input-bg);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 0.88rem;
@@ -1031,7 +1031,7 @@ onMounted(loadAccount);
 }
 .form-field input:focus {
   border-color: var(--purple);
-  background: white;
+  background: var(--white);
 }
 
 .input-eye {
@@ -1049,13 +1049,13 @@ onMounted(loadAccount);
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--text-subtle);
   display: flex;
 }
 
 .strength-bar {
   height: 4px;
-  background: #e5e7eb;
+  background: var(--input-bg);
   border-radius: 999px;
   overflow: hidden;
   margin-top: 6px;
@@ -1075,14 +1075,14 @@ onMounted(loadAccount);
 }
 
 .form-error {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 0.84rem;
 }
 .form-success {
-  background: #ecfdf5;
+  background: var(--success-bg);
   color: #065f46;
   border-radius: 8px;
   padding: 10px 14px;
@@ -1095,7 +1095,7 @@ onMounted(loadAccount);
 
 .btn-save {
   background: var(--purple);
-  color: white;
+  color: var(--white);
   border: none;
   padding: 0 22px;
   height: 40px;
@@ -1110,7 +1110,7 @@ onMounted(loadAccount);
   background: #4c3db5;
 }
 .btn-outline {
-  background: white;
+  background: var(--white);
   color: var(--purple);
   border: 1.5px solid var(--purple);
   padding: 0 18px;
@@ -1125,8 +1125,8 @@ onMounted(loadAccount);
   background: #f5f3ff;
 }
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--surface-neutral);
+  color: var(--text-charcoal);
   border: none;
   padding: 0 18px;
   height: 40px;
@@ -1136,7 +1136,7 @@ onMounted(loadAccount);
   transition: background 0.15s;
 }
 .btn-secondary:hover {
-  background: #e5e7eb;
+  background: var(--input-bg);
 }
 
 .activity-tabs {
@@ -1152,12 +1152,12 @@ onMounted(loadAccount);
   padding: 0 16px;
   height: 38px;
   border-radius: 999px;
-  background: white;
+  background: var(--white);
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px var(--overlay-black-06);
   font-size: 0.84rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-neutral);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -1167,8 +1167,8 @@ onMounted(loadAccount);
   background: #f0eeff;
 }
 .act-count {
-  background: #f0f2f8;
-  color: #9ca3af;
+  background: var(--bg-soft-purple);
+  color: var(--text-subtle);
   font-size: 0.75rem;
   padding: 1px 7px;
   border-radius: 999px;
@@ -1187,9 +1187,9 @@ onMounted(loadAccount);
   display: flex;
   align-items: center;
   gap: 14px;
-  background: white;
+  background: var(--white);
   border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px var(--overlay-black-08);
   border-radius: 12px;
   padding: 14px 16px;
   transition: box-shadow 0.2s ease;
@@ -1218,12 +1218,12 @@ onMounted(loadAccount);
 }
 .act-sub {
   font-size: 0.78rem;
-  color: #9ca3af;
+  color: var(--text-subtle);
   margin-top: 2px;
 }
 .act-comment-text {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: var(--text-neutral);
   font-style: italic;
   margin: 3px 0;
 }
@@ -1235,7 +1235,7 @@ onMounted(loadAccount);
   flex-shrink: 0;
 }
 .act-unlike {
-  background: #fef2f2;
+  background: var(--danger-bg);
   border: none;
   border-radius: 8px;
   width: 32px;
@@ -1243,23 +1243,23 @@ onMounted(loadAccount);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #dc2626;
+  color: var(--danger);
   cursor: pointer;
   transition: background 0.15s;
   flex-shrink: 0;
 }
 .act-unlike:hover {
-  background: #fee2e2;
+  background: var(--surface-danger-soft);
 }
 .act-empty {
   text-align: center;
   padding: 3rem;
-  color: #9ca3af;
+  color: var(--text-subtle);
   font-size: 0.9rem;
-  background: white;
+  background: var(--white);
   border-radius: 12px;
   border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px var(--overlay-black-08);
 }
 
 @media (max-width: 900px) {
