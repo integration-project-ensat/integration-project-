@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=portfolio_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgrespwd
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d portfolio_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgrespwd@postgres:5432/portfolio_db?schema=public
+      - DB_HOST=postgres
+      - DB_NAME=portfolio_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespwd
+      - JWT_SECRET=4a54ff6a01e06771dcd751ac194b4f4570220bb7aae32e5767d7c7024b78fcdd66eddea957ab79b14bacc45ca748d58d43d555db227770d11d9ae14dd8a0d539
+      - FRONTEND_URL=http://localhost:5173
+      - AI_SERVICE_URL=http://localhost:8000
+      - ADMIN_EMAIL=adminsup747@gmail.com
+      - ADMIN_PASSWORD=Pheracore_admin@1224
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=pheracoreplatfoms@gmail.com
+      - SMTP_PASSWORD=mrxwflshpgezmzlr
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+      npm install &&
+      npx prisma generate &&
+      npx prisma migrate deploy &&
+      node prisma/seedqa.js &&
+      npx nodemon server.js
+      "
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_API_BASE_URL=http://localhost:3000/api
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+
+volumes:
+  postgres-test-data:
+  backend_node_modules:
+  frontend_node_modules:

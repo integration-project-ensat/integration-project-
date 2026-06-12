@@ -388,9 +388,17 @@ function openEditSkills() {
   skillsForm.newSoft = ''
   editingSkills.value = true
 }
-function addTech() { const v = skillsForm.newTech.trim(); if (v && !skillsForm.tech.includes(v)) skillsForm.tech.push(v); skillsForm.newTech = '' }
+function addTech() {
+  const v = skillsForm.newTech.trim()
+  if (v && !skillsForm.tech.includes(v)) { skillsForm.tech.push(v) }
+  skillsForm.newTech = ''
+}
 function removeTech(i: number) { skillsForm.tech.splice(i, 1) }
-function addSoft() { const v = skillsForm.newSoft.trim(); if (v && !skillsForm.soft.includes(v)) skillsForm.soft.push(v); skillsForm.newSoft = '' }
+function addSoft() {
+  const v = skillsForm.newSoft.trim()
+  if (v && !skillsForm.soft.includes(v)) { skillsForm.soft.push(v) }
+  skillsForm.newSoft = ''
+}
 function removeSoft(i: number) { skillsForm.soft.splice(i, 1) }
 function saveSkills() { techSkills.value = [...skillsForm.tech]; softSkills.value = [...skillsForm.soft]; editingSkills.value = false; showToast('Compétences enregistrées') }
 
@@ -427,34 +435,28 @@ function openEditEntry(section: ModalSection, id: number) {
   }
 }
 
-function saveEntry() {
+function upsertEntry<T extends { id: number }>(list: { value: T[] }, editId: number | null, form: Omit<T, 'id'>) {
   const now = Date.now()
+  if (editId) {
+    const idx = list.value.findIndex(x => x.id === editId)
+    if (idx !== -1) { list.value[idx] = { id: editId, ...form } as T }
+  } else {
+    list.value.unshift({ id: now, ...form } as T)
+  }
+}
+
+function saveEntry() {
   if (activeModal.value === 'experience') {
-    if (editingEntryId.value) {
-      const idx = experiences.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) experiences.value[idx] = { id: editingEntryId.value, ...expForm }
-    } else { experiences.value.unshift({ id: now, ...expForm }) }
+    upsertEntry(experiences, editingEntryId.value, expForm)
     showToast('Expérience enregistrée')
-  }
-  if (activeModal.value === 'formation') {
-    if (editingEntryId.value) {
-      const idx = formations.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) formations.value[idx] = { id: editingEntryId.value, ...formForm }
-    } else { formations.value.unshift({ id: now, ...formForm }) }
+  } else if (activeModal.value === 'formation') {
+    upsertEntry(formations, editingEntryId.value, formForm)
     showToast('Formation enregistrée')
-  }
-  if (activeModal.value === 'certification') {
-    if (editingEntryId.value) {
-      const idx = certifications.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) certifications.value[idx] = { id: editingEntryId.value, ...certForm }
-    } else { certifications.value.unshift({ id: now, ...certForm }) }
+  } else if (activeModal.value === 'certification') {
+    upsertEntry(certifications, editingEntryId.value, certForm)
     showToast('Certification enregistrée')
-  }
-  if (activeModal.value === 'langue') {
-    if (editingEntryId.value) {
-      const idx = langues.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) langues.value[idx] = { id: editingEntryId.value, ...langueForm }
-    } else { langues.value.unshift({ id: now, ...langueForm }) }
+  } else if (activeModal.value === 'langue') {
+    upsertEntry(langues, editingEntryId.value, langueForm)
     showToast('Langue enregistrée')
   }
   activeModal.value = null

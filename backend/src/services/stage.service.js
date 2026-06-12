@@ -21,7 +21,7 @@ async function ensureAttachedProfessorStudent(professorId, studentId) {
   })
 
   if (!attached) {
-    throw createServiceError(403, "Ajoutez d'abord cet Ã©tudiant Ã  votre liste avant de valider sa demande.")
+    throw createServiceError(403, "Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.")
   }
 }
 
@@ -57,8 +57,8 @@ const notifyStageStatusChange = async (stage, statut, motif_refus) => {
   try {
     const message =
       statut === 'VALIDE'
-        ? `Votre stage "${stage.entreprise || 'Stage'}" a Ã©tÃ© validÃ©.`
-        : `Votre stage "${stage.entreprise || 'Stage'}" a Ã©tÃ© refusÃ©.${motif_refus ? ` Motif: ${motif_refus}` : ''}`
+        ? `Votre stage "${stage.entreprise || 'Stage'}" a été validé.`
+        : `Votre stage "${stage.entreprise || 'Stage'}" a été refusé.${motif_refus ? ` Motif: ${motif_refus}` : ''}`
 
     await notificationService.creerNotification({
       utilisateurId: stage.id_etudiant,
@@ -133,7 +133,7 @@ const stageService = {
         await notificationService.creerNotification({
           utilisateurId: id_encadrant,
           type: 'SOUMISSION_STAGE',
-          message: `Un Ã©tudiant vous a soumis un stage "${entreprise || 'Stage'}" pour validation.`,
+          message: `Un étudiant vous a soumis un stage "${entreprise || 'Stage'}" pour validation.`,
           cibleId: stage.id_stage,
           cibleType: 'STAGE',
         })
@@ -146,7 +146,7 @@ const stageService = {
   async update(id, data, etudiantId) {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
-    if (stage.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
+    if (stage.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'Accès refusé')
 
     const { entreprise, etablissement, poste, duree_semaines, missions, technologies, date_debut, date_fin, id_encadrant, id_professionnel } = data
     const professionnel = id_professionnel
@@ -179,14 +179,14 @@ const stageService = {
   async delete(id, etudiantId) {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
-    if (stage.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
+    if (stage.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'Accès refusé')
     return prisma.stage.delete({ where: { id_stage: BigInt(id) } })
   },
 
   async uploadRapport(id, rapportUrl, etudiantId) {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
-    if (stage.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
+    if (stage.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'Accès refusé')
     return prisma.stage.update({
       where: { id_stage: BigInt(id) },
       data: { rapport_url: rapportUrl }
@@ -197,7 +197,7 @@ const stageService = {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
     if (stage.id_encadrant && stage.id_encadrant !== BigInt(validateurId)) {
-      throw createServiceError(403, 'AccÃ¨s refusÃ©')
+      throw createServiceError(403, 'Accès refusé')
     }
 
     await ensureAttachedProfessorStudent(validateurId, stage.id_etudiant)

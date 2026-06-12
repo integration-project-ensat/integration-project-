@@ -21,7 +21,7 @@ async function ensureAttachedProfessorStudent(professorId, studentId) {
   })
 
   if (!attached) {
-    throw createServiceError(403, "Ajoutez d'abord cet Ã©tudiant Ã  votre liste avant de valider sa demande.")
+    throw createServiceError(403, "Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.")
   }
 }
 
@@ -64,7 +64,7 @@ async function notifyProjectStatusChange(projet, statut, motif_refus) {
       await notificationService.creerNotification({
         utilisateurId,
         type: 'VALIDATION_PROJET',
-        message: `Votre projet "${projectName}" a Ã©tÃ© validÃ©.`,
+        message: `Votre projet "${projectName}" a été validé.`,
         cibleId: projet.id_projet,
         cibleType: 'PROJET',
       })
@@ -75,7 +75,7 @@ async function notifyProjectStatusChange(projet, statut, motif_refus) {
       await notificationService.creerNotification({
         utilisateurId,
         type: 'REFUS_PROJET',
-        message: `Votre projet "${projectName}" a Ã©tÃ© refusÃ©. Motif: ${motif_refus || 'â€”'}`,
+        message: `Votre projet "${projectName}" a été refusé. Motif: ${motif_refus || '—'}`,
         cibleId: projet.id_projet,
         cibleType: 'PROJET',
       })
@@ -167,7 +167,7 @@ const projetService = {
   async update(id, data, etudiantId) {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
-    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
+    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'Accès refusé')
 
     const { titre, description, type, role, resultats, lien_github, visibilite, id_professeur, technologies } = data
     const techNames = normalizeTechnologies(technologies)
@@ -204,7 +204,7 @@ const projetService = {
   async delete(id, etudiantId) {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
-    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
+    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'Accès refusé')
     return prisma.projet.delete({ where: { id_projet: BigInt(id) } })
   },
 
@@ -234,7 +234,7 @@ const projetService = {
   async soumettre(id, etudiantId) {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
-    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
+    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'Accès refusé')
 
     await prisma.elementValidable.create({
       data: {
@@ -255,7 +255,7 @@ const projetService = {
         await notificationService.creerNotification({
           utilisateurId: projet.id_professeur,
           type: 'SOUMISSION_PROJET',
-          message: `Un Ã©tudiant vous a soumis le projet "${projet.titre || 'Projet'}" pour validation.`,
+          message: `Un étudiant vous a soumis le projet "${projet.titre || 'Projet'}" pour validation.`,
           cibleId: projet.id_projet,
           cibleType: 'PROJET',
         })

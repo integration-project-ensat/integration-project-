@@ -112,10 +112,10 @@ const statusClass = (status: ValidationStatus) => ({
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "ValidÃƒÂ©" || status === "ValidÃƒÆ’Ã‚Â©") {
+  if (status === "Validé") {
     return "Validé";
   }
-  if (status === "Refusé" || status === "RefusÃƒÂ©" || status === "RefusÃƒÆ’Ã‚Â©") {
+  if (status === "Refusé") {
     return "Refusé";
   }
   return "En attente";
@@ -125,16 +125,12 @@ const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
   if (
-    status === "Acceptée" ||
-    status === "AcceptÃƒÂ©e" ||
-    status === "AcceptÃƒÆ’Ã‚Â©e"
+    status === "Acceptée"
   ) {
     return "Acceptée";
   }
   if (
-    status === "Refusée" ||
-    status === "RefusÃƒÂ©e" ||
-    status === "RefusÃƒÆ’Ã‚Â©e"
+    status === "Refusée"
   ) {
     return "Refusée";
   }
@@ -185,7 +181,7 @@ const updateSelectedStatus = async (status: ValidationStatus) => {
     closeDetailsModal();
   } catch (err: any) {
     error.value =
-      err?.response?.data?.message || "Impossible de mettre Ã  jour la demande";
+      err?.response?.data?.message || "Impossible de mettre à jour la demande";
   }
 };
 
@@ -205,12 +201,12 @@ const ensureStudentAttached = async (studentId: string) => {
     const response = await profApi.getAttachedStudentStatus(studentId);
     if (response?.data?.data?.attached) return true;
     error.value =
-      "Ajoutez d'abord cet Ã©tudiant Ã  votre liste pour pouvoir valider ou traiter sa demande.";
+      "Ajoutez d'abord cet étudiant à votre liste pour pouvoir valider ou traiter sa demande.";
     return false;
   } catch (err: any) {
     error.value =
       err?.response?.data?.message ||
-      "Impossible de vÃ©rifier si cet Ã©tudiant est dans votre liste.";
+      "Impossible de vérifier si cet étudiant est dans votre liste.";
     return false;
   }
 };
@@ -233,7 +229,7 @@ const sendRecommendationLetter = async () => {
   } catch (err: any) {
     error.value =
       err?.response?.data?.message ||
-      "Impossible d'accepter et d'Ã©crire la lettre";
+      "Impossible d'accepter et d'écrire la lettre";
   }
 };
 
@@ -363,7 +359,7 @@ onMounted(() => {
                   >
                     {{ request.studentName }}
                   </button>
-                  <p>{{ request.type }} Â· {{ request.title }}</p>
+                  <p>{{ request.type }} · {{ request.title }}</p>
                   <span>{{ request.date }}</span>
                 </div>
 
@@ -436,7 +432,7 @@ onMounted(() => {
                   >
                     {{ request.studentName }}
                   </button>
-                  <p>Lettre Â· {{ request.title }}</p>
+                  <p>Lettre · {{ request.title }}</p>
                   <span>{{ request.date }}</span>
                 </div>
 
@@ -468,7 +464,7 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>DÃ©tails de la demande</p>
+            <p>Détails de la demande</p>
             <button
               type="button"
               class="modal-student-link"
@@ -478,7 +474,7 @@ onMounted(() => {
             </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
-            Ã—
+            ×
           </button>
         </div>
 
@@ -557,7 +553,7 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>DÃ©tails de la lettre</p>
+            <p>Détails de la lettre</p>
             <button
               type="button"
               class="modal-student-link"
@@ -571,7 +567,7 @@ onMounted(() => {
             class="modal-close"
             @click="closeRecommendationDetails"
           >
-            Ã—
+            ×
           </button>
         </div>
 
@@ -596,7 +592,7 @@ onMounted(() => {
         </div>
 
         <div class="details-section">
-          <span>Message Ã©tudiant</span>
+          <span>Message étudiant</span>
           <p>{{ selectedRecommendation.message }}</p>
         </div>
 
@@ -604,7 +600,7 @@ onMounted(() => {
           v-if="selectedRecommendation.writtenLetter"
           class="details-section"
         >
-          <span>Lettre Ã©crite</span>
+          <span>Lettre écrite</span>
           <p>{{ selectedRecommendation.writtenLetter }}</p>
         </div>
 
@@ -646,7 +642,7 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Ã‰crire la lettre</p>
+            <p>Écrire la lettre</p>
             <button
               type="button"
               class="modal-student-link"
@@ -660,7 +656,7 @@ onMounted(() => {
             class="modal-close"
             @click="closeWriteRecommendationModal"
           >
-            Ã—
+            ×
           </button>
         </div>
 
@@ -677,7 +673,7 @@ onMounted(() => {
           <textarea
             v-model="letterDraft"
             rows="8"
-            placeholder="Ã‰crivez la lettre de recommandation ici..."
+            placeholder="Écrivez la lettre de recommandation ici..."
           />
         </label>
 
@@ -1077,6 +1073,4 @@ onMounted(() => {
   color: var(--text-dark);
 }
 </style>
-
-
 
