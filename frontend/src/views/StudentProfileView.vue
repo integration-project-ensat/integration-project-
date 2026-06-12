@@ -486,7 +486,7 @@
                     <div>
                       <strong>{{ exp.poste }}</strong>
                       <p class="entry-sub">{{ exp.entreprise }}</p>
-                      <p class="entry-date">{{ exp.debut }} — {{ exp.fin }}</p>
+                      <p class="entry-date">{{ exp.debut }} - {{ exp.fin }}</p>
                       <p v-if="exp.description" class="entry-desc">{{ exp.description }}</p>
                     </div>
                     <div class="entry-actions">
@@ -515,7 +515,7 @@
                     <div>
                       <strong>{{ f.diplome }}</strong>
                       <p class="entry-sub">{{ f.etablissement }}</p>
-                      <p class="entry-date">{{ f.debut }} — {{ f.fin }}</p>
+                      <p class="entry-date">{{ f.debut }} - {{ f.fin }}</p>
                     </div>
                     <div class="entry-actions">
                       <button type="button" class="icon-btn" @click="openEditEntry('form', f.id)" title="Modifier">
@@ -997,7 +997,7 @@ import { profileService } from '../services/profile.service'
 import { recommendationService } from '../services/recommendation.service'
 import { stageService } from '../services/stage.service'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types --------------------------------------------------------------------
 
 type Recommendation = {
   id: number
@@ -1047,13 +1047,13 @@ interface Certification { id: number; titre: string; organisme: string; date: st
 interface Langue { id: number; nom: string; niveau: string }
 type EntrySection = 'exp' | 'form' | 'cert' | 'langue'
 
-// ─── Router / Auth ────────────────────────────────────────────────────────────
+// --- Router / Auth ------------------------------------------------------------
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-// ─── UI state ─────────────────────────────────────────────────────────────────
+// --- UI state -----------------------------------------------------------------
 
 const sidebarOpen = ref(false)
 const showRecosModal = ref(false)
@@ -1063,7 +1063,7 @@ const savingProfile = ref(false)
 const profileSuccess = ref('')
 const profileSaveError = ref('')
 
-// ─── Role ─────────────────────────────────────────────────────────────────────
+// --- Role ---------------------------------------------------------------------
 
 const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | null>(() => {
   const storedRole = localStorage.getItem('role')
@@ -1093,7 +1093,7 @@ const userRole = computed<'student' | 'teacher' | 'professional'>(
   () => normalizedAuthRole.value ?? roleFromRoute.value ?? 'student'
 )
 
-// ─── Tab ──────────────────────────────────────────────────────────────────────
+// --- Tab ----------------------------------------------------------------------
 
 const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'Compétances', 'À propos', 'Partager', 'Modifier bio', 'Modifier info'])
 
@@ -1114,7 +1114,7 @@ function resolveDefaultTab() {
   return getRouteTab()
 }
 
-// ─── Profile data ─────────────────────────────────────────────────────────────
+// --- Profile data -------------------------------------------------------------
 
 const profileLoading = ref(true)
 const profileError = ref('')
@@ -1207,7 +1207,7 @@ const showRecommendationsSummary = computed(
 const technicalSkillNames = computed(() => profile.value.technicalSkills.map(s => s.name))
 const softSkillNames = computed(() => profile.value.softSkills.map(s => s.name))
 
-// ─── Teacher attach ───────────────────────────────────────────────────────────
+// --- Teacher attach -----------------------------------------------------------
 
 const attachingStudent = ref(false)
 const studentAttached = ref(false)
@@ -1248,7 +1248,7 @@ const letterRequestForm = reactive({
   date_souhaitee: '',
 })
 
-// ─── IDs ──────────────────────────────────────────────────────────────────────
+// --- IDs ----------------------------------------------------------------------
 
 const profileStudentId = computed<number | undefined>(() => {
   const id = Number(route.params.id)
@@ -1273,7 +1273,7 @@ const isOwnProfile = computed(() =>
   Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
 )
 
-// ─── Connection ───────────────────────────────────────────────────────────────
+// --- Connection ---------------------------------------------------------------
 
 const defaultConnectionStatus = (): ConnectionStatus => ({
   isConnected: false,
@@ -1308,7 +1308,7 @@ const recommendationTabTitle = computed(() => {
 
 const recommendationTabDescription = computed(() => {
   if (canRequestLetterValidation.value) {
-    return `Envoyez une demande de lettre de recommandation Ã  ${profile.value.name}.`
+    return `Envoyez une demande de lettre de recommandation à ${profile.value.name}.`
   }
   if (canSendRecommendation.value) {
     return `Partagez une recommandation utile pour renforcer le profil de ${profile.value.name}.`
@@ -1419,7 +1419,7 @@ async function removeConnection() {
   )
 }
 
-// ─── Share ────────────────────────────────────────────────────────────────────
+// --- Share --------------------------------------------------------------------
 
 const profileUrl = computed(() => `${window.location.origin}${route.path}`)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
@@ -1436,7 +1436,7 @@ async function copyProfileLink() {
   window.setTimeout(() => { copied.value = false }, 1600)
 }
 
-// ─── Profile edit – bio ───────────────────────────────────────────────────────
+// --- Profile edit - bio -------------------------------------------------------
 
 const editingAbout = ref(false)
 const bioForm = ref('')
@@ -1486,7 +1486,7 @@ async function saveBio() {
 }
 function cancelBio() { bioForm.value = profile.value.bio; editingAbout.value = false }
 
-// ─── Profile edit – contact ───────────────────────────────────────────────────
+// --- Profile edit - contact ---------------------------------------------------
 
 const editingContact = ref(false)
 const contactForm = reactive({ email: '', phone: '', website: '', linkedin: '', github: '' })
@@ -1525,7 +1525,7 @@ async function saveContact() {
   }
 }
 
-// ─── Profile edit – skills ────────────────────────────────────────────────────
+// --- Profile edit - skills ----------------------------------------------------
 
 const editingSkills = ref(false)
 const skillForms = reactive({ tech: [] as string[], soft: [] as string[], newTech: '', newSoft: '' })
@@ -1556,7 +1556,7 @@ function saveSkills() {
   editingSkills.value = false
 }
 
-// ─── Profile edit – entries (exp / form / cert / langue) ─────────────────────
+// --- Profile edit - entries (exp / form / cert / langue) ---------------------
 
 const experiences = ref<Experience[]>([])
 const formations = ref<Formation[]>([])
@@ -1628,7 +1628,7 @@ function deleteEntry(section: EntrySection, id: number) {
   if (section === 'langue') langues.value = langues.value.filter(x => x.id !== id)
 }
 
-// ─── Post edit modal ──────────────────────────────────────────────────────────
+// --- Post edit modal ----------------------------------------------------------
 
 const editingPostId = ref<number | null>(null)
 const editPostSaving = ref(false)
@@ -1696,7 +1696,7 @@ function onEditImageChange(e: Event) {
   reader.readAsDataURL(file)
 }
 
-// ─── Post interactions ────────────────────────────────────────────────────────
+// --- Post interactions --------------------------------------------------------
 
 function handleComment(id: number) {
   console.log('Commentaire sur le post', id)
@@ -1767,7 +1767,7 @@ async function handleRepost(post: ProfilePost, reposted: boolean) {
   }
 }
 
-// ─── Recommendations ──────────────────────────────────────────────────────────
+// --- Recommendations ----------------------------------------------------------
 
 const recommendationMessage = ref('')
 
@@ -1942,7 +1942,7 @@ async function submitLetterRequest() {
   }
 }
 
-// ─── Navigate ─────────────────────────────────────────────────────────────────
+// --- Navigate -----------------------------------------------------------------
 
 function openPortfolio() {
   const targetId = profileId.value
@@ -1999,7 +1999,7 @@ async function uploadProfileBanner(file: File) {
   }
 }
 
-// ─── API loaders ──────────────────────────────────────────────────────────────
+// --- API loaders --------------------------------------------------------------
 
 async function loadProfile() {
   profileLoading.value = true
@@ -2149,7 +2149,7 @@ async function attachCurrentStudent() {
   }
 }
 
-// ─── Mappers ──────────────────────────────────────────────────────────────────
+// --- Mappers ------------------------------------------------------------------
 
 function mapBackendPost(post: any): ProfilePost {
   const auteur = post.auteur
@@ -2203,7 +2203,7 @@ function mapBackendRecommendation(recommendation: any): Recommendation {
   }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 function fullName(user: any) {
   return [user?.prenom, user?.nom].filter(Boolean).join(' ')
@@ -2227,7 +2227,7 @@ function getInitials(name: string) {
   return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
 }
 
-// ─── Lifecycle & watchers ─────────────────────────────────────────────────────
+// --- Lifecycle & watchers -----------------------------------------------------
 
 onMounted(async () => {
   await loadProfile()
@@ -2421,7 +2421,7 @@ watch(profileId, async () => {
   width: 100%;
 }
 
-/* ── Teacher actions ─────────────────────────────── */
+/* -- Teacher actions ------------------------------- */
 .teacher-actions {
   margin-top: 14px;
   background: white;
@@ -2463,7 +2463,7 @@ watch(profileId, async () => {
 
 .attach-btn:disabled { opacity: .65; cursor: not-allowed; }
 
-/* ── Recommendations ─────────────────────────────── */
+/* -- Recommendations ------------------------------- */
 .recommendations-list { display: grid; gap: 12px; }
 
 .recommendation-card {
@@ -2495,7 +2495,7 @@ watch(profileId, async () => {
 
 .recommendation-message { font-size: .9rem; line-height: 1.5; color: var(--text-dark); }
 
-/* ── Connect tab ─────────────────────────────────── */
+/* -- Connect tab ----------------------------------- */
 .requests-panel {
   display: grid;
   gap: 16px;
@@ -2542,7 +2542,7 @@ watch(profileId, async () => {
 .connect-btn.danger { background: rgba(220, 38, 38, .09); color: #dc2626; }
 .connect-btn:disabled { opacity: .65; cursor: not-allowed; }
 
-/* ── Share tab ───────────────────────────────────── */
+/* -- Share tab ------------------------------------- */
 .share-tab { display: flex; justify-content: center; margin-top: 18px; }
 
 .share-card {
@@ -2608,7 +2608,7 @@ watch(profileId, async () => {
 .share-btn.whatsapp { background: #25d366; }
 .share-btn.x { background: #111827; }
 
-/* ── Modals ──────────────────────────────────────── */
+/* -- Modals ---------------------------------------- */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -2777,7 +2777,7 @@ watch(profileId, async () => {
   border: 0;
 }
 
-/* ── Mini avatar ─────────────────────────────────── */
+/* -- Mini avatar ----------------------------------- */
 .mini-avatar {
   width: 42px;
   height: 42px;
@@ -2795,7 +2795,7 @@ watch(profileId, async () => {
 
 .mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ── Profile edit sections ───────────────────────── */
+/* -- Profile edit sections ------------------------- */
 .profile-edit-sections { display: grid; gap: 12px; margin-top: 14px; }
 
 .pedit-card {
@@ -3069,7 +3069,7 @@ watch(profileId, async () => {
 
 .bio-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(79, 70, 229, .12); }
 
-/* ── Responsive ──────────────────────────────────── */
+/* -- Responsive ------------------------------------ */
 @media (max-width: 900px) {
   .content,
   .content.shifted { padding: 16px; }

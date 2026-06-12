@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from model import CareerRecommendationModel
 
 
-app = FastAPI(title="PheraCore AI Career Recommendation Service", version="1.0.0")
+app = FastAPI(title="Service IA de recommandation de carrière PheraCore", version="1.0.0")
 model = CareerRecommendationModel()
 
 
@@ -21,7 +21,7 @@ class CareerRecommendationRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"success": True, "message": "AI service is running"}
+    return {"success": True, "message": "Le service IA est démarré"}
 
 
 @app.post("/recommend")
@@ -31,4 +31,4 @@ def recommend(payload: CareerRecommendationRequest):
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=500, detail="AI recommendation failed") from error
+        raise HTTPException(status_code=500, detail="La recommandation IA a échoué") from error

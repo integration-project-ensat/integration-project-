@@ -582,7 +582,7 @@ async function saveEmail() {
     });
     currentUser.email = response.data.email;
     emailSuccess.value =
-      response.message || "Adresse e-mail mise a jour avec succes.";
+      response.message || "Adresse e-mail mise à jour avec succès.";
     Object.assign(emailForm, { newEmail: "", confirmEmail: "", password: "" });
     setTimeout(() => {
       showEmailForm.value = false;
@@ -591,7 +591,7 @@ async function saveEmail() {
   } catch (error: any) {
     emailError.value =
       error?.response?.data?.message ||
-      "Impossible de mettre a jour l'adresse e-mail.";
+      "Impossible de mettre à jour l'adresse e-mail.";
   }
 }
 
@@ -652,7 +652,7 @@ async function savePassword() {
       confirmPassword: passwordForm.confirm,
     });
     passwordSuccess.value =
-      response.message || "Mot de passe mis a jour avec succes.";
+      response.message || "Mot de passe mis à jour avec succès.";
     Object.assign(passwordForm, { current: "", newPass: "", confirm: "" });
     setTimeout(() => {
       showPasswordForm.value = false;
@@ -661,7 +661,7 @@ async function savePassword() {
   } catch (error: any) {
     passwordError.value =
       error?.response?.data?.message ||
-      "Impossible de mettre a jour le mot de passe.";
+      "Impossible de mettre à jour le mot de passe.";
   }
 }
 

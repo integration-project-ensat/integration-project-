@@ -481,7 +481,7 @@ const selectTemplate = async (id_modele: number) => {
     const studentId = profileStudentId.value;
 
     if (!studentId) {
-      throw new Error("Impossible de trouver l'etudiant du portfolio.");
+      throw new Error("Impossible de trouver l'étudiant du portfolio.");
     }
 
     await portfolioService.changeTemplate(selectedTemplateId);

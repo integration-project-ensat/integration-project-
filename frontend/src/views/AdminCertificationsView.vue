@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="dashboard-layout">
     <AdminNavbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
     <AdminSidebar :open="sidebarOpen" />
@@ -65,7 +65,7 @@
           </table>
 
           <div class="pagination">
-            <span class="pag-info">Affichage {{ pagStart }} Ã  {{ pagEnd }} sur {{ filteredItems.length }} certifications</span>
+            <span class="pag-info">Affichage {{ pagStart }} à {{ pagEnd }} sur {{ filteredItems.length }} certifications</span>
             <div class="pag-controls">
               <button class="pag-btn" :disabled="page === 1" @click="page--">Précédent</button>
               <button v-for="p in totalPages" :key="p" class="pag-btn num" :class="{ active: page === p }" @click="page = p">{{ p }}</button>
@@ -81,12 +81,12 @@
       </div>
     </main>
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• DETAIL MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- Modale de détail -->
     <Transition name="modal">
       <div v-if="modal.open" class="modal-overlay" @click.self="closeModal">
         <div class="modal-box">
 
-          <!-- â”€â”€ En-tête étudiant â”€â”€ -->
+          <!-- En-tête étudiant -->
           <div class="modal-head">
             <div class="mh-left">
               <div class="modal-avatar" :style="{ background: modal.item?.avatarColor }">
@@ -94,7 +94,7 @@
               </div>
               <div>
                 <h3 class="mh-name">{{ modal.item?.studentName }}</h3>
-                <p class="mh-meta">{{ modal.item?.studentEmail }} Â· {{ modal.item?.studentSchool }}</p>
+                <p class="mh-meta">{{ modal.item?.studentEmail }} · {{ modal.item?.studentSchool }}</p>
               </div>
             </div>
             <div class="mh-right">
@@ -103,7 +103,7 @@
             </div>
           </div>
 
-          <!-- â”€â”€ Scrollable body â”€â”€ -->
+          <!-- Contenu défilant -->
           <div class="modal-body">
 
             <!-- Section : Informations générales -->
@@ -164,7 +164,7 @@
               </h4>
               <div class="photo-grid">
                 <div v-for="(ph, i) in modal.item.photos" :key="i" class="photo-card">
-                  <!-- Simule une image avec couleur + icÃ´ne -->
+                  <!-- Simule une image avec couleur et icône -->
                   <div class="photo-thumb" :style="{ background: ph.color }">
                     <ImageIcon :size="28" color="rgba(255,255,255,0.7)" />
                   </div>
@@ -212,13 +212,13 @@
                 <span class="msection-dot red"></span> Motif de refus
               </h4>
               <textarea v-model="modal.reason"
-                placeholder="Expliquez la raison du refus. Ce message sera envoyé Ã  l'étudiant."
+                placeholder="Expliquez la raison du refus. Ce message sera envoyé à l'étudiant."
                 class="reason-input"></textarea>
             </section>
 
           </div>
 
-          <!-- â”€â”€ Footer actions â”€â”€ -->
+          <!-- -- Footer actions -- -->
           <div class="modal-footer">
             <button class="btn-cancel" @click="closeModal">Fermer</button>
             <div class="mf-right">
@@ -256,7 +256,7 @@ const page        = ref(1)
 const perPage     = 5
 const statusLabel = { pending: 'En attente', validated: 'Validé', refused: 'Refusé' }
 
-/* â•â•â• DONNÃ‰ES â€” chargÃ©es depuis le backend â•â•â• */
+/* Données chargées depuis le backend */
 const items = ref([])
 
 const responseList = (response) => {
@@ -324,7 +324,7 @@ const loadCertifications = async () => {
 
 onMounted(loadCertifications)
 
-/* â”€â”€ Stats, filter, pagination â”€â”€ */
+/* -- Stats, filter, pagination -- */
 const stats        = computed(() => [
   { label: 'Total',      value: items.value.length,                                       type: 'total' },
   { label: 'En attente', value: items.value.filter(i => i.status === 'pending').length,   type: 'pending' },
@@ -338,7 +338,7 @@ const paginatedItems = computed(() => filteredItems.value.slice((page.value - 1)
 const pagStart = computed(() => Math.min((page.value - 1) * perPage + 1, filteredItems.value.length))
 const pagEnd   = computed(() => Math.min(page.value * perPage, filteredItems.value.length))
 
-/* â”€â”€ Modal â”€â”€ */
+/* -- Modal -- */
 const modal = ref({ open: false, item: null, action: 'view', reason: '' })
 const openDetail      = (item, action) => { modal.value = { open: true, item, action, reason: '' } }
 const closeModal      = () => { modal.value.open = false }
@@ -384,19 +384,19 @@ const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).jo
 </script>
 
 <style scoped>
-/* â•â• Layout â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* == Layout ================================== */
 .dashboard-layout { min-height: 100vh; background: #f5f7fb; }
 .main-content { position: fixed; top: 106px; left: 0; right: 0; bottom: 0; overflow-y: auto; transition: left 0.25s ease; }
 .main-content.sidebar-open { left: 185px; }
 .page-content {
-   padding: 28px 8px 30px 43px; 
+   padding: 28px 8px 30px 43px;
   background: #dfe2ea;
    display: flex; flex-direction: column; gap: 20px; min-height: 100%; }
 
 .page-title { font-size: 24px; font-weight: 800; color: var(--text-strong); margin: 0 0 6px; letter-spacing: -0.4px; }
 .page-desc  { font-size: 13px; color: var(--text-slate); margin: 0; }
 
-/* â•â• Stats â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* == Stats =================================== */
 .stats-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .stat-pill { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 24px; background: var(--white); border: 1px solid var(--border-admin); }
 .stat-num { font-size: 18px; font-weight: 800; color: var(--text-strong); }
@@ -405,7 +405,7 @@ const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).jo
 .stat-pill.validated .stat-num { color: var(--success); }
 .stat-pill.refused   .stat-num { color: var(--danger); }
 
-/* â•â• Table card â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* == Table card ============================== */
 .table-card { background: var(--white); border: 1px solid var(--border-admin); border-radius: 16px; overflow: hidden; }
 .table-top  { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 14px; gap: 12px; flex-wrap: wrap; }
 .table-title-block { display: flex; align-items: center; gap: 10px; }
@@ -448,7 +448,7 @@ const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).jo
 .btn-eye { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 7px; border: 1px solid var(--border-light); background: transparent; color: var(--text-light); cursor: pointer; transition: background 0.15s, color 0.15s; }
 .btn-eye:hover { background: var(--indigo-soft); color: var(--indigo); }
 
-/* â•â• Pagination â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* == Pagination ============================== */
 .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; border-top: 1px solid var(--surface-muted); flex-wrap: wrap; gap: 10px; }
 .pag-info { font-size: 12.5px; color: var(--text-light); }
 .pag-controls { display: flex; align-items: center; gap: 4px; }
@@ -458,7 +458,7 @@ const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).jo
 .pag-btn.num { min-width: 32px; text-align: center; }
 .pag-btn.num.active { background: var(--indigo); border-color: var(--indigo); color: var(--white); font-weight: 600; }
 
-/* â•â• MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* == MODAL =================================== */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(15,23,42,0.5);
@@ -594,7 +594,7 @@ const initials = (name) => (name || '').split(' ').map(w => w[0]).slice(0, 2).jo
 .btn-refuse-confirm { display: inline-flex; align-items: center; gap: 5px; padding: 8px 16px; border-radius: 9px; border: none; background: var(--danger); color: var(--white); font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
 .btn-refuse-confirm:hover { background: #b91c1c; }
 
-/* â•â• Footer â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* == Footer ================================== */
 .page-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; font-size: 12px; color: var(--text-light); border-top: 1px solid var(--border-admin); margin-top: auto; }
 .footer-links { display: flex; gap: 16px; }
 .footer-links a { color: var(--text-light); text-decoration: none; transition: color 0.15s; }

@@ -29,10 +29,7 @@ function getUserIdFromToken(req) {
 async function findStudentForAnalysis(req, requestedStudentId) {
   const tokenUserId = getUserIdFromToken(req)
   const studentId = requestedStudentId || tokenUserId
-  if (!studentId) return null
 
-  const student = await getStudentProfileData(studentId)
-  return student || null
   if (studentId) {
     const student = await getStudentProfileData(studentId)
     if (student) return student
@@ -179,7 +176,7 @@ function buildAiPayloadFromStudent(targetCareer, student) {
       anneeUniversitaire: student.annee_universitaire,
       objectifPro: student.portfolio?.objectif_pro ?? null,
       score: student.score_credibilite?.score_total?.toString() ?? null,
-      source: 'database'
+      source: 'base de données'
     }
   }
 }

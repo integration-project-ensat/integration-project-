@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -305,7 +305,7 @@ onMounted(() => {
             </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
-            Ã—
+            ×
           </button>
         </div>
 
@@ -381,7 +381,7 @@ onMounted(() => {
             <h2>{{ writingRequest.studentName }}</h2>
           </div>
           <button type="button" class="modal-close" @click="closeWriteModal">
-            Ã—
+            ×
           </button>
         </div>
 

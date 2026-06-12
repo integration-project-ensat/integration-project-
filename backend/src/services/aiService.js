@@ -9,7 +9,7 @@ async function requestCareerRecommendation(profilePayload) {
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}))
-    const message = errorBody.detail || `AI service error: ${response.status}`
+    const message = errorBody.detail || `Erreur du service IA : ${response.status}`
     throw new Error(message)
   }
 

@@ -25,7 +25,7 @@
         </button>
       </form>
 
-      <RouterLink to="/login" class="back">Retour a se connecter ></RouterLink>
+      <RouterLink to="/login" class="back">Retour à la connexion ></RouterLink>
     </div>
   </div>
 </template>

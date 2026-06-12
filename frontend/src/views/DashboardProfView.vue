@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -318,7 +318,7 @@ onMounted(() => {
         <div class="dashboard-header">
           <div>
             <p class="dashboard-kicker">Espace professeur</p>
-            <h1>Dashboard</h1>
+            <h1>Tableau de bord</h1>
           </div>
         </div>
 

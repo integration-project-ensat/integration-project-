@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
@@ -105,7 +105,7 @@ const stats = computed(() => [
   {
     title: "Profils sauvegardés",
     value: totalSaved.value,
-    info: "Top Profiles",
+    info: "Meilleurs profils",
     icon: CheckCircle2,
   },
   {
@@ -384,7 +384,7 @@ const submitStage = async () => {
         <article class="panel">
           <div class="section-heading">
             <div>
-              <p>Top Profiles</p>
+              <p>Meilleurs profils</p>
               <h2>Profils sauvegardés récents</h2>
             </div>
           </div>
