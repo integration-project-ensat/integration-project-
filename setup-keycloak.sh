@@ -629,16 +629,6 @@ if curl -sS --connect-timeout 5 --max-time 15 -u "$SONAR_ADMIN:$SONAR_PASSWORD" 
 
   echo "  SAML SonarQube configuré ✓"
 
-  # Générer un token admin pour les appels API (SonarQube 10.x)
-  SONAR_TOKEN=$(curl -s -u "$SONAR_ADMIN:$SONAR_PASSWORD" -X POST \
-    "$SONAR_URL/api/user_tokens/generate" \
-    -d "name=setup-script-token-$$" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
-
-  if [[ -z "$SONAR_TOKEN" ]]; then
-    echo "  ERREUR : impossible de générer un token SonarQube"
-    exit 1
-  fi
-
   # Création du projet pheracore s'il n'existe pas
   curl -s -X POST "$SONAR_URL/api/projects/create" \
     -u "$SONAR_ADMIN:$SONAR_PASSWORD" \
@@ -648,7 +638,7 @@ if curl -sS --connect-timeout 5 --max-time 15 -u "$SONAR_ADMIN:$SONAR_PASSWORD" 
   SONAR_PERMISSION_CODE=$(
     curl -s -o /dev/null -w "%{http_code}" -X POST \
       "$SONAR_URL/api/permissions/add_group?permission=user&groupName=sonar-users&projectKey=pheracore" \
-      -H "Authorization: Bearer $SONAR_TOKEN"
+      -u "$SONAR_ADMIN:$SONAR_PASSWORD"
   )
   echo "  Accès projet SonarQube attribué à sonar-users ✓"
 
