@@ -452,7 +452,8 @@ const handleOAuthCallback = async (req, res, provider) => {
   const providerDbField = provider === 'GOOGLE' ? 'google_id' : 'github_id';
   const tempFlag = provider === 'GOOGLE' ? 'tempGoogleSignup' : 'tempGithubSignup';
   const providerId = req.user[providerIdField];
-  const { email, nom, prenom } = req.user;
+  const { nom, prenom } = req.user;
+  const email = String(req.user?.email || '').trim().toLowerCase();
 
   if (!email) {
     return res.status(400).json({
@@ -471,16 +472,17 @@ const handleOAuthCallback = async (req, res, provider) => {
       profil: true
     }
   });
+  const existingAuthProvider = String(existingUser?.auth_provider || 'LOCAL').trim().toUpperCase();
 
   // CAS 1 : compte existe avec un autre provider
-  if (existingUser && existingUser.auth_provider !== provider) {
+  if (existingUser && existingAuthProvider !== provider) {
     return redirectToFrontend(req, res, '/login', {
-      error: `email_exists_${existingUser.auth_provider.toLowerCase()}`
+      error: `email_exists_${existingAuthProvider.toLowerCase()}`
     });
   }
 
   // CAS 2 : compte OAuth existant
-  if (existingUser && existingUser.auth_provider === provider) {
+  if (existingUser && existingAuthProvider === provider) {
     if (provider === 'GITHUB' && existingUser.role !== ROLES.ETUDIANT) {
       return redirectToFrontend(req, res, '/login', {
         error: 'github_students_only'

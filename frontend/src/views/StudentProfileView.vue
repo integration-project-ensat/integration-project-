@@ -519,10 +519,10 @@
               </template>
             </div>
 
-            <!-- ExpÃ©riences professionnelles -->
+            <!-- Expériences professionnelles -->
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>ExpÃ©riences professionnelles</h3>
+                <h3>Expériences professionnelles</h3>
                 <button type="button" class="btn-add-entry" @click="openAddEntry('exp')">+ Ajouter</button>
               </div>
               <div v-for="exp in experiences" :key="exp.id" class="entry-item">
@@ -532,7 +532,7 @@
                     <div>
                       <strong>{{ exp.poste }}</strong>
                       <p class="entry-sub">{{ exp.entreprise }}</p>
-                      <p class="entry-date">{{ exp.debut }} â€” {{ exp.fin }}</p>
+                      <p class="entry-date">{{ exp.debut }} — {{ exp.fin }}</p>
                       <p v-if="exp.description" class="entry-desc">{{ exp.description }}</p>
                     </div>
                     <div class="entry-actions">
@@ -561,7 +561,7 @@
                     <div>
                       <strong>{{ f.diplome }}</strong>
                       <p class="entry-sub">{{ f.etablissement }}</p>
-                      <p class="entry-date">{{ f.debut }} â€” {{ f.fin }}</p>
+                      <p class="entry-date">{{ f.debut }} — {{ f.fin }}</p>
                     </div>
                     <div class="entry-actions">
                       <button type="button" class="icon-btn" @click="openEditEntry('form', f.id)" title="Modifier">
@@ -786,12 +786,12 @@
                       <option value="MASTER">Master</option>
                       <option value="EMPLOI">Emploi</option>
                       <option value="STAGE">Stage</option>
-                      <option value="DOUBLE_DIPLOME">Double diplÃ´me</option>
+                      <option value="DOUBLE_DIPLOME">Double diplôme</option>
                       <option value="INTERNATIONAL">International</option>
                     </select>
                   </div>
                   <div class="form-field">
-                    <label>Date souhaitÃ©e</label>
+                    <label>Date souhaitée</label>
                     <input v-model="letterRequestForm.date_souhaitee" type="date" />
                   </div>
                 </div>
@@ -865,7 +865,7 @@
               <div class="link-box">
                 <span>{{ profileUrl }}</span>
                 <button type="button" @click="copyProfileLink">
-                  {{ copied ? 'CopiÃ©' : 'Copier' }}
+                  {{ copied ? 'Copié' : 'Copier' }}
                 </button>
               </div>
               <div class="share-actions">
@@ -881,7 +881,7 @@
       </main>
     </div>
 
-    <!-- Modal CRUD entrÃ©es (exp, form, cert, langue) -->
+    <!-- Modal CRUD entrées (exp, form, cert, langue) -->
     <div v-if="activeEntryModal" class="modal-backdrop" @click.self="activeEntryModal = null">
       <div class="entry-modal">
         <div class="modal-head">
@@ -890,19 +890,19 @@
         </div>
         <div class="entry-modal-body">
           <template v-if="activeEntryModal === 'exp'">
-            <div class="form-field"><label>Poste</label><input v-model="expForm.poste" placeholder="DÃ©veloppeur Full Stack" /></div>
+            <div class="form-field"><label>Poste</label><input v-model="expForm.poste" placeholder="Développeur Full Stack" /></div>
             <div class="form-field"><label>Entreprise</label><input v-model="expForm.entreprise" placeholder="Nom de l'entreprise" /></div>
             <div class="form-field-row">
-              <div class="form-field"><label>DÃ©but</label><input v-model="expForm.debut" placeholder="2024-01" /></div>
+              <div class="form-field"><label>Début</label><input v-model="expForm.debut" placeholder="2024-01" /></div>
               <div class="form-field"><label>Fin</label><input v-model="expForm.fin" placeholder="2024-06 ou En cours" /></div>
             </div>
             <div class="form-field"><label>Description</label><textarea v-model="expForm.description" placeholder="Description du poste..." /></div>
           </template>
           <template v-if="activeEntryModal === 'form'">
-            <div class="form-field"><label>DiplÃ´me</label><input v-model="formForm.diplome" placeholder="IngÃ©nierie Informatique" /></div>
+            <div class="form-field"><label>Diplôme</label><input v-model="formForm.diplome" placeholder="Ingénierie Informatique" /></div>
             <div class="form-field"><label>Établissement</label><input v-model="formForm.etablissement" placeholder="Nom de l'école" /></div>
             <div class="form-field-row">
-              <div class="form-field"><label>DÃ©but</label><input v-model="formForm.debut" placeholder="2022" /></div>
+              <div class="form-field"><label>Début</label><input v-model="formForm.debut" placeholder="2022" /></div>
               <div class="form-field"><label>Fin</label><input v-model="formForm.fin" placeholder="2025" /></div>
             </div>
           </template>
@@ -912,15 +912,15 @@
             <div class="form-field"><label>Date</label><input v-model="certForm.date" placeholder="Jan 2025" /></div>
           </template>
           <template v-if="activeEntryModal === 'langue'">
-            <div class="form-field"><label>Langue</label><input v-model="langueForm.nom" placeholder="FranÃ§ais" /></div>
+            <div class="form-field"><label>Langue</label><input v-model="langueForm.nom" placeholder="Français" /></div>
             <div class="form-field">
               <label>Niveau</label>
               <select v-model="langueForm.niveau">
                 <option>Natif</option>
                 <option>Courant</option>
                 <option>Professionnel</option>
-                <option>IntermÃ©diaire</option>
-                <option>DÃ©butant</option>
+                <option>Intermédiaire</option>
+                <option>Débutant</option>
               </select>
             </div>
           </template>
@@ -981,7 +981,7 @@
     >
       <div class="recos-modal">
         <div class="modal-head">
-          <h3>Personnes qui ont recommandÃ© {{ profile.name }}</h3>
+          <h3>Personnes qui ont recommandé {{ profile.name }}</h3>
           <button type="button" @click="showRecosModal = false">×</button>
         </div>
         <div class="recommenders-list">
@@ -1385,7 +1385,7 @@ const connectionPanelDescription = computed(() => {
   if (isOwnProfile.value) return 'Vous consultez votre propre profil.'
   if (connectionStatus.value.isConnected) return `Vous êtes connecté avec ${profile.value.name}.`
   if (connectionStatus.value.requestSent) return `Votre demande à ${profile.value.name} est en attente.`
-  if (connectionStatus.value.requestReceived) return `${profile.value.name} vous a envoyÃ© une demande de connexion.`
+  if (connectionStatus.value.requestReceived) return `${profile.value.name} vous a envoyé une demande de connexion.`
   return `Envoyez une demande de connexion à ${profile.value.name} pour rester en contact.`
 })
 
@@ -1442,7 +1442,7 @@ async function cancelConnectionRequest() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.supprimerConnexion(connexionId),
-    'Demande annulÃ©e.',
+    'Demande annulée.',
     "Impossible d'annuler la demande."
   )
 }
@@ -1452,7 +1452,7 @@ async function acceptConnectionRequest() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.accepterConnexion(connexionId),
-    'Connexion acceptÃ©e.',
+    'Connexion acceptée.',
     "Impossible d'accepter la demande."
   )
 }
@@ -1462,7 +1462,7 @@ async function rejectConnectionRequest() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.refuserConnexion(connexionId),
-    'Demande refusÃ©e.',
+    'Demande refusée.',
     'Impossible de refuser la demande.'
   )
 }
@@ -1472,7 +1472,7 @@ async function removeConnection() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.supprimerConnexion(connexionId),
-    'Connexion retirÃ©e.',
+    'Connexion retirée.',
     'Impossible de retirer la connexion.'
   )
 }
@@ -1481,7 +1481,7 @@ async function removeConnection() {
 
 const profileUrl = computed(() => `${window.location.origin}${route.path}`)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
-const encodedShareText = computed(() => encodeURIComponent(`DÃ©couvrez le profil de ${profile.value.name}`))
+const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${profile.value.name}`))
 
 const gmailShareUrl = computed(() => `mailto:?subject=${encodedShareText.value}&body=${encodedShareText.value}%0A${encodedProfileUrl.value}`)
 const linkedinShareUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodedProfileUrl.value}`)
@@ -1664,7 +1664,7 @@ const certForm = reactive({ titre: '', organisme: '', date: '' })
 const langueForm = reactive({ nom: '', niveau: 'Courant' })
 
 const entryModalTitle = computed(() => {
-  const labels: Record<string, string> = { exp: 'une expÃ©rience', form: 'une formation', cert: 'une certification', langue: 'une langue' }
+  const labels: Record<string, string> = { exp: 'une expérience', form: 'une formation', cert: 'une certification', langue: 'une langue' }
   return activeEntryModal.value ? labels[activeEntryModal.value] : ''
 })
 
@@ -2116,7 +2116,7 @@ async function loadProfile() {
     const technicalSkills = rawCompetences
       .filter((item: any) => String(item?.competence?.categorie || '').toUpperCase() !== 'COMPORTEMENTALE')
       .map((item: any) => ({
-        name: item?.competence?.nom || 'CompÃ©tence',
+        name: item?.competence?.nom || 'Compétence',
         level: Number(item?.niveau_maitrise ?? 75),
         description: 'Compétence issue du profil étudiant.',
         projectsCount: 0
@@ -2125,7 +2125,7 @@ async function loadProfile() {
     const softSkills = rawCompetences
       .filter((item: any) => String(item?.competence?.categorie || '').toUpperCase() === 'COMPORTEMENTALE')
       .map((item: any) => ({
-        name: item?.competence?.nom || 'CompÃ©tence',
+        name: item?.competence?.nom || 'Compétence',
         level: Number(item?.niveau_maitrise ?? 75),
         description: 'Compétence comportementale issue du profil étudiant.',
         projectsCount: 0
