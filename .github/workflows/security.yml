@@ -74,14 +74,14 @@ jobs:
         run: |
           sudo sysctl -w vm.max_map_count=262144
           echo "${{ secrets.PHERACORE_DB_SECRETS }}" > .env
-          export $(cat .env | grep -v '#' | xargs)
           docker compose \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
             up -d postgres
           timeout 60 bash -c \
-            'until docker exec integration-project--postgres-1 pg_isready -U $DB_USER; \
+            'until docker exec integration-project--postgres-1 pg_isready; \
             do sleep 2; done'
+          DB_USER=$(grep "^DB_USER=" .env | cut -d'=' -f2)
           docker exec integration-project--postgres-1 \
             psql -U $DB_USER -c "CREATE DATABASE sonarqube;" || true
           echo "Sonarqube DB created"
