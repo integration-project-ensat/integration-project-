@@ -207,7 +207,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* â”€â”€ Layout identique Ã  DashboardView â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* â”€â”€ Layout identique    DashboardView â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page {
   min-height: 100vh;
   background: var(--bg-soft-purple);
@@ -541,3 +541,4 @@ onMounted(() => {
 
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
 </style>
+

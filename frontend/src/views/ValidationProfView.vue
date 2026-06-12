@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -32,8 +32,8 @@ const filteredRequests = computed(() => {
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "ValidÃ©" || status === "ValidÃƒÂ©") return "Validé";
-  if (status === "Refusé" || status === "RefusÃ©" || status === "RefusÃƒÂ©") return "Refusé";
+  if (status === "Validé" || status === "ValidÃƒÂ©" || status === "ValidÃƒÆ’Ã‚Â©") return "Validé";
+  if (status === "Refusé" || status === "RefusÃƒÂ©" || status === "RefusÃƒÆ’Ã‚Â©") return "Refusé";
   return "En attente";
 };
 
@@ -87,7 +87,7 @@ const updateStatus = async (
     await loadRequests();
   } catch (err: any) {
     error.value =
-      err?.response?.data?.message || "Impossible de mettre à jour ce statut.";
+      err?.response?.data?.message || "Impossible de mettre Ã  jour ce statut.";
   }
 };
 
@@ -113,12 +113,12 @@ const ensureStudentAttached = async (studentId: string) => {
     const response = await profApi.getAttachedStudentStatus(studentId);
     if (response?.data?.data?.attached) return true;
     error.value =
-      "Ajoutez d'abord cet étudiant à votre liste pour pouvoir valider sa demande.";
+      "Ajoutez d'abord cet Ã©tudiant Ã  votre liste pour pouvoir valider sa demande.";
     return false;
   } catch (err: any) {
     error.value =
       err?.response?.data?.message ||
-      "Impossible de vérifier si cet étudiant est dans votre liste.";
+      "Impossible de vÃ©rifier si cet Ã©tudiant est dans votre liste.";
     return false;
   }
 };
@@ -249,7 +249,7 @@ onMounted(() => {
                   class="action-btn muted"
                   @click.stop="openDetailsModal(request)"
                 >
-                  Voir détails
+                  Voir dÃ©tails
                 </button>
               </div>
             </div>
@@ -266,7 +266,7 @@ onMounted(() => {
       <section class="letter-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Détails de la demande</p>
+            <p>DÃ©tails de la demande</p>
             <button
               type="button"
               class="modal-student-link"
@@ -276,7 +276,7 @@ onMounted(() => {
             </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
-            ×
+            Ã—
           </button>
         </div>
 
@@ -727,4 +727,6 @@ onMounted(() => {
   font-weight: 800;
 }
 </style>
+
+
 

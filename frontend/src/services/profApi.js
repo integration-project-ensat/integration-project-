@@ -34,9 +34,9 @@ export default {
 
   updateValidationStatus(request, status) {
     let normalizedStatus = 'EN_ATTENTE'
-    if (status === 'Validé' || status === 'ValidÃ©' || status === 'ValidÃƒÂ©') {
+    if (status === 'Validé' || status === 'Validé' || status === 'ValidÃƒÂ©') {
       normalizedStatus = 'VALIDE'
-    } else if (status === 'Refusé' || status === 'RefusÃ©' || status === 'RefusÃƒÂ©') {
+    } else if (status === 'Refusé' || status === 'Refusé' || status === 'RefusÃƒÂ©') {
       normalizedStatus = 'REFUSE'
     }
 
@@ -57,9 +57,9 @@ export default {
 
   updateRecommendationStatus(letterId, status, payload = {}) {
     let normalizedStatus = 'EN_ATTENTE'
-    if (status === 'Acceptée' || status === 'AcceptÃ©e' || status === 'AcceptÃƒÂ©e') {
+    if (status === 'Acceptée' || status === 'Acceptée' || status === 'AcceptÃƒÂ©e') {
       normalizedStatus = 'REDIGEE'
-    } else if (status === 'Refusée' || status === 'RefusÃ©e' || status === 'RefusÃƒÂ©e') {
+    } else if (status === 'Refusée' || status === 'Refusée' || status === 'RefusÃƒÂ©e') {
       normalizedStatus = 'REFUSEE'
     }
 
@@ -74,4 +74,6 @@ export default {
     return api.get('/pro/dashboard')
   }
 }
+
+
 

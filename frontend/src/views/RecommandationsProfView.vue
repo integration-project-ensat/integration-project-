@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -49,8 +49,8 @@ const filteredRequests = computed(() => {
 const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
-  if (status === "Acceptée" || status === "AcceptÃ©e" || status === "AcceptÃƒÂ©e") return "Acceptée";
-  if (status === "Refusée" || status === "RefusÃ©e" || status === "RefusÃƒÂ©e") return "Refusée";
+  if (status === "Acceptée" || status === "AcceptÃƒÂ©e" || status === "AcceptÃƒÆ’Ã‚Â©e") return "Acceptée";
+  if (status === "Refusée" || status === "RefusÃƒÂ©e" || status === "RefusÃƒÆ’Ã‚Â©e") return "Refusée";
   return "En attente";
 };
 
@@ -98,12 +98,12 @@ const ensureStudentAttached = async (studentId: string) => {
     const response = await profApi.getAttachedStudentStatus(studentId);
     if (response?.data?.data?.attached) return true;
     error.value =
-      "Ajoutez d'abord cet étudiant à votre liste pour pouvoir traiter sa demande.";
+      "Ajoutez d'abord cet Ã©tudiant Ã  votre liste pour pouvoir traiter sa demande.";
     return false;
   } catch (err: any) {
     error.value =
       err?.response?.data?.message ||
-      "Impossible de vérifier si cet étudiant est dans votre liste.";
+      "Impossible de vÃ©rifier si cet Ã©tudiant est dans votre liste.";
     return false;
   }
 };
@@ -148,7 +148,7 @@ const sendLetter = async () => {
   } catch (err: any) {
     error.value =
       err?.response?.data?.message ||
-      "Impossible d'accepter et rédiger cette lettre.";
+      "Impossible d'accepter et rÃ©diger cette lettre.";
   }
 };
 
@@ -258,7 +258,7 @@ onMounted(() => {
                   class="action-btn muted"
                   @click.stop="openDetailsModal(request)"
                 >
-                  Voir détails
+                  Voir dÃ©tails
                 </button>
                 <button
                   v-if="request.status === 'En attente'"
@@ -266,7 +266,7 @@ onMounted(() => {
                   class="action-btn primary"
                   @click.stop="openWriteModal(request)"
                 >
-                  Accepter et écrire
+                  Accepter et Ã©crire
                 </button>
                 <button
                   v-if="request.status === 'En attente'"
@@ -291,7 +291,7 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Détails de la demande</p>
+            <p>DÃ©tails de la demande</p>
             <button
               type="button"
               class="modal-student-link"
@@ -301,7 +301,7 @@ onMounted(() => {
             </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
-            ×
+            Ã—
           </button>
         </div>
 
@@ -326,12 +326,12 @@ onMounted(() => {
         </div>
 
         <div class="details-section">
-          <span>Message étudiant</span>
+          <span>Message Ã©tudiant</span>
           <p>{{ selectedRequest.message }}</p>
         </div>
 
         <div v-if="selectedRequest.writtenLetter" class="details-section">
-          <span>Lettre écrite</span>
+          <span>Lettre Ã©crite</span>
           <p>{{ selectedRequest.writtenLetter }}</p>
         </div>
 
@@ -351,7 +351,7 @@ onMounted(() => {
             class="action-btn primary"
             @click="openWriteModal(selectedRequest)"
           >
-            Accepter et écrire
+            Accepter et Ã©crire
           </button>
           <button
             v-if="selectedRequest.status === 'En attente'"
@@ -373,11 +373,11 @@ onMounted(() => {
       <section class="details-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
-            <p>Écrire la lettre</p>
+            <p>Ã‰crire la lettre</p>
             <h2>{{ writingRequest.studentName }}</h2>
           </div>
           <button type="button" class="modal-close" @click="closeWriteModal">
-            ×
+            Ã—
           </button>
         </div>
 
@@ -394,7 +394,7 @@ onMounted(() => {
           <textarea
             v-model="letterDraft"
             rows="8"
-            placeholder="Écrivez la lettre de recommandation ici..."
+            placeholder="Ã‰crivez la lettre de recommandation ici..."
           ></textarea>
         </label>
 
@@ -765,4 +765,6 @@ onMounted(() => {
   outline: none;
 }
 </style>
+
+
 
