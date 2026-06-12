@@ -19,6 +19,26 @@ function isUsableToken(token) {
   )
 }
 
+function normalizeRole(role) {
+  const value = String(role || '').trim()
+  if (!value) return null
+
+  const upperValue = value.toUpperCase()
+  const roleMap = {
+    ADMIN: 'admin',
+    ADMINISTRATEUR: 'admin',
+    STUDENT: 'student',
+    ETUDIANT: 'student',
+    TEACHER: 'teacher',
+    PROF: 'teacher',
+    PROFESSEUR: 'teacher',
+    PROFESSIONAL: 'professional',
+    PROFESSIONNEL: 'professional'
+  }
+
+  return roleMap[upperValue] || value.toLowerCase()
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user:  null,   // { id, id_utilisateur, email, name }
@@ -40,12 +60,20 @@ export const useAuthStore = defineStore('auth', {
       }
 
       const normalizedUser = normalizeUser(user)
+      const normalizedRole = normalizeRole(role || normalizedUser?.role)
+
       this.user  = normalizedUser
       this.token = token
-      this.role  = role
+      this.role  = normalizedRole
       localStorage.setItem('token', token)
-      localStorage.setItem('role',  role)
-      localStorage.setItem('user',  JSON.stringify(normalizedUser))
+      localStorage.setItem('role', normalizedRole || '')
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          ...normalizedUser,
+          role: normalizedRole
+        })
+      )
     },
 
     logout() {
@@ -59,7 +87,7 @@ export const useAuthStore = defineStore('auth', {
 
     restoreSession() {
       const token = localStorage.getItem('token')
-      const role  = localStorage.getItem('role')
+      const role  = normalizeRole(localStorage.getItem('role'))
       const storedUser = localStorage.getItem('user')
 
       if (!isUsableToken(token)) {
@@ -70,10 +98,14 @@ export const useAuthStore = defineStore('auth', {
       if (token && role) {
         this.token = token
         this.role  = role
+        localStorage.setItem('role', role)
 
         if (storedUser) {
           try {
-            this.user = normalizeUser(JSON.parse(storedUser))
+            this.user = {
+              ...normalizeUser(JSON.parse(storedUser)),
+              role
+            }
           } catch {
             this.user = null
           }

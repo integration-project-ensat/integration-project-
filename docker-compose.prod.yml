@@ -1,44 +1,61 @@
-version: '3.8'
+version: "3.8"
+
 services:
   frontend:
-    image: ${ECR_REGISTRY}/integration-frontend:latest
-    restart: always
+    image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-frontend:latest
     expose:
       - "80"
+    depends_on:
+      - backend
 
   backend:
-    image: ${ECR_REGISTRY}/integration-backend:latest
-    restart: always
+    image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-backend:latest
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        npm run seed &&
+        npm run start
+      "
     expose:
       - "3000"
     env_file:
-      - .env
+      - ./.env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
       - AI_SERVICE_URL=http://ai-service:8000
     depends_on:
-      - postgres
-      - keycloak
-      - ai-service
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      ai-service:
+        condition: service_started
 
   ai-service:
-    image: ${ECR_REGISTRY}/integration-ai:latest
-    restart: always
+    image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-ai:latest
     expose:
       - "8000"
+    command: sh -c "python train_model.py && uvicorn app:app --host 0.0.0.0 --port 8000"
 
   postgres:
     image: postgres:15-alpine
     restart: always
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME:?DB_NAME is required}
+      - POSTGRES_USER=${DB_USER:?DB_USER is required}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest

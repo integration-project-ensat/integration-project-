@@ -5,11 +5,6 @@
         <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="36" />
         <span>heraCore</span>
       </div>
-      <button class="theme-btn">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-         <path d="M7.01074 1.42676C3.87305 1.67578 1.40625 4.30078 1.40625 7.5C1.40625 10.8662 4.13379 13.5938 7.5 13.5938C8.47559 13.5938 9.39551 13.3652 10.2129 12.958C7.18359 12.2725 4.92188 9.56543 4.92188 6.32812C4.92188 4.40039 5.72461 2.66309 7.01074 1.42676ZM0 7.5C0 3.35742 3.35742 0 7.5 0C8.06836 0 8.625 0.0644531 9.16113 0.18457C9.45117 0.249023 9.66797 0.492187 9.70313 0.785156C9.73828 1.07812 9.58594 1.36523 9.31934 1.5C7.54395 2.38477 6.32813 4.21582 6.32813 6.32812C6.32813 9.30469 8.74219 11.7188 11.7188 11.7188C11.8652 11.7188 12.0088 11.7129 12.1523 11.7012C12.4482 11.6777 12.7266 11.8418 12.8496 12.1143C12.9727 12.3867 12.9082 12.7031 12.6943 12.9082C11.3467 14.2031 9.51563 15 7.5 15C3.35742 15 0 11.6426 0 7.5Z" fill="#111827"/>
-        </svg>
-      </button>
     </div>
 
     <div class="card">
@@ -62,6 +57,7 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import authService from '@/services/auth.service.js'
+import { useAuthStore } from '@/store/auth.js'
 
 type ApiError = {
   response?: {
@@ -72,6 +68,12 @@ type ApiError = {
   }
 }
 
+type PendingSignup = {
+  email: string
+  password: string
+  role: string
+}
+
 const getApiErrorMessage = (e: unknown, fallback: string) => {
   const data = (e as ApiError).response?.data
   return data?.errors?.[0]?.message || data?.message || fallback
@@ -79,6 +81,7 @@ const getApiErrorMessage = (e: unknown, fallback: string) => {
 
 const router   = useRouter()
 const route    = useRoute()
+const auth     = useAuthStore()
 const email    = route.query.email as string || ''
 const error    = ref('')
 const success  = ref('')
@@ -126,6 +129,34 @@ function onPaste(e: ClipboardEvent) {
   inputs.value[Math.min(text.length, 5)]?.focus()
 }
 
+function redirectByRole(role: string | null | undefined) {
+  if (role === 'admin') {
+    router.push('/admin')
+    return
+  }
+  if (role === 'teacher') {
+    router.push('/prof/dashboard')
+    return
+  }
+  if (role === 'professional') {
+    router.push('/pro/dashboard')
+    return
+  }
+  router.push('/student/dashboard')
+}
+
+function getPendingSignup(): PendingSignup | null {
+  const raw = sessionStorage.getItem('pendingSignup')
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw) as PendingSignup
+  } catch {
+    sessionStorage.removeItem('pendingSignup')
+    return null
+  }
+}
+
 async function submit() {
   error.value = ''
   const fullCode = code.join('')
@@ -133,10 +164,43 @@ async function submit() {
 
   loading.value = true
   try {
-    await authService.verifyCode(email, fullCode)
+    const response = await authService.verifyCode(email, fullCode)
     success.value = 'Code vérifié !'
-    setTimeout(() => {
-      router.push('/dashboard')
+    setTimeout(async () => {
+      const token = response?.data?.token
+      const user = response?.data?.user
+      const role = user?.role || localStorage.getItem('role')
+
+      if (token && user && role) {
+        auth.login(user, token, role)
+        sessionStorage.removeItem('pendingSignup')
+        redirectByRole(auth.role)
+        return
+      }
+
+      const pendingSignup = getPendingSignup()
+      const shouldAutoLogin =
+        pendingSignup &&
+        pendingSignup.email === email.trim().toLowerCase() &&
+        (
+          pendingSignup.role === 'student' ||
+          pendingSignup.role === 'Prof' ||
+          pendingSignup.role === 'Professional'
+        )
+
+      if (shouldAutoLogin) {
+        const loginData = await authService.login(pendingSignup.email, pendingSignup.password)
+        const loginUser = loginData?.data?.user
+        const loginRole = loginUser?.role || localStorage.getItem('role')
+
+        auth.login(loginUser, loginData?.data?.token, loginRole)
+        sessionStorage.removeItem('pendingSignup')
+        redirectByRole(auth.role)
+        return
+      }
+
+      sessionStorage.removeItem('pendingSignup')
+      router.push('/login')
     }, 1000)
   } catch(e) {
     error.value = getApiErrorMessage(e, 'Code incorrect ou expiré.')
