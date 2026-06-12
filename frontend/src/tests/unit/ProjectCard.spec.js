@@ -1,1 +1,0 @@
-// Tests unitaires du composant ProjectCard. Vérifie que le titre s'affiche correctement, que le statut coloré est bien rendu, et que les props sont bien gérées.

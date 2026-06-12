@@ -1,0 +1,1093 @@
+<template>
+  <div class="dashboard-layout">
+    <AdminNavbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
+    <AdminSidebar :open="sidebarOpen" />
+    <AdminSubbar
+      title="Tableau de bord (Aperçu)"
+      v-model:searchQuery="search"
+      :sidebarOpen="sidebarOpen"
+    />
+
+    <main class="main-content" :class="{ 'sidebar-open': sidebarOpen }">
+      <section class="dashboard-content">
+        <!-- KPI Cards -->
+        <div class="stat-grid">
+          <StatCard
+            v-for="stat in stats"
+            :key="stat.label"
+            :label="stat.label"
+            :value="stat.value"
+            :trend="stat.trend"
+            :icon="stat.icon"
+          />
+        </div>
+
+        <!-- Charts row -->
+        <div class="charts-row">
+          <!-- Growth chart -->
+          <div class="chart-card growth-card">
+            <div class="chart-header">
+              <div>
+                <h3 class="section-title">Croissance de la plateforme</h3>
+                <p class="section-sub">
+                  Évolution des inscriptions et des soumissions sur les 6
+                  derniers mois
+                </p>
+              </div>
+              <button class="btn-outline">Exporter</button>
+            </div>
+
+            <div class="chart-area">
+              <svg
+                viewBox="0 0 540 200"
+                class="line-chart"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stop-color="#6366f1"
+                      stop-opacity="0.25"
+                    />
+                    <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+                  </linearGradient>
+                  <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stop-color="#06b6d4"
+                      stop-opacity="0.20"
+                    />
+                    <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+
+                <line
+                  v-for="y in [40, 80, 120, 160, 200]"
+                  :key="y"
+                  x1="0"
+                  :y1="y"
+                  x2="540"
+                  :y2="y"
+                  stroke="#f1f5f9"
+                  stroke-width="1"
+                />
+
+                <!-- Y-axis labels -->
+                <text
+                  v-for="(label, i) in yLabels"
+                  :key="i"
+                  x="4"
+                  :y="yLabelPositions[i] - 4"
+                  font-size="9"
+                  fill="#cbd5e1"
+                >
+                  {{ label }}
+                </text>
+
+                <path :d="blueArea" fill="url(#gradBlue)" />
+                <path
+                  :d="blueLine"
+                  fill="none"
+                  stroke="#6366f1"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+
+                <path :d="cyanArea" fill="url(#gradCyan)" />
+                <path
+                  :d="cyanLine"
+                  fill="none"
+                  stroke="#06b6d4"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+
+                <!-- Data points -->
+                <circle
+                  v-for="(pt, i) in bluePoints"
+                  :key="'b' + i"
+                  :cx="pt.x"
+                  :cy="pt.y"
+                  r="3.5"
+                  fill="#fff"
+                  stroke="#6366f1"
+                  stroke-width="2"
+                />
+                <circle
+                  v-for="(pt, i) in cyanPoints"
+                  :key="'c' + i"
+                  :cx="pt.x"
+                  :cy="pt.y"
+                  r="3.5"
+                  fill="#fff"
+                  stroke="#06b6d4"
+                  stroke-width="2"
+                />
+              </svg>
+
+              <div class="chart-x-labels">
+                <span v-for="m in months" :key="m">{{ m }}</span>
+              </div>
+
+              <!-- Legend -->
+              <div class="chart-legend">
+                <span class="legend-line blue"></span>
+                <span class="legend-text">Inscriptions</span>
+                <span class="legend-line cyan"></span>
+                <span class="legend-text">Portfolios</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Donut chart -->
+          <div class="chart-card donut-card">
+            <div>
+              <h3 class="section-title">Répartition par secteur</h3>
+              <p class="section-sub">Domaines d'études les plus représentés</p>
+            </div>
+
+            <div class="donut-wrapper">
+              <svg viewBox="0 0 160 160" class="donut-svg">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  stroke="#f1f5f9"
+                  stroke-width="22"
+                />
+                <circle
+                  v-for="seg in donutSegments"
+                  :key="seg.label"
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  :stroke="seg.color"
+                  stroke-width="22"
+                  :stroke-dasharray="`${seg.dash} ${377 - seg.dash}`"
+                  :stroke-dashoffset="seg.offset"
+                  stroke-linecap="butt"
+                  style="transform: rotate(-90deg); transform-origin: 80px 80px"
+                />
+              </svg>
+            </div>
+
+            <ul class="donut-legend">
+              <li
+                v-for="seg in donutSegments"
+                :key="seg.label"
+                class="legend-item"
+              >
+                <span
+                  class="legend-dot"
+                  :style="{ background: seg.color }"
+                ></span>
+                <span class="legend-label">{{ seg.label }}</span>
+                <span class="legend-value">{{ seg.count }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <ActivityTable :activities="plateformeActivities" />
+
+        <!-- Historique des connexions -->
+        <div id="connexion-history" class="conn-card">
+          <div class="conn-head">
+            <div>
+              <h3 class="section-title">Historique des connexions</h3>
+              <p class="section-sub">
+                Traçabilité complète des activités d'authentification.
+              </p>
+            </div>
+            <div class="conn-actions">
+              <button class="btn-export-conn" @click="exportConnCSV">
+                <Download :size="13" /> Export CSV
+              </button>
+              <button class="btn-refresh-conn" @click="refreshConn">
+                <RefreshCw :size="13" /> Actualiser
+              </button>
+            </div>
+          </div>
+
+          <div class="conn-filters">
+            <div class="conn-filter-group">
+              <select v-model="connFilter.status" class="conn-select">
+                <option value="">Tous les statuts</option>
+                <option value="SUCCESS">SUCCESS</option>
+                <option value="ERREUR">ERREUR</option>
+                <option value="TERMINE">TERMINÉ</option>
+              </select>
+            </div>
+            <div class="conn-search">
+              <Search :size="13" />
+              <input
+                v-model="connFilter.search"
+                type="text"
+                placeholder="Rechercher IP, user-agent..."
+              />
+            </div>
+            <span class="conn-count">
+              <span class="suspect-dot" v-if="suspectCount > 0"></span>
+              {{ suspectCount }} suspect{{
+                suspectCount > 1 ? "s" : ""
+              }}
+              détecté{{ suspectCount > 1 ? "s" : "" }}
+            </span>
+          </div>
+
+          <div class="conn-table-wrap">
+            <table class="conn-table">
+              <thead>
+                <tr>
+                  <th>UTILISATEUR</th>
+                  <th>ADRESSE IP</th>
+                  <th>USER-AGENT</th>
+                  <th>DATE & HEURE</th>
+                  <th>STATUT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="log in filteredLogs"
+                  :key="log.id"
+                  class="conn-row"
+                  :class="{ suspect: log.suspect }"
+                >
+                  <td>
+                    <div class="conn-user">
+                      <div
+                        class="conn-avatar"
+                        :style="{ background: log.avatarColor }"
+                      >
+                        {{ log.userInitials }}
+                      </div>
+                      <div>
+                        <p class="conn-username">{{ log.userName }}</p>
+                        <p class="conn-role">{{ log.userRole }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      class="conn-ip"
+                      :class="{ 'ip-suspect': log.suspect }"
+                    >
+                      {{ log.ip }}
+                      <span
+                        v-if="log.suspect"
+                        class="ip-flag"
+                        title="IP suspecte"
+                        >⚑</span
+                      >
+                    </span>
+                  </td>
+                  <td class="conn-agent">{{ log.agent }}</td>
+                  <td class="conn-date">{{ log.datetime }}</td>
+                  <td>
+                    <span
+                      class="conn-badge"
+                      :class="log.status.toLowerCase()"
+                      >{{ log.status }}</span
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { Download, RefreshCw, Search } from "lucide-vue-next";
+import { Users, Briefcase, CheckCircle, Clock } from "lucide-vue-next";
+
+import adminApi from "@/services/adminApi.js";
+
+import AdminNavbar from "../components/admin/AdminNavbar.vue";
+import AdminSidebar from "../components/admin/AdminSidebar.vue";
+import AdminSubbar from "../components/admin/AdminSubbar.vue";
+import StatCard from "../components/admin/StatCard.vue";
+import ActivityTable from "../components/admin/ActivityTable.vue";
+
+const search = ref("");
+const sidebarOpen = ref(true);
+
+const months = ref(["Jan", "Fév", "Mar", "Avr", "Mai", "Jun"]);
+const stats = ref([]);
+
+// xs est maintenant réactif pour s'adapter au nombre de mois réels
+const xs = ref([0, 108, 216, 324, 432, 540]);
+
+// Y values normalisés pour le SVG (0 = haut, 200 = bas)
+const blueRaw = ref([180, 170, 160, 145, 120, 80]);
+const cyanRaw = ref([185, 175, 165, 150, 130, 95]);
+
+// Valeurs réelles pour les labels Y
+const chartMax = ref(1);
+
+const toPath = (ys) =>
+  ys.map((y, i) => `${i === 0 ? "M" : "L"} ${xs.value[i]} ${y}`).join(" ");
+
+const toArea = (ys) =>
+  toPath(ys) + ` L ${xs.value[xs.value.length - 1]} 200 L 0 200 Z`;
+
+const blueLine = computed(() => toPath(blueRaw.value));
+const blueArea = computed(() => toArea(blueRaw.value));
+const cyanLine = computed(() => toPath(cyanRaw.value));
+const cyanArea = computed(() => toArea(cyanRaw.value));
+
+// Points pour les cercles sur chaque mois
+const bluePoints = computed(() =>
+  blueRaw.value.map((y, i) => ({ x: xs.value[i], y })),
+);
+const cyanPoints = computed(() =>
+  cyanRaw.value.map((y, i) => ({ x: xs.value[i], y })),
+);
+
+// Labels de l'axe Y (valeurs réelles)
+const yLabelPositions = [40, 80, 120, 160, 200];
+const yLabels = computed(() => {
+  const max = chartMax.value;
+  return yLabelPositions.map((pos) => Math.round(max - (pos / 200) * max));
+});
+
+const donutSegments = ref([
+  { label: "Design", count: 0, color: "#6366f1", dash: 0, offset: 0 },
+  { label: "Développement", count: 0, color: "#06b6d4", dash: 0, offset: 0 },
+  { label: "Marketing", count: 0, color: "#f59e0b", dash: 0, offset: 0 },
+  { label: "IA & Data", count: 0, color: "#8b5cf6", dash: 0, offset: 0 },
+]);
+
+const plateformeActivities = ref([]);
+
+/* Connexions history */
+const connFilter = ref({ status: "", search: "" });
+const connLogs = ref([]);
+
+const filteredLogs = computed(() => {
+  return connLogs.value.filter((l) => {
+    const matchStatus =
+      !connFilter.value.status || l.status === connFilter.value.status;
+    const q = connFilter.value.search.toLowerCase();
+    const matchSearch =
+      !q ||
+      l.ip.includes(q) ||
+      l.agent.toLowerCase().includes(q) ||
+      l.userName.toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+});
+
+const suspectCount = computed(
+  () => connLogs.value.filter((l) => l.suspect).length,
+);
+
+const refreshConn = () => {
+  loadDashboard().catch(() => {});
+};
+
+const exportConnCSV = () => {
+  const rows = [
+    ["Utilisateur", "IP", "User-Agent", "Date & Heure", "Statut"],
+    ...filteredLogs.value.map((l) => [
+      l.userName,
+      l.ip,
+      l.agent,
+      l.datetime,
+      l.status,
+    ]),
+  ];
+  const csv = rows.map((r) => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement("a"), {
+    href: url,
+    download: "connexions.csv",
+  });
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+const mapDashboardToUI = (d) => {
+  if (!d) return;
+
+  // ── Stats KPI ──────────────────────────────────────────────
+  if (d.stats) {
+    stats.value = [
+      {
+        label: "Profils Totaux",
+        value: d.stats.totalProfils ?? 0,
+        trend: 0,
+        icon: Users,
+      },
+      {
+        label: "Portfolios Soumis",
+        value: d.stats.totalPortfolios ?? 0,
+        trend: 0,
+        icon: Briefcase,
+      },
+      {
+        label: "Vérifiés",
+        value: d.stats.totalVerifies ?? 0,
+        trend: 0,
+        icon: CheckCircle,
+      },
+      {
+        label: "En Attente",
+        value: d.stats.enAttente ?? 0,
+        trend: 0,
+        icon: Clock,
+      },
+    ];
+  }
+
+  // ── Graphique croissance ───────────────────────────────────
+  if (d.croissance) {
+    const insData = d.croissance.inscriptions || [];
+    const porData = d.croissance.portfolios || [];
+
+    // Construire un tableau ordonné des mois présents dans l'API
+    // L'API retourne les mois dans l'ordre ASC (ORDER BY mois_date ASC)
+    const allMois = [
+      ...new Set([
+        ...insData.map((x) => x.mois),
+        ...porData.map((x) => x.mois),
+      ]),
+    ];
+
+    if (allMois.length > 0) {
+      months.value = allMois;
+
+      // Dictionnaires mois → valeur
+      const insMap = Object.fromEntries(
+        insData.map((x) => [x.mois, Number(x.valeur ?? 0)]),
+      );
+      const porMap = Object.fromEntries(
+        porData.map((x) => [x.mois, Number(x.valeur ?? 0)]),
+      );
+
+      const insRaw = allMois.map((m) => insMap[m] ?? 0);
+      const porRaw = allMois.map((m) => porMap[m] ?? 0);
+
+      const max = Math.max(1, ...insRaw, ...porRaw);
+      chartMax.value = max;
+
+      // Positions X dynamiques selon le nombre de mois
+      const n = allMois.length;
+      const xsLocal =
+        n === 1
+          ? [270] // un seul point → centre
+          : allMois.map((_, i) => Math.round((i / (n - 1)) * 540));
+
+      xs.value = xsLocal;
+
+      // Normalisation : valeur → position Y dans le SVG (0=haut, 200=bas)
+      // On laisse une marge de 10px en haut pour que la courbe ne soit pas coupée
+      const norm = (arr) => arr.map((v) => Math.round(190 - (v / max) * 170));
+
+      blueRaw.value = norm(insRaw);
+      cyanRaw.value = norm(porRaw);
+    }
+    // Si pas de données du tout, les valeurs par défaut restent
+  }
+
+  // ── Donut filières ─────────────────────────────────────────
+  if (Array.isArray(d.repartitionFilieres)) {
+    const palette = [
+      "#6366f1",
+      "#06b6d4",
+      "#f59e0b",
+      "#8b5cf6",
+      "#f43f5e",
+      "#14b8a6",
+    ];
+    const totalCount =
+      d.repartitionFilieres.reduce((acc, x) => acc + Number(x.count ?? 0), 0) ||
+      1;
+
+    const C = 376.99;
+    let cumulative = 0;
+
+    donutSegments.value = d.repartitionFilieres.slice(0, 4).map((f, idx) => {
+      const count = Number(f.count ?? 0);
+      const dash = (count / totalCount) * C;
+      const offset = -cumulative;
+      cumulative += dash;
+      return {
+        label: f.filiere ?? "Autre",
+        count,
+        color: palette[idx % palette.length],
+        dash,
+        offset,
+      };
+    });
+  }
+
+  // ── Historique connexions ──────────────────────────────────
+  if (Array.isArray(d.activiteRecente)) {
+    connLogs.value = d.activiteRecente.map((log, idx) => {
+      const u = log.utilisateur || {};
+      const uiStatus = String(log.statut || "").toLowerCase();
+      let status;
+
+      if (uiStatus === "complete") {
+        status = "SUCCESS";
+      } else if (uiStatus === "annule") {
+        status = "ERREUR";
+      } else {
+        status = "SUCCESS";
+      }
+
+      return {
+        id: log.id ?? idx,
+        userName: u.nom_complet || u.email || "Inconnu",
+        userInitials: (u.nom_complet
+          ? u.nom_complet
+              .split(" ")
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((w) => w[0])
+              .join("")
+          : "??"
+        ).toUpperCase(),
+        userRole: log.action || "Activité",
+        avatarColor: "#c7d2fe",
+        ip: log.adresse_ip || "—",
+        agent: log.user_agent || "—",
+        datetime: log.date
+          ? String(log.date).replace("T", " ").slice(0, 16)
+          : "—",
+        status,
+        suspect: false,
+      };
+    });
+  }
+
+  // ── Activités plateforme ───────────────────────────────────
+  if (Array.isArray(d.activitesPlateforme)) {
+    plateformeActivities.value = d.activitesPlateforme.map((act) => {
+      const u = act.utilisateur || {};
+      const status =
+        String(act.statut).toLowerCase() === "complete"
+          ? "completed"
+          : String(act.statut).toLowerCase() === "annule"
+            ? "cancelled"
+            : "pending";
+
+      return {
+        id: act.id,
+        name: u.nom_complet || u.email || "Inconnu",
+        email: u.email || "",
+        action: act.action,
+        date: act.date
+          ? new Date(act.date).toLocaleString("fr-FR", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "—",
+        status,
+        avatarColor: "#c7d2fe",
+      };
+    });
+  }
+};
+
+const loadDashboard = async () => {
+  try {
+    const resp = await adminApi.getAdminDashboard();
+    if (resp?.data?.success && resp.data.data) {
+      mapDashboardToUI(resp.data.data);
+    }
+  } catch (err) {
+    console.error("Dashboard load error:", err);
+  }
+};
+
+onMounted(() => {
+  loadDashboard();
+  window.addEventListener("admin-dashboard-refresh", loadDashboard);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("admin-dashboard-refresh", loadDashboard);
+});
+</script>
+
+<style scoped>
+.dashboard-layout {
+  min-height: 100vh;
+  background: #f5f7fb;
+  font-family: "Geist", "DM Sans", "Inter", sans-serif;
+}
+
+.main-content {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transition: left 0.25s ease;
+}
+
+.main-content.sidebar-open {
+  left: 185px;
+}
+
+.dashboard-content {
+  padding: 60px 8px 30px 43px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  flex: 1;
+  background: #dfe2ea;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+}
+
+.chart-card {
+  background: var(--white);
+  border: 1px solid var(--border-admin);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin: 0 0 3px;
+}
+.section-sub {
+  font-size: 12px;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.btn-outline {
+  padding: 7px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-outline:hover {
+  background: var(--surface-subtle);
+}
+
+.chart-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.line-chart {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+
+.chart-x-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+.chart-x-labels span {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+}
+.legend-line.blue {
+  background: var(--indigo);
+}
+.legend-line.cyan {
+  background: var(--blue-w);
+}
+
+.legend-text {
+  font-size: 11.5px;
+  color: var(--text-slate);
+  margin-right: 8px;
+}
+
+.donut-card {
+  gap: 14px;
+}
+
+.donut-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.donut-svg {
+  width: 150px;
+  height: 150px;
+}
+
+.donut-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.legend-value {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+@media (max-width: 1100px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 720px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Connexions ─────────────────────────────────────────── */
+.conn-card {
+  background: var(--white);
+  border: 1px solid var(--border-admin);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.conn-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 22px 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.conn-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-export-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-export-conn:hover {
+  background: var(--surface-subtle);
+}
+
+.btn-refresh-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: none;
+  border-radius: 8px;
+  background: #0d1b2a;
+  color: var(--white);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-refresh-conn:hover {
+  background: #1e3a5f;
+}
+
+.conn-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px 14px;
+  flex-wrap: wrap;
+}
+
+.conn-select {
+  appearance: none;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 7px 12px;
+  background: var(--surface-subtle);
+  font-size: 13px;
+  color: var(--text-body);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.conn-select:focus {
+  border-color: var(--indigo);
+}
+
+.conn-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: var(--surface-subtle);
+  flex: 1;
+  max-width: 280px;
+  transition: border-color 0.15s;
+}
+.conn-search:focus-within {
+  border-color: var(--indigo);
+  background: var(--white);
+}
+.conn-search svg {
+  color: var(--text-light);
+  flex-shrink: 0;
+}
+.conn-search input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text-body);
+  width: 100%;
+}
+.conn-search input::placeholder {
+  color: var(--text-light);
+}
+
+.conn-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--danger-light);
+  margin-left: auto;
+}
+.suspect-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--danger-light);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.conn-table-wrap {
+  overflow-x: auto;
+}
+
+.conn-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+.conn-table thead tr {
+  background: var(--surface-admin);
+  border-top: 1px solid var(--surface-muted);
+  border-bottom: 1px solid var(--surface-muted);
+}
+.conn-table th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.conn-row {
+  border-bottom: 1px solid var(--surface-subtle);
+  transition: background 0.12s;
+}
+.conn-row:last-child {
+  border-bottom: none;
+}
+.conn-row:hover {
+  background: var(--surface-admin);
+}
+.conn-row.suspect {
+  background: #fff5f5;
+}
+.conn-row.suspect:hover {
+  background: var(--surface-danger-soft);
+}
+
+.conn-table td {
+  padding: 13px 16px;
+  vertical-align: middle;
+}
+
+.conn-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.conn-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-body);
+  flex-shrink: 0;
+}
+.conn-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin: 0 0 1px;
+}
+.conn-role {
+  font-size: 11px;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.conn-ip {
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  color: var(--text-body);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.conn-ip.ip-suspect {
+  color: var(--danger-light);
+  font-weight: 600;
+}
+.ip-flag {
+  font-size: 12px;
+  color: var(--danger-light);
+}
+
+.conn-agent {
+  font-size: 12.5px;
+  color: var(--text-slate);
+}
+.conn-date {
+  font-size: 12.5px;
+  color: var(--text-light);
+  white-space: nowrap;
+  font-family: "Courier New", monospace;
+}
+
+.conn-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.conn-badge.success {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.conn-badge.erreur {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.conn-badge.termine {
+  background: #eff6ff;
+  color: var(--blue);
+}
+</style>

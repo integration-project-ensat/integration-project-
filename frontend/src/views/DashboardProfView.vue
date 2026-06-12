@@ -1,0 +1,1076 @@
+﻿<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import SidebarProf from "../components/exploreProf/SidebarProf.vue";
+import Topbar from "../components/exploreStudent/Topbar.vue";
+import profApi from "@/services/profApi";
+
+export type ValidationStatus = "En attente" | "Validé" | "Refusé";
+export type RecommendationStatus = "En attente" | "Acceptée" | "Refusée";
+
+export interface ValidationRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  avatar?: string;
+  initials: string;
+  type: string;
+  title: string;
+  description: string;
+  date: string;
+  status: ValidationStatus;
+  attachments?: string[];
+}
+
+export interface RecommendationRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  avatar?: string;
+  initials: string;
+  profileInfo: string;
+  title: string;
+  message: string;
+  date: string;
+  status: RecommendationStatus;
+  writtenLetter?: string;
+}
+
+const router = useRouter();
+const sidebarOpen = ref(true);
+const selectedRequest = ref<ValidationRequest | null>(null);
+const selectedRecommendation = ref<RecommendationRequest | null>(null);
+const writingRecommendation = ref<RecommendationRequest | null>(null);
+const letterDraft = ref("");
+const stats = ref({ total: 0, pending: 0, validated: 0, refused: 0 });
+const requests = ref<ValidationRequest[]>([]);
+const recommendations = ref<RecommendationRequest[]>([]);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+
+const statusSections: Array<{
+  key: "pending" | "validated" | "refused";
+  title: ValidationStatus;
+}> = [
+  { key: "pending", title: "En attente" },
+  { key: "validated", title: "Validé" },
+  { key: "refused", title: "Refusé" },
+];
+
+const statCards = [
+  { label: "Total demandes", key: "total" },
+  { label: "En attente", key: "pending" },
+  { label: "Validées", key: "validated" },
+  { label: "Refusées", key: "refused" },
+] as const;
+
+const recommendationStatCards = [
+  { label: "Total lettres", key: "total" },
+  { label: "En attente", key: "pending" },
+  { label: "Acceptées", key: "accepted" },
+  { label: "Refusées", key: "refused" },
+] as const;
+
+const recommendationSections: Array<{
+  key: "pending" | "accepted" | "refused";
+  title: RecommendationStatus;
+}> = [
+  { key: "pending", title: "En attente" },
+  { key: "accepted", title: "Acceptée" },
+  { key: "refused", title: "Refusée" },
+];
+
+const groupedRequests = computed(() => ({
+  pending: requests.value.filter((request) => request.status === "En attente"),
+  validated: requests.value.filter((request) => request.status === "Validé"),
+  refused: requests.value.filter((request) => request.status === "Refusé"),
+}));
+
+const groupedRecommendations = computed(() => ({
+  pending: recommendations.value.filter(
+    (request) => request.status === "En attente",
+  ),
+  accepted: recommendations.value.filter(
+    (request) => request.status === "Acceptée",
+  ),
+  refused: recommendations.value.filter(
+    (request) => request.status === "Refusée",
+  ),
+}));
+
+const recommendationStats = computed(() => ({
+  total: recommendations.value.length,
+  pending: groupedRecommendations.value.pending.length,
+  accepted: groupedRecommendations.value.accepted.length,
+  refused: groupedRecommendations.value.refused.length,
+}));
+
+const statusClass = (status: ValidationStatus) => ({
+  "is-pending": status === "En attente",
+  "is-valid": status === "Validé",
+  "is-refused": status === "Refusé",
+});
+
+const normalizeValidationStatus = (status: string): ValidationStatus => {
+  if (status === "Validé") {
+    return "Validé";
+  }
+  if (status === "Refusé") {
+    return "Refusé";
+  }
+  return "En attente";
+};
+
+const normalizeRecommendationStatus = (
+  status: string,
+): RecommendationStatus => {
+  if (
+    status === "Acceptée"
+  ) {
+    return "Acceptée";
+  }
+  if (
+    status === "Refusée"
+  ) {
+    return "Refusée";
+  }
+  return "En attente";
+};
+
+const recommendationStatusClass = (status: RecommendationStatus) => ({
+  "is-pending": status === "En attente",
+  "is-valid": status === "Acceptée",
+  "is-refused": status === "Refusée",
+});
+
+const resolveAvatar = (path?: string | null) => {
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) {
+    return `${window.location.origin}${value}`;
+  }
+  if (value.startsWith("uploads/")) {
+    return `${window.location.origin}/${value}`;
+  }
+  return "";
+};
+
+const openDetailsModal = (request: ValidationRequest) => {
+  selectedRequest.value = request;
+};
+
+const closeDetailsModal = () => {
+  selectedRequest.value = null;
+};
+
+const openRecommendationDetails = (request: RecommendationRequest) => {
+  selectedRecommendation.value = request;
+};
+
+const closeRecommendationDetails = () => {
+  selectedRecommendation.value = null;
+};
+
+const updateSelectedStatus = async (status: ValidationStatus) => {
+  if (!selectedRequest.value) return;
+  if (!(await ensureStudentAttached(selectedRequest.value.studentId))) return;
+  try {
+    await profApi.updateValidationStatus(selectedRequest.value, status);
+    await loadDashboard();
+    closeDetailsModal();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de mettre à jour la demande";
+  }
+};
+
+const openWriteRecommendationModal = (request: RecommendationRequest) => {
+  selectedRecommendation.value = null;
+  writingRecommendation.value = request;
+  letterDraft.value = request.writtenLetter ?? "";
+};
+
+const closeWriteRecommendationModal = () => {
+  writingRecommendation.value = null;
+  letterDraft.value = "";
+};
+
+const ensureStudentAttached = async (studentId: string) => {
+  try {
+    const response = await profApi.getAttachedStudentStatus(studentId);
+    if (response?.data?.data?.attached) return true;
+    error.value =
+      "Ajoutez d'abord cet étudiant à votre liste pour pouvoir valider ou traiter sa demande.";
+    return false;
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible de vérifier si cet étudiant est dans votre liste.";
+    return false;
+  }
+};
+
+const sendRecommendationLetter = async () => {
+  if (!writingRecommendation.value) return;
+  if (!(await ensureStudentAttached(writingRecommendation.value.studentId))) {
+    return;
+  }
+  try {
+    await profApi.updateRecommendationStatus(
+      writingRecommendation.value.id,
+      "Acceptée",
+      {
+        contenu: letterDraft.value.trim(),
+      },
+    );
+    closeWriteRecommendationModal();
+    await loadDashboard();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message ||
+      "Impossible d'accepter et d'écrire la lettre";
+  }
+};
+
+const refuseSelectedRecommendation = async () => {
+  if (!selectedRecommendation.value) return;
+  if (!(await ensureStudentAttached(selectedRecommendation.value.studentId))) {
+    return;
+  }
+  try {
+    await profApi.updateRecommendationStatus(
+      selectedRecommendation.value.id,
+      "Refusée",
+    );
+    closeRecommendationDetails();
+    await loadDashboard();
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Impossible de refuser la demande";
+  }
+};
+
+const openStudentProfile = (
+  request: ValidationRequest | RecommendationRequest,
+) => {
+  router.push(`/profile/student/${request.studentId}?from=prof`);
+};
+
+const loadDashboard = async () => {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const response = await profApi.getProfDashboard();
+    if (response.data?.success) {
+      const data = response.data.data;
+      stats.value = data.stats ?? stats.value;
+      requests.value = Array.isArray(data.validationRequests)
+        ? data.validationRequests.map((request: any) => ({
+            ...request,
+            avatar: resolveAvatar(request.avatar),
+            status: normalizeValidationStatus(request.status),
+          }))
+        : [];
+      recommendations.value = Array.isArray(data.recommendationRequests)
+        ? data.recommendationRequests.map((request: any) => ({
+            ...request,
+            avatar: resolveAvatar(request.avatar),
+            status: normalizeRecommendationStatus(request.status),
+          }))
+        : [];
+    } else {
+      error.value =
+        response.data?.message || "Impossible de charger le dashboard";
+    }
+  } catch (err: any) {
+    error.value =
+      err?.response?.data?.message || "Erreur lors du chargement du dashboard";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadDashboard();
+});
+</script>
+
+<template>
+  <div class="dashboard-page">
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
+    <SidebarProf :isOpen="sidebarOpen" />
+
+    <main
+      class="dashboard-shell"
+      :class="{ 'dashboard-shellShift': sidebarOpen }"
+    >
+      <section class="dashboard-panel">
+        <div class="dashboard-header">
+          <div>
+            <p class="dashboard-kicker">Espace professeur</p>
+            <h1>Tableau de bord</h1>
+          </div>
+        </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
+
+        <div class="stats-grid">
+          <article v-for="card in statCards" :key="card.key" class="stat-card">
+            <span>{{ card.label }}</span>
+            <strong>{{ stats[card.key] }}</strong>
+          </article>
+        </div>
+
+        <div class="status-grid">
+          <section
+            v-for="section in statusSections"
+            :key="section.key"
+            class="status-panel"
+          >
+            <div class="status-title">
+              <h2>{{ section.title }}</h2>
+              <span>{{ groupedRequests[section.key].length }}</span>
+            </div>
+
+            <div class="request-list">
+              <article
+                v-for="request in groupedRequests[section.key]"
+                :key="request.id"
+                class="request-row"
+                @click="openDetailsModal(request)"
+              >
+                <button
+                  type="button"
+                  class="student-avatar"
+                  :aria-label="`Voir le profil de ${request.studentName}`"
+                  @click.stop="openStudentProfile(request)"
+                >
+                  <img v-if="request.avatar" :src="request.avatar" :alt="request.studentName" />
+                  <span v-else>{{ request.initials }}</span>
+                </button>
+
+                <div class="request-content">
+                  <button
+                    type="button"
+                    class="student-name-btn"
+                    @click.stop="openStudentProfile(request)"
+                  >
+                    {{ request.studentName }}
+                  </button>
+                  <p>{{ request.type }} · {{ request.title }}</p>
+                  <span>{{ request.date }}</span>
+                </div>
+
+                <span class="status-badge" :class="statusClass(request.status)">
+                  {{ request.status }}
+                </span>
+              </article>
+
+              <p
+                v-if="!groupedRequests[section.key].length"
+                class="empty-state"
+              >
+                Aucune demande
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <div class="dashboard-sectionHeader">
+          <div>
+            <p class="dashboard-kicker">Demandes de lettres</p>
+            <h2>Lettres de recommandation</h2>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article
+            v-for="card in recommendationStatCards"
+            :key="card.key"
+            class="stat-card"
+          >
+            <span>{{ card.label }}</span>
+            <strong>{{ recommendationStats[card.key] }}</strong>
+          </article>
+        </div>
+
+        <div class="status-grid">
+          <section
+            v-for="section in recommendationSections"
+            :key="section.key"
+            class="status-panel"
+          >
+            <div class="status-title">
+              <h2>{{ section.title }}</h2>
+              <span>{{ groupedRecommendations[section.key].length }}</span>
+            </div>
+
+            <div class="request-list">
+              <article
+                v-for="request in groupedRecommendations[section.key]"
+                :key="request.id"
+                class="request-row"
+                @click="openRecommendationDetails(request)"
+              >
+                <button
+                  type="button"
+                  class="student-avatar"
+                  :aria-label="`Voir le profil de ${request.studentName}`"
+                  @click.stop="openStudentProfile(request)"
+                >
+                  <img v-if="request.avatar" :src="request.avatar" :alt="request.studentName" />
+                  <span v-else>{{ request.initials }}</span>
+                </button>
+
+                <div class="request-content">
+                  <button
+                    type="button"
+                    class="student-name-btn"
+                    @click.stop="openStudentProfile(request)"
+                  >
+                    {{ request.studentName }}
+                  </button>
+                  <p>Lettre · {{ request.title }}</p>
+                  <span>{{ request.date }}</span>
+                </div>
+
+                <span
+                  class="status-badge"
+                  :class="recommendationStatusClass(request.status)"
+                >
+                  {{ request.status }}
+                </span>
+              </article>
+
+              <p
+                v-if="!groupedRecommendations[section.key].length"
+                class="empty-state"
+              >
+                Aucune demande
+              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div
+      v-if="selectedRequest"
+      class="modal-backdrop"
+      @click.self="closeDetailsModal"
+    >
+      <section class="details-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <p>Détails de la demande</p>
+            <button
+              type="button"
+              class="modal-student-link"
+              @click="openStudentProfile(selectedRequest)"
+            >
+              {{ selectedRequest.studentName }}
+            </button>
+          </div>
+          <button type="button" class="modal-close" @click="closeDetailsModal">
+            ×
+          </button>
+        </div>
+
+        <div class="details-grid">
+          <div>
+            <span>Type</span>
+            <strong>{{ selectedRequest.type }}</strong>
+          </div>
+          <div>
+            <span>Date</span>
+            <strong>{{ selectedRequest.date }}</strong>
+          </div>
+          <div>
+            <span>Statut</span>
+            <strong>{{ selectedRequest.status }}</strong>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <span>Titre</span>
+          <h3>{{ selectedRequest.title }}</h3>
+        </div>
+
+        <div class="details-section">
+          <span>Description</span>
+          <p>{{ selectedRequest.description }}</p>
+        </div>
+
+        <div class="details-section">
+          <span>Liens / fichiers joints</span>
+          <div class="attachment-list">
+            <a
+              v-for="attachment in selectedRequest.attachments || []"
+              :key="attachment"
+              href="#"
+              @click.prevent
+            >
+              {{ attachment }}
+            </a>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeDetailsModal"
+          >
+            Fermer
+          </button>
+          <button
+            v-if="selectedRequest.status === 'En attente'"
+            type="button"
+            class="action-btn primary"
+            @click="updateSelectedStatus('Validé')"
+          >
+            Valider
+          </button>
+          <button
+            v-if="selectedRequest.status === 'En attente'"
+            type="button"
+            class="action-btn danger"
+            @click="updateSelectedStatus('Refusé')"
+          >
+            Refuser
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div
+      v-if="selectedRecommendation"
+      class="modal-backdrop"
+      @click.self="closeRecommendationDetails"
+    >
+      <section class="details-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <p>Détails de la lettre</p>
+            <button
+              type="button"
+              class="modal-student-link"
+              @click="openStudentProfile(selectedRecommendation)"
+            >
+              {{ selectedRecommendation.studentName }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="modal-close"
+            @click="closeRecommendationDetails"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="details-grid">
+          <div>
+            <span>Profil</span>
+            <strong>{{ selectedRecommendation.profileInfo }}</strong>
+          </div>
+          <div>
+            <span>Date</span>
+            <strong>{{ selectedRecommendation.date }}</strong>
+          </div>
+          <div>
+            <span>Statut</span>
+            <strong>{{ selectedRecommendation.status }}</strong>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <span>Titre</span>
+          <h3>{{ selectedRecommendation.title }}</h3>
+        </div>
+
+        <div class="details-section">
+          <span>Message étudiant</span>
+          <p>{{ selectedRecommendation.message }}</p>
+        </div>
+
+        <div
+          v-if="selectedRecommendation.writtenLetter"
+          class="details-section"
+        >
+          <span>Lettre écrite</span>
+          <p>{{ selectedRecommendation.writtenLetter }}</p>
+        </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeRecommendationDetails"
+          >
+            Fermer
+          </button>
+          <button
+            v-if="selectedRecommendation.status === 'En attente'"
+            type="button"
+            class="action-btn primary"
+            @click="openWriteRecommendationModal(selectedRecommendation)"
+          >
+            Accepter
+          </button>
+          <button
+            v-if="selectedRecommendation.status === 'En attente'"
+            type="button"
+            class="action-btn danger"
+            @click="refuseSelectedRecommendation"
+          >
+            Refuser
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div
+      v-if="writingRecommendation"
+      class="modal-backdrop"
+      @click.self="closeWriteRecommendationModal"
+    >
+      <section class="details-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <p>Écrire la lettre</p>
+            <button
+              type="button"
+              class="modal-student-link"
+              @click="openStudentProfile(writingRecommendation)"
+            >
+              {{ writingRecommendation.studentName }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="modal-close"
+            @click="closeWriteRecommendationModal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="details-section">
+          <span>Demande</span>
+          <h3>{{ writingRecommendation.title }}</h3>
+          <p>{{ writingRecommendation.message }}</p>
+        </div>
+
+        <p v-if="error" class="page-error">{{ error }}</p>
+
+        <label class="letter-field">
+          <span>Lettre de recommandation</span>
+          <textarea
+            v-model="letterDraft"
+            rows="8"
+            placeholder="Écrivez la lettre de recommandation ici..."
+          />
+        </label>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="action-btn muted"
+            @click="closeWriteRecommendationModal"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="action-btn primary"
+            @click="sendRecommendationLetter"
+          >
+            Envoyer
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.dashboard-page {
+  min-height: 100vh;
+  width: 100vw;
+  background: var(--surface-page);
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  padding-top: 50px;
+  overflow: hidden;
+}
+
+.dashboard-shell {
+  height: calc(100vh - 50px);
+  overflow-y: auto;
+  padding: 16px;
+  transition: padding-left 0.3s ease;
+}
+
+.dashboard-shellShift {
+  padding-left: 264px;
+}
+
+.dashboard-panel {
+  max-width: none;
+  margin: 0;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-kicker {
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.dashboard-header h1 {
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.page-error {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 12px 16px;
+  font-weight: 700;
+}
+
+.dashboard-sectionHeader {
+  margin: 22px 0 14px;
+}
+
+.dashboard-sectionHeader h2 {
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.stat-card,
+.status-panel,
+.request-row,
+.details-modal {
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-06);
+  box-shadow: 0 14px 32px var(--overlay-slate-08);
+}
+
+.stat-card {
+  border-radius: var(--radius-card);
+  padding: 18px;
+}
+
+.stat-card span {
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stat-card strong {
+  display: block;
+  color: var(--purple);
+  font-family: var(--font-body);
+  font-size: 34px;
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.status-panel {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.status-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--overlay-slate-border-soft);
+  padding: 16px;
+}
+
+.status-title h2 {
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.status-title span {
+  border-radius: var(--radius-pill);
+  background: var(--purple-soft);
+  color: var(--purple);
+  padding: 6px 11px;
+  font-weight: 800;
+}
+
+.request-list {
+  display: grid;
+  gap: 10px;
+  max-height: 360px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.request-row {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.student-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: 800;
+  overflow: hidden;
+}
+
+.student-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.student-name-btn,
+.modal-student-link {
+  background: transparent;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-weight: 800;
+  text-align: left;
+}
+
+.request-content p {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 3px;
+}
+
+.request-content span,
+.empty-state {
+  color: var(--text-gray);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-badge {
+  border-radius: var(--radius-pill);
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.status-badge.is-pending {
+  background: var(--warning-bg);
+  color: #c2410c;
+}
+
+.status-badge.is-valid {
+  background: var(--success-bg);
+  color: var(--success-dark);
+}
+
+.status-badge.is-refused {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.42);
+  padding: 20px;
+}
+
+.details-modal {
+  width: min(640px, 100%);
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-header p {
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.modal-student-link {
+  font-size: 24px;
+}
+
+.modal-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  color: var(--text-dark);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.details-grid div,
+.details-section {
+  border: 1px solid var(--overlay-slate-border);
+  border-radius: 16px;
+  background: var(--surface-subtle);
+  padding: 12px 14px;
+}
+
+.details-grid span,
+.details-section span,
+.letter-field span {
+  display: block;
+  color: var(--text-gray);
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.details-grid strong,
+.details-section h3 {
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.details-section {
+  margin-bottom: 14px;
+}
+
+.letter-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.details-section p {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.letter-field textarea {
+  width: 100%;
+  border-radius: 16px;
+  background: var(--surface-subtle);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--text-dark);
+  padding: 12px 14px;
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.attachment-list,
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment-list a {
+  border-radius: var(--radius-pill);
+  background: var(--purple-soft);
+  color: var(--purple);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.modal-actions {
+  margin-top: 16px;
+}
+
+.action-btn {
+  min-height: 36px;
+  border-radius: var(--radius-pill);
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.action-btn.primary {
+  background: var(--purple);
+  color: var(--white);
+}
+
+.action-btn.danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.action-btn.muted {
+  background: var(--input-bg);
+  color: var(--text-dark);
+}
+</style>
+

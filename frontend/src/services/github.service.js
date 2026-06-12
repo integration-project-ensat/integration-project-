@@ -1,1 +1,0 @@
-// Appels à l'API GitHub REST (via le backend proxy). Récupère les dépôts publics, le nombre de commits, les langages utilisés et le calendrier d'activité.

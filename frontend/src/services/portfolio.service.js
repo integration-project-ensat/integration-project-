@@ -1,1 +1,30 @@
-// Appels API liés au portfolio : charger les données, mettre à jour la visibilité, déclencher la génération PDF, récupérer le lien public partageable.
+import api from './api'
+
+export const portfolioService = {
+  getPortfolio(studentId) {
+    return api.get(`/portfolio/${studentId}`)
+  },
+
+  getPortfolioExportHtmlUrl(studentId) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+    return `${apiBase.replace(/\/$/, '')}/portfolio/${studentId}/export/html`
+  },
+
+  getPortfolioExportPdfUrl(studentId) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+    return `${apiBase.replace(/\/$/, '')}/portfolio/${studentId}/export/pdf`
+  },
+
+  async getTemplates() {
+    const { data } = await api.get('/templates')
+    return data
+  },
+
+  async changeTemplate(id_modele) {
+    const { data } = await api.patch('/template', {
+      id_modele
+    })
+
+    return data
+  }
+}

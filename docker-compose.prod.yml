@@ -1,35 +1,87 @@
-version: '3.8'
+version: "3.8"
+
 services:
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile  
-    restart: always
+    image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-frontend:latest
     expose:
       - "80"
- 
+    depends_on:
+      - backend
+
   backend:
-    restart: always
+    image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-backend:latest
+    command: >
+      sh -c "
+        npx prisma generate &&
+        npx prisma migrate deploy &&
+        npm run seed &&
+        npm run start
+      "
     expose:
       - "3000"
+    volumes:
+      - backend_uploads:/app/uploads
+    env_file:
+      - ./.env
     environment:
       - NODE_ENV=production
- 
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
+      - AI_SERVICE_URL=http://ai-service:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      ai-service:
+        condition: service_healthy
+
+  ai-service:
+    image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-ai:latest
+    expose:
+      - "8000"
+    command: uvicorn app:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   postgres:
+    image: postgres:15-alpine
     restart: always
- 
+    environment:
+      - POSTGRES_DB=${DB_NAME:?DB_NAME is required}
+      - POSTGRES_USER=${DB_USER:?DB_USER is required}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
   keycloak:
+    image: quay.io/keycloak/keycloak:latest
     restart: always
     expose:
       - "8080"
     environment:
-      - KC_HOSTNAME=localhost        
-      - KC_HOSTNAME_STRICT=false     
-      - KC_HTTP_ENABLED=true         
-      - KC_PROXY=edge                
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      - KC_HOSTNAME=localhost
+      - KC_HOSTNAME_STRICT=false
+      - KC_HTTP_ENABLED=true
+      - KC_PROXY=edge
     command: start
- 
+
   nginx:
+    image: nginx:alpine
     restart: always
     ports:
       - "80:80"
@@ -37,3 +89,10 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres-data:
+  backend_uploads:
