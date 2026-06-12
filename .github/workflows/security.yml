@@ -81,9 +81,8 @@ jobs:
           timeout 60 bash -c \
             'until docker exec integration-project--postgres-1 pg_isready; \
             do sleep 2; done'
-          DB_USER=$(grep "^DB_USER=" .env | cut -d'=' -f2)
           docker exec integration-project--postgres-1 \
-            psql -U $DB_USER -c "CREATE DATABASE sonarqube;" || true
+            psql -U postgres -c "CREATE DATABASE sonarqube;" || true
           echo "Sonarqube DB created"
 
       - name: "Demarrer tous les services"
