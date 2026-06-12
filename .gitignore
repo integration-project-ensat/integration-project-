@@ -147,3 +147,5 @@ gitlab-sync/.env.gitlab-sync.local
 mkcert.exe
 nginx/ssl/nginx.key
 nginx/ssl/nginx.crt
+frontend/test-results/
+frontend/playwright-report/
