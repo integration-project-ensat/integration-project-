@@ -11,6 +11,11 @@ export default defineConfig({
     }
   },
   test: {
-    environment: 'jsdom'
+    environment: 'jsdom',
+    exclude: [
+      '**/node_modules/**',
+      '**/e2e/**',
+      '**/*.cy.{js,ts}',
+    ]
   }
 })
