@@ -98,17 +98,8 @@ const resolveBackendAsset = (path?: string | null) => {
     return value;
   }
 
-  if (value.startsWith("/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}${value}`;
-  }
-
-  if (value.startsWith("uploads/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}/${value}`;
-  }
+  if (value.startsWith("/")) return `${window.location.origin}${value}`;
+  if (value.startsWith("uploads/")) return `${window.location.origin}/${value}`;
 
   return "";
 };
@@ -279,7 +270,7 @@ const mapPost = (post: any): FeedPost => {
     score,
     comments: Array.isArray(post.commentaires) ? post.commentaires.map(mapComment) : [],
     isPopular: score >= 85 || recommendationCount >= 10 || likeCount >= 15,
-    imagePreview: post.image_url || null,
+    imagePreview: resolveBackendAsset(post.image_url) || null,
     collaborators:
       structured?.collaboratorsNames ||
       post.collaborateurs?.map((item: any) =>
@@ -297,6 +288,36 @@ const mapPost = (post: any): FeedPost => {
         )
       : false,
   };
+};
+
+const mapFeedPosts = (items: any[]) => {
+  return items.reduce((acc: FeedPost[], post: any) => {
+    try {
+      acc.push(mapPost(post));
+    } catch (mapError) {
+      console.error("Post ignored because its data is invalid:", post, mapError);
+    }
+    return acc;
+  }, []);
+};
+
+const clearCommentDrafts = () => {
+  Object.keys(commentDrafts).forEach((key) => {
+    commentDrafts[key] = "";
+  });
+};
+
+const handleUnauthorizedFeedError = (err: any) => {
+  if (err?.response?.status === 401) {
+    router.push("/login");
+    return true;
+  }
+
+  return false;
+};
+
+const updateFeedError = (err: any) => {
+  error.value = err?.response?.data?.message || "Erreur lors du chargement du fil d’actualité";
 };
 
 const syncInteractionState = (items: FeedPost[]) => {
@@ -347,28 +368,14 @@ const loadPosts = async () => {
 
   try {
     const response = await feedService.getPosts();
-    const items = Array.isArray(response.data?.data)
-      ? response.data.data.reduce((acc: FeedPost[], post: any) => {
-          try {
-            acc.push(mapPost(post));
-          } catch (mapError) {
-            console.error("Post ignored because its data is invalid:", post, mapError);
-          }
-          return acc;
-        }, [])
-      : [];
-    posts.value = items;
-    Object.keys(commentDrafts).forEach((key) => {
-      commentDrafts[key] = "";
-    });
+    posts.value = Array.isArray(response.data?.data) ? mapFeedPosts(response.data.data) : [];
+    clearCommentDrafts();
     error.value = null;
   } catch (err: any) {
-    if (err?.response?.status === 401) {
-      router.push('/login');
+    if (handleUnauthorizedFeedError(err)) {
       return;
     }
-    error.value =
-      err?.response?.data?.message || "Erreur lors du chargement du fil d’actualité";
+    updateFeedError(err);
   } finally {
     loading.value = false;
   }
@@ -418,7 +425,7 @@ const openProject = (projectId: string) => {
 };
 
 const toggleSavedPostProfile = (post: FeedPost) => {
-  const saved = saveProfile({
+  saveProfile({
     id: post.studentId,
     name: post.studentName,
     school: post.school.split("·")[0]?.trim() || post.school,

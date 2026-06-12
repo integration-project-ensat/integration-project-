@@ -1,6 +1,13 @@
-const { prisma, toBigInt } = require('../models/prisma')
+﻿const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
 const { recalculerScore } = require('./score.service')
+
+function createServiceError(statusCode, message) {
+  const error = new Error(message)
+  error.statusCode = statusCode
+  error.status = statusCode
+  return error
+}
 
 async function ensureAttachedProfessorStudent(professorId, studentId) {
   const attached = await prisma.professeurEtudiant.findUnique({
@@ -14,10 +21,67 @@ async function ensureAttachedProfessorStudent(professorId, studentId) {
   })
 
   if (!attached) {
-    throw {
-      statusCode: 403,
-      message: "Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.",
+    throw createServiceError(403, "Ajoutez d'abord cet Ã©tudiant Ã  votre liste avant de valider sa demande.")
+  }
+}
+
+function buildProjectValidationElement(projet, statut, validateurId, motif_refus) {
+  return {
+    type: 'PROJET',
+    reference_id: projet.id_projet,
+    statut,
+    validateur_id: validateurId ? toBigInt(validateurId) : undefined,
+    date_soumission: new Date(),
+    date_validation: new Date(),
+    motif_refus: motif_refus ?? null,
+  }
+}
+
+async function persistProjectValidationElement(projet, statut, validateurId, motif_refus) {
+  const existingElement = await prisma.elementValidable.findFirst({
+    where: { type: 'PROJET', reference_id: projet.id_projet }
+  })
+
+  const data = buildProjectValidationElement(projet, statut, validateurId, motif_refus)
+
+  if (existingElement) {
+    await prisma.elementValidable.update({
+      where: { id_element: existingElement.id_element },
+      data,
+    })
+    return
+  }
+
+  await prisma.elementValidable.create({ data })
+}
+
+async function notifyProjectStatusChange(projet, statut, motif_refus) {
+  try {
+    const utilisateurId = projet.id_etudiant
+    const projectName = projet.titre || 'Projet'
+
+    if (statut === 'VALIDE') {
+      await notificationService.creerNotification({
+        utilisateurId,
+        type: 'VALIDATION_PROJET',
+        message: `Votre projet "${projectName}" a Ã©tÃ© validÃ©.`,
+        cibleId: projet.id_projet,
+        cibleType: 'PROJET',
+      })
+      return
     }
+
+    if (statut === 'REFUSE') {
+      await notificationService.creerNotification({
+        utilisateurId,
+        type: 'REFUS_PROJET',
+        message: `Votre projet "${projectName}" a Ã©tÃ© refusÃ©. Motif: ${motif_refus || 'â€”'}`,
+        cibleId: projet.id_projet,
+        cibleType: 'PROJET',
+      })
+    }
+  } catch (e) {
+    // ne pas bloquer la validation en cas d'erreur de notification
   }
 }
 
@@ -103,7 +167,7 @@ const projetService = {
   async update(id, data, etudiantId) {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
-    if (projet.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
 
     const { titre, description, type, role, resultats, lien_github, visibilite, id_professeur, technologies } = data
     const techNames = normalizeTechnologies(technologies)
@@ -140,7 +204,7 @@ const projetService = {
   async delete(id, etudiantId) {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
-    if (projet.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
     return prisma.projet.delete({ where: { id_projet: BigInt(id) } })
   },
 
@@ -148,64 +212,11 @@ const projetService = {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
     if (projet.id_professeur && projet.id_professeur !== BigInt(validateurId)) {
-      throw { statusCode: 403, message: 'Acces refuse' }
+      throw createServiceError(403, 'Acces refuse')
     }
     await ensureAttachedProfessorStudent(validateurId, projet.id_etudiant)
-
-    // Enregistrer dans ElementValidable pour historisation
-    // Remplacement de l'upsert incorrect (PK != id_projet) par une recherche
-    // par type + reference_id, puis update/create selon le cas.
-    const existingElement = await prisma.elementValidable.findFirst({
-      where: { type: 'PROJET', reference_id: projet.id_projet }
-    })
-
-    if (existingElement) {
-      await prisma.elementValidable.update({
-        where: { id_element: existingElement.id_element },
-        data: {
-          statut,
-          validateur_id: toBigInt(validateurId),
-          date_validation: new Date(),
-          motif_refus: motif_refus ?? null,
-        },
-      })
-    } else {
-      await prisma.elementValidable.create({
-        data: {
-          type: 'PROJET',
-          reference_id: projet.id_projet,
-          statut,
-          validateur_id: validateurId ? toBigInt(validateurId) : undefined,
-          date_soumission: new Date(),
-          date_validation: new Date(),
-          motif_refus: motif_refus ?? null,
-        },
-      })
-    }
-
-    // Créer une notification pour l'étudiant concerné
-    try {
-      const utilisateurId = projet.id_etudiant
-      if (statut === 'VALIDE') {
-        await notificationService.creerNotification({
-          utilisateurId,
-          type: 'VALIDATION_PROJET',
-          message: `Votre projet \"${projet.titre || 'Projet'}\" a été validé.`,
-          cibleId: projet.id_projet,
-          cibleType: 'PROJET',
-        })
-      } else if (statut === 'REFUSE') {
-        await notificationService.creerNotification({
-          utilisateurId,
-          type: 'REFUS_PROJET',
-          message: `Votre projet \"${projet.titre || 'Projet'}\" a été refusé. Motif: ${motif_refus || '—'}`,
-          cibleId: projet.id_projet,
-          cibleType: 'PROJET',
-        })
-      }
-    } catch (e) {
-      // ne pas bloquer la validation en cas d'erreur de notification
-    }
+    await persistProjectValidationElement(projet, statut, validateurId, motif_refus)
+    await notifyProjectStatusChange(projet, statut, motif_refus)
 
     const updatedProjet = await prisma.projet.update({
       where: { id_projet: BigInt(id) },
@@ -223,7 +234,7 @@ const projetService = {
   async soumettre(id, etudiantId) {
     const projet = await prisma.projet.findUnique({ where: { id_projet: BigInt(id) } })
     if (!projet) return null
-    if (projet.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (projet.id_etudiant !== BigInt(etudiantId)) throw createServiceError(403, 'AccÃ¨s refusÃ©')
 
     await prisma.elementValidable.create({
       data: {
@@ -244,7 +255,7 @@ const projetService = {
         await notificationService.creerNotification({
           utilisateurId: projet.id_professeur,
           type: 'SOUMISSION_PROJET',
-          message: `Un étudiant vous a soumis le projet "${projet.titre || 'Projet'}" pour validation.`,
+          message: `Un Ã©tudiant vous a soumis le projet "${projet.titre || 'Projet'}" pour validation.`,
           cibleId: projet.id_projet,
           cibleType: 'PROJET',
         })

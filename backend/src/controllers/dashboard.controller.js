@@ -176,12 +176,12 @@ const getProfDashboard = asyncHandler(async (req, res) => {
       const validationStatut = lettreValidationMap.get(
         lettre.id_lettre.toString(),
       );
-      const status =
-        lettre.statut === "REFUSEE" || validationStatut === "REFUSE"
-          ? "Refusée"
-          : lettre.statut === "REDIGEE" || validationStatut === "VALIDE"
-            ? "Acceptée"
-            : "En attente";
+      let status = "En attente";
+      if (lettre.statut === "REFUSEE" || validationStatut === "REFUSE") {
+        status = "Refusée";
+      } else if (lettre.statut === "REDIGEE" || validationStatut === "VALIDE") {
+        status = "Acceptée";
+      }
 
       return {
         id: lettre.id_lettre.toString(),

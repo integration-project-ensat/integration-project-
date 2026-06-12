@@ -33,12 +33,12 @@ export default {
   },
 
   updateValidationStatus(request, status) {
-    const normalizedStatus =
-      status === 'Validé' || status === 'ValidÃ©' || status === 'ValidÃƒÂ©'
-        ? 'VALIDE'
-        : status === 'Refusé' || status === 'RefusÃ©' || status === 'RefusÃƒÂ©'
-          ? 'REFUSE'
-          : 'EN_ATTENTE'
+    let normalizedStatus = 'EN_ATTENTE'
+    if (status === 'Validé' || status === 'ValidÃ©' || status === 'ValidÃƒÂ©') {
+      normalizedStatus = 'VALIDE'
+    } else if (status === 'Refusé' || status === 'RefusÃ©' || status === 'RefusÃƒÂ©') {
+      normalizedStatus = 'REFUSE'
+    }
 
     if (request.type === 'Projet') {
       return api.patch(`/projets/${request.id}/statut`, {
@@ -56,12 +56,12 @@ export default {
   },
 
   updateRecommendationStatus(letterId, status, payload = {}) {
-    const normalizedStatus =
-      status === 'Acceptée' || status === 'AcceptÃ©e' || status === 'AcceptÃƒÂ©e'
-        ? 'REDIGEE'
-        : status === 'Refusée' || status === 'RefusÃ©e' || status === 'RefusÃƒÂ©e'
-          ? 'REFUSEE'
-          : 'EN_ATTENTE'
+    let normalizedStatus = 'EN_ATTENTE'
+    if (status === 'Acceptée' || status === 'AcceptÃ©e' || status === 'AcceptÃƒÂ©e') {
+      normalizedStatus = 'REDIGEE'
+    } else if (status === 'Refusée' || status === 'RefusÃ©e' || status === 'RefusÃƒÂ©e') {
+      normalizedStatus = 'REFUSEE'
+    }
 
     return api.patch(`/lettres/${letterId}/statut`, {
       statut: normalizedStatus,

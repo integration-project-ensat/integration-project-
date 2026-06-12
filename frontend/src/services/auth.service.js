@@ -69,7 +69,7 @@ function persistSession(user, token) {
 }
 
 function redirectToProvider(provider) {
-  const apiRoot = import.meta.env.VITE_API_BASE_URL || '/api'
+  const apiRoot = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
   window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/${provider}`
 }
 

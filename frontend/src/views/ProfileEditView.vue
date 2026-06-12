@@ -788,7 +788,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
         </div>
 
         <!-- ══ RECOMMANDATIONS ════════════════════════════════ -->
-        <div class="section-card">
+        <div v-if="false" class="section-card">
           <div class="section-head">
             <h2>Recommandations</h2>
           </div>

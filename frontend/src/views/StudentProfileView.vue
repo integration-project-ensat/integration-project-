@@ -345,12 +345,53 @@
           <!-- Tab : Modifier bio (profil etudiant) -->
           <section v-if="activeTab === 'Modifier bio' && isStudentProfile" class="profile-edit-sections">
 
+            <!-- Informations personnelles -->
+            <div class="pedit-card">
+              <div class="pedit-head">
+                <h3>Informations personnelles</h3>
+                <button v-if="!editingInfo" type="button" class="btn-modifier" @click="openEditInfo">Modifier</button>
+              </div>
+              <template v-if="!editingInfo">
+                <div class="role-overview role-overview--edit">
+                  <article class="role-overview-card">
+                    <span>Nom complet</span>
+                    <strong>{{ profile.name || 'Non renseigné' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Titre</span>
+                    <strong>{{ profile.title || 'Non renseigné' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Établissement</span>
+                    <strong>{{ profile.school || 'Non renseigné' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Ville</span>
+                    <strong>{{ profile.location || 'Non renseignée' }}</strong>
+                  </article>
+                </div>
+              </template>
+              <template v-else>
+                <div class="contact-form">
+                  <div class="form-field"><label>Nom complet</label><input v-model="infoForm.name" type="text" placeholder="Nom Prénom" /></div>
+                  <div class="form-field"><label>Titre</label><input v-model="infoForm.title" type="text" placeholder="Ex: Génie Informatique" /></div>
+                  <div class="form-field"><label>Établissement</label><input v-model="infoForm.school" type="text" placeholder="ENSA Tanger" /></div>
+                  <div class="form-field"><label>Ville</label><input v-model="infoForm.location" type="text" placeholder="Tanger" /></div>
+                </div>
+                <div class="pedit-row-actions">
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveInfo">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
+                  <button type="button" class="cancel-btn" @click="cancelInfo">Annuler</button>
+                </div>
+              </template>
+            </div>
+
             <!-- À propos -->
             <div class="pedit-card">
               <div class="pedit-head">
                 <h3>À propos</h3>
                 <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Modifier
                 </button>
               </div>
@@ -579,29 +620,6 @@
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Recommandations (lecture seule) -->
-            <div class="pedit-card">
-              <div class="pedit-head"><h3>Recommandations</h3></div>
-              <div class="recommendations-list">
-                <article v-for="r in recommendations" :key="r.id" class="recommendation-card">
-                  <div class="mini-avatar">
-                    <img v-if="r.avatar" :src="r.avatar" alt="" />
-                    <span v-else>{{ getInitials(r.author) }}</span>
-                  </div>
-                  <div class="recommendation-content">
-                    <div class="recommendation-head">
-                      <div>
-                        <h4>{{ r.author }}</h4>
-                        <p>{{ r.role === 'teacher' ? 'Professeur' : 'Professionnel' }}</p>
-                      </div>
-                      <span>{{ r.date }}</span>
-                    </div>
-                    <p class="recommendation-message">{{ r.message || 'Recommandation sans commentaire.' }}</p>
-                  </div>
-                </article>
               </div>
             </div>
 
@@ -1438,12 +1456,17 @@ async function copyProfileLink() {
 
 // ─── Profile edit – bio ───────────────────────────────────────────────────────
 
+const editingInfo = ref(false)
 const editingAbout = ref(false)
+const infoForm = reactive({ name: '', title: '', school: '', location: '' })
 const bioForm = ref('')
 
 function applySavedProfile(savedProfile: any) {
   profile.value = {
     ...profile.value,
+    name: savedProfile?.name ?? profile.value.name,
+    title: savedProfile?.title ?? profile.value.title,
+    school: savedProfile?.school ?? profile.value.school,
     bio: savedProfile?.bio ?? profile.value.bio,
     email: savedProfile?.email ?? profile.value.email,
     phone: savedProfile?.phone ?? profile.value.phone,
@@ -1452,6 +1475,35 @@ function applySavedProfile(savedProfile: any) {
     avatar: savedProfile?.avatar ?? profile.value.avatar,
     banner: savedProfile?.banner ?? profile.value.banner,
   }
+}
+
+function openEditInfo() {
+  infoForm.name = profile.value.name
+  infoForm.title = profile.value.title
+  infoForm.school = profile.value.school
+  infoForm.location = profile.value.location
+  editingInfo.value = true
+}
+
+async function saveInfo() {
+  const saved = await saveProfileChanges(
+    {
+      name: infoForm.name,
+      title: infoForm.title,
+      etablissement: infoForm.school,
+      adresse: infoForm.location,
+    },
+    'Informations personnelles mises a jour avec succes.'
+  )
+  if (saved) editingInfo.value = false
+}
+
+function cancelInfo() {
+  infoForm.name = profile.value.name
+  infoForm.title = profile.value.title
+  infoForm.school = profile.value.school
+  infoForm.location = profile.value.location
+  editingInfo.value = false
 }
 
 async function saveProfileChanges(payload: Record<string, string>, successMessage: string) {
@@ -2218,9 +2270,10 @@ function normalizeBackendRole(roleRaw: unknown): ProfileRole {
 
 function resolveBackendAsset(path: string) {
   if (!path || /^https?:\/\//.test(path)) return path
-  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-  const backendBase = apiBase.replace(/\/api\/?$/, '')
-  return `${backendBase}${path}`
+  if (String(path).startsWith('data:')) return path
+  if (String(path).startsWith('/')) return `${window.location.origin}${path}`
+  if (String(path).startsWith('uploads/')) return `${window.location.origin}/${path}`
+  return ''
 }
 
 function getInitials(name: string) {

@@ -68,9 +68,9 @@ const fullName = (user: any) =>
 
 const resolveBackendAsset = (path: string) => {
   if (!path || /^https?:\/\//.test(path)) return path;
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-  const backendBase = apiBase.replace(/\/api\/?$/, "");
-  return `${backendBase}${path}`;
+  if (String(path).startsWith("/")) return `${window.location.origin}${path}`;
+  if (String(path).startsWith("uploads/")) return `${window.location.origin}/${path}`;
+  return "";
 };
 
 const normalizeExternalUrl = (value?: string) => {

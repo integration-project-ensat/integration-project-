@@ -1,11 +1,5 @@
 import api from './api'
-
-const resolveBackendAsset = (path) => {
-  if (!path || /^https?:\/\//.test(path) || String(path).startsWith('data:')) return path
-  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-  const backendBase = apiBase.replace(/\/api\/?$/, '')
-  return `${backendBase}${path}`
-}
+import { resolveBackendAsset } from '../utils/backendAsset'
 
 const fullName = (user) =>
   [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
@@ -123,7 +117,9 @@ const mapPost = (item) => ({
   subtitle: item?.subtitle || item?.visibilite || 'Post portfolio',
   description: item?.description || item?.contenu || '',
   avatar: resolveBackendAsset(item?.avatar || item?.auteur?.profil?.photo_profil || ''),
-  images: item?.images || (item?.image_url ? [item.image_url] : []),
+  images:
+    item?.images ||
+    (item?.image_url ? [resolveBackendAsset(item.image_url)] : []),
   media: item?.media || [],
   compteurs_reactions: item?.compteurs_reactions || {},
   reposts: item?.reposts || item?._count?.reposts || 0,
@@ -144,16 +140,15 @@ const normalizeProfile = (payload) => {
   const professional = payload?.professionnel || {}
   const professor = payload?.professeur || {}
   const normalizedRole = profileRole(payload?.role)
-  const score = normalizedRole === 'student'
-    ? (
-        Number(
-          payload?.score ??
-          student?.score_credibilite?.score_total ??
-          professional?.score_credibilite?.score_total ??
-          0,
-        ) || 0
-      )
-    : 0
+  let score = 0
+  if (normalizedRole === 'student') {
+    score = Number(
+      payload?.score ??
+      student?.score_credibilite?.score_total ??
+      professional?.score_credibilite?.score_total ??
+      0,
+    ) || 0
+  }
 
   const recommendations = Array.isArray(payload?.recommendations)
     ? payload.recommendations.map(mapRecommendation)

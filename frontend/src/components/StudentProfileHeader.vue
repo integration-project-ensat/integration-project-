@@ -1,5 +1,4 @@
-
-<template>
+﻿<template>
   <div class="profile-header">
     <div class="cover-section">
       <div class="cover-img" :style="localBannerStyle">
@@ -9,7 +8,7 @@
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
-            Modifier la bannière
+            Modifier la banniÃ¨re
           </label>
           <input id="banner-file-input" type="file" accept="image/*" class="sr-only" @change="onBannerChange" />
         </template>
@@ -41,7 +40,7 @@
       <p class="location">
         {{ profile.location }}
         <button type="button" class="contact" @click="showContact = !showContact">
-          • Contact info
+          â€¢ Contact info
         </button>
       </p>
 
@@ -111,18 +110,18 @@
       </div>
 
       <div v-if="showAbout" class="about-section">
-        <h3>À propos</h3>
+        <h3>Ã€ propos</h3>
         <p v-if="profile.bio" class="bio">{{ profile.bio }}</p>
-        <p v-else class="bio muted">Aucune bio pour l’instant.</p>
+        <p v-else class="bio muted">Aucune bio pour lâ€™instant.</p>
       </div>
 
       <div v-if="showCompetances" class="competances-dropdown">
         <div class="competances-section">
-          <h3>Compétances Techniques</h3>
+          <h3>CompÃ©tances Techniques</h3>
           <div class="skills-flex-list">
-            <span 
-              v-for="skill in technicalSkills" 
-              :key="skill.name" 
+            <span
+              v-for="skill in technicalSkills"
+              :key="skill.name"
               class="skill-tag clickable"
               @click="openSkillPopup(skill, 'tech')"
             >
@@ -132,11 +131,11 @@
         </div>
 
         <div class="competances-section">
-          <h3>Compétances Comportementales</h3>
+          <h3>CompÃ©tances Comportementales</h3>
           <div class="skills-flex-list">
-            <span 
-              v-for="skill in softSkills" 
-              :key="skill.name" 
+            <span
+              v-for="skill in softSkills"
+              :key="skill.name"
               class="skill-tag soft clickable"
               @click="openSkillPopup(skill, 'soft')"
             >
@@ -149,12 +148,12 @@
       <div v-if="showShare" class="share-dropdown">
         <div class="share-card-internal">
           <h3>Partager ce profil</h3>
-          <p class="share-subtitle">Copiez le lien ou partagez directement avec votre réseau.</p>
+          <p class="share-subtitle">Copiez le lien ou partagez directement avec votre rÃ©seau.</p>
 
           <div class="link-box">
             <span>{{ profileUrl }}</span>
             <button type="button" class="copy-btn" @click="copyProfileLink">
-              {{ copied ? 'Copié' : 'Copier' }}
+              {{ copied ? 'CopiÃ©' : 'Copier' }}
             </button>
           </div>
 
@@ -192,7 +191,7 @@
 
       <div v-if="showRecommendationsSummary !== false" class="recos-section">
         <div class="reco-card">
-          <p class="reco-label">Reco plus récent de profs</p>
+          <p class="reco-label">Reco plus rÃ©cent de profs</p>
 
           <div v-if="latestTeacherReco" class="reco-item">
             <span class="reco-avatar" :class="avatarColorClass(latestTeacherReco.author)">
@@ -204,12 +203,12 @@
 
           <div v-else class="reco-item muted">
             <span class="dot" />
-            <span>Aucune recommandation récente.</span>
+            <span>Aucune recommandation rÃ©cente.</span>
           </div>
         </div>
 
         <div class="reco-card">
-          <p class="reco-label">Reco plus récent de professionnels</p>
+          <p class="reco-label">Reco plus rÃ©cent de professionnels</p>
 
           <div v-if="latestProfessionalReco" class="reco-item">
             <span class="reco-avatar" :class="avatarColorClass(latestProfessionalReco.author)">
@@ -221,12 +220,12 @@
 
           <div v-else class="reco-item muted">
             <span class="dot" />
-            <span>Aucune recommandation récente.</span>
+            <span>Aucune recommandation rÃ©cente.</span>
           </div>
         </div>
 
         <div class="reco-card">
-          <p class="reco-label">Reco plus récent d'étudiants</p>
+          <p class="reco-label">Reco plus rÃ©cent d'Ã©tudiants</p>
 
           <div v-if="latestStudentReco" class="reco-item">
             <span class="reco-avatar" :class="avatarColorClass(latestStudentReco.author)">
@@ -238,7 +237,7 @@
 
           <div v-else class="reco-item muted">
             <span class="dot" />
-            <span>Aucune recommandation récente.</span>
+            <span>Aucune recommandation rÃ©cente.</span>
           </div>
         </div>
       </div>
@@ -256,7 +255,7 @@
               {{ selectedSkill.name }}
             </span>
           </div>
-          <button type="button" class="close-modal-btn" @click="showSkillModal = false">×</button>
+          <button type="button" class="close-modal-btn" @click="showSkillModal = false">Ã—</button>
         </div>
 
         <div class="modal-body">
@@ -275,11 +274,11 @@
           <div class="modal-details-section">
             <h4>Description & Application</h4>
             <p class="skill-description">{{ selectedSkill.description }}</p>
-            
+
             <div class="skill-meta-info">
               <div class="meta-item">
-                <span class="meta-icon">📁</span>
-                <span>Utilisé activement dans <strong>{{ selectedSkill.projectsCount }} projet(s)</strong> portfolio</span>
+                <span class="meta-icon">ðŸ“</span>
+                <span>UtilisÃ© activement dans <strong>{{ selectedSkill.projectsCount }} projet(s)</strong> portfolio</span>
               </div>
             </div>
           </div>
@@ -319,7 +318,7 @@ const showContact = ref(false)
 const showShare = ref(false)
 const copied = ref(false)
 
-// Gestion du pop-up des compétences
+// Gestion du pop-up des compÃ©tences
 const showSkillModal = ref(false)
 const selectedSkill = ref<SelectedSkillState | null>(null)
 
@@ -362,15 +361,15 @@ const emit = defineEmits<{
 const localAvatar = ref<string | null>(null)
 const localBanner = ref<string | null>(null)
 
-const tabList = computed(() =>
-  props.tabs?.length
-    ? props.tabs
-    : props.isOwner
-    ? props.profileRole === 'student'
-      ? ['Modifier bio', 'Partager']
-      : ['Modifier info', 'Partager']
-    : ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
-)
+const tabList = computed(() => {
+  if (props.tabs?.length) return props.tabs
+  if (props.isOwner) {
+    if (props.profileRole === 'student') return ['Modifier bio', 'Partager']
+    return ['Modifier info', 'Partager']
+  }
+
+  return ['Portfolio', 'Recommander', 'Connecter', 'CompÃ©tences', 'Ã€ propos', 'Partager']
+})
 
 const localBannerStyle = computed(() => {
   if (localBanner.value) {
@@ -388,8 +387,8 @@ function tabClass(tab: string) {
     portfolio: tab === 'Portfolio',
     recommendation: tab === 'Recommander',
     connect: tab === 'Connecter',
-    competances: tab === 'Compétances',
-    about: tab === 'À propos',
+    competances: tab === 'CompÃ©tances',
+    about: tab === 'Ã€ propos',
     share: tab === 'Partager',
     'modifier-bio': tab === 'Modifier bio' || tab === 'Modifier info',
   }
@@ -433,7 +432,7 @@ const softSkills = computed(() => props.profile.softSkills ?? [])
 // Liens de Partage Dynamiques
 const profileUrl = computed(() => window.location.href)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
-const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${props.profile.name}`))
+const encodedShareText = computed(() => encodeURIComponent(`DÃ©couvrez le profil de ${props.profile.name}`))
 
 const gmailShareUrl = computed(() => `mailto:?subject=${encodedShareText.value}&body=${encodedShareText.value}%0A${encodedProfileUrl.value}`)
 const linkedinShareUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodedProfileUrl.value}`)
@@ -452,9 +451,67 @@ const fallbackTab = computed(() => {
   if (tabList.value.includes('Modifier bio')) return 'Portfolio'
   if (tabList.value.includes('Modifier info')) return 'Portfolio'
   if (tabList.value.includes('Portfolio')) return 'Portfolio'
-  if (tabList.value.includes('À propos')) return 'À propos'
+  if (tabList.value.includes('Ã€ propos')) return 'Ã€ propos'
   return tabList.value[0] || ''
 })
+
+
+const toggleInternalSection = (section: 'Compétences' | 'À propos' | 'Partager') => {
+  if (section === 'Compétences') {
+    showCompetances.value = !showCompetances.value
+    showAbout.value = false
+    showShare.value = false
+    return
+  }
+
+  if (section === 'À propos') {
+    showAbout.value = !showAbout.value
+    showCompetances.value = false
+    showShare.value = false
+    return
+  }
+
+  showShare.value = !showShare.value
+  showCompetances.value = false
+  showAbout.value = false
+}
+
+const openProfileEditTab = (tab: 'Modifier bio' | 'Modifier info') => {
+  if (props.modelValue === tab) {
+    emit('update:modelValue', fallbackTab.value)
+    return
+  }
+
+  emit('update:modelValue', tab)
+}
+
+const handleTabClick = (tab: string) => {
+  showContact.value = false
+
+  if (tab === 'Compétences' || tab === 'À propos' || tab === 'Partager') {
+    toggleInternalSection(tab)
+    return
+  }
+
+  if (tab === 'Portfolio') {
+    showCompetances.value = false
+    showAbout.value = false
+    showShare.value = false
+    emit('update:modelValue', 'Portfolio')
+    return
+  }
+
+  if (tab === 'Modifier bio' || tab === 'Modifier info') {
+    openProfileEditTab(tab)
+    return
+  }
+
+  if (props.modelValue === tab) {
+    emit('update:modelValue', fallbackTab.value)
+  } else {
+    emit('update:modelValue', tab)
+  }
+}
 
 function openSkillPopup(skill: SkillItem, type: 'tech' | 'soft') {
   selectedSkill.value = { ...skill, type }
@@ -465,40 +522,6 @@ async function copyProfileLink() {
   await navigator.clipboard.writeText(profileUrl.value)
   copied.value = true
   window.setTimeout(() => { copied.value = false }, 1600)
-}
-
-const handleTabClick = (tab: string) => {
-  showContact.value = false
-  
-  // Fermeture croisée des sections internes du Header
-  showCompetances.value = tab === 'Compétances' ? !showCompetances.value : false
-  showAbout.value = tab === 'À propos' ? !showAbout.value : false
-  showShare.value = tab === 'Partager' ? !showShare.value : false
-
-  if (tab === 'Portfolio') {
-    showCompetances.value = false
-    showAbout.value = false
-    emit('update:modelValue', 'Portfolio')
-    return
-  }
-
-  if (tab === 'Modifier bio' || tab === 'Modifier info') {
-    if (props.modelValue === tab) {
-      emit('update:modelValue', fallbackTab.value)
-    } else {
-      emit('update:modelValue', tab === 'Modifier info' ? 'Modifier info' : 'Modifier bio')
-    }
-    return
-  }
-
-  if (tab === 'Compétances' || tab === 'À propos' || tab === 'Partager') {
-    return
-  }
-  if (props.modelValue === tab) {
-    emit('update:modelValue', fallbackTab.value)
-  } else {
-    emit('update:modelValue', tab)
-  }
 }
 
 function avatarColorClass(name: string) {
@@ -825,7 +848,7 @@ h1 {
   color: var(--text-muted);
 }
 
-/* Grille des compétences */
+/* Grille des compÃ©tences */
 .competances-dropdown {
   display: grid;
   grid-template-columns: 1fr 1fr;

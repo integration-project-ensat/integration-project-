@@ -23,13 +23,12 @@ type ExploreCardProfile = {
 };
 
 const resolveBackendAsset = (path?: string | null) => {
-  if (!path || /^https?:\/\//.test(path) || String(path).startsWith("data:")) {
-    return path || "";
-  }
-
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-  const backendBase = apiBase.replace(/\/api\/?$/, "");
-  return `${backendBase}${path}`;
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) return `${window.location.origin}${value}`;
+  if (value.startsWith("uploads/")) return `${window.location.origin}/${value}`;
+  return "";
 };
 
 const pickRole = (profile: ProfilExplore) =>

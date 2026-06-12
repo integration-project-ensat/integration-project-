@@ -27,7 +27,7 @@
               <button type="button" class="ghost-action" :disabled="isLoading" @click="loadDashboard">
                 Actualiser
               </button>
-              <button type="button" class="primary-action" @click="goTo('/profile/edit')">
+              <button type="button" class="primary-action" @click="goTo('/profile?tab=Modifier%20bio')">
                 Compléter mon profil
               </button>
             </div>

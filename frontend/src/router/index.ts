@@ -44,7 +44,6 @@ import TopProfilesProView from "../views/TopProfilesProView.vue";
 import ValidationProfView from "../views/ValidationProfView.vue";
 import RecommandationsProfView from "../views/RecommandationsProfView.vue";
 import EtudiantsProfView from "../views/EtudiantsProfView.vue";
-import ProfileEditView from "../views/ProfileEditView.vue";
 import AIPortfolioAnalyzerView from "../views/AIPortfolioAnalyzerView.vue";
 import PortfolioCreativeView from "../views/PortfolioCreativeView.vue";
 import PortfolioProfessionalView from "../views/PortfolioProfessionalView.vue";
@@ -223,7 +222,11 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     { path: "/profile", name: "profile", component: StudentProfileView, meta: { requiresAuth: true } },
-    { path: "/profile/edit", name: "profile-edit", component: ProfileEditView },
+    {
+      path: "/profile/edit",
+      name: "profile-edit",
+      redirect: "/profile?tab=Modifier%20bio",
+    },
     { path: "/dashboard", name: "dashboard", component: DashboardProView },
     { path: "/portfolio", name: "portfolio", component: StudentPortfolioView },
     { path: "/lettres", name: "letters", component: LettersView },

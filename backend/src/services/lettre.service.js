@@ -1,4 +1,4 @@
-const { prisma, toBigInt } = require('../models/prisma')
+﻿const { prisma, toBigInt } = require('../models/prisma')
 const notificationService = require('./notification.service')
 
 const normalizeMotif = (motif) => String(motif || '').trim().toUpperCase()
@@ -10,6 +10,13 @@ const ALLOWED_MOTIFS = new Set([
   'STAGE',
   'INTERNATIONAL',
 ])
+
+const createServiceError = (status, message) => {
+  const error = new Error(message)
+  error.status = status
+  error.statusCode = status
+  return error
+}
 
 const ensureAttachedProfessorStudent = async (professorId, studentId) => {
   const attached = await prisma.professeurEtudiant.findUnique({
@@ -23,11 +30,65 @@ const ensureAttachedProfessorStudent = async (professorId, studentId) => {
   })
 
   if (!attached) {
-    throw {
-      status: 403,
-      message: "Ajoutez d'abord cet étudiant à votre liste avant de traiter sa demande.",
-    }
+    throw createServiceError(403, "Ajoutez d'abord cet étudiant à votre liste avant de traiter sa demande.")
   }
+}
+
+const persistLetterElement = async (id_lettre, status, validateurId, motif_refus) => {
+  const existingElement = await prisma.elementValidable.findFirst({
+    where: {
+      type: 'RECOMMANDATION',
+      reference_id: toBigInt(id_lettre),
+    },
+    select: { id_element: true },
+  })
+
+  const elementData = {
+    statut: status,
+    validateur_id: toBigInt(validateurId),
+    date_validation: new Date(),
+    motif_refus: status === 'REFUSE' ? motif_refus : null,
+  }
+
+  if (existingElement) {
+    await prisma.elementValidable.update({
+      where: { id_element: existingElement.id_element },
+      data: elementData,
+    })
+    return
+  }
+
+  await prisma.elementValidable.create({
+    data: {
+      type: 'RECOMMANDATION',
+      reference_id: toBigInt(id_lettre),
+      date_soumission: new Date(),
+      ...elementData,
+    },
+  })
+}
+
+const notifyLetterStatusChange = async (lettre, statut, motif_refus) => {
+  try {
+    if (statut !== 'REDIGEE' && statut !== 'REFUSEE') return
+
+    const motifLabel = lettre.motif ? ` (${String(lettre.motif).toLowerCase()})` : ''
+    const refusalSuffix = motif_refus ? ` Motif: ${motif_refus}` : ''
+    const notificationType =
+      statut === 'REDIGEE' ? 'RECOMMANDATION_ACCEPTEE' : 'RECOMMANDATION_REFUSEE'
+    const notificationMessage =
+      statut === 'REDIGEE'
+        ? `Votre demande de lettre${motifLabel} a été acceptée et rédigée.`
+        : `Votre demande de lettre${motifLabel} a été refusée.${refusalSuffix}`
+
+    await notificationService.creerNotification({
+      utilisateurId: lettre.id_etudiant,
+      type: notificationType,
+      message: notificationMessage,
+      cibleId: lettre.id_lettre,
+      cibleType: 'LETTRE',
+    })
+  } catch (e) {}
 }
 
 const createRequest = async ({
@@ -38,10 +99,10 @@ const createRequest = async ({
 }) => {
   const normalizedMotif = normalizeMotif(motif)
 
-  if (!id_etudiant) throw { status: 401, message: 'Authentification requise' }
-  if (!id_professeur) throw { status: 400, message: 'Professeur cible requis' }
+  if (!id_etudiant) throw createServiceError(401, 'Authentification requise')
+  if (!id_professeur) throw createServiceError(400, 'Professeur cible requis')
   if (!ALLOWED_MOTIFS.has(normalizedMotif)) {
-    throw { status: 400, message: 'Motif de lettre invalide' }
+    throw createServiceError(400, 'Motif de lettre invalide')
   }
 
   const [student, professor] = await Promise.all([
@@ -56,11 +117,11 @@ const createRequest = async ({
   ])
 
   if (!student || student.role !== 'ETUDIANT') {
-    throw { status: 403, message: 'Seul un etudiant peut envoyer cette demande' }
+    throw createServiceError(403, 'Seul un etudiant peut envoyer cette demande')
   }
 
   if (!professor || professor.role !== 'PROFESSEUR') {
-    throw { status: 404, message: 'Professeur introuvable' }
+    throw createServiceError(404, 'Professeur introuvable')
   }
 
   const existingPending = await prisma.lettreRecommandation.findFirst({
@@ -74,10 +135,10 @@ const createRequest = async ({
   })
 
   if (existingPending) {
-    throw {
-      status: 409,
-      message: 'Une demande en attente existe deja pour ce professeur et ce motif',
-    }
+    throw createServiceError(
+      409,
+      'Une demande en attente existe deja pour ce professeur et ce motif',
+    )
   }
 
   const created = await prisma.lettreRecommandation.create({
@@ -120,7 +181,7 @@ const createRequest = async ({
 }
 
 const getLettres = async (id_etudiant, demandeurId) => {
-  // Propriétaire voit toutes ses lettres
+  // PropriÃ©taire voit toutes ses lettres
   if (toBigInt(demandeurId) === toBigInt(id_etudiant)) {
     return prisma.lettreRecommandation.findMany({
       where: { id_etudiant: toBigInt(id_etudiant) },
@@ -129,7 +190,7 @@ const getLettres = async (id_etudiant, demandeurId) => {
     })
   }
 
-  // Visiteur non authentifié ou autre utilisateur ne voit que les lettres publiques
+  // Visiteur non authentifiÃ© ou autre utilisateur ne voit que les lettres publiques
   return prisma.lettreRecommandation.findMany({
     where: { id_etudiant: toBigInt(id_etudiant), visibilite: 'PUBLIC' },
     include: { professeur: { include: { utilisateur: true } } },
@@ -143,13 +204,13 @@ const getLettreById = async (id_lettre) => {
     include: { professeur: { include: { utilisateur: true } }, etudiant: { include: { utilisateur: true } } },
   })
 
-  if (!lettre) throw { status: 404, message: 'Lettre introuvable' }
+  if (!lettre) throw createServiceError(404, 'Lettre introuvable')
   return lettre
 }
 
 const updateVisibilite = async (id_lettre, visibilite) => {
   const existing = await prisma.lettreRecommandation.findUnique({ where: { id_lettre: toBigInt(id_lettre) }, select: { id_lettre: true } })
-  if (!existing) throw { status: 404, message: 'Lettre non trouvee' }
+  if (!existing) throw createServiceError(404, 'Lettre non trouvee')
 
   return prisma.lettreRecommandation.update({
     where: { id_lettre: toBigInt(id_lettre) },
@@ -163,9 +224,9 @@ const updateStatut = async (id_lettre, statut, validateurId, { contenu = undefin
     select: { id_lettre: true, id_professeur: true, id_etudiant: true, motif: true },
   })
 
-  if (!lettre) throw { status: 404, message: 'Lettre introuvable' }
+  if (!lettre) throw createServiceError(404, 'Lettre introuvable')
   if (lettre.id_professeur && toBigInt(lettre.id_professeur) !== toBigInt(validateurId)) {
-    throw { status: 403, message: 'Acces refuse' }
+    throw createServiceError(403, 'Acces refuse')
   }
   await ensureAttachedProfessorStudent(validateurId, lettre.id_etudiant)
 
@@ -188,54 +249,14 @@ const updateStatut = async (id_lettre, statut, validateurId, { contenu = undefin
         where: { id_lettre: toBigInt(id_lettre) },
       })
 
-  const elementStatus =
-    statut === 'REDIGEE' ? 'VALIDE' : statut === 'REFUSEE' ? 'REFUSE' : 'EN_ATTENTE'
-
-  const existingElement = await prisma.elementValidable.findFirst({
-    where: {
-      type: 'RECOMMANDATION',
-      reference_id: toBigInt(id_lettre),
-    },
-    select: { id_element: true },
-  })
-
-  const elementData = {
-    statut: elementStatus,
-    validateur_id: toBigInt(validateurId),
-    date_validation: new Date(),
-    motif_refus: elementStatus === 'REFUSE' ? motif_refus : null,
+  let elementStatus = 'EN_ATTENTE'
+  if (statut === 'REDIGEE') {
+    elementStatus = 'VALIDE'
+  } else if (statut === 'REFUSEE') {
+    elementStatus = 'REFUSE'
   }
-
-  if (existingElement) {
-    await prisma.elementValidable.update({
-      where: { id_element: existingElement.id_element },
-      data: elementData,
-    })
-  } else {
-    await prisma.elementValidable.create({
-      data: {
-        type: 'RECOMMANDATION',
-        reference_id: toBigInt(id_lettre),
-        date_soumission: new Date(),
-        ...elementData,
-      },
-    })
-  }
-
-  try {
-    if (statut === 'REDIGEE' || statut === 'REFUSEE') {
-      await notificationService.creerNotification({
-        utilisateurId: lettre.id_etudiant,
-        type: statut === 'REDIGEE' ? 'RECOMMANDATION_ACCEPTEE' : 'RECOMMANDATION_REFUSEE',
-        message:
-          statut === 'REDIGEE'
-            ? `Votre demande de lettre${lettre.motif ? ` (${String(lettre.motif).toLowerCase()})` : ''} a été acceptée et rédigée.`
-            : `Votre demande de lettre${lettre.motif ? ` (${String(lettre.motif).toLowerCase()})` : ''} a été refusée.${motif_refus ? ` Motif: ${motif_refus}` : ''}`,
-        cibleId: lettre.id_lettre,
-        cibleType: 'LETTRE',
-      })
-    }
-  } catch (e) {}
+  await persistLetterElement(id_lettre, elementStatus, validateurId, motif_refus)
+  await notifyLetterStatusChange(lettre, statut, motif_refus)
 
   return updatedLettre
 }

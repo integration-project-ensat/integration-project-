@@ -226,6 +226,15 @@ const props = defineProps<{
 
 const emit = defineEmits(['comment', 'share', 'like', 'submit-comment', 'edit', 'delete'])
 
+const resolveAvatar = (path?: string | null) => {
+  const value = String(path || '').trim()
+  if (!value) return ''
+  if (/^https?:\/\//.test(value) || value.startsWith('data:')) return value
+  if (value.startsWith('/')) return `${window.location.origin}${value}`
+  if (value.startsWith('uploads/')) return `${window.location.origin}/${value}`
+  return ''
+}
+
 // États réactifs existants et nouveaux
 const expanded = ref(false)
 const currentIndex = ref(0)
@@ -365,12 +374,19 @@ function toggleCommentBox() {
 
 function submitComment() {
   if (!commentText.value.trim()) return
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null')
+    } catch {
+      return null
+    }
+  })()
   localComments.value.push({
     id: Date.now(),
-    author: JSON.parse(localStorage.getItem('user') || 'null')?.name || 'Vous',
+    author: storedUser?.name || 'Vous',
     text: commentText.value,
     time: "A l'instant",
-    avatar: JSON.parse(localStorage.getItem('user') || 'null')?.avatar || ''
+    avatar: resolveAvatar(storedUser?.avatar || '')
   })
   emit('submit-comment', commentText.value)
   commentText.value = '' 

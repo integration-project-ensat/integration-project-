@@ -1,4 +1,11 @@
-const { prisma } = require("../models/prisma");
+﻿const { prisma } = require("../models/prisma");
+
+const createServiceError = (statusCode, message) => {
+  const error = new Error(message)
+  error.statusCode = statusCode
+  error.status = statusCode
+  return error
+}
 
 const userSelect = {
   id_utilisateur: true,
@@ -42,7 +49,7 @@ const verifierUtilisateur = async (id) => {
   });
 
   if (!utilisateur || !utilisateur.est_actif) {
-    throw { statusCode: 404, message: "Utilisateur introuvable" };
+    throw createServiceError(404, "Utilisateur introuvable");
   }
 
   return utilisateur;
@@ -78,10 +85,7 @@ const lockPair = async (tx, userAId, userBId) => {
 
 const assertNotAdminConnection = (userA, userB) => {
   if (userA.role === "ADMINISTRATEUR" || userB.role === "ADMINISTRATEUR") {
-    throw {
-      statusCode: 403,
-      message: "Les administrateurs ne participent pas aux connexions",
-    };
+    throw createServiceError(403, "Les administrateurs ne participent pas aux connexions");
   }
 };
 
@@ -102,10 +106,7 @@ const mapStatus = (connexion, utilisateurId) => {
 const connexionService = {
   async envoyerDemande(demandeurId, destinataireId) {
     if (BigInt(demandeurId) === BigInt(destinataireId)) {
-      throw {
-        statusCode: 400,
-        message: "Vous ne pouvez pas vous connecter avec vous-même",
-      };
+      throw createServiceError(400, "Vous ne pouvez pas vous connecter avec vous-mÃªme");
     }
 
     const demandeur = await verifierUtilisateur(demandeurId);
@@ -130,7 +131,7 @@ const connexionService = {
       });
 
       if (alreadyConnected) {
-        throw { statusCode: 409, message: "Users are already connected" };
+        throw createServiceError(409, "Users are already connected");
       }
 
       const pendingRequest = await tx.connexion.findFirst({
@@ -141,7 +142,7 @@ const connexionService = {
       });
 
       if (pendingRequest) {
-        throw { statusCode: 409, message: "Request already exists" };
+        throw createServiceError(409, "Request already exists");
       }
 
       const connexion = await tx.connexion.create({
@@ -157,7 +158,7 @@ const connexionService = {
         data: {
           utilisateur_id: BigInt(destinataireId),
           type: "DEMANDE_CONNEXION",
-          message: `${demandeur.prenom} ${demandeur.nom} vous a envoyé une demande de connexion`,
+          message: `${demandeur.prenom} ${demandeur.nom} vous a envoyÃ© une demande de connexion`,
           cible_id: connexion.id_connexion,
           cible_type: "CONNEXION",
           date_reception: new Date(),
@@ -179,14 +180,11 @@ const connexionService = {
     assertNotAdminConnection(connexion.demandeur, connexion.destinataire);
 
     if (BigInt(connexion.destinataire_id) !== BigInt(utilisateurId)) {
-      throw {
-        statusCode: 403,
-        message: "Vous ne pouvez traiter que les demandes reçues",
-      };
+      throw createServiceError(403, "Vous ne pouvez traiter que les demandes reÃ§ues");
     }
 
     if (connexion.statut !== "EN_ATTENTE") {
-      throw { statusCode: 400, message: "Cette demande a déjà été traitée" };
+      throw createServiceError(400, "Cette demande a dÃ©jÃ  Ã©tÃ© traitÃ©e");
     }
 
     return prisma.$transaction(async (tx) => {
@@ -202,7 +200,7 @@ const connexionService = {
         });
 
         if (alreadyConnected) {
-          throw { statusCode: 409, message: "Users are already connected" };
+          throw createServiceError(409, "Users are already connected");
         }
       }
 
@@ -211,7 +209,7 @@ const connexionService = {
           data: {
             utilisateur_id: connexion.demandeur_id,
             type: "CONNEXION_REFUSEE",
-            message: `${connexion.destinataire.prenom} ${connexion.destinataire.nom} a refusé votre demande de connexion`,
+            message: `${connexion.destinataire.prenom} ${connexion.destinataire.nom} a refusÃ© votre demande de connexion`,
             cible_id: connexion.id_connexion,
             cible_type: "CONNEXION",
             date_reception: new Date(),
@@ -245,7 +243,7 @@ const connexionService = {
         data: {
           utilisateur_id: connexion.demandeur_id,
           type: "CONNEXION_ACCEPTEE",
-          message: `${connexion.destinataire.prenom} ${connexion.destinataire.nom} a accepté votre demande de connexion`,
+          message: `${connexion.destinataire.prenom} ${connexion.destinataire.nom} a acceptÃ© votre demande de connexion`,
           cible_id: connexion.id_connexion,
           cible_type: "CONNEXION",
           date_reception: new Date(),
@@ -316,31 +314,25 @@ const connexionService = {
       where: { id_connexion: BigInt(connexionId) },
     });
 
-    if (!connexion) throw { statusCode: 404, message: "Connexion introuvable" };
+    if (!connexion) throw createServiceError(404, "Connexion introuvable");
 
     const estParticipant =
       BigInt(connexion.demandeur_id) === BigInt(utilisateurId) ||
       BigInt(connexion.destinataire_id) === BigInt(utilisateurId);
 
     if (!estParticipant) {
-      throw { statusCode: 403, message: "Action non autorisée" };
+      throw createServiceError(403, "Action non autorisÃ©e");
     }
 
     if (
       connexion.statut === "EN_ATTENTE" &&
       BigInt(connexion.demandeur_id) !== BigInt(utilisateurId)
     ) {
-      throw {
-        statusCode: 403,
-        message: "Seul le demandeur peut annuler une demande en attente",
-      };
+      throw createServiceError(403, "Seul le demandeur peut annuler une demande en attente");
     }
 
     if (!["ACCEPTEE", "EN_ATTENTE"].includes(connexion.statut)) {
-      throw {
-        statusCode: 422,
-        message: "Cette relation ne peut pas être supprimée",
-      };
+      throw createServiceError(422, "Cette relation ne peut pas Ãªtre supprimÃ©e");
     }
 
     await prisma.$transaction(async (tx) => {
