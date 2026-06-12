@@ -82,7 +82,7 @@ jobs:
             'until docker exec integration-project--postgres-1 pg_isready; \
             do sleep 2; done'
           docker exec integration-project--postgres-1 \
-            psql -U postgres -c "CREATE DATABASE sonarqube;" || true
+            sh -c 'psql -U $POSTGRES_USER -c "CREATE DATABASE sonarqube;"' || true
           echo "Sonarqube DB created"
 
       - name: "Demarrer tous les services"
