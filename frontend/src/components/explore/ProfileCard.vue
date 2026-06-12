@@ -24,14 +24,14 @@
             }}
           </template>
         </div>
-        <div>
-          <div class="flex flex-wrap items-center gap-2">
-            <h3 class="text-xl font-semibold text-white">{{ profile.name }}</h3>
-            <span
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <h3 class="text-xl font-semibold text-white">{{ profile.name }}</h3>
+            <span v-if="showScore"
               class="rounded-full bg-cyan-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300"
               >{{ profile.score }}+</span
             >
-          </div>
+        </div>
           <p class="mt-2 text-sm text-slate-400">{{ profile.role }}</p>
           <p class="mt-1 text-sm text-slate-500">
             {{ profile.school }} · {{ profile.field }} · {{ profile.city }}
@@ -62,7 +62,7 @@
       </div>
     </div>
     <div class="mt-6 grid gap-3 sm:grid-cols-3">
-      <div class="rounded-3xl bg-slate-900/90 px-4 py-4 text-sm text-slate-300">
+      <div v-if="showScore" class="rounded-3xl bg-slate-900/90 px-4 py-4 text-sm text-slate-300">
         <span class="block text-xs uppercase tracking-[0.25em] text-slate-500"
           >Score</span
         >
@@ -93,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 
 interface Profile {
   id: number;
@@ -108,5 +109,6 @@ interface Profile {
   recommendations: number;
 }
 
-defineProps<{ profile: Profile }>();
+const props = defineProps<{ profile: Profile; showScore?: boolean }>();
+const showScore = computed(() => props.showScore !== false);
 </script>

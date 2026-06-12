@@ -723,7 +723,7 @@ onMounted(() => {
                 >
                   {{ post.studentName }}
                 </button>
-                <span class="feed-score">
+                <span v-if="role === 'student'" class="feed-score">
                   <span>*</span>{{ post.score }}+
                 </span>
                 <div class="post-profile-actions">

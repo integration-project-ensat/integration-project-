@@ -114,6 +114,7 @@ const handleUpdateFilters = (
                 v-for="profile in profiles"
                 :key="profile.id_utilisateur"
                 :profile="adapterProfil(profile)"
+                :show-score="false"
                 :default-expanded="profile.id_utilisateur === profiles[0]?.id_utilisateur"
               />
             </div>

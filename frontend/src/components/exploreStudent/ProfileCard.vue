@@ -21,7 +21,11 @@ interface Profile {
   portfolioPath?: string;
 }
 
-const props = defineProps<{ profile: Profile; defaultExpanded?: boolean }>();
+const props = defineProps<{
+  profile: Profile;
+  defaultExpanded?: boolean;
+  showScore?: boolean;
+}>();
 const router = useRouter()
 const showDetails = ref(Boolean(props.defaultExpanded));
 
@@ -63,7 +67,7 @@ const toggleDetails = () => {
       <div class="pc-info">
         <div class="pc-nameRow">
           <h3 class="pc-name">{{ profile.name }}</h3>
-          <span class="pc-score"
+          <span v-if="props.showScore !== false" class="pc-score"
             ><span class="pc-scoreStar">*</span>{{ profile.score }}+</span
           >
         </div>

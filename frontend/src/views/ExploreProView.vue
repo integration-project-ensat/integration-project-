@@ -243,6 +243,7 @@ const handleUpdateFilters = (next: Record<string, any>) => {
 
                 <ProfileCard
                   :profile="adapterProfil(profile)"
+                  :show-score="false"
                   :default-expanded="profile.id_utilisateur === profiles[0]?.id_utilisateur"
                 />
               </div>
