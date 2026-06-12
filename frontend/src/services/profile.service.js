@@ -89,6 +89,28 @@ const profileRole = (role) => {
   return 'student'
 }
 
+const safeJsonParse = (value) => {
+  if (!value) return null
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+const buildFallbackProfile = (userId) => {
+  const storedUser = typeof localStorage !== 'undefined' ? safeJsonParse(localStorage.getItem('user')) : null
+  const fallbackName = fullName(storedUser) || storedUser?.name || 'Profil utilisateur'
+  const fallbackEmail = storedUser?.email || 'profil@plateforme.ma'
+
+  return normalizeProfile({
+    id: userId ?? storedUser?.id ?? storedUser?.id_utilisateur ?? 0,
+    name: fallbackName,
+    email: fallbackEmail,
+    role: storedUser?.role || 'student'
+  })
+}
+
 const mapRecommendation = (item) => ({
   id: Number(item?.id_recommandation ?? item?.id ?? Date.now()),
   author: fullName(item?.auteur) || item?.author || 'Auteur inconnu',
@@ -211,14 +233,22 @@ export const profileService = {
   async getProfile(userId) {
     const id = userId == null || Number.isNaN(Number(userId)) ? null : Number(userId)
     const url = id != null ? `/profil/${id}` : '/profil/me'
-    const { data } = await api.get(url)
-    return normalizeProfile(data?.data ?? data)
+    try {
+      const { data } = await api.get(url)
+      return normalizeProfile(data?.data ?? data)
+    } catch {
+      return buildFallbackProfile(id)
+    }
   },
 
   async getCurrentUser() {
-  const { data } = await api.get('/profil/me')
-  return normalizeProfile(data?.data ?? data)
-},
+    try {
+      const { data } = await api.get('/profil/me')
+      return normalizeProfile(data?.data ?? data)
+    } catch {
+      return buildFallbackProfile(null)
+    }
+  },
   async updateProfile(userId, payload) {
     const id = userId == null || Number.isNaN(Number(userId)) ? null : Number(userId)
     const url = id != null ? `/profil/${id}` : '/profil/me'
@@ -229,7 +259,7 @@ export const profileService = {
 
   async uploadAvatar(userId, file) {
     const form = new FormData()
-    form.append('photo', file)
+    form.append('avatar', file)
     const { data } = await api.post('/profil/photo', form)
     return resolveBackendAsset(data?.data?.photo_profil || data?.photo_profil || '')
   },

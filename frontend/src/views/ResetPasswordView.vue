@@ -10,7 +10,7 @@
     <div class="card">
       <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" class="card-logo" width="48" height="48" />
 
-      <h1>Réinitialiser votre mot de passe</h1>
+      <h1>Reinitialiser votre passe</h1>
       <p class="subtitle">Choisissez un nouveau mot de passe pour votre compte</p>
 
       <div v-if="tokenInvalid" class="token-error">
@@ -33,7 +33,7 @@
         <p v-if="success" class="success">{{ success }}</p>
 
         <button type="submit" class="btn" :disabled="loading || tokenLoading">
-          <span v-if="!loading">Réinitialiser</span>
+          <span v-if="!loading">Envoyer</span>
           <span v-else class="spin" />
         </button>
       </form>
@@ -80,7 +80,6 @@ const form = reactive({
 // Vérifie le token au montage et récupère l'email
 onMounted(async () => {
   if (!token) {
-    tokenInvalid.value = 'Token manquant. Veuillez redemander un lien.'
     tokenLoading.value = false
     return
   }
@@ -101,16 +100,16 @@ async function submit() {
     error.value = 'Veuillez remplir tous les champs'; return
   }
   if (form.password !== form.confirmPassword) {
-    error.value = 'Les mots de passe ne correspondent pas.'; return
+    error.value = 'Le mot de passe ne correspond pas.'; return
   }
   loading.value = true
   try {
+    success.value = 'Mot de passe réinitialisé !'
     await authService.resetPassword({
       token,
       newPassword: form.password,
       confirmPassword: form.confirmPassword
     })
-    success.value = 'Mot de passe réinitialisé avec succès !'
     setTimeout(() => router.push('/login'), 2000)
   } catch(e) {
     error.value = getApiErrorMessage(e, 'Une erreur est survenue.')

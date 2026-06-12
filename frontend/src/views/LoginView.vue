@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
 import { useAuthStore } from '@/store/auth.js'
@@ -69,7 +70,14 @@ function startGithubLogin() {
 }
 
 const router   = useRouter()
-const auth     = useAuthStore()
+const auth     = (() => {
+  const activePinia = getActivePinia()
+  if (activePinia) return useAuthStore()
+
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  return useAuthStore(pinia)
+})()
 const email    = ref('')
 const password = ref('')
 const error    = ref('')
