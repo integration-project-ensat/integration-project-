@@ -1651,24 +1651,32 @@ function saveEntry() {
   if (!s) return
   const newId = Date.now()
   if (s === 'exp') {
-    editingEntryId.value !== null
-      ? (experiences.value = experiences.value.map(x => x.id === editingEntryId.value ? { ...x, ...expForm } : x))
-      : experiences.value.push({ id: newId, ...expForm })
+    if (editingEntryId.value !== null) {
+      experiences.value = experiences.value.map(x => x.id === editingEntryId.value ? { ...x, ...expForm } : x)
+    } else {
+      experiences.value.push({ id: newId, ...expForm })
+    }
   }
   if (s === 'form') {
-    editingEntryId.value !== null
-      ? (formations.value = formations.value.map(x => x.id === editingEntryId.value ? { ...x, ...formForm } : x))
-      : formations.value.push({ id: newId, ...formForm })
+    if (editingEntryId.value !== null) {
+      formations.value = formations.value.map(x => x.id === editingEntryId.value ? { ...x, ...formForm } : x)
+    } else {
+      formations.value.push({ id: newId, ...formForm })
+    }
   }
   if (s === 'cert') {
-    editingEntryId.value !== null
-      ? (certifications.value = certifications.value.map(x => x.id === editingEntryId.value ? { ...x, ...certForm } : x))
-      : certifications.value.push({ id: newId, ...certForm })
+    if (editingEntryId.value !== null) {
+      certifications.value = certifications.value.map(x => x.id === editingEntryId.value ? { ...x, ...certForm } : x)
+    } else {
+      certifications.value.push({ id: newId, ...certForm })
+    }
   }
   if (s === 'langue') {
-    editingEntryId.value !== null
-      ? (langues.value = langues.value.map(x => x.id === editingEntryId.value ? { ...x, ...langueForm } : x))
-      : langues.value.push({ id: newId, ...langueForm })
+    if (editingEntryId.value !== null) {
+      langues.value = langues.value.map(x => x.id === editingEntryId.value ? { ...x, ...langueForm } : x)
+    } else {
+      langues.value.push({ id: newId, ...langueForm })
+    }
   }
   activeEntryModal.value = null
 }

@@ -153,6 +153,32 @@ async function main() {
   });
   console.log('✅ Administrateur créé :', admin.email);
 
+  // ==================== 7. PROFESSIONNEL ACTIF (QA E2E) ====================
+  const proActif = await prisma.utilisateur.upsert({
+    where: { email: 'pro.actif@test.com' },
+    update: {},
+    create: {
+      email: 'pro.actif@test.com',
+      mot_de_passe_hashe: hash,
+      nom: 'Benali',
+      prenom: 'Karim',
+      role: 'PROFESSIONNEL',
+      est_actif: true,
+      email_verifie: true,
+      profil: { create: {} },
+      professionnel: {
+        create: {
+          entreprise: 'DigitalMaroc',
+          poste: 'Directeur Technique',
+          secteur: 'Informatique',
+          est_valide: true,
+          statut_validation: 'APPROUVE',
+        }
+      }
+    }
+  });
+  console.log('✅ Professionnel actif créé :', proActif.email);
+
   // ==================== RÉSUMÉ ====================
   console.log('\n========================================');
   console.log('📋 RÉSUMÉ POUR QA');
@@ -166,6 +192,7 @@ async function main() {
   console.log('  PROFESSIONNEL non vér :', 'non.verifie@entreprise.com');
   console.log('  Compte expiré         :', 'expire@test.com');
   console.log('  ADMINISTRATEUR        :', 'admin@systeme.com');
+  console.log('  PROFESSIONNEL actif   :', 'pro.actif@test.com');
   console.log('');
   console.log('Variables Postman à remplir :');
   console.log('  base_url            : http://localhost:3000/api/auth');
