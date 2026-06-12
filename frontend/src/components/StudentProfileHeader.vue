@@ -71,7 +71,7 @@
           :key="tab"
           type="button"
           class="tab"
-          :class="tabClass(tab)"
+          :class="[tabClass(tab), { 'modifier-bio': tab === 'Modifier bio' }]"
           @click="handleTabClick(tab)"
         >
           {{

@@ -1287,9 +1287,15 @@ const currentUserId = computed(() => {
   }
 })
 
-const isOwnProfile = computed(() =>
-  Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
-)
+const isOwnProfile = computed(() => {
+  if (!profileStudentId.value) return true
+
+  return Boolean(
+    currentUserId.value &&
+    profileId.value &&
+    Number(currentUserId.value) === Number(profileId.value)
+  )
+})
 
 // ─── Connection ───────────────────────────────────────────────────────────────
 
