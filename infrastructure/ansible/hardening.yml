@@ -101,6 +101,9 @@
         - '443'
         - '{{ keycloak_port }}'
         - '{{ grafana_port }}'  
+        - '{{ gitlab_port }}'
+        - '{{ pgadmin_port }}'
+        - '{{ sonarqube_port }}'
         - '9090'
         - '3100'
 

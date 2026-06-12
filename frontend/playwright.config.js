@@ -11,5 +11,8 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120000,
+    env: {
+      VITE_E2E_MOCKS: 'true'
+    }
   },
 })
