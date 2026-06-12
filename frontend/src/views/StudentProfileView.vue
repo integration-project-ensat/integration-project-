@@ -988,7 +988,6 @@ import SidebarProf from '../components/exploreProf/SidebarProf.vue'
 import SidebarPro from '../components/explorePro/SidebarPro.vue'
 import StudentProfileHeader from '../components/StudentProfileHeader.vue'
 import PostCard from '../components/PostCard.vue'
-import { commentaireService } from '../services/commentaire.service'
 import { connexionService } from '../services/connexion.service'
 import { lettreService } from '../services/lettre.service'
 import { postService } from '../services/post.service'
@@ -1020,6 +1019,16 @@ type ProfilePost = {
   images?: string[]
   imageUrl?: string
   media?: Array<string | { url: string; type?: 'image' | 'video' | 'pdf' | 'file'; name?: string }>
+  comments?: Array<{
+    id: number
+    author: string
+    text: string
+    time: string
+    avatar?: string
+  }>
+  likeCount?: number
+  commentCount?: number
+  repostCount?: number
 }
 
 type ConnectionStatus = {
@@ -1064,6 +1073,13 @@ const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | nul
   if (role === 'STUDENT' || role === 'ETUDIANT') return 'student'
   return null
 })
+
+const currentUserAvatar = computed(() => resolveBackendAsset(auth.user?.avatar || auth.user?.photo_profil || ''))
+const currentUserName = computed(() =>
+  [auth.user?.prenom, auth.user?.nom].filter(Boolean).join(' ').trim() ||
+  auth.user?.name ||
+  'Vous'
+)
 
 const roleFromRoute = computed<'student' | 'teacher' | 'professional' | null>(() => {
   const from = typeof route.query.from === 'string' ? route.query.from : ''
@@ -1689,7 +1705,21 @@ function handleComment(id: number) {
 async function handleSubmitComment(post: ProfilePost, contenu: string) {
   if (!post.id) return
   try {
-    await commentaireService.createCommentaire({ id_poste: post.id, contenu })
+    const response = await postService.addComment(post.id, contenu)
+    const createdComment = response?.data?.data || response?.data
+    const targetPost = posts.value.find((entry) => entry.id === post.id)
+    if (targetPost) {
+      const previousCommentCount = Number(targetPost.commentCount ?? targetPost.comments?.length ?? 0)
+      const nextComment = {
+        id: Number(createdComment?.id_commentaire ?? Date.now()),
+        author: [createdComment?.auteur?.prenom, createdComment?.auteur?.nom].filter(Boolean).join(' ') || currentUserName.value,
+        text: createdComment?.contenu || contenu,
+        time: "A l'instant",
+        avatar: resolveBackendAsset(createdComment?.auteur?.profil?.photo_profil || currentUserAvatar.value || ''),
+      }
+      targetPost.comments = [nextComment, ...(targetPost.comments || [])]
+      targetPost.commentCount = previousCommentCount + 1
+    }
   } catch (error) {
     console.error('Erreur ajout commentaire', error)
   }
@@ -1704,7 +1734,13 @@ async function handleLike(post: ProfilePost, liked: boolean) {
       await postService.removeReaction(post.id)
     }
     const targetPost = posts.value.find((entry) => entry.id === post.id)
-    if (targetPost) targetPost.liked = liked
+    if (targetPost) {
+      const previousLiked = Boolean(targetPost.liked)
+      targetPost.liked = liked
+      const currentCount = Number(targetPost.likeCount ?? 0)
+      if (liked && !previousLiked) targetPost.likeCount = currentCount + 1
+      if (!liked && previousLiked) targetPost.likeCount = Math.max(0, currentCount - 1)
+    }
   } catch (error) {
     console.error('Erreur reaction post', error)
   }
@@ -1719,7 +1755,13 @@ async function handleRepost(post: ProfilePost, reposted: boolean) {
       await postService.removeRepost(post.id)
     }
     const targetPost = posts.value.find((entry) => entry.id === post.id)
-    if (targetPost) targetPost.reposted = reposted
+    if (targetPost) {
+      const previousReposted = Boolean(targetPost.reposted)
+      targetPost.reposted = reposted
+      const currentCount = Number(targetPost.repostCount ?? 0)
+      if (reposted && !previousReposted) targetPost.repostCount = currentCount + 1
+      if (!reposted && previousReposted) targetPost.repostCount = Math.max(0, currentCount - 1)
+    }
   } catch (error) {
     console.error('Erreur republication post', error)
   }
@@ -2126,9 +2168,21 @@ function mapBackendPost(post: any): ProfilePost {
     reposted: Array.isArray(post.reposts)
       ? post.reposts.some((repost: any) => Number(repost?.auteur?.id_utilisateur) === currentUserId.value)
       : false,
-    avatar: '',
+    avatar: resolveBackendAsset(auteur?.profil?.photo_profil || ''),
     images: post.image_url ? [resolveBackendAsset(post.image_url)] : [],
     imageUrl: post.image_url ? resolveBackendAsset(post.image_url) : undefined,
+    likeCount: Number(post.compteurs_reactions?.JAIME ?? post.reactions?.length ?? 0),
+    commentCount: Array.isArray(post.commentaires) ? post.commentaires.length : 0,
+    repostCount: Number(post.compteur_reposts ?? post._count?.reposts ?? post.reposts?.length ?? 0),
+    comments: Array.isArray(post.commentaires)
+      ? post.commentaires.map((comment: any) => ({
+          id: Number(comment.id_commentaire),
+          author: fullName(comment.auteur) || 'Auteur inconnu',
+          text: comment.contenu || '',
+          time: "A l'instant",
+          avatar: resolveBackendAsset(comment.auteur?.profil?.photo_profil || ''),
+        }))
+      : [],
   }
 }
 
@@ -2143,7 +2197,7 @@ function mapBackendRecommendation(recommendation: any): Recommendation {
     id: Number(recommendation.id_recommandation),
     author: fullName(auteur) || 'Auteur inconnu',
     role,
-    avatar: '',
+    avatar: resolveBackendAsset(auteur?.profil?.photo_profil || recommendation.avatar || ''),
     message: recommendation.message || '',
     date: "Aujourd'hui"
   }

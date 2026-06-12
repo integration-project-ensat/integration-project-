@@ -147,6 +147,23 @@ function formatDate(value: any) {
   return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function resolveAvatar(path?: string | null) {
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}${value}`;
+  }
+  if (value.startsWith("uploads/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}/${value}`;
+  }
+  return "";
+}
+
 function mapRecommendation(item: any): RecommendationItem {
   const status = formatStatus(item?.statut);
   const author = [item?.auteur?.prenom, item?.auteur?.nom].filter(Boolean).join(" ") || "Auteur inconnu";
@@ -154,7 +171,7 @@ function mapRecommendation(item: any): RecommendationItem {
   return {
     id: Number(item?.id_recommandation),
     author,
-    avatar: item?.auteur?.profil?.photo_profil || "",
+    avatar: resolveAvatar(item?.auteur?.profil?.photo_profil || item?.avatar),
     roleLabel: formatRole(item?.role_auteur ?? item?.auteur?.role),
     message: item?.message || "",
     status,

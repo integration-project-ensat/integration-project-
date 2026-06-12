@@ -25,6 +25,7 @@ interface NotificationItem {
   relatedTitle: string;
   time: string;
   initials: string;
+  avatar?: string;
   profilePath: string;
   targetPath: string;
   unread?: boolean;
@@ -45,6 +46,25 @@ const props = withDefaults(
 const emit = defineEmits<{
   "update:modelValue": [value: string];
 }>();
+
+const resolveAvatar = (path?: string | null) => {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path) || String(path).startsWith("data:")) return path;
+  if (String(path).startsWith("/")) return String(path);
+  if (String(path).startsWith("uploads/")) return `/${path}`;
+  return "";
+};
+
+const profilePathForRole = (userId: string, role?: string | null) => {
+  const normalized = String(role || "").toUpperCase();
+  if (normalized === "PROFESSEUR" || normalized === "TEACHER") {
+    return `/profile/prof/${userId}?from=${props.userType === "professionnel" ? "pro" : props.userType === "professeur" ? "prof" : "student"}`;
+  }
+  if (normalized === "PROFESSIONNEL" || normalized === "PROFESSIONAL") {
+    return `/profile/pro/${userId}?from=${props.userType === "professionnel" ? "pro" : props.userType === "professeur" ? "prof" : "student"}`;
+  }
+  return `/profile/student/${userId}?from=${props.userType === "professionnel" ? "pro" : props.userType === "professeur" ? "prof" : "student"}`;
+};
 
 const router = useRouter();
 const notificationRef = ref<HTMLElement | null>(null);
@@ -522,8 +542,17 @@ const mapNotification = (notificationRaw: any): NotificationItem => {
     action,
     relatedTitle: targetType || "",
     time: formatTimeAgo(notificationRaw.date_reception),
-    initials: category.charAt(0).toUpperCase(),
-    profilePath: targetPath,
+    initials: person
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || category.charAt(0).toUpperCase(),
+    avatar: resolveAvatar(notificationRaw.avatar),
+    profilePath: notificationRaw.actor_user_id
+      ? profilePathForRole(String(notificationRaw.actor_user_id), notificationRaw.actor_role)
+      : targetPath,
     targetPath,
     unread: notificationRaw.lu === false || notificationRaw.lu === 0,
   };
@@ -711,7 +740,8 @@ onMounted(() => {
                 :aria-label="`Voir le profil de ${notification.person}`"
                 @click.stop="navigateToProfile(notification)"
               >
-                {{ notification.initials }}
+                <img v-if="notification.avatar" :src="notification.avatar" :alt="notification.person" />
+                <span v-else>{{ notification.initials }}</span>
               </button>
 
                 <span class="explore-notif-copy">
@@ -1019,8 +1049,16 @@ onMounted(() => {
   cursor: pointer;
   font-size: 13px;
   font-weight: 900;
+  overflow: hidden;
   padding: 0;
   transition: transform 0.15s ease;
+}
+
+.explore-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .explore-avatar:hover {

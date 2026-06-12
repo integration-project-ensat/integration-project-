@@ -10,4 +10,5 @@ export declare const postService: {
   removeReaction(id: number | string): Promise<any>
   repost(id: number | string): Promise<any>
   removeRepost(id: number | string): Promise<any>
+  addComment(id: number | string, contenu: string): Promise<any>
 }

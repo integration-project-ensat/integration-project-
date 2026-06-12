@@ -43,6 +43,23 @@ const statusClass = (status: ValidationStatus) => ({
   "is-refused": status === "Refusé",
 });
 
+const resolveAvatar = (path?: string | null) => {
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}${value}`;
+  }
+  if (value.startsWith("uploads/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}/${value}`;
+  }
+  return "";
+};
+
 const loadRequests = async () => {
   error.value = null;
   try {
@@ -51,6 +68,7 @@ const loadRequests = async () => {
       ? response.data.data.validationRequests.map(
           (request: ValidationRequest) => ({
             ...request,
+            avatar: resolveAvatar((request as any).avatar),
             status: normalizeValidationStatus(request.status),
           }),
         )
@@ -187,7 +205,8 @@ onMounted(() => {
               :aria-label="`Voir le profil de ${request.studentName}`"
               @click.stop="openStudentProfile(request)"
             >
-              {{ request.initials }}
+              <img v-if="request.avatar" :src="request.avatar" :alt="request.studentName" />
+              <span v-else>{{ request.initials }}</span>
             </button>
 
             <div class="validation-content">
@@ -489,6 +508,14 @@ onMounted(() => {
   justify-content: center;
   font-family: var(--font-head);
   font-weight: 800;
+  overflow: hidden;
+}
+
+.student-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .validation-content {

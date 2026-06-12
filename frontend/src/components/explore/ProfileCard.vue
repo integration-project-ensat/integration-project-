@@ -7,14 +7,22 @@
     >
       <div class="flex items-center gap-4">
         <div
-          class="h-20 w-20 rounded-[28px] bg-slate-900 text-slate-500 grid place-items-center text-3xl font-semibold"
+          class="h-20 w-20 overflow-hidden rounded-[28px] bg-slate-900 text-slate-500 grid place-items-center text-3xl font-semibold"
         >
-          {{
-            profile.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-          }}
+          <img
+            v-if="profile.avatar"
+            :src="profile.avatar"
+            :alt="profile.name"
+            class="h-full w-full object-cover"
+          />
+          <template v-else>
+            {{
+              profile.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+            }}
+          </template>
         </div>
         <div>
           <div class="flex flex-wrap items-center gap-2">
@@ -89,6 +97,7 @@
 interface Profile {
   id: number;
   name: string;
+  avatar?: string;
   role: string;
   school: string;
   field: string;

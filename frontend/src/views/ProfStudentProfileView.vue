@@ -58,7 +58,10 @@ onMounted(async () => {
         </button>
 
         <div class="profile-hero">
-          <div class="student-avatar">{{ student.initials }}</div>
+          <div class="student-avatar">
+            <img v-if="backendProfile?.avatar" :src="backendProfile.avatar" :alt="student.studentName" />
+            <span v-else>{{ student.initials }}</span>
+          </div>
           <div>
             <p class="profile-kicker">Profil étudiant</p>
             <h1>{{ student.studentName }}</h1>
@@ -148,6 +151,14 @@ onMounted(async () => {
   font-family: var(--font-head);
   font-size: 22px;
   font-weight: 800;
+  overflow: hidden;
+}
+
+.student-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .profile-kicker {

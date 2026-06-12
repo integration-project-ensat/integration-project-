@@ -66,6 +66,7 @@ const mapAttachedStudent = (item) => {
     id: item.etudiant?.id_utilisateur?.toString(),
     initials: toInitials(fullName(studentUser)),
     name: fullName(studentUser) || 'Étudiant inconnu',
+    avatar: studentUser?.profil?.photo_profil || null,
     email: studentUser?.email || '',
     apogee: item.etudiant?.numero_etudiant || '',
     school: item.etudiant?.annee_universitaire || '—',

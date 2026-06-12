@@ -1,7 +1,19 @@
 const { prisma, toBigInt } = require('../models/prisma')
 
 const includeAuteur = {
-  auteur: { select: { id_utilisateur: true, nom: true, prenom: true, role: true } },
+  auteur: {
+    select: {
+      id_utilisateur: true,
+      nom: true,
+      prenom: true,
+      role: true,
+      profil: {
+        select: {
+          photo_profil: true,
+        },
+      },
+    },
+  },
 }
 
 const commentaireService = {

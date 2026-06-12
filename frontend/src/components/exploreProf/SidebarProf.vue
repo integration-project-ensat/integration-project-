@@ -8,7 +8,8 @@
       @click="handleNavigation(profileLink, $event)"
     >
       <div class="avatar-sm">
-        <span>{{ initials }}</span>
+        <img v-if="auth.user?.avatar" :src="auth.user.avatar" alt="avatar" />
+        <span v-else>{{ initials }}</span>
       </div>
       <div class="user-info">
         <p class="user-name">{{ currentUser.name }}</p>

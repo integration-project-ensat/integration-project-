@@ -75,6 +75,20 @@ const password = ref('')
 const error    = ref('')
 const loading  = ref(false)
 
+function getErrorMessage(e: any) {
+  const errors = e?.response?.data?.errors
+  if (errors && errors.length > 0) {
+    return errors[0].message
+  }
+
+  return (
+    e?.response?.data?.message ||
+    e?.response?.statusText ||
+    e?.message ||
+    'Erreur de connexion'
+  )
+}
+
 async function submit() {
   error.value = ''
   if (!email.value || !password.value) { error.value = 'Champs requis'; return }
@@ -84,16 +98,11 @@ async function submit() {
     auth.login(data.data.user, data.data.token, data.data.user ? data.data.user.role : localStorage.getItem('role'))
     const role = localStorage.getItem('role')
     if (role === 'admin') router.push('/admin')
-    else if (role === 'teacher') router.push('/prof/dashboard')
-    else if (role === 'professional') router.push('/pro/dashboard')
-    else router.push('/student/dashboard')
+    else if (role === 'teacher') router.push('/explore-prof')
+    else if (role === 'professional') router.push('/explore-pro')
+    else router.push('/student/explore')
   } catch (e: any) {
-    const errors = e.response?.data?.errors
-    if (errors && errors.length > 0) {
-      error.value = errors[0].message
-    } else {
-      error.value = e.response?.data?.message || e.message || 'Erreur de connexion'
-    }
+    error.value = getErrorMessage(e)
   } finally {
     loading.value = false
   }

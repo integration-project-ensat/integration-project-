@@ -56,6 +56,11 @@ const getProfDashboard = asyncHandler(async (req, res) => {
               select: {
                 prenom: true,
                 nom: true,
+                profil: {
+                  select: {
+                    photo_profil: true,
+                  },
+                },
               },
             },
           },
@@ -73,6 +78,11 @@ const getProfDashboard = asyncHandler(async (req, res) => {
               select: {
                 prenom: true,
                 nom: true,
+                profil: {
+                  select: {
+                    photo_profil: true,
+                  },
+                },
               },
             },
           },
@@ -90,6 +100,11 @@ const getProfDashboard = asyncHandler(async (req, res) => {
               select: {
                 prenom: true,
                 nom: true,
+                profil: {
+                  select: {
+                    photo_profil: true,
+                  },
+                },
               },
             },
           },
@@ -124,6 +139,7 @@ const getProfDashboard = asyncHandler(async (req, res) => {
       id: projet.id_projet.toString(),
       studentId: projet.etudiant?.id_utilisateur?.toString() ?? "unknown",
       studentName: formatName(projet.etudiant?.utilisateur),
+      avatar: projet.etudiant?.utilisateur?.profil?.photo_profil ?? null,
       initials: toInitials(formatName(projet.etudiant?.utilisateur)),
       type: "Projet",
       title: projet.titre || "Projet",
@@ -138,6 +154,7 @@ const getProfDashboard = asyncHandler(async (req, res) => {
       id: stage.id_stage.toString(),
       studentId: stage.etudiant?.id_utilisateur?.toString() ?? "unknown",
       studentName: formatName(stage.etudiant?.utilisateur),
+      avatar: stage.etudiant?.utilisateur?.profil?.photo_profil ?? null,
       initials: toInitials(formatName(stage.etudiant?.utilisateur)),
       type: "Stage",
       title: stage.entreprise || "Stage",
@@ -170,6 +187,7 @@ const getProfDashboard = asyncHandler(async (req, res) => {
         id: lettre.id_lettre.toString(),
         studentId: lettre.etudiant?.id_utilisateur?.toString() ?? "unknown",
         studentName: formatName(lettre.etudiant?.utilisateur),
+        avatar: lettre.etudiant?.utilisateur?.profil?.photo_profil ?? null,
         initials: toInitials(formatName(lettre.etudiant?.utilisateur)),
         profileInfo: lettre.etudiant?.filiere || "Étudiant",
         title: lettre.motif
@@ -279,7 +297,7 @@ const getProDashboard = asyncHandler(async (req, res) => {
               id_utilisateur: true,
               nom: true,
               prenom: true,
-              profil: { select: { adresse: true } },
+              profil: { select: { adresse: true, photo_profil: true } },
               etudiant: {
                 select: {
                   filiere: true,
@@ -310,6 +328,7 @@ const getProDashboard = asyncHandler(async (req, res) => {
         school: stage.etablissement || studentUser.etudiant?.etablissement || "Établissement non renseigné",
         field: studentUser.etudiant?.filiere || "—",
         city: studentUser.profil?.adresse || "—",
+        avatar: studentUser.profil?.photo_profil || null,
         score: Number(studentUser.etudiant?.score_credibilite?.score_total ?? 0),
         startDate: stage.date_debut
           ? stage.date_debut.toISOString().split("T")[0]
@@ -331,6 +350,7 @@ const getProDashboard = asyncHandler(async (req, res) => {
       school: etudiant.etudiant?.etablissement || "Établissement non renseigné",
       field: etudiant.etudiant?.filiere || "—",
       city: etudiant.profil?.adresse || "—",
+      avatar: etudiant.profil?.photo_profil || null,
       score: Number(etudiant.etudiant?.score_credibilite?.score_total ?? 0),
       recommendations: 0,
       badges: (etudiant.etudiant?.badges || [])

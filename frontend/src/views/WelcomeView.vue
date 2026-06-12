@@ -31,8 +31,8 @@
           d'opportunites concretes.
         </p>
         <div class="hero-actions">
-          <RouterLink to="/signup" class="primary-action">Commencer</RouterLink>
-          <RouterLink to="/login" class="secondary-action">Inscription</RouterLink>
+          <RouterLink to="/login" class="primary-action">Commencer</RouterLink>
+          <RouterLink to="/signup" class="secondary-action">Inscription</RouterLink>
         </div>
         <div class="connect-list" aria-label="Types de profils connectes">
           <strong>Connecter entre :</strong>
@@ -93,11 +93,11 @@
     <h2>Soutenus par des acteurs de reference.</h2>
   </div>
   <div class="partners-grid">
-    <a href="https://www.men.gov.ma" class="partner-card" target="_blank" rel="noopener">
+    <a href="https://www.code212.ac.ma" class="partner-card" target="_blank" rel="noopener">
       <img src="@/assets/LogoCode212.png" alt="Code 212" />
       <small>Code 212fi</small>
     </a>
-    <a href="https://www.code212.ac.ma" class="partner-card" target="_blank" rel="noopener">
+    <a href="https://ensat.ac.ma/Portail/" class="partner-card" target="_blank" rel="noopener">
       <img src="@/assets/ensaLogo.png" alt="ENSA Tanger" />
       <small>ENSA Tanger</small>
     </a>

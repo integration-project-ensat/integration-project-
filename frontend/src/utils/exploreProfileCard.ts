@@ -10,6 +10,7 @@ type ExploreCardReco = {
 type ExploreCardProfile = {
   id: number | string;
   name: string;
+  avatar?: string;
   role: string;
   school: string;
   city: string;
@@ -19,6 +20,16 @@ type ExploreCardProfile = {
   profilePath: string;
   portfolioPath: string;
   recos: ExploreCardReco[];
+};
+
+const resolveBackendAsset = (path?: string | null) => {
+  if (!path || /^https?:\/\//.test(path) || String(path).startsWith("data:")) {
+    return path || "";
+  }
+
+  const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+  const backendBase = apiBase.replace(/\/api\/?$/, "");
+  return `${backendBase}${path}`;
 };
 
 const pickRole = (profile: ProfilExplore) =>
@@ -108,6 +119,7 @@ export const mapExploreProfileCard = (
 ): ExploreCardProfile => ({
   id: profile.id_utilisateur,
   name: `${profile.prenom} ${profile.nom}`,
+  avatar: resolveBackendAsset(profile.profil?.photo_profil),
   role: pickRole(profile),
   school: pickSchool(profile),
   city: pickCity(profile),

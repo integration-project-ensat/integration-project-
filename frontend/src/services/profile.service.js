@@ -87,11 +87,19 @@ const recommendationRole = (role) => {
   return 'teacher'
 }
 
+const profileRole = (role) => {
+  const normalized = String(role || '').toUpperCase()
+  if (normalized === 'PROFESSIONNEL' || normalized === 'PROFESSIONAL') return 'professional'
+  if (normalized === 'ETUDIANT' || normalized === 'STUDENT') return 'student'
+  if (normalized === 'PROFESSEUR' || normalized === 'TEACHER') return 'teacher'
+  return 'student'
+}
+
 const mapRecommendation = (item) => ({
   id: Number(item?.id_recommandation ?? item?.id ?? Date.now()),
   author: fullName(item?.auteur) || item?.author || 'Auteur inconnu',
   role: recommendationRole(item?.role_auteur ?? item?.auteur?.role ?? item?.role),
-  avatar: item?.auteur?.profil?.photo_profil || item?.avatar || '',
+  avatar: resolveBackendAsset(item?.auteur?.profil?.photo_profil || item?.avatar || ''),
   message: item?.message || '',
   date: item?.date_recommandation || item?.date || '',
 })
@@ -114,12 +122,20 @@ const mapPost = (item) => ({
   author: item?.author || fullName(item?.auteur) || 'Auteur inconnu',
   subtitle: item?.subtitle || item?.visibilite || 'Post portfolio',
   description: item?.description || item?.contenu || '',
-  avatar: item?.avatar || item?.auteur?.profil?.photo_profil || '',
+  avatar: resolveBackendAsset(item?.avatar || item?.auteur?.profil?.photo_profil || ''),
   images: item?.images || (item?.image_url ? [item.image_url] : []),
   media: item?.media || [],
   compteurs_reactions: item?.compteurs_reactions || {},
   reposts: item?.reposts || item?._count?.reposts || 0,
-  commentaires: item?.commentaires || [],
+  likeCount: Number(item?.compteurs_reactions?.JAIME ?? item?.reactions?.length ?? 0),
+  commentCount: Array.isArray(item?.commentaires) ? item.commentaires.length : 0,
+  repostCount: Number(item?.compteur_reposts ?? item?._count?.reposts ?? item?.reposts?.length ?? 0),
+  commentaires: Array.isArray(item?.commentaires)
+    ? item.commentaires.map((comment) => ({
+        ...comment,
+        avatar: resolveBackendAsset(comment?.avatar || comment?.auteur?.profil?.photo_profil || ''),
+      }))
+    : [],
 })
 
 const normalizeProfile = (payload) => {
@@ -127,13 +143,17 @@ const normalizeProfile = (payload) => {
   const student = payload?.etudiant || {}
   const professional = payload?.professionnel || {}
   const professor = payload?.professeur || {}
-  const score =
-    Number(
-      payload?.score ??
-      student?.score_credibilite?.score_total ??
-      professional?.score_credibilite?.score_total ??
-      0,
-    ) || 0
+  const normalizedRole = profileRole(payload?.role)
+  const score = normalizedRole === 'student'
+    ? (
+        Number(
+          payload?.score ??
+          student?.score_credibilite?.score_total ??
+          professional?.score_credibilite?.score_total ??
+          0,
+        ) || 0
+      )
+    : 0
 
   const recommendations = Array.isArray(payload?.recommendations)
     ? payload.recommendations.map(mapRecommendation)
