@@ -81,6 +81,27 @@ function normalizeFiliere(value) {
   return match?.label || String(value || '').trim() || null;
 }
 
+function buildOAuthFallbackName(email) {
+  const localPart = String(email || '').split('@')[0].trim();
+  return localPart || 'Utilisateur';
+}
+
+function validateOAuthRoleData(role, specificData) {
+  if (role === ROLES.ETUDIANT && !String(specificData.numero_etudiant || '').trim()) {
+    return 'Le numéro étudiant est obligatoire.';
+  }
+
+  if (role === ROLES.PROFESSEUR && !String(specificData.code_administratif || '').trim()) {
+    return 'Le code administratif est obligatoire.';
+  }
+
+  if (role === ROLES.PROFESSIONNEL && !String(specificData.entreprise || '').trim()) {
+    return "L'entreprise est obligatoire.";
+  }
+
+  return null;
+}
+
 function generateToken(user) {
   return jwt.sign(
     { userId: user.id_utilisateur.toString(), email: user.email, role: user.role,jti:uuidv4() },
@@ -452,8 +473,10 @@ const handleOAuthCallback = async (req, res, provider) => {
   const providerDbField = provider === 'GOOGLE' ? 'google_id' : 'github_id';
   const tempFlag = provider === 'GOOGLE' ? 'tempGoogleSignup' : 'tempGithubSignup';
   const providerId = req.user[providerIdField];
-  const { nom, prenom } = req.user;
+  const nom = String(req.user?.nom || '').trim();
+  const prenom = String(req.user?.prenom || '').trim();
   const email = String(req.user?.email || '').trim().toLowerCase();
+  const fallbackName = buildOAuthFallbackName(email);
 
   if (!email) {
     return res.status(400).json({
@@ -513,8 +536,8 @@ const handleOAuthCallback = async (req, res, provider) => {
   const tempToken = jwt.sign(
     {
       email,
-      nom,
-      prenom,
+      nom: nom || fallbackName,
+      prenom: prenom || fallbackName,
       [providerIdField]: providerId,
       provider,
       [tempFlag]: true
@@ -530,7 +553,14 @@ const handleOAuthCallback = async (req, res, provider) => {
 };
 
 const googleCallback = asyncHandler(async (req, res) => {
-  return handleOAuthCallback(req, res, 'GOOGLE');
+  try {
+    return await handleOAuthCallback(req, res, 'GOOGLE');
+  } catch (error) {
+    console.error('[oauth][google-callback]', error);
+    return redirectToFrontend(req, res, '/login', {
+      error: 'oauth_callback_failed'
+    });
+  }
 });
 
 const completeOAuthSignup = async (req, res, provider) => {
@@ -571,6 +601,14 @@ const completeOAuthSignup = async (req, res, provider) => {
     });
   }
 
+  const validationError = validateOAuthRoleData(role, specificData);
+  if (validationError) {
+    return res.status(400).json({
+      success: false,
+      message: validationError
+    });
+  }
+
   if (provider === 'GITHUB' && role !== ROLES.ETUDIANT) {
     return res.status(403).json({
       success: false,
@@ -604,11 +642,12 @@ const completeOAuthSignup = async (req, res, provider) => {
   }
 
   const user = await prisma.$transaction(async (tx) => {
+    const fallbackName = buildOAuthFallbackName(decoded.email);
     const newUser = await tx.utilisateur.create({
       data: {
         email: decoded.email,
-        nom: decoded.nom,
-        prenom: decoded.prenom,
+        nom: String(decoded.nom || '').trim() || fallbackName,
+        prenom: String(decoded.prenom || '').trim() || fallbackName,
         role,
         [providerDbField]: decoded[providerIdField],
         auth_provider: provider,
@@ -719,7 +758,14 @@ const completeGoogleSignup = asyncHandler(async (req, res) => {
 });
 
 const githubCallback = asyncHandler(async (req, res) => {
-  return handleOAuthCallback(req, res, 'GITHUB');
+  try {
+    return await handleOAuthCallback(req, res, 'GITHUB');
+  } catch (error) {
+    console.error('[oauth][github-callback]', error);
+    return redirectToFrontend(req, res, '/login', {
+      error: 'oauth_callback_failed'
+    });
+  }
 });
 
 const completeGithubSignup = asyncHandler(async (req, res) => {
