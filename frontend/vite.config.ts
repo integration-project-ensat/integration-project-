@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
     env.VITE_BACKEND_URL ||
     env.BACKEND_URL ||
     'http://localhost:3000'
+  const hmrHost = process.env.VITE_HMR_HOST || env.VITE_HMR_HOST || 'localhost'
+  const hmrProtocol = process.env.VITE_HMR_PROTOCOL || env.VITE_HMR_PROTOCOL || 'ws'
   const e2eMocksEnabled = process.env.VITE_E2E_MOCKS === 'true' || env.VITE_E2E_MOCKS === 'true'
 
   const e2eMockApiPlugin = {
@@ -104,8 +106,8 @@ export default defineConfig(({ mode }) => {
         }
       },
       hmr: {
-        protocol: 'ws',
-        host: 'localhost',
+        protocol: hmrProtocol,
+        host: hmrHost,
         port: 5173
       }
     },
