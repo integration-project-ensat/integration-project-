@@ -14,10 +14,9 @@ async function ensureAttachedProfessorStudent(professorId, studentId) {
   })
 
   if (!attached) {
-    throw {
-      statusCode: 403,
-      message: "Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.",
-    }
+    const err = new Error("Ajoutez d'abord cet étudiant à votre liste avant de valider sa demande.")
+    err.statusCode = 403
+    throw err
   }
 }
 
@@ -59,7 +58,9 @@ const stageService = {
         })
       : null
     if (id_professionnel && !professionnel) {
-      throw { statusCode: 400, message: 'Professionnel introuvable' }
+      const err = new Error('Professionnel introuvable')
+      err.statusCode = 400
+      throw err
     }
 
     const stage = await prisma.stage.create({
@@ -97,7 +98,11 @@ const stageService = {
   async update(id, data, etudiantId) {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
-    if (stage.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (stage.id_etudiant !== BigInt(etudiantId)) {
+      const err = new Error('Accès refusé')
+      err.statusCode = 403
+      throw err
+    }
 
     const { entreprise, etablissement, poste, duree_semaines, missions, technologies, date_debut, date_fin, id_encadrant, id_professionnel } = data
     const professionnel = id_professionnel
@@ -107,7 +112,9 @@ const stageService = {
         })
       : null
     if (id_professionnel && !professionnel) {
-      throw { statusCode: 400, message: 'Professionnel introuvable' }
+      const err = new Error('Professionnel introuvable')
+      err.statusCode = 400
+      throw err
     }
 
     return prisma.stage.update({
@@ -130,14 +137,22 @@ const stageService = {
   async delete(id, etudiantId) {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
-    if (stage.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (stage.id_etudiant !== BigInt(etudiantId)) {
+      const err = new Error('Accès refusé')
+      err.statusCode = 403
+      throw err
+    }
     return prisma.stage.delete({ where: { id_stage: BigInt(id) } })
   },
 
   async uploadRapport(id, rapportUrl, etudiantId) {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
-    if (stage.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (stage.id_etudiant !== BigInt(etudiantId)) {
+      const err = new Error('Accès refusé')
+      err.statusCode = 403
+      throw err
+    }
     return prisma.stage.update({
       where: { id_stage: BigInt(id) },
       data: { rapport_url: rapportUrl }
@@ -148,7 +163,9 @@ const stageService = {
     const stage = await prisma.stage.findUnique({ where: { id_stage: BigInt(id) } })
     if (!stage) return null
     if (stage.id_encadrant && stage.id_encadrant !== BigInt(validateurId)) {
-      throw { statusCode: 403, message: 'Accès refusé' }
+      const err = new Error('Accès refusé')
+      err.statusCode = 403
+      throw err
     }
 
     await ensureAttachedProfessorStudent(validateurId, stage.id_etudiant)
