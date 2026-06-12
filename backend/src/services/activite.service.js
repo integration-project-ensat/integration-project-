@@ -45,7 +45,11 @@ const activiteService = {
   async update(id, data, etudiantId) {
     const activite = await prisma.activiteParascolaire.findUnique({ where: { id_activite: BigInt(id) } })
     if (!activite) return null
-    if (activite.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (activite.id_etudiant !== BigInt(etudiantId)) {
+  const err = new Error('Accès refusé')
+  err.statusCode = 403
+  throw err
+}
 
     const { nom, type, periode, description } = data
     return prisma.activiteParascolaire.update({
@@ -62,19 +66,29 @@ const activiteService = {
   async delete(id, etudiantId) {
     const activite = await prisma.activiteParascolaire.findUnique({ where: { id_activite: BigInt(id) } })
     if (!activite) return null
-    if (activite.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
+    if (activite.id_etudiant !== BigInt(etudiantId)) {
+  const err = new Error('Accès refusé')
+  err.statusCode = 403
+  throw err
+}
     return prisma.activiteParascolaire.delete({ where: { id_activite: BigInt(id) } })
   },
 
   async uploadJustificatif(id, justificatifUrl, etudiantId) {
     const activite = await prisma.activiteParascolaire.findUnique({ where: { id_activite: BigInt(id) } })
     if (!activite) return null
-    if (activite.id_etudiant !== BigInt(etudiantId)) throw { statusCode: 403, message: 'Accès refusé' }
-    return prisma.activiteParascolaire.update({
-      where: { id_activite: BigInt(id) },
-      data: { justificatif_url: justificatifUrl }
-    })
-  },
+    
+    
+  if (activite.id_etudiant !== BigInt(etudiantId)) {
+    const err = new Error('Accès refusé')
+    err.statusCode = 403
+    throw err
+  }
+  return prisma.activiteParascolaire.update({
+    where: { id_activite: BigInt(id) },
+    data: { justificatif_url: justificatifUrl }
+  })
+},
 
   async valider(id, validateur, statut) {
     const activite = await prisma.activiteParascolaire.findUnique({ where: { id_activite: BigInt(id) } })
