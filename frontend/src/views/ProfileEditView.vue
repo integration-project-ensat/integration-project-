@@ -1,11 +1,13 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth.js'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
 import { profileService } from '../services/profile.service'
 
 const router = useRouter()
+const auth = useAuthStore()
 const sidebarOpen = ref(false)
 type ProfileRole = 'student' | 'teacher' | 'professional'
 const profileRole = ref<ProfileRole>('student')
@@ -62,6 +64,34 @@ function applyBackendProfile(data: any) {
   profile.github = data?.github || ''
   profile.avatar = data?.avatar || null
   profile.banner = data?.banner || null
+}
+
+function syncCurrentUserAssets(avatar: string | null, banner: string | null) {
+  if (auth.user) {
+    const currentUser = auth.user as Record<string, any>
+    auth.user = {
+      ...currentUser,
+      avatar: avatar || currentUser.avatar || '',
+      banner: banner || currentUser.banner || ''
+    }
+  }
+
+  const storedUser = localStorage.getItem('user')
+  if (!storedUser) return
+
+  try {
+    const parsed = JSON.parse(storedUser)
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        ...parsed,
+        avatar: avatar || parsed.avatar || '',
+        banner: banner || parsed.banner || ''
+      })
+    )
+  } catch {
+    // Ignore malformed session payloads and keep the current in-memory state.
+  }
 }
 
 function normalizeProfileRole(roleRaw: unknown): ProfileRole {
@@ -236,55 +266,55 @@ const langueForm = reactive({ nom: '', niveau: 'Intermédiaire' })
 
 // ──────────────────────────────────────────────
 // Avatar / Banner upload
-// ──────────────────────────────────────────────
-function onAvatarChange(e: Event) {
+// --------------------------------------------------
+async function deleteAvatarPhoto() {
+  try {
+    await profileService.deleteAvatar()
+    profile.avatar = null
+    await loadProfile()
+    syncCurrentUserAssets(profile.avatar, profile.banner)
+    showToast('Photo supprimée', 'success')
+  } catch (error) {
+    console.warn("Erreur lors de la suppression de la photo", error)
+    showToast("Erreur lors de la suppression de la photo", 'error')
+  }
+}
+
+async function onAvatarChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
-  let settled = false
-  const reader = new FileReader()
-  reader.onload = ev => {
-    if (!settled) profile.avatar = ev.target?.result as string
-  }
-  reader.readAsDataURL(file)
-  showToast("Upload de la photo...", 'success')
-  profileService.uploadAvatar(profile.id, file).then(photoUrl => {
-    settled = true
-    if (photoUrl) {
-      profile.avatar = photoUrl
-      showToast('Photo enregistrée', 'success')
-    } else {
-      showToast("Erreur : l'URL retournée est vide", 'error')
-    }
-  }).catch(error => {
-    settled = true
+
+  showToast('Upload de la photo...', 'success')
+  try {
+    const photoUrl = await profileService.uploadAvatar(profile.id, file)
+    if (!photoUrl) throw new Error("L'URL retournée est vide")
+    profile.avatar = photoUrl
+    await loadProfile()
+    syncCurrentUserAssets(profile.avatar, profile.banner)
+    showToast('Photo enregistrée', 'success')
+  } catch (error) {
     console.warn("Erreur lors de l'upload de la photo", error)
     showToast("Erreur lors de l'upload de la photo", 'error')
-  })
+  }
 }
 
-function onBannerChange(e: Event) {
+async function onBannerChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
-  let settled = false
-  const reader = new FileReader()
-  reader.onload = ev => { if (!settled) profile.banner = ev.target?.result as string }
-  reader.readAsDataURL(file)
-  showToast("Upload de la bannière...", 'success')
-  profileService.uploadBanner(profile.id, file).then(photoUrl => {
-    settled = true
-    if (photoUrl) {
-      profile.banner = photoUrl
-      showToast('Bannière enregistrée', 'success')
-    } else {
-      showToast("Erreur : l'URL retournée est vide", 'error')
-    }
-  }).catch(error => {
-    settled = true
+
+  showToast('Upload de la bannière...', 'success')
+  try {
+    const photoUrl = await profileService.uploadBanner(profile.id, file)
+    if (!photoUrl) throw new Error("L'URL retournée est vide")
+    profile.banner = photoUrl
+    await loadProfile()
+    syncCurrentUserAssets(profile.avatar, profile.banner)
+    showToast('Bannière enregistrée', 'success')
+  } catch (error) {
     console.warn("Erreur lors de l'upload de la bannière", error)
     showToast("Erreur lors de l'upload de la bannière", 'error')
-  })
+  }
 }
-
 const bannerStyle = computed(() =>
   profile.banner
     ? { backgroundImage: `url(${profile.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
@@ -488,7 +518,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
             </div>
 
             <div class="cover-actions">
-              <button v-if="profile.avatar" class="btn-sm danger" @click="profile.avatar = null">Supprimer la photo</button>
+              <button v-if="profile.avatar" class="btn-sm danger" @click="deleteAvatarPhoto">Supprimer la photo</button>
               <button class="btn-sm outline" @click="router.push('/profile')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 Voir le profil

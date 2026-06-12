@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { Bookmark } from 'lucide-vue-next'
-import { useDebounceFn } from '@vueuse/core'
 import ExploreHeader  from '../components/exploreStudent/ExploreHeader.vue'
 import FilterPanel    from '../components/exploreStudent/FilterPanel.vue'
 import ProfileCard    from '../components/exploreStudent/ProfileCard.vue'
@@ -117,10 +116,14 @@ const chargerSauvegardes = async () => {
 }
 
 // --- Debounce sur la recherche ----------------
-const debouncedSearch = useDebounceFn(() => {
-  pagination.value.page = 1
-  chargerProfils()
-}, 400)
+let searchDebounceTimer: number | undefined
+const debouncedSearch = () => {
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = window.setTimeout(() => {
+    pagination.value.page = 1
+    chargerProfils()
+  }, 400)
+}
 
 watch(searchQuery, debouncedSearch)
 

@@ -234,6 +234,11 @@ export const profileService = {
     return resolveBackendAsset(data?.data?.photo_profil || data?.photo_profil || '')
   },
 
+  async deleteAvatar() {
+    const { data } = await api.delete('/profil/photo')
+    return data
+  },
+
   async uploadBanner(userId, file) {
     const form = new FormData()
     form.append('banner', file)
