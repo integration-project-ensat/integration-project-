@@ -4,11 +4,76 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const backendTarget = process.env.VITE_BACKEND_URL || env.VITE_BACKEND_URL || 'http://backend:3000'
+  const backendTarget = process.env.VITE_BACKEND_URL || env.VITE_BACKEND_URL || 'http://127.0.0.1:3000'
+  const e2eMocksEnabled = process.env.VITE_E2E_MOCKS === 'true' || env.VITE_E2E_MOCKS === 'true'
+
+  const e2eMockApiPlugin = {
+    name: 'e2e-mock-api',
+    configureServer(server) {
+      if (!e2eMocksEnabled) return
+
+      server.middlewares.use((req, res, next) => {
+        const url = req.url || ''
+
+        if (!url.startsWith('/api/')) {
+          next()
+          return
+        }
+
+        const send = (status, body) => {
+          res.statusCode = status
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(body))
+        }
+
+        if (url.includes('/auth/seconnecter') || url.endsWith('/login')) {
+          send(200, {
+            success: true,
+            data: {
+              token: 'mock-e2e-token',
+              user: { id: 1, email: 'test@test.com', role: 'student' }
+            }
+          })
+          return
+        }
+
+        if (url.includes('/auth/sinscrire')) {
+          send(201, {
+            success: true,
+            data: {
+              token: 'mock-e2e-token',
+              user: { id: 2, email: 'test@test.com', role: 'student' }
+            }
+          })
+          return
+        }
+
+        if (
+          url.includes('/auth/me') ||
+          url.includes('/auth/logout') ||
+          url.includes('/auth/deconnecter') ||
+          url.includes('/auth/mot-de-passe-oublie') ||
+          url.includes('/auth/verifier-code') ||
+          url.includes('/auth/renvoyer-code') ||
+          url.includes('/auth/reinitialiser-mot-de-passe')
+        ) {
+          send(200, { success: true, data: null })
+          return
+        }
+
+        if (url.includes('/notifications')) {
+          send(200, { success: true, data: [] })
+          return
+        }
+
+        send(200, { success: true, data: [] })
+      })
+    }
+  }
 
   return {
   base: '/',
-  plugins: [vue()],
+  plugins: [e2eMockApiPlugin, vue()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
