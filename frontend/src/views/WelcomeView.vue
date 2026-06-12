@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <main class="welcome-page">
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
@@ -23,20 +23,20 @@
     <section id="accueil" class="hero-section">
       <div class="hero-copy">
         <span class="hero-dot"></span>
-        <p class="eyebrow">Portfolio academique et professionnel</p>
-        <h1>La vitrine moderne des talents etudiants.</h1>
+        <p class="eyebrow">Portfolio académique et professionnel</p>
+        <h1>La vitrine moderne des talents étudiants.</h1>
         <p class="hero-text">
-          PheraCore connecte les etudiants, les enseignants et les professionnels
-          autour de portfolios fiables, de recommandations qualifiees et
-          d'opportunites concretes.
+          PheraCore connecte les étudiants, les enseignants et les professionnels
+          autour de portfolios fiables, de recommandations qualifiées et
+          d'opportunités concrètes.
         </p>
         <div class="hero-actions">
-          <RouterLink to="/signup" class="primary-action">Commencer</RouterLink>
-          <RouterLink to="/login" class="secondary-action">Inscription</RouterLink>
+          <RouterLink to="/login" class="primary-action">Commencer</RouterLink>
+          <RouterLink to="/signup" class="secondary-action">Inscription</RouterLink>
         </div>
-        <div class="connect-list" aria-label="Types de profils connectes">
+        <div class="connect-list" aria-label="Types de profils connectés">
           <strong>Connecter entre :</strong>
-          <span>Etudiant</span>
+          <span>Étudiant</span>
           <span>Professeur</span>
           <span>Professionnel</span>
         </div>
@@ -62,7 +62,7 @@
       </div>
     </section>
 
-    <section class="stats-section" aria-label="Chiffres cles">
+    <section class="stats-section" aria-label="Chiffres clés">
       <article v-for="stat in stats" :key="stat.label" class="stat-card">
         <strong>{{ stat.value }}</strong>
         <span>{{ stat.label }}</span>
@@ -71,10 +71,10 @@
 
     <section id="plateforme" class="content-section platform-section">
       <div class="section-heading">
-        <span>Details de la plateforme</span>
+        <span>Détails de la plateforme</span>
         <h2>Un espace clair pour valoriser les parcours.</h2>
         <p>
-          La page d'accueil presente les benefices essentiels de la plateforme
+          La page d'accueil présente les bénéfices essentiels de la plateforme
           avec une lecture rapide, un style professionnel et des actions simples.
         </p>
       </div>
@@ -90,14 +90,14 @@
     <section id="partenaires" class="content-section partners-section">
   <div class="section-heading compact">
     <span>Partenaires institutionnels</span>
-    <h2>Soutenus par des acteurs de reference.</h2>
+    <h2>Soutenus par des acteurs de référence.</h2>
   </div>
   <div class="partners-grid">
-    <a href="https://www.men.gov.ma" class="partner-card" target="_blank" rel="noopener">
-      <img src="@/assets/LogoCode212.png" alt="Code 212" />
-      <small>Code 212fi</small>
-    </a>
     <a href="https://www.code212.ac.ma" class="partner-card" target="_blank" rel="noopener">
+      <img src="@/assets/LogoCode212.png" alt="Code 212" />
+      <small>Code 212</small>
+    </a>
+    <a href="https://ensat.ac.ma/Portail/" class="partner-card" target="_blank" rel="noopener">
       <img src="@/assets/ensaLogo.png" alt="ENSA Tanger" />
       <small>ENSA Tanger</small>
     </a>
@@ -112,14 +112,14 @@
         <span>PheraCore</span>
       </div>
       <p class="footer-tagline">
-        La premiere plateforme de portfolio academique et professionnel
-        pour les etudiants du Nord Maroc.
+        La première plateforme de portfolio académique et professionnel
+        pour les étudiants du Nord Maroc.
       </p>
     </div>
 
     <div class="footer-col">
       <h4>PheraCore</h4>
-      <RouterLink to="/signup">Creer un compte</RouterLink>
+      <RouterLink to="/signup">Créer un compte</RouterLink>
       <RouterLink to="/login">Se connecter</RouterLink>
       <RouterLink to="/explore">Explorer les profils</RouterLink>
     </div>
@@ -131,7 +131,7 @@
     </div>
 
     <div class="footer-col">
-      <h4>Reseaux sociaux</h4>
+      <h4>Réseaux sociaux</h4>
       <a href="https://www.linkedin.com" target="_blank" rel="noopener">LinkedIn</a>
       <a href="https://www.instagram.com" target="_blank" rel="noopener">Instagram</a>
       <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
@@ -139,7 +139,7 @@
   </div>
 
   <div class="footer-bottom">
-    <p>© {{ currentYear }} PheraCore. Tous droits reserves.</p>
+    <p>© {{ currentYear }} PheraCore. Tous droits réservés.</p>
   </div>
 </footer>
 
@@ -155,8 +155,8 @@ import photo3 from "@/assets/photo3.jpeg";
 const currentYear = new Date().getFullYear();
 
 const stats = [
-  { value: "3", label: "profils connectes" },
-  { value: "500+", label: "recommandations valorisees" },
+  { value: "3", label: "profils connectés" },
+  { value: "500+", label: "recommandations valorisées" },
   { value: "24/7", label: "portfolio consultable" },
 ];
 
@@ -164,12 +164,12 @@ const features = [
   {
     icon: "01",
     title: "Portfolio vivant",
-    description: "Centralisez les projets, stages, certifications et competences dans une interface lisible et moderne.",
+    description: "Centralisez les projets, stages, certifications et compétences dans une interface lisible et moderne.",
   },
   {
     icon: "02",
     title: "Recommandations fiables",
-    description: "Donnez de la valeur au profil grace aux retours des professeurs, encadrants et professionnels.",
+    description: "Donnez de la valeur au profil grâce aux retours des professeurs, encadrants et professionnels.",
   },
   {
     icon: "03",
@@ -179,9 +179,9 @@ const features = [
 ];
 
 const studentPhotos = [
-  { alt: "Etudiante souriante tenant un cahier", className: "photo-top",   src: photo1 },
-  { alt: "Etudiante lisant avec ses camarades",  className: "photo-left",  src: photo2 },
-  { alt: "Etudiant souriant avec un livre",      className: "photo-right", src: photo3 },
+  { alt: "Étudiante souriante tenant un cahier", className: "photo-top",   src: photo1 },
+  { alt: "Étudiante lisant avec ses camarades",  className: "photo-left",  src: photo2 },
+  { alt: "Étudiant souriant avec un livre",      className: "photo-right", src: photo3 },
 ];
 </script>
 
@@ -217,6 +217,8 @@ const studentPhotos = [
 }
 
 .topbar {
+  z-index: 20;
+  isolation: isolate;
   width: min(100%, 1180px);
   min-height: 76px;
   margin: 0 auto;
@@ -372,6 +374,8 @@ const studentPhotos = [
   position: relative;
   min-height: 620px;
   margin-top: -600px;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .visual-pill {
@@ -398,6 +402,7 @@ const studentPhotos = [
   border: 1px solid rgba(255, 255, 255, .1);
   box-shadow: 0 24px 50px rgba(0, 0, 0, .28);
   animation: photoFloat 10s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .photo-top   { left: calc(50% - 70px); top: 0; }
@@ -410,6 +415,7 @@ const studentPhotos = [
   width: 18px; height: 18px;
   border-radius: 50%;
   animation: softBlink 5.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .spark-cyan   { left: 4%;   top: 20%;    width: 13px; height: 13px; background: var(--blue); }

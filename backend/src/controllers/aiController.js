@@ -22,7 +22,7 @@ function ensureArray(value) {
 
 function validatePayload(payload) {
   if (!payload.targetCareer || !String(payload.targetCareer).trim()) {
-    return `targetCareer is required. Examples: ${allowedCareers.join(', ')}`
+    return `Le métier cible est requis. Exemples : ${allowedCareers.join(', ')}`
   }
   return null
 }
@@ -69,7 +69,7 @@ async function getCareerRecommendation(req, res) {
         ...requestedPayload,
         student: {
           ...(req.body.student || {}),
-          source: req.body.student?.source || 'mock'
+          source: req.body.student?.source || 'exemple'
         }
       }
     }
@@ -77,7 +77,7 @@ async function getCareerRecommendation(req, res) {
     if (!payload) {
       return res.status(404).json({
         success: false,
-        message: 'Aucun profil étudiant trouvé dans la base de données pour l’analyse IA'
+        message: "Aucun profil étudiant trouvé dans la base de données pour l'analyse IA"
       })
     }
 
@@ -90,7 +90,7 @@ async function getCareerRecommendation(req, res) {
   } catch (error) {
     return res.status(502).json({
       success: false,
-      message: 'AI service unavailable or failed to analyze the profile',
+      message: "Le service IA est indisponible ou n'a pas pu analyser le profil",
       details: error.message
     })
   }

@@ -93,9 +93,9 @@ async function submit() {
     auth.login(session.user, session.token, session.role)
 
     if (session.role === 'admin') router.push('/admin')
-    else if (session.role === 'teacher') router.push('/prof/dashboard')
-    else if (session.role === 'professional') router.push('/pro/dashboard')
-    else router.push('/student/dashboard')
+    else if (session.role === 'teacher') router.push('/explore-prof')
+    else if (session.role === 'professional') router.push('/explore-pro')
+    else router.push('/student/explore')
   } catch (e: any) {
     error.value =
       e.response?.data?.message || 'Erreur lors de finalisation'

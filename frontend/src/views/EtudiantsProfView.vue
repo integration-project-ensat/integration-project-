@@ -20,6 +20,7 @@ interface ProfStudent {
   id: string;
   initials: string;
   name: string;
+  avatar?: string;
   email: string;
   apogee: string;
   school: string;
@@ -227,6 +228,7 @@ const statusFilter = ref("Toutes");
 
 const withResolvedBadges = (student: ProfStudent) => ({
   ...student,
+  avatar: resolveAvatar(student.avatar),
   badges: resolveProfileBadges({
     badges: student.badges,
     filiere: student.field,
@@ -234,6 +236,23 @@ const withResolvedBadges = (student: ProfStudent) => ({
     field: student.field,
   }),
 });
+
+const resolveAvatar = (path?: string | null) => {
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}${value}`;
+  }
+  if (value.startsWith("uploads/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}/${value}`;
+  }
+  return "";
+};
 
 const sourceLabel = (value: string) => (value === "CSV" ? "CSV" : "Manuel");
 const formatDate = (value: string) =>
@@ -536,7 +555,10 @@ onMounted(loadStudents);
                 <tr v-for="student in filteredStudents" :key="student.id">
                   <td>
                     <button type="button" class="profile-cell" @click="openStudentProfile(student)">
-                      <span>{{ student.initials }}</span>
+                      <span class="profile-avatar">
+                        <img v-if="student.avatar" :src="student.avatar" :alt="student.name" />
+                        <span v-else>{{ student.initials }}</span>
+                      </span>
                       <div>
                         <strong>{{ student.name }}</strong>
                         <small>{{ student.email }}</small>
@@ -922,7 +944,7 @@ th {
   text-align: left;
 }
 
-.profile-cell span {
+.profile-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -931,6 +953,15 @@ th {
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .profile-cell small {

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -12,6 +12,7 @@ export interface ValidationRequest {
   id: string;
   studentId: string;
   studentName: string;
+  avatar?: string;
   initials: string;
   type: string;
   title: string;
@@ -25,6 +26,7 @@ export interface RecommendationRequest {
   id: string;
   studentId: string;
   studentName: string;
+  avatar?: string;
   initials: string;
   profileInfo: string;
   title: string;
@@ -145,6 +147,23 @@ const recommendationStatusClass = (status: RecommendationStatus) => ({
   "is-refused": status === "Refusée",
 });
 
+const resolveAvatar = (path?: string | null) => {
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}${value}`;
+  }
+  if (value.startsWith("uploads/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}/${value}`;
+  }
+  return "";
+};
+
 const openDetailsModal = (request: ValidationRequest) => {
   selectedRequest.value = request;
 };
@@ -258,12 +277,14 @@ const loadDashboard = async () => {
       requests.value = Array.isArray(data.validationRequests)
         ? data.validationRequests.map((request: any) => ({
             ...request,
+            avatar: resolveAvatar(request.avatar),
             status: normalizeValidationStatus(request.status),
           }))
         : [];
       recommendations.value = Array.isArray(data.recommendationRequests)
         ? data.recommendationRequests.map((request: any) => ({
             ...request,
+            avatar: resolveAvatar(request.avatar),
             status: normalizeRecommendationStatus(request.status),
           }))
         : [];
@@ -297,7 +318,7 @@ onMounted(() => {
         <div class="dashboard-header">
           <div>
             <p class="dashboard-kicker">Espace professeur</p>
-            <h1>Dashboard</h1>
+            <h1>Tableau de bord</h1>
           </div>
         </div>
 
@@ -334,7 +355,8 @@ onMounted(() => {
                   :aria-label="`Voir le profil de ${request.studentName}`"
                   @click.stop="openStudentProfile(request)"
                 >
-                  {{ request.initials }}
+                  <img v-if="request.avatar" :src="request.avatar" :alt="request.studentName" />
+                  <span v-else>{{ request.initials }}</span>
                 </button>
 
                 <div class="request-content">
@@ -406,7 +428,8 @@ onMounted(() => {
                   :aria-label="`Voir le profil de ${request.studentName}`"
                   @click.stop="openStudentProfile(request)"
                 >
-                  {{ request.initials }}
+                  <img v-if="request.avatar" :src="request.avatar" :alt="request.studentName" />
+                  <span v-else>{{ request.initials }}</span>
                 </button>
 
                 <div class="request-content">
@@ -853,6 +876,14 @@ onMounted(() => {
   justify-content: center;
   font-family: var(--font-body);
   font-weight: 800;
+  overflow: hidden;
+}
+
+.student-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .student-name-btn,

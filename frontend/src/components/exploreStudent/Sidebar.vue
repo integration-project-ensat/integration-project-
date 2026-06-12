@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <aside class="sidebar" :class="{ open: isOpen }">
     <component
       :is="forceNavigation ? 'a' : RouterLink"
@@ -8,7 +8,8 @@
       @click="handleNavigation('/profile', $event)"
     >
       <div class="avatar-sm">
-        <span>{{ initials }}</span>
+        <img v-if="auth.user?.avatar" :src="auth.user.avatar" alt="avatar" />
+        <span v-else>{{ initials }}</span>
       </div>
       <div class="user-info">
         <p class="user-name">{{ userName }}</p>
@@ -158,7 +159,7 @@ const icons = {
 const navItems = [
   {
     path: "/student/dashboard",
-    label: "Dashboard",
+    label: "Tableau de bord",
     icon: icons.dashboard,
     activeIcon: icons.dashboardFill,
   },

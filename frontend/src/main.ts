@@ -13,5 +13,6 @@ app.use(router)
 
 const authStore = useAuthStore()
 authStore.restoreSession()
-
-app.mount('#app')
+authStore.validateSession().finally(() => {
+  app.mount('#app')
+})

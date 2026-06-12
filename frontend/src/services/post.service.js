@@ -40,4 +40,8 @@ export const postService = {
   removeRepost(id) {
     return api.delete(`/posts/${id}/reposts`)
   },
+
+  addComment(id, contenu) {
+    return api.post(`/posts/${id}/comments`, { contenu })
+  },
 }

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { SlidersHorizontal } from "../lib/icons";
@@ -69,7 +69,7 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
       <section class="top-profiles-panel">
         <div class="page-heading">
           <p>Espace professionnel</p>
-          <h1>Top Profiles</h1>
+          <h1>Meilleurs profils</h1>
         </div>
 
         <div class="stats-grid">
@@ -192,7 +192,7 @@ const fallbackBadges = (profile: { badges?: string[]; field: string; school: str
                   <td>
                     <div class="action-row">
                       <button type="button" @click="openPath(profile.profilePath)">
-                        Voir profil
+                        Voir le profil
                       </button>
                       <button
                         type="button"

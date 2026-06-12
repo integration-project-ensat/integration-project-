@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
@@ -21,6 +21,7 @@ interface Intern {
   id: string;
   initials: string;
   name: string;
+  avatar?: string;
   school: string;
   field: string;
   city: string;
@@ -37,6 +38,7 @@ interface Intern {
 interface SavedProfile {
   id: string;
   name: string;
+  avatar?: string;
   school: string;
   field: string;
   city: string;
@@ -61,6 +63,14 @@ const totalSaved = computed(() => savedProfiles.value.length);
 const isSubmittingStage = ref(false);
 const isLoadingDashboard = ref(false);
 const dashboardError = ref("");
+
+const resolveAvatar = (path?: string | null) => {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path) || String(path).startsWith("data:")) return path;
+  if (String(path).startsWith("/")) return String(path);
+  if (String(path).startsWith("uploads/")) return `/${path}`;
+  return "";
+};
 
 const interns = ref<Intern[]>([]);
 
@@ -95,7 +105,7 @@ const stats = computed(() => [
   {
     title: "Profils sauvegardés",
     value: totalSaved.value,
-    info: "Top Profiles",
+    info: "Meilleurs profils",
     icon: CheckCircle2,
   },
   {
@@ -154,6 +164,7 @@ const loadDashboard = async () => {
       interns.value = Array.isArray(data.interns)
         ? data.interns.map((intern: Intern) => ({
             ...intern,
+            avatar: resolveAvatar((intern as any).avatar),
             badges:
               Array.isArray(intern.badges) && intern.badges.length
                 ? intern.badges
@@ -163,7 +174,12 @@ const loadDashboard = async () => {
                   }),
           }))
         : [];
-      savedProfiles.value = Array.isArray(data.savedProfiles) ? data.savedProfiles : [];
+      savedProfiles.value = Array.isArray(data.savedProfiles)
+        ? data.savedProfiles.map((profile: SavedProfile) => ({
+            ...profile,
+            avatar: resolveAvatar((profile as any).avatar),
+          }))
+        : [];
       pendingRequests.value = data.connections?.pending ?? 0;
       acceptedRequests.value = data.connections?.accepted ?? 0;
       refusedRequests.value = data.connections?.refused ?? 0;
@@ -321,7 +337,10 @@ const submitStage = async () => {
                       class="student-cell"
                       @click="openPath(intern.profilePath)"
                     >
-                      <span>{{ intern.initials }}</span>
+                      <span class="student-avatar">
+                        <img v-if="intern.avatar" :src="intern.avatar" :alt="intern.name" />
+                        <span v-else>{{ intern.initials }}</span>
+                      </span>
                       <div>
                         <strong>{{ intern.name }}</strong>
                         <SkillBadges :badges="intern.badges" compact />
@@ -365,7 +384,7 @@ const submitStage = async () => {
         <article class="panel">
           <div class="section-heading">
             <div>
-              <p>Top Profiles</p>
+              <p>Meilleurs profils</p>
               <h2>Profils sauvegardés récents</h2>
             </div>
           </div>
@@ -376,7 +395,10 @@ const submitStage = async () => {
               :key="profile.id"
               class="saved-card"
             >
-              <span>{{ profile.name.slice(0, 2).toUpperCase() }}</span>
+              <span class="student-avatar">
+                <img v-if="profile.avatar" :src="profile.avatar" :alt="profile.name" />
+                <span v-else>{{ profile.name.slice(0, 2).toUpperCase() }}</span>
+              </span>
               <div>
                 <strong>{{ profile.name }}</strong>
 
@@ -724,8 +746,7 @@ th {
   font-weight: 900;
 }
 
-.student-cell span,
-.saved-card > span {
+.student-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -735,6 +756,15 @@ th {
   align-items: center;
   justify-content: center;
   font-weight: 900;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.student-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .score-pill,

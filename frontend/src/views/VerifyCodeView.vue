@@ -135,14 +135,14 @@ function redirectByRole(role: string | null | undefined) {
     return
   }
   if (role === 'teacher') {
-    router.push('/prof/dashboard')
+    router.push('/explore-prof')
     return
   }
   if (role === 'professional') {
-    router.push('/pro/dashboard')
+    router.push('/explore-pro')
     return
   }
-  router.push('/student/dashboard')
+  router.push('/student/explore')
 }
 
 function getPendingSignup(): PendingSignup | null {

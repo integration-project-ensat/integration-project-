@@ -1,18 +1,18 @@
 <template>
   <aside class="sidebar" :class="{ open: props.isOpen }">
 
-    <!-- User info -->
+    <!-- Informations utilisateur -->
     <div class="sidebar-user">
       <div class="avatar-sm">
         <img v-if="user.avatar" :src="user.avatar" alt="avatar" />
         <span v-else>{{ initials }}</span>
       </div>
       <div class="user-info">
-        <p class="user-name">{{ user.name || 'Nom Prenom' }}</p>
+        <p class="user-name">{{ user.name || 'Nom Prénom' }}</p>
         <p class="user-email">{{ user.email || 'exemple@univ.etu.ac.ma' }}</p>
       </div>
     </div>
- 
+
     <!-- Navigation dynamique selon le rôle -->
     <nav class="sidebar-nav">
       <RouterLink
@@ -25,8 +25,8 @@
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
- 
-    <!-- Bottom -->
+
+    <!-- Bas de la barre latérale -->
     <div class="sidebar-bottom">
       <RouterLink
         :to="settingsPath"
@@ -34,49 +34,49 @@
         :class="{ active: route.path === settingsPath }"
       >
         <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
       </RouterLink>
       <button class="nav-item logout" @click="logout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </button>
     </div>
 
   </aside>
 </template>
- 
+
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, RouterLink, useRouter } from 'vue-router'
 import authService from '@/services/auth.service.js'
- 
-// ── Props ──
+
+// Propriétés
 const props = withDefaults(defineProps<{
   role: 'student' | 'teacher' | 'professional'
-  isOpen?: boolean        // ← ajoute cette ligne
+  isOpen?: boolean
   user?: {
     name: string
     email: string
     avatar?: string
   }
 }>(), {
-  isOpen: false,          // ← ajoute cette ligne
+  isOpen: false,
   user: () => ({
-    name: 'Nom Prenom',
+    name: 'Nom Prénom',
     email: 'exemple@univ.etu.ac.ma',
     avatar: ''
   })
 })
- 
+
 const route  = useRoute()
 const router = useRouter()
- 
+
 const initials = computed(() => {
-  const name = props.user?.name || 'Nom Prenom'
+  const name = props.user?.name || 'Nom Prénom'
   return name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
 })
- 
-// ── Icons ──
+
+// Icônes
 const icons = {
   dashboard:      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
   explore:        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
@@ -94,37 +94,37 @@ const icons = {
   settings:       `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
   logout:         `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
 }
- 
-// ── Nav items selon le rôle ──
+
+// Éléments de navigation selon le rôle
 const navByRole = {
   student: [
-    { path: '/dashboard',      label: 'Dashboard',      icon: icons.dashboard },
+    { path: '/dashboard',      label: 'Tableau de bord', icon: icons.dashboard },
     { path: '/explore',        label: 'Explorer',       icon: icons.explore },
     { path: '/student/feed',   label: 'Fil d’actualité', icon: icons.feed },
     { path: '/projets',        label: 'Projets',        icon: icons.projets },
     { path: '/stages',         label: 'Stages',         icon: icons.stages },
     { path: '/certifications', label: 'Certifications', icon: icons.certifications },
-    { path: '/activites',      label: 'Activites',      icon: icons.activites },
-    { path: '/portfolio',      label: 'My Portfolio',   icon: icons.portfolio },
+    { path: '/activites',      label: 'Activités',      icon: icons.activites },
+    { path: '/portfolio',      label: 'Mon portfolio',  icon: icons.portfolio },
     { path: '/github',         label: 'GitHub',         icon: icons.github },
   ],
   teacher: [
-    { path: '/dashboard',      label: 'Dashboard',      icon: icons.dashboard },
+    { path: '/dashboard',      label: 'Tableau de bord', icon: icons.dashboard },
     { path: '/explore',        label: 'Explorer',       icon: icons.explore },
-    { path: '/etudiants',      label: 'Mes Etudiants',  icon: icons.etudiants },
+    { path: '/etudiants',      label: 'Mes étudiants',  icon: icons.etudiants },
     { path: '/certifications', label: 'Certifications', icon: icons.certifications },
-    { path: '/recos',          label: 'Mes Recos',      icon: icons.recos },
+    { path: '/recos',          label: 'Mes recommandations', icon: icons.recos },
     { path: '/commentaires',   label: 'Commentaires',   icon: icons.commentaires },
   ],
   professional: [
-    { path: '/dashboard',      label: 'Dashboard',      icon: icons.dashboard },
+    { path: '/dashboard',      label: 'Tableau de bord', icon: icons.dashboard },
     { path: '/explore',        label: 'Explorer',       icon: icons.explore },
     { path: '/offres',         label: 'Offres',         icon: icons.offres },
-    { path: '/recos',          label: 'Mes Recos',      icon: icons.recos },
+    { path: '/recos',          label: 'Mes recommandations', icon: icons.recos },
     { path: '/commentaires',   label: 'Commentaires',   icon: icons.commentaires },
   ]
 }
- 
+
 const navItems = computed(() => navByRole[props.role] ?? navByRole.student)
 const settingsPath = computed(() => {
   if (props.role === 'teacher') return '/prof/settings'
@@ -137,7 +137,7 @@ async function logout() {
   router.push('/login')
 }
 </script>
- 
+
 <style scoped>
 
 .sidebar {
@@ -159,7 +159,7 @@ async function logout() {
 .sidebar.open {
   transform: translateX(0);
 }
- 
+
 .sidebar-user {
   display: flex;
   align-items: center;
@@ -167,7 +167,7 @@ async function logout() {
   padding: 16px 14px;
   border-bottom: 1px solid var(--border-neutral);
 }
- 
+
 .avatar-sm {
   width: 38px;
   height: 38px;
@@ -183,7 +183,7 @@ async function logout() {
   overflow: hidden;
 }
 .avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
- 
+
 .user-info { overflow: hidden; }
 .user-name  {
   font-size: .82rem;
@@ -201,7 +201,7 @@ async function logout() {
   overflow: hidden;
   text-overflow: ellipsis;
 }
- 
+
 .sidebar-nav {
   flex: 1;
   padding: 8px 0;
@@ -209,7 +209,7 @@ async function logout() {
   flex-direction: column;
   overflow-y: auto;
 }
- 
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -233,14 +233,14 @@ async function logout() {
   border-left: 3px solid var(--purple);
   font-weight: 600;
 }
- 
+
 .nav-icon { display: flex; align-items: center; flex-shrink: 0; }
- 
+
 .sidebar-bottom {
   padding: 8px 0;
   border-top: 1px solid var(--border-neutral);
 }
- 
+
 .logout { color: #e53e3e; }
 .logout:hover { color: #c53030; background: #fff5f5; }
 </style>

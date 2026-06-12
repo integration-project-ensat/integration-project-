@@ -126,8 +126,8 @@ async function seedProfesseurs(hashProfesseur) {
       nom: "El Amrani",
       prenom: "Youssef",
       code_administratif: "PROF-002",
-      departement: "Reseaux",
-      specialite: "Cybersecurite",
+      departement: "Réseaux",
+      specialite: "Cybersécurité",
       titre: "Pr.",
       telephone: "0600000002",
       ville: "Casablanca",
@@ -218,7 +218,7 @@ async function seedEtudiants(hashEtudiant) {
       nom: "Tazi",
       prenom: "Imane",
       numero_etudiant: "ETU002",
-      filiere: "Reseaux et Telecoms",
+      filiere: "Réseaux et Télécoms",
       etablissement: "FST Tanger",
       objectif_pro: "CYBERSECURITE",
       telephone: "0611111112",
@@ -242,7 +242,7 @@ async function seedEtudiants(hashEtudiant) {
       nom: "El Fassi",
       prenom: "Salma",
       numero_etudiant: "ETU004",
-      filiere: "Genie Informatique",
+      filiere: "Génie Informatique",
       etablissement: "EMI Rabat",
       objectif_pro: "DEVOPS",
       telephone: "0611111114",
@@ -254,7 +254,7 @@ async function seedEtudiants(hashEtudiant) {
       nom: "Naciri",
       prenom: "Yassine",
       numero_etudiant: "ETU005",
-      filiere: "Cybersecurite",
+      filiere: "Cybersécurité",
       etablissement: "ENSA Marrakech",
       objectif_pro: "CYBERSECURITE",
       telephone: "0611111115",
@@ -436,7 +436,7 @@ async function seedCompetences() {
     { nom: "Python", categorie: "TECHNIQUE", niveau: "INTERMEDIAIRE" },
     { nom: "Communication", categorie: "COMPORTEMENTALE", niveau: "AVANCE" },
     {
-      nom: "Travail en equipe",
+      nom: "Travail en équipe",
       categorie: "COMPORTEMENTALE",
       niveau: "EXPERT",
     },
@@ -543,8 +543,8 @@ async function seedProjets(etudiants, professeurs, technologies) {
       techs: ["Node.js", "Prisma", "PostgreSQL"],
     },
     {
-      titre: "Projet3 - Dashboard BI",
-      description: "Tableau de bord Business Intelligence.",
+      titre: "Projet3 - Tableau de bord BI",
+      description: "Tableau de bord d'informatique décisionnelle.",
       type: "PERSONNEL",
       statut: "VALIDE",
       etudiantIdx: 2,
@@ -552,8 +552,8 @@ async function seedProjets(etudiants, professeurs, technologies) {
       techs: ["Python", "PostgreSQL"],
     },
     {
-      titre: "Projet4 - Chatbot IA",
-      description: "Chatbot intelligent avec NLP.",
+      titre: "Projet4 - Assistant conversationnel IA",
+      description: "Assistant conversationnel intelligent avec traitement automatique du langage.",
       type: "HACKATHON",
       statut: "EN_ATTENTE",
       etudiantIdx: 3,
@@ -561,8 +561,8 @@ async function seedProjets(etudiants, professeurs, technologies) {
       techs: ["Python", "Docker"],
     },
     {
-      titre: "Projet5 - Audit securite",
-      description: "Audit et securisation d'une application web.",
+      titre: "Projet5 - Audit sécurité",
+      description: "Audit et sécurisation d'une application web.",
       type: "MODULE",
       statut: "REFUSE",
       etudiantIdx: 4,
@@ -589,7 +589,7 @@ async function seedProjets(etudiants, professeurs, technologies) {
       techs: ["React", "Node.js", "Docker"],
     },
     {
-      titre: "Projet8 - Système de recommendation",
+      titre: "Projet8 - Système de recommandation",
       description: "Moteur de recommandation pour contenus utilisateurs.",
       type: "PERSONNEL",
       statut: "EN_ATTENTE",
@@ -599,7 +599,7 @@ async function seedProjets(etudiants, professeurs, technologies) {
     },
     {
       titre: "Projet9 - Application de gestion de conférences",
-      description: "Outil collaboratif pour gérer programmes et participants.",
+      description: "Outil collaboratif pour gérer les programmes et les participants.",
       type: "INTEGRATION",
       statut: "VALIDE",
       etudiantIdx: 3,
@@ -607,8 +607,8 @@ async function seedProjets(etudiants, professeurs, technologies) {
       techs: ["React", "Prisma", "PostgreSQL"],
     },
     {
-      titre: "Projet10 - Dashboard securite",
-      description: "Tableau de bord de surveillance et alertes securite.",
+      titre: "Projet10 - Tableau de bord sécurité",
+      description: "Tableau de bord de surveillance et alertes de sécurité.",
       type: "HACKATHON",
       statut: "REFUSE",
       etudiantIdx: 4,
@@ -626,9 +626,9 @@ async function seedProjets(etudiants, professeurs, technologies) {
       titre: projet.titre,
       description: projet.description,
       type: projet.type,
-      role: "Developpeur",
+      role: "Développeur",
       resultats:
-        projet.statut === "VALIDE" ? "Prototype valide et documente" : null,
+        projet.statut === "VALIDE" ? "Prototype validé et documenté" : null,
       lien_github: `https://github.com/demo/${projet.titre.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       captures: { images: [] },
       statut: projet.statut,
@@ -636,7 +636,7 @@ async function seedProjets(etudiants, professeurs, technologies) {
       est_dans_portfolio: projet.statut === "VALIDE",
       appreciation_professeur:
         projet.statut === "VALIDE"
-          ? "Bon travail, projet bien structure."
+          ? "Bon travail, projet bien structuré."
           : null,
     };
 
@@ -675,7 +675,7 @@ async function seedStages(etudiants, professeurs, professionnels) {
       entreprise: "Entreprise Alpha",
       proIdx: 0,
       etablissement: "ENSA Tanger",
-      poste: "Developpeur Front-end",
+      poste: "Développeur Front-end",
       duree_semaines: 8,
       statut: "VALIDE",
       etudiantIdx: 0,
@@ -740,7 +740,7 @@ async function seedStages(etudiants, professeurs, professionnels) {
       entreprise: "Startup Gamma",
       proIdx: 2,
       etablissement: "ENSA Tanger",
-      poste: "Developpeur Backend",
+      poste: "Développeur Backend",
       duree_semaines: 9,
       statut: "EN_ATTENTE",
       etudiantIdx: 0,
@@ -847,7 +847,7 @@ async function seedDiplomes(etudiants) {
       titre_diplome: "Licence Informatique",
       domaine: "Informatique",
     },
-    { etudiantIdx: 1, titre_diplome: "Licence Reseaux", domaine: "Reseaux" },
+    { etudiantIdx: 1, titre_diplome: "Licence Réseaux", domaine: "Réseaux" },
     { etudiantIdx: 2, titre_diplome: "Licence Data", domaine: "Data Science" },
   ];
 
@@ -858,7 +858,7 @@ async function seedDiplomes(etudiants) {
       id_etudiant: etudiants[diplome.etudiantIdx].id_utilisateur,
       titre_diplome: diplome.titre_diplome,
       domaine: diplome.domaine,
-      etablissement: etudiants[diplome.etudiantIdx].etablissement || "Universite Mohammed V",
+      etablissement: etudiants[diplome.etudiantIdx].etablissement || "Université Mohammed V",
       annee_debut: 2022,
       annee_fin: 2025,
     };
@@ -886,7 +886,7 @@ async function seedBadges(etudiants) {
     },
     {
       nom: "Badge DevOps",
-      description: "Competences DevOps validees.",
+      description: "Compétences DevOps validées.",
       icone_url: "https://example.com/badges/devops.svg",
       critere_type: "DEVOPS",
     },
@@ -904,7 +904,7 @@ async function seedBadges(etudiants) {
     },
     {
       nom: "Badge Collaboration",
-      description: "Excellent esprit d'equipe.",
+      description: "Excellent esprit d'équipe.",
       icone_url: "https://example.com/badges/collab.svg",
       critere_type: "COLLAB",
     },
@@ -1034,21 +1034,21 @@ async function seedModelesPortfolio(admin) {
   const modelesData = [
   {
     nom: "Modern",
-    description: "Template par défaut",
+    description: "Modèle par défaut",
     structure: {},
     theme: "modern",
     sections: "all"
   },
   {
     nom: "Creative",
-    description: "Template créatif",
+    description: "Modèle créatif",
     structure: {},
     theme: "creative",
     sections: "all"
   },
   {
     nom: "Professional",
-    description: "Template professionnel",
+    description: "Modèle professionnel",
     structure: {},
     theme: "professional",
     sections: "all"
@@ -1144,7 +1144,7 @@ async function seedLettresRecommandation(etudiants, professeurs) {
       statut: "REDIGEE",
       visibilite: "PRIVE",
       contenu:
-        "Yassine a fait preuve d’un excellent esprit d’equipe et d’un vrai sens du detail.",
+        "Yassine a fait preuve d'un excellent esprit d'équipe et d'un vrai sens du détail.",
     },
   ];
 
@@ -1304,14 +1304,14 @@ async function seedPostes(etudiants) {
   const result = [];
   const postsData = [
     "Je viens de publier mon portfolio et je suis fier du travail accompli.",
-    "Aujourd’hui, j’ai termine la phase de design UI/UX de mon projet.",
-    "Mon projet de fin d’annee avance bien et la demo est presque prete.",
-    "Merci a mon professeur pour son soutien sur ma nouvelle application web.",
-    "J’ai participe a un hackathon sur la cybersécurite ce weekend.",
-    "Je suis en periode de stage chez Entreprise Alpha, c’est une super experience.",
+    "Aujourd'hui, j'ai terminé la phase de design UI/UX de mon projet.",
+    "Mon projet de fin d'année avance bien et la démo est presque prête.",
+    "Merci à mon professeur pour son soutien sur ma nouvelle application web.",
+    "J'ai participé à un hackathon sur la cybersécurité ce week-end.",
+    "Je suis en période de stage chez Entreprise Alpha, c'est une super expérience.",
     "Je cherche un mentor pour un projet de data science.",
-    "J’ai obtenu une certification en Docker et je partage mes retours.",
-    "Mon groupe a finalise la presentation de notre application mobile.",
+    "J'ai obtenu une certification en Docker et je partage mes retours.",
+    "Mon groupe a finalisé la présentation de notre application mobile.",
     "Je travaille sur des exemples de projets GitHub pour enrichir mon portfolio.",
   ];
 
@@ -1363,7 +1363,7 @@ async function seedCommentairesReactionsRecommandations(
       id_auteur: pros[0].id_utilisateur,
       id_portfolio: portfolios[0].id_portfolio,
       id_poste: null,
-      contenu: "Excellent portfolio, tres bien structure.",
+      contenu: "Excellent portfolio, très bien structuré.",
     },
     {
       id_auteur: professeurs[0].id_utilisateur,
@@ -1375,7 +1375,7 @@ async function seedCommentairesReactionsRecommandations(
       id_auteur: pros[1].id_utilisateur,
       id_portfolio: portfolios[1].id_portfolio,
       id_poste: null,
-      contenu: "Une belle demonstration de maturite professionnelle.",
+      contenu: "Une belle démonstration de maturité professionnelle.",
     },
     {
       id_auteur: professeurs[1].id_utilisateur,
@@ -1403,7 +1403,7 @@ async function seedCommentairesReactionsRecommandations(
     {
       id_auteur: pros[0].id_utilisateur,
       id_etudiant_cible: etudiants[0].id_utilisateur,
-      message: "Etudiant tres competent, je le recommande chaleureusement.",
+      message: "Étudiant très compétent, je le recommande chaleureusement.",
       role_auteur: "PROFESSIONNEL",
       statut: "VALIDE",
       portfolioIdx: 0,
@@ -1419,7 +1419,7 @@ async function seedCommentairesReactionsRecommandations(
     {
       id_auteur: pros[1].id_utilisateur,
       id_etudiant_cible: etudiants[2].id_utilisateur,
-      message: "Excellent esprit d’innovation et collaboration.",
+      message: "Excellent esprit d'innovation et de collaboration.",
       role_auteur: "PROFESSIONNEL",
       statut: "VALIDE",
       portfolioIdx: 2,
@@ -1624,7 +1624,7 @@ async function seedElementsValidables(projets, stages, activites, admin) {
           date: toDate("2026-01-12"),
           organisme: "Plateforme Portfolio",
           date_retention: toDate("2031-01-12"),
-          description: `Attestation generee pour l’element validable de type ${saved.type}.`,
+          description: `Attestation générée pour l'élément validable de type ${saved.type}.`,
         },
         create: {
           id_element: saved.id_element,
@@ -1639,7 +1639,7 @@ async function seedElementsValidables(projets, stages, activites, admin) {
           date: toDate("2026-01-12"),
           organisme: "Plateforme Portfolio",
           date_retention: toDate("2031-01-12"),
-          description: `Attestation generee pour l’element validable de type ${saved.type}.`,
+          description: `Attestation générée pour l'élément validable de type ${saved.type}.`,
         },
       });
     }
@@ -1647,7 +1647,7 @@ async function seedElementsValidables(projets, stages, activites, admin) {
 }
 
 async function main() {
-  console.log("Debut du seeding complet...");
+  console.log("Début du seeding complet...");
 
   const [hashAdmin, hashProfesseur, hashEtudiant, hashProfessionnel] =
     await Promise.all([
@@ -1695,8 +1695,8 @@ async function main() {
   await seedGithub(etudiants[0]);
   await seedElementsValidables(projets, stages, activites, admins[0]);
 
-  console.log("Seeding complet termine avec succes.");
-  console.log("Comptes crees ou mis a jour :");
+  console.log("Seeding complet terminé avec succès.");
+  console.log("Comptes créés ou mis à jour :");
   console.log(
     `Admins: ${admins.map((u) => u.email).join(", ")} / ${PASSWORDS.admin}`,
   );
@@ -1704,12 +1704,12 @@ async function main() {
     `Professeurs: ${professeurs.map((u) => u.email).join(", ")} / ${PASSWORDS.professeur}`,
   );
   console.log(
-    `Etudiants: ${etudiants.map((u) => u.email).join(", ")} / ${PASSWORDS.etudiant}`,
+    `Étudiants: ${etudiants.map((u) => u.email).join(", ")} / ${PASSWORDS.etudiant}`,
   );
   console.log(
     `Professionnels: ${professionnels.map((u) => u.email).join(", ")} / ${PASSWORDS.professionnel}`,
   );
-  console.log(`Competences: ${competences.length}`);
+  console.log(`Compétences: ${competences.length}`);
   console.log(`Technologies: ${technologies.length}`);
   console.log(`Projets: ${projets.length}`);
   console.log(`Stages: ${stages.length}`);

@@ -22,6 +22,7 @@ interface ProConnectionRequest {
   id: string;
   initials: string;
   name: string;
+  avatar?: string;
   school: string;
   field: string;
   badges: string[];
@@ -126,6 +127,14 @@ const getFieldLabel = (user: any) =>
 
 const getSchoolLabel = (user: any) => user?.profil?.adresse || "Étudiant";
 
+const resolveAvatar = (path?: string | null) => {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path) || String(path).startsWith("data:")) return path;
+  if (String(path).startsWith("/")) return String(path);
+  if (String(path).startsWith("uploads/")) return `/${path}`;
+  return "";
+};
+
 const mapPendingRequest = (
   connexion: any,
   currentUserId: string | null,
@@ -141,6 +150,7 @@ const mapPendingRequest = (
     id: String(connexion.id_connexion),
     initials: toInitials(name),
     name,
+    avatar: resolveAvatar(sourceUser?.profil?.photo_profil),
     school: getSchoolLabel(sourceUser),
     field: getFieldLabel(sourceUser),
     badges: pickBadges(sourceUser, getFieldLabel(sourceUser), getSchoolLabel(sourceUser)),
@@ -171,6 +181,7 @@ const mapAcceptedRequest = (
     id: String(connexion.id_connexion),
     initials: toInitials(name),
     name,
+    avatar: resolveAvatar(otherUser?.profil?.photo_profil),
     school: getSchoolLabel(otherUser),
     field: getFieldLabel(otherUser),
     badges: pickBadges(otherUser, getFieldLabel(otherUser), getSchoolLabel(otherUser)),
@@ -346,7 +357,8 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
               class="avatar"
               @click="router.push(request.profilePath)"
             >
-              {{ request.initials }}
+              <img v-if="request.avatar" :src="request.avatar" :alt="request.name" />
+              <span v-else>{{ request.initials }}</span>
             </button>
             <div class="request-body">
               <button
@@ -522,6 +534,17 @@ watch(() => route.query.tab, syncActiveTabFromRoute);
   color: var(--text-dark);
   font-weight: 900;
   flex-shrink: 0;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .request-body {

@@ -361,7 +361,9 @@ if (!user.est_actif) {
   return res.status(403).json({ message: 'En attente de validation administrative.' });
 }
 
-if (user.auth_provider !== 'LOCAL') {
+const authProvider = String(user.auth_provider || 'LOCAL').trim().toUpperCase();
+
+if (authProvider !== 'LOCAL') {
   return res.status(400).json({
     success: false,
     message: `Ce compte utilise ${user.auth_provider} Sign-In`

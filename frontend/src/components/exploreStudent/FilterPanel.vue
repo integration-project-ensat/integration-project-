@@ -15,12 +15,12 @@ const emit = defineEmits<{
 
 const sections = [
   {
-    title: "Annee",
+    title: "Année",
     key: "year",
     options: [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018],
   },
   {
-    title: "Ecole/Faculte",
+    title: "École/Faculté",
     key: "school",
     options: [
       "ENSA",
@@ -42,7 +42,7 @@ const sections = [
     ],
   },
   {
-    title: "Filiere",
+    title: "Filière",
     key: "field",
     options: [
       "Informatique",
@@ -104,7 +104,7 @@ const sections = [
     ],
   },
   {
-    title: "Competences",
+    title: "Compétences",
     key: "skills",
     options: [
       "Java",

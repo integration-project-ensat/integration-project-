@@ -1,5 +1,22 @@
 const prisma = require('../../prisma/client');
 
+const userSelect = {
+  id_utilisateur: true,
+  nom: true,
+  prenom: true,
+  role: true,
+  profil: {
+    select: {
+      photo_profil: true
+    }
+  }
+};
+
+const includeUsers = {
+  demandeur: { select: userSelect },
+  destinataire: { select: userSelect }
+};
+
 const NOTIFICATIONS_CONNEXION = [
   'DEMANDE_CONNEXION',
   'CONNEXION_ACCEPTEE',
@@ -60,11 +77,55 @@ const getNotifications = async (utilisateurId, type = null) => {
     where.type = type;
   }
 
-  return prisma.notification.findMany({
+  const notifications = await prisma.notification.findMany({
     where,
     orderBy: {
       date_reception: 'desc'
     }
+  });
+
+  const connectionIds = [...new Set(
+    notifications
+      .filter((notification) => notification.cible_type === 'CONNEXION' && notification.cible_id)
+      .map((notification) => notification.cible_id.toString())
+  )];
+
+  if (!connectionIds.length) {
+    return notifications;
+  }
+
+  const connectionTargets = await prisma.connexion.findMany({
+    where: {
+      id_connexion: {
+        in: connectionIds.map((id) => BigInt(id))
+      }
+    },
+    include: includeUsers
+  });
+
+  const connectionMap = new Map(
+    connectionTargets.map((connexion) => [connexion.id_connexion.toString(), connexion])
+  );
+
+  return notifications.map((notification) => {
+    if (notification.cible_type !== 'CONNEXION' || !notification.cible_id) {
+      return notification;
+    }
+
+    const connexion = connectionMap.get(notification.cible_id.toString());
+    if (!connexion) return notification;
+
+    const targetUser =
+      notification.type === 'DEMANDE_CONNEXION'
+        ? connexion.demandeur
+        : connexion.destinataire;
+
+    return {
+      ...notification,
+      avatar: targetUser?.profil?.photo_profil || null,
+      actor_user_id: targetUser?.id_utilisateur?.toString() || null,
+      actor_role: targetUser?.role || null,
+    };
   });
 };
 

@@ -50,7 +50,20 @@ const includePost = {
   },
   commentaires: {
     where: { statut: 'VALIDE' },
-    include: { auteur: { select: { id_utilisateur: true, nom: true, prenom: true } } },
+    include: {
+      auteur: {
+        select: {
+          id_utilisateur: true,
+          nom: true,
+          prenom: true,
+          profil: {
+            select: {
+              photo_profil: true,
+            },
+          },
+        },
+      },
+    },
     orderBy: { date: 'desc' },
   },
   reactions: {
@@ -158,7 +171,7 @@ const postService = {
     const post = await prisma.poste.findUnique({ where: { id_poste: BigInt(id) } })
     if (!post) return null
 
-    await prisma.commentaire.create({
+    return prisma.commentaire.create({
       data: {
         id_poste: BigInt(id),
         id_auteur: BigInt(auteurId),
@@ -166,9 +179,21 @@ const postService = {
         statut: 'VALIDE',
         date: new Date(),
       },
+      include: {
+        auteur: {
+          select: {
+            id_utilisateur: true,
+            nom: true,
+            prenom: true,
+            profil: {
+              select: {
+                photo_profil: true,
+              },
+            },
+          },
+        },
+      },
     })
-
-    return this.findById(id)
   },
 
   async create(data, file, auteurId) {

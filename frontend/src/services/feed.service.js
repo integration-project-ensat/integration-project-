@@ -64,6 +64,6 @@ export const feedService = {
   },
 
   createComment(id_poste, contenu) {
-    return api.post("/commentaires", { id_poste, contenu });
+    return api.post(`/posts/${id_poste}/comments`, { contenu });
   },
 };

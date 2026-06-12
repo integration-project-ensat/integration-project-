@@ -9,6 +9,7 @@ import SkillBadges from "./SkillBadges.vue";
 interface Profile {
   id: number | string;
   name: string;
+  avatar?: string;
   role: string;
   school: string;
   city: string;
@@ -20,7 +21,11 @@ interface Profile {
   portfolioPath?: string;
 }
 
-const props = defineProps<{ profile: Profile; defaultExpanded?: boolean }>();
+const props = defineProps<{
+  profile: Profile;
+  defaultExpanded?: boolean;
+  showScore?: boolean;
+}>();
 const router = useRouter()
 const showDetails = ref(Boolean(props.defaultExpanded));
 
@@ -45,12 +50,24 @@ const toggleDetails = () => {
 <template>
   <article class="pc-card">
     <div class="pc-top">
-      <div class="pc-avatar" aria-hidden="true"></div>
+      <div class="pc-avatar" aria-hidden="true">
+        <img v-if="profile.avatar" :src="profile.avatar" :alt="profile.name" />
+        <span v-else>
+          {{
+            profile.name
+              .split(" ")
+              .map((part) => part[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase()
+          }}
+        </span>
+      </div>
 
       <div class="pc-info">
         <div class="pc-nameRow">
           <h3 class="pc-name">{{ profile.name }}</h3>
-          <span class="pc-score"
+          <span v-if="props.showScore !== false" class="pc-score"
             ><span class="pc-scoreStar">*</span>{{ profile.score }}+</span
           >
         </div>
@@ -140,6 +157,7 @@ const toggleDetails = () => {
   height: 100px;
   width: 100px;
   border-radius: 9999px;
+  overflow: hidden;
   background-color: var(--input-bg);
   background-image:
     linear-gradient(45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%),
@@ -150,6 +168,18 @@ const toggleDetails = () => {
   background-position: 0 0, 0 9px, 9px -9px, -9px 0px;
   border: 1px solid rgba(15, 23, 42, 0.07);
   margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.pc-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .pc-info {

@@ -157,12 +157,31 @@ function downloadPdf(letter: Letter) {
   window.open(lettreService.getPdfUrl(letter.id), '_blank', 'noopener')
 }
 
+function resolveAvatar(path?: string | null) {
+  const value = String(path || '').trim()
+  if (!value) return null
+  if (/^https?:\/\//.test(value) || value.startsWith('data:')) return value
+  if (value.startsWith('/')) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+    const backendBase = apiBase.replace(/\/api\/?$/, '')
+    return `${backendBase}${value}`
+  }
+  if (value.startsWith('uploads/')) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+    const backendBase = apiBase.replace(/\/api\/?$/, '')
+    return `${backendBase}/${value}`
+  }
+  return null
+}
+
 function mapBackendLetter(letter: any): Letter {
   const author = letter?.professeur?.utilisateur || {}
   const content = letter?.contenu || '<p>Aucun contenu rédigé pour le moment.</p>'
   return {
     id: Number(letter?.id_lettre),
-    subject: `Lettre de recommandation${letter?.motif ? ` — ${String(letter.motif).toLowerCase()}` : ''}`,
+    subject: letter?.motif
+  ? 'Lettre de recommandation — ' + String(letter.motif).toLowerCase()
+  : 'Lettre de recommandation',
     preview: String(content).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Aperçu indisponible.',
     content,
     receivedAt: letter?.date_souhaitee || new Date().toISOString(),
@@ -170,7 +189,7 @@ function mapBackendLetter(letter: any): Letter {
       name: [author?.prenom, author?.nom].filter(Boolean).join(' ') || 'Professeur inconnu',
       role: 'Professeur',
       institution: letter?.professeur?.departement || 'Établissement non renseigné',
-      avatar: author?.profil?.photo_profil || null,
+      avatar: resolveAvatar(author?.profil?.photo_profil || author?.avatar),
     },
   }
 }

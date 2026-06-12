@@ -138,7 +138,27 @@
       </button>
     </div>
 
+    <div class="post-stats">
+      <span>{{ likeCount }} j'aime</span>
+      <span>{{ commentCount }} commentaires</span>
+      <span>{{ repostCount }} reposts</span>
+    </div>
+
     <div v-if="showCommentBox" class="comment-section">
+      <div v-if="localComments.length" class="comment-list">
+        <div v-for="comment in localComments" :key="comment.id" class="comment-row">
+          <div class="comment-badge" :class="avatarColorClass(comment.author)">
+            <img v-if="comment.avatar" :src="comment.avatar" alt="avatar" />
+            <span v-else>{{ getInitials(comment.author) }}</span>
+          </div>
+          <div class="comment-copy">
+            <strong>{{ comment.author }}</strong>
+            <p>{{ comment.text }}</p>
+            <span>{{ comment.time }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="comment-input-wrapper">
         <input 
           v-model="commentText" 
@@ -190,6 +210,16 @@ const props = defineProps<{
       type?: MediaType
       name?: string
     }>
+    comments?: Array<{
+      id: number
+      author: string
+      text: string
+      time: string
+      avatar?: string
+    }>
+    likeCount?: number
+    commentCount?: number
+    repostCount?: number
   }
   manageable?: boolean
 }>()
@@ -203,6 +233,7 @@ const isLiked = ref(false)
 const isReposted = ref(false)
 const showCommentBox = ref(false)
 const commentText = ref('')
+const localComments = ref<Array<{ id: number; author: string; text: string; time: string; avatar?: string }>>([])
 
 const initials = computed(() => {
   return getInitials(props.post.author)
@@ -226,10 +257,25 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => props.post.comments,
+  (value) => {
+    localComments.value = Array.isArray(value) ? [...value] : []
+  },
+  { immediate: true },
+)
+
 const shortDesc = computed(() => {
   return props.post.description.length > 200
     ? props.post.description.slice(0, 200) + '... '
     : props.post.description
+})
+
+const likeCount = computed(() => Number(props.post.likeCount ?? 0))
+const repostCount = computed(() => Number(props.post.repostCount ?? 0))
+const commentCount = computed(() => {
+  if (props.post.commentCount != null) return Number(props.post.commentCount)
+  return localComments.value.length
 })
 
 const mediaItems = computed<MediaItem[]>(() => {
@@ -319,6 +365,13 @@ function toggleCommentBox() {
 
 function submitComment() {
   if (!commentText.value.trim()) return
+  localComments.value.push({
+    id: Date.now(),
+    author: JSON.parse(localStorage.getItem('user') || 'null')?.name || 'Vous',
+    text: commentText.value,
+    time: "A l'instant",
+    avatar: JSON.parse(localStorage.getItem('user') || 'null')?.avatar || ''
+  })
   emit('submit-comment', commentText.value)
   commentText.value = '' 
 }
@@ -554,6 +607,16 @@ function avatarColorClass(name: string) {
   gap: 10px;
 }
 
+.post-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
 .action-btn {
   width: 36px;
   height: 36px;
@@ -602,6 +665,60 @@ function avatarColorClass(name: string) {
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid var(--surface-muted);
+}
+
+.comment-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.comment-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--avatar-bg, #e5e7eb);
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.comment-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.comment-copy strong {
+  font-size: .82rem;
+  color: var(--text-dark);
+}
+
+.comment-copy p {
+  font-size: .82rem;
+  color: var(--text-dark);
+  line-height: 1.45;
+}
+
+.comment-copy span {
+  font-size: .74rem;
+  color: var(--text-muted);
 }
 
 .comment-input-wrapper {

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Bookmark } from "../lib/icons";
@@ -21,6 +21,7 @@ interface FeedComment {
   id: number;
   authorId: string;
   authorName: string;
+  avatar?: string;
   initials: string;
   text: string;
   time: string;
@@ -32,6 +33,7 @@ interface FeedPost {
   id: string;
   studentId: string;
   studentName: string;
+  avatar?: string;
   initials: string;
   school: string;
   time: string;
@@ -85,6 +87,32 @@ const getCurrentUserName = () => {
   return user?.name || [user?.prenom, user?.nom].filter(Boolean).join(" ").trim() || "Vous";
 };
 
+const resolveBackendAsset = (path?: string | null) => {
+  const value = String(path || "").trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (/^https?:\/\//.test(value) || value.startsWith("data:")) {
+    return value;
+  }
+
+  if (value.startsWith("/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}${value}`;
+  }
+
+  if (value.startsWith("uploads/")) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const backendBase = apiBase.replace(/\/api\/?$/, "");
+    return `${backendBase}/${value}`;
+  }
+
+  return "";
+};
+
 const myStudentId = ref(getCurrentUserId());
 
 // ID de l'utilisateur connecté (pour afficher edit/delete sur ses propres posts)
@@ -99,6 +127,8 @@ const likedPosts = reactive<Record<string, boolean>>({});
 const likedComments = reactive<Record<number, boolean>>({});
 const openReplyCommentId = ref<number | null>(null);
 const savedFeedbackId = ref<string | null>(null);
+const repostFeedback = ref("");
+const repostFeedbackVisible = ref(false);
 const { isSaved, saveProfile } = useProSavedProfiles();
 
 type ConnectionState = {
@@ -165,7 +195,11 @@ const formatRelativeDate = (dateValue?: string | null) => {
   return date.toLocaleDateString("fr-FR");
 };
 
-const parseStructuredContent = (content: string) => {
+const parseStructuredContent = (content: unknown) => {
+  if (typeof content !== "string" || !content.trim()) {
+    return null;
+  }
+
   try {
     const parsed = JSON.parse(content);
     return typeof parsed === "object" && parsed ? parsed : null;
@@ -191,6 +225,7 @@ const mapComment = (comment: any): FeedComment => {
     id: Number(comment.id_commentaire),
     authorId: String(comment.auteur?.id_utilisateur ?? ""),
     authorName,
+    avatar: resolveBackendAsset(comment.auteur?.profil?.photo_profil),
     initials: toInitials(authorName),
     text: comment.contenu,
     time: formatRelativeDate(comment.date),
@@ -201,6 +236,7 @@ const mapComment = (comment: any): FeedComment => {
 
 const mapPost = (post: any): FeedPost => {
   const structured = parseStructuredContent(post.contenu);
+  const rawContent = typeof post?.contenu === "string" ? post.contenu : "";
   const studentName =
     [post.auteur?.prenom, post.auteur?.nom].filter(Boolean).join(" ").trim() ||
     "Etudiant";
@@ -221,14 +257,15 @@ const mapPost = (post: any): FeedPost => {
     id: String(post.id_poste),
     studentId: String(post.auteur?.id_utilisateur ?? ""),
     studentName,
+    avatar: resolveBackendAsset(post.auteur?.profil?.photo_profil),
     initials: toInitials(studentName),
     school: school || "Maroc",
     time: formatRelativeDate(post.date_creation),
     projectTitle:
       structured?.projectTitle ||
-      post.contenu.split("\n")[0]?.slice(0, 70) ||
+      rawContent.split("\n")[0]?.slice(0, 70) ||
       "Publication",
-    description: structured?.description || post.contenu,
+    description: structured?.description || rawContent || "Publication",
     badges: buildBadges(post),
     technologies,
     github: structured?.github,
@@ -311,11 +348,20 @@ const loadPosts = async () => {
   try {
     const response = await feedService.getPosts();
     const items = Array.isArray(response.data?.data)
-      ? response.data.data.map(mapPost)
+      ? response.data.data.reduce((acc: FeedPost[], post: any) => {
+          try {
+            acc.push(mapPost(post));
+          } catch (mapError) {
+            console.error("Post ignored because its data is invalid:", post, mapError);
+          }
+          return acc;
+        }, [])
       : [];
     posts.value = items;
-    syncInteractionState(items);
-    await syncConnectionStates(items);
+    Object.keys(commentDrafts).forEach((key) => {
+      commentDrafts[key] = "";
+    });
+    error.value = null;
   } catch (err: any) {
     if (err?.response?.status === 401) {
       router.push('/login');
@@ -325,6 +371,18 @@ const loadPosts = async () => {
       err?.response?.data?.message || "Erreur lors du chargement du fil d’actualité";
   } finally {
     loading.value = false;
+  }
+
+  try {
+    syncInteractionState(posts.value);
+  } catch (interactionError) {
+    console.error("Unable to sync feed interactions:", interactionError);
+  }
+
+  try {
+    await syncConnectionStates(posts.value);
+  } catch (connectionError) {
+    console.error("Unable to sync connection states:", connectionError);
   }
 };
 
@@ -384,16 +442,35 @@ const toggleComments = (postId: string) => {
   openCommentPostId.value = openCommentPostId.value === postId ? null : postId;
 };
 
+const showRepostFeedback = (message: string) => {
+  repostFeedback.value = message;
+  repostFeedbackVisible.value = true;
+  window.setTimeout(() => {
+    if (repostFeedback.value === message) {
+      repostFeedbackVisible.value = false;
+    }
+  }, 1800);
+};
+
 const toggleRepost = async (post: FeedPost) => {
+  const wasReposted = Boolean(repostedPosts[post.id]);
+
   try {
-    if (repostedPosts[post.id]) {
+    error.value = null;
+    repostedPosts[post.id] = !wasReposted;
+    post.repostCount += wasReposted ? -1 : 1;
+
+    if (wasReposted) {
       await feedService.removeRepost(post.id);
+      showRepostFeedback("Repost retiré");
     } else {
       await feedService.repostPost(post.id);
+      showRepostFeedback("Post reposté");
     }
-    await loadPosts();
   } catch {
-    error.value = "Impossible de mettre a jour le repost.";
+    repostedPosts[post.id] = wasReposted;
+    post.repostCount += wasReposted ? 1 : -1;
+    error.value = "Impossible de mettre à jour le partage.";
   }
 };
 
@@ -436,15 +513,22 @@ const isConnectionDisabled = (post: FeedPost) => {
 };
 
 const togglePostLike = async (post: FeedPost) => {
+  const wasLiked = Boolean(likedPosts[post.id]);
+
   try {
-    if (likedPosts[post.id]) {
+    error.value = null;
+    likedPosts[post.id] = !wasLiked;
+    post.likeCount += wasLiked ? -1 : 1;
+
+    if (wasLiked) {
       await feedService.unlikePost(post.id);
     } else {
       await feedService.likePost(post.id);
     }
-    await loadPosts();
   } catch {
-    error.value = "Impossible de mettre a jour le j’aime.";
+    likedPosts[post.id] = wasLiked;
+    post.likeCount += wasLiked ? 1 : -1;
+    error.value = "Impossible de mettre à jour le j’aime.";
   }
 };
 
@@ -462,21 +546,39 @@ const addComment = async (post: FeedPost) => {
   const text = commentDrafts[post.id]?.trim();
   if (!text) return;
 
+  const optimisticComment: FeedComment = {
+    id: Date.now(),
+    authorId: myStudentId.value || "current-user",
+    authorName: getCurrentUserName(),
+    avatar: getCurrentUser()?.avatar || "",
+    initials: toInitials(getCurrentUserName()),
+    text,
+    time: "A l'instant",
+    likeCount: 0,
+    replies: [],
+  };
+
   try {
-    await feedService.createComment(post.id, text);
-    post.comments.unshift({
-      id: Date.now(),
-      authorId: myStudentId.value || "current-user",
-      authorName: getCurrentUserName(),
-      initials: toInitials(getCurrentUserName()),
-      text,
-      time: "A l'instant",
-      likeCount: 0,
-      replies: [],
-    });
+    error.value = null;
+    post.comments.push(optimisticComment);
     commentDrafts[post.id] = "";
-  } catch {
-    error.value = "Impossible d’ajouter le commentaire.";
+    await feedService.createComment(post.id, text);
+    error.value = null;
+  } catch (err: any) {
+    post.comments = post.comments.filter((comment) => comment.id !== optimisticComment.id);
+
+    if (err?.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('user');
+      router.push('/login');
+      return;
+    }
+
+    error.value =
+      err?.response?.data?.message ||
+      err?.response?.data?.errors?.[0]?.message ||
+      "Impossible d’ajouter le commentaire.";
   }
 };
 
@@ -488,6 +590,7 @@ const addReply = (comment: FeedComment) => {
     id: Date.now(),
     authorId: myStudentId.value || "current-user",
     authorName: getCurrentUserName(),
+    avatar: getCurrentUser()?.avatar || "",
     initials: toInitials(getCurrentUserName()),
     text,
     time: "A l'instant",
@@ -554,6 +657,12 @@ onMounted(() => {
 </script>
 
 <template>
+  <transition name="feed-toast">
+    <div v-if="repostFeedbackVisible" class="feed-toast">
+      {{ repostFeedback }}
+    </div>
+  </transition>
+
   <div class="feed-page">
     <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
     <SidebarStudent v-if="role === 'student'" :isOpen="sidebarOpen" />
@@ -593,7 +702,7 @@ onMounted(() => {
 
         <article v-for="post in !loading && !error ? visiblePosts : []" :key="post.id" class="feed-card">
           <div v-if="post.repostedBy" class="repost-line">
-            {{ post.repostedBy }} a reposté ce projet
+            {{ post.repostedBy }} a partagé ce projet
           </div>
 
           <div class="post-top">
@@ -602,7 +711,8 @@ onMounted(() => {
               class="feed-avatar"
               @click="openStudentProfile(post.studentId)"
             >
-              {{ post.initials }}
+              <img v-if="post.avatar" :src="post.avatar" :alt="post.studentName" class="feed-avatar-image" />
+              <span v-else>{{ post.initials }}</span>
             </button>
             <div class="post-author-block">
               <div class="post-author-line">
@@ -613,11 +723,11 @@ onMounted(() => {
                 >
                   {{ post.studentName }}
                 </button>
-                <span class="feed-score">
+                <span v-if="role === 'student'" class="feed-score">
                   <span>*</span>{{ post.score }}+
                 </span>
                 <div class="post-profile-actions">
-                  <!-- Boutons edit / delete visibles seulement sur les posts de l'utilisateur connecté -->
+                  <!-- Boutons modifier / supprimer visibles seulement sur les publications de l'utilisateur connecté -->
                   <template v-if="post.studentId === myStudentId">
                     <button type="button" class="post-owner-btn" @click="openEditPost(post)" title="Modifier">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -706,7 +816,6 @@ onMounted(() => {
           <div class="post-stats">
             <span>{{ post.likeCount }} j’aime</span>
             <span>{{ post.repostCount }} reposts</span>
-            <span>{{ post.recommendationCount }} recommandations</span>
             <button
               type="button"
               class="comments-count"
@@ -745,7 +854,8 @@ onMounted(() => {
                 class="comment-avatar"
                 @click="openStudentProfile(comment.authorId)"
               >
-                {{ comment.initials }}
+                <img v-if="comment.avatar" :src="comment.avatar" :alt="comment.authorName" class="feed-avatar-image" />
+                <span v-else>{{ comment.initials }}</span>
               </button>
               <div>
                 <button
@@ -782,7 +892,8 @@ onMounted(() => {
                       class="comment-avatar"
                       @click="openStudentProfile(reply.authorId)"
                     >
-                      {{ reply.initials }}
+                      <img v-if="reply.avatar" :src="reply.avatar" :alt="reply.authorName" class="feed-avatar-image" />
+                      <span v-else>{{ reply.initials }}</span>
                     </button>
                     <div>
                       <button
@@ -815,7 +926,7 @@ onMounted(() => {
                 v-model="commentDrafts[post.id]"
                 type="text"
                 placeholder="Ajouter un commentaire..."
-                @keydown.enter="addComment(post)"
+                @keydown.enter.prevent="addComment(post)"
               />
               <button type="button" @click="addComment(post)">Publier</button>
             </div>
@@ -835,6 +946,31 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.feed-toast {
+  position: fixed;
+  top: 76px;
+  right: 24px;
+  z-index: 80;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(12, 33, 58, 0.94);
+  color: var(--white);
+  font-size: 0.92rem;
+  font-weight: 700;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+}
+
+.feed-toast-enter-active,
+.feed-toast-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.feed-toast-enter-from,
+.feed-toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 .feed-page {
   min-height: 100vh;
   width: 100vw;
@@ -1305,11 +1441,19 @@ onMounted(() => {
   justify-content: center;
   flex-shrink: 0;
   font-weight: 800;
+  overflow: hidden;
 }
 
 .feed-avatar {
   width: 52px;
   height: 52px;
+}
+
+.feed-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .comment-avatar {

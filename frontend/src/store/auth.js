@@ -1,12 +1,48 @@
 import { defineStore } from 'pinia'
 
+function resolveBackendAsset(path) {
+  const value = String(path || '').trim()
+
+  if (!value) {
+    return ''
+  }
+
+  if (/^https?:\/\//.test(value) || value.startsWith('data:')) {
+    return value
+  }
+
+  if (value.startsWith('/')) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+    const backendBase = apiBase.replace(/\/api\/?$/, '')
+    return `${backendBase}${value}`
+  }
+
+  if (value.startsWith('uploads/')) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+    const backendBase = apiBase.replace(/\/api\/?$/, '')
+    return `${backendBase}/${value}`
+  }
+
+  return ''
+}
+
+function pickAvatar(user) {
+  return (
+    resolveBackendAsset(user.avatar) ||
+    resolveBackendAsset(user.photo_profil) ||
+    resolveBackendAsset(user.profil?.photo_profil) ||
+    ''
+  )
+}
+
 function normalizeUser(user) {
   if (!user) return null
   const name = user.name || [user.prenom, user.nom].filter(Boolean).join(' ').trim()
   return {
     ...user,
     id: user.id ?? user.id_utilisateur ?? null,
-    name: name || null
+    name: name || null,
+    avatar: pickAvatar(user)
   }
 }
 
@@ -110,6 +146,32 @@ export const useAuthStore = defineStore('auth', {
             this.user = null
           }
         }
+      }
+    },
+
+    async validateSession() {
+      if (!isUsableToken(this.token || localStorage.getItem('token'))) {
+        this.logout()
+        return false
+      }
+
+      try {
+        const { default: api } = await import('../services/api.js')
+        const { data } = await api.get('/auth/me')
+        const user = normalizeUser(data?.data)
+        const role = normalizeRole(user?.role || data?.data?.role || this.role)
+
+        this.user = {
+          ...user,
+          role
+        }
+        this.role = role
+        localStorage.setItem('user', JSON.stringify(this.user))
+        localStorage.setItem('role', role || '')
+        return true
+      } catch {
+        this.logout()
+        return false
       }
     }
   }

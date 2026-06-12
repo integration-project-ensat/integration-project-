@@ -37,7 +37,8 @@
         <div v-else class="cards">
           <article v-for="comment in filteredComments" :key="comment.key" class="card">
             <div class="avatar">
-              <span>{{ getInitials(comment.author) }}</span>
+              <img v-if="comment.avatar" :src="comment.avatar" :alt="comment.author" />
+              <span v-else>{{ getInitials(comment.author) }}</span>
             </div>
             <div class="card-body">
               <div class="card-head">
@@ -70,6 +71,7 @@ import { profileService } from "../services/profile.service";
 interface StudentCommentItem {
   key: string;
   author: string;
+  avatar?: string;
   content: string;
   context: string;
   dateLabel: string;
@@ -128,6 +130,7 @@ function mapComment(item: any, context: string, prefix: string): StudentCommentI
   return {
     key: `${prefix}-${item?.id_commentaire ?? Math.random()}`,
     author,
+    avatar: resolveBackendAsset(item?.auteur?.profil?.photo_profil || ""),
     content: item?.contenu || "Commentaire vide",
     context,
     dateLabel: formatDate(item?.date),
@@ -136,6 +139,14 @@ function mapComment(item: any, context: string, prefix: string): StudentCommentI
     statusLabel: status.label,
     statusClass: status.className,
   };
+}
+
+function resolveBackendAsset(path: string) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return path;
+  if (path.startsWith("/")) return path;
+  if (path.startsWith("uploads/")) return `/${path}`;
+  return "";
 }
 
 async function loadComments() {
@@ -206,7 +217,8 @@ onMounted(async () => {
 .tab-btn.active { background:rgba(79,70,229,.1); color:var(--purple); }
 .cards { padding:18px 28px 28px; display:flex; flex-direction:column; gap:14px; }
 .card { display:flex; gap:16px; border:1px solid var(--input-bg); border-radius:var(--radius-card); padding:18px; background: linear-gradient(180deg, var(--white) 0%, #fbfbff 100%); }
-.avatar { width:48px; height:48px; border-radius:50%; background:var(--purple-soft); color:var(--purple); display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
+.avatar { width:48px; height:48px; border-radius:50%; background:var(--purple-soft); color:var(--purple); display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; overflow:hidden; }
+.avatar img { width:100%; height:100%; object-fit:cover; display:block; }
 .card-body { flex:1; min-width:0; }
 .card-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
 .card-head h3 { margin:0; font-size:.98rem; font-family:var(--font-head); }

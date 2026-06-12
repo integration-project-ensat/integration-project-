@@ -16,9 +16,9 @@ const auth = useAuthStore()
 
 function redirectByRole(role: string) {
   if (role === 'admin') return '/admin'
-  if (role === 'teacher') return '/prof/dashboard'
-  if (role === 'professional') return '/pro/dashboard'
-  return '/student/dashboard'
+  if (role === 'teacher') return '/explore-prof'
+  if (role === 'professional') return '/explore-pro'
+  return '/student/explore'
 }
 
 onMounted(async () => {
