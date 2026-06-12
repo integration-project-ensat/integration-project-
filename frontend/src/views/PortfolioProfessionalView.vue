@@ -317,7 +317,13 @@ function avatarColorClass(name: string) {
   return c[s % c.length];
 }
 function scrollToSection(id: SectionId) {
-  document.getElementById(id)?.scrollIntoView({ behavior:"smooth", block:"start" });
+  const element = document.getElementById(id);
+  if (!element) return;
+  const header = document.querySelector(".pf .pf-header") as HTMLElement | null;
+  const headerOffset = (header?.offsetHeight ?? 88) + 20;
+  const targetTop =
+    window.scrollY + element.getBoundingClientRect().top - headerOffset;
+  window.scrollTo({ top: Math.max(targetTop, 0), behavior: "smooth" });
 }
 function resolveBackendAsset(path: string|null|undefined) {
   if (!path) return "";
@@ -599,6 +605,11 @@ onBeforeUnmount(()=>observer?.disconnect());
   color: #1A2332 !important;
   font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif !important;
   font-size: 15px;
+  padding-bottom: 140px;
+}
+
+.pf [data-section-id] {
+  scroll-margin-top: 96px;
 }
 
 /* ─── HEADER ─────────────────────────────────────── */

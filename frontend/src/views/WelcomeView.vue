@@ -217,6 +217,8 @@ const studentPhotos = [
 }
 
 .topbar {
+  z-index: 20;
+  isolation: isolate;
   width: min(100%, 1180px);
   min-height: 76px;
   margin: 0 auto;
@@ -372,6 +374,8 @@ const studentPhotos = [
   position: relative;
   min-height: 620px;
   margin-top: -600px;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .visual-pill {
@@ -398,6 +402,7 @@ const studentPhotos = [
   border: 1px solid rgba(255, 255, 255, .1);
   box-shadow: 0 24px 50px rgba(0, 0, 0, .28);
   animation: photoFloat 10s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .photo-top   { left: calc(50% - 70px); top: 0; }
@@ -410,6 +415,7 @@ const studentPhotos = [
   width: 18px; height: 18px;
   border-radius: 50%;
   animation: softBlink 5.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .spark-cyan   { left: 4%;   top: 20%;    width: 13px; height: 13px; background: var(--blue); }

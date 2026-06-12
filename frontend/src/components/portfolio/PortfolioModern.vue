@@ -390,12 +390,13 @@ const getInitials = (name: string) => {
   min-height: 100vh;
   background: linear-gradient(135deg, #0b1220 0%, #121b30 48%, #1f315c 100%);
   color: var(--surface-subtle);
+  isolation: isolate;
 }
 
 .portfolio-header {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 80;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -404,6 +405,7 @@ const getInitials = (name: string) => {
   background: rgba(9, 15, 28, 0.86);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  isolation: isolate;
 }
 
 .brand {
@@ -470,6 +472,8 @@ const getInitials = (name: string) => {
   gap: 48px;
   align-items: center;
   min-height: calc(100vh - 80px);
+  position: relative;
+  z-index: 1;
 }
 
 .hero-left {
@@ -551,6 +555,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 0;
 }
 
 .profile-photo {
@@ -567,12 +572,15 @@ h1 {
   font-size: 4rem;
   font-weight: 800;
   overflow: hidden;
+  position: relative;
+  z-index: 0;
 }
 
 .profile-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 
 .floating-icon {

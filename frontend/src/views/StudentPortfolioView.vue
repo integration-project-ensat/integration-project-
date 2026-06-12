@@ -597,7 +597,11 @@ function avatarColorClass(name: string) {
 function scrollToSection(id: SectionId) {
   const element = document.getElementById(id);
   if (!element) return;
-  element.scrollIntoView({ behavior: "smooth", block: "start" });
+  const header = document.querySelector(".portfolio-header") as HTMLElement | null;
+  const headerOffset = (header?.offsetHeight ?? 96) + 20;
+  const targetTop =
+    window.scrollY + element.getBoundingClientRect().top - headerOffset;
+  window.scrollTo({ top: Math.max(targetTop, 0), behavior: "smooth" });
 }
 
 function resolveBackendAsset(path: string | null | undefined) {
@@ -1093,12 +1097,14 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   background: linear-gradient(135deg, #0b1220 0%, #121b30 48%, #1f315c 100%);
   color: var(--surface-subtle);
+  isolation: isolate;
+  padding-bottom: 140px;
 }
 
 .portfolio-header {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 80;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -1107,6 +1113,7 @@ onBeforeUnmount(() => {
   background: rgba(9, 15, 28, 0.86);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  isolation: isolate;
 }
 
 .brand {
@@ -1165,6 +1172,7 @@ onBeforeUnmount(() => {
   width: min(1240px, 100%);
   margin: 0 auto;
   padding: 72px 24px;
+  scroll-margin-top: 128px;
 }
 
 .hero-section {
@@ -1173,6 +1181,8 @@ onBeforeUnmount(() => {
   gap: 48px;
   align-items: center;
   min-height: calc(100vh - 80px);
+  position: relative;
+  z-index: 1;
 }
 
 .hero-left {
@@ -1254,6 +1264,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 0;
 }
 
 .profile-photo {
@@ -1270,12 +1281,15 @@ h1 {
   font-size: 4rem;
   font-weight: 800;
   overflow: hidden;
+  position: relative;
+  z-index: 0;
 }
 
 .profile-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 
 .floating-icon {
