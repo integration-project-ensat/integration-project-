@@ -309,6 +309,8 @@ async function saveInfo() {
   try {
     Object.assign(profile, infoForm)
     await persistProfile({
+      name: infoForm.name,
+      title: infoForm.title,
       adresse: infoForm.location,
       etablissement: infoForm.school,
     })
@@ -1037,6 +1039,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 
 /* ── Section cards ── */
 .section-card { padding: 22px 24px; }
+.section-card:last-of-type { display: none; }
 
 .section-head {
   display: flex;
