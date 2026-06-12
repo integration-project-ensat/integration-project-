@@ -728,7 +728,10 @@ const completeGithubSignup = asyncHandler(async (req, res) => {
 // ==================== PROFIL ====================
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await prisma.utilisateur.findUnique({
+  const fallbackUser = req.utilisateur ? sanitizeUser(req.utilisateur) : null;
+
+  try {
+    const user = await prisma.utilisateur.findUnique({
     where: { id_utilisateur: req.utilisateur.id_utilisateur },
     include: {
       etudiant: true,
@@ -737,18 +740,30 @@ const getCurrentUser = asyncHandler(async (req, res) => {
       administrateur: true,
       profil:true
     }
-  });
-  if (!user) {
+    });
+    if (!user) {
     return res.status(404).json({
       success: false, 
       message: 'Utilisateur non trouvé'
     });
-  }
+    }
 
-  res.json({
-    success: true,
-    data: sanitizeUser(user)
-  });
+    return res.json({
+      success: true,
+      data: sanitizeUser(user)
+    });
+  } catch (error) {
+    console.error('[getCurrentUser] fallback minimal user:', error.message);
+
+    if (!fallbackUser) {
+      throw error;
+    }
+
+    return res.json({
+      success: true,
+      data: fallbackUser
+    });
+  }
 });
 
 // ==================== Déconnexion ====================
