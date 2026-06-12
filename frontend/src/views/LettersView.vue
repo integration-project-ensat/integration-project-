@@ -171,7 +171,9 @@ function mapBackendLetter(letter: any): Letter {
   const content = letter?.contenu || '<p>Aucun contenu rédigé pour le moment.</p>'
   return {
     id: Number(letter?.id_lettre),
-    subject: `Lettre de recommandation${letter?.motif ? ` — ${String(letter.motif).toLowerCase()}` : ''}`,
+    subject: letter?.motif
+  ? 'Lettre de recommandation — ' + String(letter.motif).toLowerCase()
+  : 'Lettre de recommandation',
     preview: String(content).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Aperçu indisponible.',
     content,
     receivedAt: letter?.date_souhaitee || new Date().toISOString(),

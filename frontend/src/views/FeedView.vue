@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Bookmark } from "../lib/icons";
@@ -477,7 +477,7 @@ const toggleRepost = async (post: FeedPost) => {
   } catch {
     repostedPosts[post.id] = wasReposted;
     post.repostCount += wasReposted ? 1 : -1;
-    error.value = "Impossible de mettre a jour le repost.";
+    error.value = "Impossible de mettre à jour le partage.";
   }
 };
 
@@ -535,7 +535,7 @@ const togglePostLike = async (post: FeedPost) => {
   } catch {
     likedPosts[post.id] = wasLiked;
     post.likeCount += wasLiked ? 1 : -1;
-    error.value = "Impossible de mettre a jour le j’aime.";
+    error.value = "Impossible de mettre à jour le j’aime.";
   }
 };
 
@@ -709,7 +709,7 @@ onMounted(() => {
 
         <article v-for="post in !loading && !error ? visiblePosts : []" :key="post.id" class="feed-card">
           <div v-if="post.repostedBy" class="repost-line">
-            {{ post.repostedBy }} a reposté ce projet
+            {{ post.repostedBy }} a partagé ce projet
           </div>
 
           <div class="post-top">
@@ -734,7 +734,7 @@ onMounted(() => {
                   <span>*</span>{{ post.score }}+
                 </span>
                 <div class="post-profile-actions">
-                  <!-- Boutons edit / delete visibles seulement sur les posts de l'utilisateur connecté -->
+                  <!-- Boutons modifier / supprimer visibles seulement sur les publications de l'utilisateur connecté -->
                   <template v-if="post.studentId === myStudentId">
                     <button type="button" class="post-owner-btn" @click="openEditPost(post)" title="Modifier">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

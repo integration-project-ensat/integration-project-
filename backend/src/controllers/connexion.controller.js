@@ -1,4 +1,4 @@
-﻿const connexionService = require("../services/connexion.service");
+const connexionService = require("../services/connexion.service");
 const { ApiResponse } = require("../utils/apiResponse");
 
 const connexionController = {
@@ -10,7 +10,7 @@ const connexionController = {
       );
       return res
         .status(201)
-        .json(ApiResponse.created(connexion, "Demande de connexion envoyÃ©e"));
+        .json(ApiResponse.created(connexion, "Demande de connexion envoyée"));
     } catch (e) {
       if (e.statusCode === 400)
         return res.status(400).json(ApiResponse.conflict(e.message));
@@ -30,7 +30,7 @@ const connexionController = {
         req.utilisateur.id_utilisateur,
         req.params.userId,
       );
-      return res.json(ApiResponse.success(status, "Statut de connexion rÃ©cupÃ©rÃ©"));
+      return res.json(ApiResponse.success(status, "Statut de connexion récupéré"));
     } catch (e) {
       if (e.statusCode === 404)
         return res.status(404).json(ApiResponse.notFound("Utilisateur"));
@@ -46,7 +46,7 @@ const connexionController = {
       );
       if (!connexion)
         return res.status(404).json(ApiResponse.notFound("Connexion"));
-      return res.json(ApiResponse.success(connexion, "Connexion acceptÃ©e"));
+      return res.json(ApiResponse.success(connexion, "Connexion acceptée"));
     } catch (e) {
       if (e.statusCode === 403)
         return res.status(403).json(ApiResponse.forbidden(e.message));
@@ -67,7 +67,7 @@ const connexionController = {
       );
       if (!connexion)
         return res.status(404).json(ApiResponse.notFound("Connexion"));
-      return res.json(ApiResponse.success(connexion, "Connexion refusÃ©e"));
+      return res.json(ApiResponse.success(connexion, "Connexion refusée"));
     } catch (e) {
       if (e.statusCode === 403)
         return res.status(403).json(ApiResponse.forbidden(e.message));
@@ -82,7 +82,7 @@ const connexionController = {
       const connexions = await connexionService.findMine(
         req.utilisateur.id_utilisateur,
       );
-      return res.json(ApiResponse.success(connexions, "Connexions rÃ©cupÃ©rÃ©es"));
+      return res.json(ApiResponse.success(connexions, "Connexions récupérées"));
     } catch (e) {
       return res.status(500).json(ApiResponse.serverError());
     }
@@ -94,7 +94,7 @@ const connexionController = {
         req.utilisateur.id_utilisateur,
       );
       return res.json(
-        ApiResponse.success(connexions, "Mes demandes rÃ©cupÃ©rÃ©es"),
+        ApiResponse.success(connexions, "Mes demandes récupérées"),
       );
     } catch (e) {
       return res.status(500).json(ApiResponse.serverError());
@@ -107,7 +107,7 @@ const connexionController = {
         req.utilisateur.id_utilisateur,
       );
       return res.json(
-        ApiResponse.success(connexions, "Demandes reÃ§ues rÃ©cupÃ©rÃ©es"),
+        ApiResponse.success(connexions, "Demandes reçues récupérées"),
       );
     } catch (e) {
       return res.status(500).json(ApiResponse.serverError());
@@ -120,7 +120,7 @@ const connexionController = {
         req.utilisateur.id_utilisateur,
       );
       return res.json(
-        ApiResponse.success(connexions, "Mes connexions rÃ©cupÃ©rÃ©es"),
+        ApiResponse.success(connexions, "Mes connexions récupérées"),
       );
     } catch (e) {
       return res.status(500).json(ApiResponse.serverError());
@@ -134,7 +134,7 @@ const connexionController = {
         req.utilisateur.id_utilisateur,
       );
       return res.json(
-        ApiResponse.success(null, "Connexion supprimÃ©e avec succÃ¨s"),
+        ApiResponse.success(null, "Connexion supprimée avec succès"),
       );
     } catch (e) {
       if (e.statusCode === 403)

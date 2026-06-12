@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <aside class="sidebar" :class="{ open: isOpen }">
     <component
       :is="forceNavigation ? 'a' : RouterLink"
@@ -41,16 +41,12 @@
         class="nav-item"
         @click="handleNavigation('/pro/settings', $event)"
       >
-        <span class="nav-icon" v-html="icons.settings" />
-        <span>Parametres</span>
+        <span>Paramètres</span>
+        <span>Paramètres</span>
       </component>
-      <a
-        href="/login"
-        class="nav-item logout"
-        @click="handleLogout"
-      >
+      <a href="/login" class="nav-item logout" @click="handleLogout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Deconnexion</span>
+        <span>Déconnexion</span>
       </a>
     </div>
   </aside>
@@ -129,12 +125,13 @@ const icons = {
 };
 
 const navItems = [
-  { path: "/pro/dashboard", label: "Dashboard", icon: icons.dashboard },
+  { path: "/pro/dashboard", label: "Tableau de bord", icon: icons.dashboard },
   { path: "/explore-pro", label: "Explorer", icon: icons.explore },
-  { path: "/pro/feed", label: "Fil d’actualité", icon: icons.feed },
-  { path: "/pro/top-profiles", label: "Top Profiles", icon: icons.topProfiles },
+  { path: "/pro/dashboard", label: "Tableau de bord", icon: icons.dashboard },
+  { path: "/pro/top-profiles", label: "Meilleurs profils", icon: icons.topProfiles },
   { path: "/pro/connexions?tab=pending", label: "Connexions", icon: icons.connexions },
-];
+  { path: "/pro/top-profiles", label: "Meilleurs profils", icon: icons.topProfiles },
+]
 </script>
 
 <style scoped>

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <aside class="sidebar" :class="{ open: isOpen }">
     <component
       :is="forceNavigation ? 'a' : RouterLink"
@@ -159,7 +159,7 @@ const icons = {
 const navItems = [
   {
     path: "/student/dashboard",
-    label: "Dashboard",
+    label: "Tableau de bord",
     icon: icons.dashboard,
     activeIcon: icons.dashboardFill,
   },

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -276,7 +276,7 @@ onMounted(() => {
             </button>
           </div>
           <button type="button" class="modal-close" @click="closeDetailsModal">
-            Ã—
+            ×
           </button>
         </div>
 

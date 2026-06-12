@@ -17,7 +17,7 @@
           <div class="dropdown" :class="{ open: roleOpen }">
             <button type="button" class="dropdown-btn" @click="roleOpen = !roleOpen">
               <span :class="{ placeholder: !selectedRoleLabel }">
-                {{ selectedRoleLabel || 'Determiner le role' }}
+                {{ selectedRoleLabel || 'Déterminer le rôle' }}
               </span>
               <span class="chevron"><svg width="10" height="13" viewBox="0 0 10 13" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g clip-path="url(#clip0_280_523)">

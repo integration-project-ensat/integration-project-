@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { Bookmark } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
@@ -15,7 +15,7 @@ import {
   type ProfilExplore
 } from '../services/profilApi'
 import { mapExploreProfileCard } from '../utils/exploreProfileCard'
-// â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- State ------------------------------------
 const searchQuery    = ref('')
 const sidebarOpen    = ref(true)
 const loading        = ref(false)
@@ -77,7 +77,7 @@ const removeLocalSavedProfile = (id: string) => {
   writeLocalSavedProfiles(readLocalSavedProfiles().filter((item: any) => item.id !== id))
 }
 
-// â”€â”€â”€ Charger les profils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Charger les profils ----------------------
 const chargerProfils = async () => {
   loading.value = true
   error.value   = null
@@ -101,7 +101,7 @@ const chargerProfils = async () => {
   }
 }
 
-// â”€â”€â”€ Charger les sauvegardes existantes â”€â”€â”€â”€â”€â”€â”€
+// --- Charger les sauvegardes existantes -------
 const chargerSauvegardes = async () => {
   const localIds = readLocalSavedProfiles().map((item: any) => String(item.id))
 
@@ -116,7 +116,7 @@ const chargerSauvegardes = async () => {
   }
 }
 
-// â”€â”€â”€ Debounce sur la recherche â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Debounce sur la recherche ----------------
 const debouncedSearch = useDebounceFn(() => {
   pagination.value.page = 1
   chargerProfils()
@@ -124,19 +124,19 @@ const debouncedSearch = useDebounceFn(() => {
 
 watch(searchQuery, debouncedSearch)
 
-// â”€â”€â”€ Watch filtres â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Watch filtres ----------------------------
 watch(filters, () => {
   pagination.value.page = 1
   chargerProfils()
 }, { deep: true })
 
-// â”€â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Init -------------------------------------
 onMounted(() => {
   chargerProfils()
   chargerSauvegardes()
 })
 
-// â”€â”€â”€ Sauvegarder / retirer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Sauvegarder / retirer --------------------
 const toggleSavedProfile = async (profile: ProfilExplore) => {
   const id = profile.id_utilisateur
   try {
@@ -159,16 +159,16 @@ const toggleSavedProfile = async (profile: ProfilExplore) => {
   }
 }
 
-// â”€â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Pagination -------------------------------
 const changerPage = (page: number) => {
   pagination.value.page = page
   chargerProfils()
 }
 
-// â”€â”€â”€ Adapter le profil pour ProfileCard â”€â”€â”€â”€â”€â”€â”€
+// --- Adapter le profil pour ProfileCard -------
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'pro')
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Helpers ----------------------------------
 const profileId = (profile: ProfilExplore) => profile.id_utilisateur
 const isSaved = (id: string) => savedIds.value.has(id)
 

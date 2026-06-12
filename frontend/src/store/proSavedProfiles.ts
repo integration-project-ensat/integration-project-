@@ -33,7 +33,7 @@ const mapBackendSavedProfile = (saved: any): SavedProfile => {
 
   return {
     id,
-    name: name || "Etudiant",
+    name: name || "Étudiant",
     school: studentInfo.etablissement || "Etablissement non renseigne",
     field: studentInfo.filiere || "-",
     city: student.profil?.adresse || "-",
