@@ -1,1 +1,0 @@
-<!-- Composant badge individuel. Affiche l'icône SVG du badge, son nom, sa description et la date d'obtention. Utilisé dans le portfolio et le dashboard. -->
