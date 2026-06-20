@@ -12,10 +12,6 @@ scrape_configs:
 
   - job_name: 'node-exporter'
     static_configs:
-<<<<<<< HEAD
-      - targets: ['portfolio_node_exporter:9100']
-  
-=======
       - targets: ['node-exporter:9100']
 
   - job_name: 'cadvisor'
@@ -34,4 +30,3 @@ scrape_configs:
   - job_name: 'nginx'
     static_configs:
       - targets: ['nginx-exporter:9113']
->>>>>>> ffec965685648b8de19cdc801f985c238968a6a2
