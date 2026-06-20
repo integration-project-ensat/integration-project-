@@ -1,61 +1,90 @@
 <template>
-  <header
-    class="flex flex-col gap-4 rounded-[28px] bg-[#111827] p-5 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.85)] sm:flex-row sm:items-center sm:justify-between"
-  >
-    <div class="space-y-1">
-      <p class="text-sm uppercase tracking-[0.35em] text-cyan-300/80">
-        Explore
-      </p>
-      <h2 class="text-2xl font-semibold text-white">
-        Découvre les talents du moment
-      </h2>
-    </div>
-
-    <div
-      class="flex w-full items-center gap-3 rounded-3xl bg-slate-950/80 px-4 py-3 sm:max-w-md"
-    >
-      <Search class="h-5 w-5 text-slate-400" />
-      <input
-        v-model="searchQuery"
-        type="search"
-        placeholder="Recherche par nom, école, ville..."
-        class="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
-      />
-    </div>
-
-    <div class="flex items-center gap-3">
-      <button
-        class="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-slate-900 text-slate-300 transition hover:bg-slate-800"
-      >
-        <Bell class="h-5 w-5" />
+  <header class="topbar">
+    <div class="left">
+      <button class="burger-btn" @click="$emit('toggleSidebar')">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
       </button>
-      <div class="flex items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3">
-        <div
-          class="h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500"
-        ></div>
-        <div class="hidden text-right sm:block">
-          <p class="text-sm text-slate-300">Salma Benali</p>
-          <p class="text-xs text-slate-500">Responsable Talent</p>
-        </div>
+      <div class="logo">
+        <img src="@/assets/PheraCoreLogo.svg" alt="PheraCore" height="32" />
+        <span>heraCore</span>
       </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { Bell, Search } from "lucide-vue-next";
-import { computed } from "vue";
-
-const props = withDefaults(defineProps<{ searchQuery?: string }>(), {
-  searchQuery: "",
-});
-
-const emit = defineEmits<{
-  "update:searchQuery": [value: string];
+defineEmits<{
+  toggleSidebar: [];
 }>();
-
-const searchQuery = computed({
-  get: () => props.searchQuery,
-  set: (value) => emit("update:searchQuery", value),
-});
 </script>
+
+<style scoped>
+.topbar {
+  width: 100%;
+  height: 50px;
+  background: #0d1b2a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.logo img {
+  height: 32px;
+  width: auto;
+  max-height: 32px;
+  display: block;
+}
+
+.burger-btn {
+  background: transparent;
+  color: var(--white);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.burger-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+</style>

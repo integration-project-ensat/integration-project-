@@ -1,23 +1,31 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../../prisma/client');
 const { hasPermission } = require('../config/roles');
+const { estRévoqué } = require('../services/tokenBlacklist.service');
+const { getAuthTokenFromRequest } = require('../utils/authCookie');
 
 const authentifier = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = getAuthTokenFromRequest(req);
 
-    if (!authHeader?.startsWith('Bearer ')) {
+    if (!token) {
       return res.status(401).json({
         success: false,
         message: 'Accès non autorisé: token manquant'
       });
     }
 
-    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: ['HS256']
     });
 
+      if (decoded?.jti && await estRévoqué(decoded.jti)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session invalidée, veuillez vous reconnecter'
+      });
+    }
+    
     const utilisateur = await prisma.utilisateur.findUnique({
       where: { id_utilisateur: BigInt(decoded.userId) },
       select: {
@@ -53,6 +61,7 @@ const authentifier = async (req, res, next) => {
     }
 
     req.utilisateur = utilisateur;
+    req.authToken = token;
     next();
 
   } catch (erreur) {

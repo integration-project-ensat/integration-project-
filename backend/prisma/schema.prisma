@@ -1,11 +1,21 @@
 generator client {
   provider   = "prisma-client-js"
   engineType = "binary"
-  
 }
-
 datasource db {
   provider = "postgresql"
+}
+model Repost {
+  id_repost BigInt   @id @default(autoincrement())
+  id_auteur BigInt
+  id_poste  BigInt
+  date      DateTime @default(now())
+
+  auteur      Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
+  publication Poste       @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
+
+  @@unique([id_auteur, id_poste])
+  @@map("reposts")
 }
 
 enum RoleUtilisateur {
@@ -19,10 +29,27 @@ enum TypeNotification {
   SOUMISSION_PROJET
   VALIDATION_PROJET
   REFUS_PROJET
+
+  SOUMISSION_STAGE
+  VALIDATION_STAGE
+  REFUS_STAGE
+
   NOUVEAU_COMMENTAIRE
+  COMMENTAIRE_ACCEPTE
+  COMMENTAIRE_REFUSE
+
   NOUVELLE_RECOMMANDATION
+  RECOMMANDATION_ACCEPTEE
+  RECOMMANDATION_REFUSEE
+
   VALIDATION_ATTESTATION
+  REFUS_ATTESTATION
+
   BADGE_OBTENU
+  
+  DEMANDE_CONNEXION
+  CONNEXION_ACCEPTEE
+  CONNEXION_REFUSEE
 }
 
 enum Visibilite {
@@ -75,6 +102,7 @@ enum TypeActivite {
 enum StatutActivite {
   DECLAREE
   ATTESTEE_INSTITUTION
+  REFUSEE
 }
 
 enum MotifLettre {
@@ -88,6 +116,7 @@ enum MotifLettre {
 enum StatutLettre {
   EN_ATTENTE
   REDIGEE
+  REFUSEE
 }
 
 enum VisibiliteLettre {
@@ -101,6 +130,8 @@ enum TypeElementValidable {
   STAGE
   ACTIVITE
   ATTESTATION
+  COMMENTAIRE
+  RECOMMANDATION
 }
 
 enum ObjectifProfessionnel {
@@ -164,17 +195,58 @@ enum TypeReaction {
   LIKE
   
 }
+enum StatutConnexion {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+  BLOQUEE
+}
 enum NiveauAcces {
   SUPER_ADMIN
   STANDARD
+}
+
+enum ActionConnexion {
+  LOGIN_REUSSI
+  LOGIN_ECHOUE
+  DECONNEXION
+}
+
+enum RaisonEchec {
+  MOT_DE_PASSE_INCORRECT
+  EMAIL_INEXISTANT
+  EMAIL_NON_VERIFIE
+  COMPTE_INACTIF
+}
+model JournalConnexion {
+  id              BigInt           @id @default(autoincrement())
+  utilisateur_id  BigInt?
+  email           String?          @db.VarChar(255)
+  nom_complet     String?          @db.VarChar(200)
+  role            RoleUtilisateur?
+  action          ActionConnexion
+  raison          RaisonEchec?
+  adresse_ip      String?          @db.VarChar(45)
+  user_agent      String?          @db.VarChar(500)
+  date            DateTime         @default(now())
+ 
+  utilisateur     Utilisateur?     @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: SetNull)
+ 
+  @@index([action])
+  @@index([adresse_ip])
+  @@index([date])
+  @@map("journal_connexions")
 }
 model Utilisateur {
   id_utilisateur     BigInt  @id @default(autoincrement())
   nom                String  @db.VarChar(100)
   prenom             String  @db.VarChar(100)
   email              String  @unique @db.VarChar(255)
-  mot_de_passe_hashe String
+  mot_de_passe_hashe String?
   role               RoleUtilisateur
+  google_id          String? @unique
+  github_id          String? @unique
+  auth_provider      String @default("LOCAL")
   est_actif          Boolean          @default(true)
   est_valide         Boolean          @default(false)
   date_creation      DateTime         @default(now())
@@ -201,6 +273,13 @@ model Utilisateur {
   recommandations     Recommandation[]   @relation("AuteurRecommandations")
   reactions           Reaction[]
   postes              Poste[]
+  journal_connexions JournalConnexion[]
+  connexions_envoyees Connexion[] @relation("DemandeurConnexion")
+  connexions_recues   Connexion[] @relation("DestinataireConnexion")
+  profils_sauvegardes   ProfilSauvegarde[] @relation("ProfilsSauvegardes")
+sauvegarde_par_autres ProfilSauvegarde[] @relation("ProfilsSauvegardesParAutres")
+  postes_collabores   PosteCollaborateur[]
+  reposts             Repost[]
 
   @@map("utilisateurs")
 }
@@ -209,6 +288,7 @@ model Etudiant {
   id_utilisateur      BigInt  @id
   numero_etudiant     String? @unique @db.VarChar(20)
   filiere             String? @db.VarChar(100)
+  etablissement       String? @db.VarChar(200)
   annee_universitaire String? @db.VarChar(9) 
   date_naissance      DateTime? @db.Date    
   
@@ -219,12 +299,14 @@ model Etudiant {
   projets                 Projet[]
   stages                  Stage[]
   activites               ActiviteParascolaire[]
+  attestations            Attestation[]
   lettres_recommandation  LettreRecommandation[]
   recommandations_recues  Recommandation[] @relation("RecommandationsRecues")
   portfolio               Portfolio?
   github_integration      GithubIntegration?
   score_credibilite       ScoreCredibilite?
   badges                  ProfilBadge[]
+  professeurs_associes    ProfesseurEtudiant[]
  
 
   @@map("etudiants")
@@ -243,8 +325,22 @@ model Professeur {
   projets_encadres Projet[]
   stages_encadres  Stage[]
   lettres_redigees LettreRecommandation[]
+  etudiants_associes ProfesseurEtudiant[]
 
   @@map("professeurs")
+}
+
+model ProfesseurEtudiant {
+  id_professeur BigInt
+  id_etudiant   BigInt
+  source        String?  @db.VarChar(20)
+  date_ajout    DateTime @default(now())
+
+  professeur Professeur @relation(fields: [id_professeur], references: [id_utilisateur], onDelete: Cascade)
+  etudiant   Etudiant   @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
+
+  @@id([id_professeur, id_etudiant])
+  @@map("professeur_etudiants")
 }
 
 model Administrateur {
@@ -272,6 +368,7 @@ model Professionnel {
   justificatifs_url String?
 
   utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  stages_accueillis Stage[]
 
   @@map("professionnels")
 }
@@ -296,8 +393,9 @@ model Profil {
   id_profil               BigInt            @id @default(autoincrement())
   id_utilisateur          BigInt            @unique
   photo_profil            String?           @db.VarChar(500)
+  banniere_profil         String?           @db.VarChar(500)
   telephone               String?           @db.VarChar(20)
-  pays                    String?           @db.VarChar(100)
+  adresse                 String?           @db.VarChar(100)
   email_professionnel String?  @db.VarChar(255)
   bio                String?          @db.Text
   linkedin_url            String?
@@ -395,7 +493,9 @@ model Stage {
   id_stage         BigInt           @id @default(autoincrement())
   id_etudiant      BigInt
   id_encadrant     BigInt?
+  id_professionnel BigInt?
   entreprise       String           @db.VarChar(200)
+  etablissement    String?          @db.VarChar(200)
   poste            String?          @db.VarChar(150)
   duree_semaines   Int?
   missions         String?
@@ -408,6 +508,7 @@ model Stage {
 
   etudiant  Etudiant     @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
   encadrant Professeur?  @relation(fields: [id_encadrant], references: [id_utilisateur], onDelete: SetNull)
+  professionnel Professionnel? @relation(fields: [id_professionnel], references: [id_utilisateur], onDelete: SetNull)
 
   @@map("stages")
 }
@@ -465,6 +566,7 @@ model ElementValidable {
 model Attestation {
   id_attestation BigInt    @id @default(autoincrement())
   id_element     BigInt    @unique
+  id_etudiant    BigInt?
   titre          String?   @db.VarChar(200)
   type           String?   @db.VarChar(200)
   date           DateTime? @db.Date
@@ -473,6 +575,7 @@ model Attestation {
   description    String?
 
   element ElementValidable @relation(fields: [id_element], references: [id_element], onDelete: Cascade)
+  etudiant Etudiant?       @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
 
   @@map("attestations")
 }
@@ -501,6 +604,7 @@ model ModelePortfolio {
   id_modele       BigInt  @id @default(autoincrement())
   cree_par_admin  BigInt?
   nom             String  @db.VarChar(100)
+  description    String? @db.VarChar(500)
   structure       Json?
   theme           String?
   sections        String?
@@ -660,14 +764,29 @@ model Poste {
   id_poste  BigInt     @id @default(autoincrement())
   id_auteur     BigInt
   contenu         String
+  image_url       String?    @db.VarChar(500)
   visibilite      Visibilite @default(PUBLIC)
   date_creation   DateTime   @default(now())
 
   auteur Utilisateur @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
   commentaires Commentaire[]
   reactions    Reaction[]    // pour les "j'aime"
+  collaborateurs PosteCollaborateur[]
+  reposts      Repost[]
 
   @@map("postes")
+}
+
+model PosteCollaborateur {
+  id_poste       BigInt
+  id_utilisateur BigInt
+  date_ajout     DateTime @default(now())
+
+  poste       Poste       @relation(fields: [id_poste], references: [id_poste], onDelete: Cascade)
+  utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@id([id_poste, id_utilisateur])
+  @@map("poste_collaborateurs")
 }
 
 model Reaction {
@@ -683,3 +802,40 @@ model Reaction {
   @@unique([id_auteur, id_poste]) // une seule réaction par personne
   @@map("reactions")
 }
+model TokenRévoqué {
+  id         BigInt   @id @default(autoincrement())
+  jti        String   @unique @db.VarChar(100)
+  user_id    BigInt?
+  expires_at DateTime
+  date       DateTime @default(now())
+
+  @@index([expires_at])
+  @@map("tokens_revoques")
+}
+model Connexion {
+  id_connexion    BigInt @id @default(autoincrement())
+  demandeur_id    BigInt
+  destinataire_id BigInt
+  statut          StatutConnexion @default(EN_ATTENTE)
+  date_demande    DateTime @default(now())
+  date_reponse    DateTime?
+
+  demandeur    Utilisateur @relation("DemandeurConnexion", fields: [demandeur_id], references: [id_utilisateur], onDelete: Cascade)
+  destinataire Utilisateur @relation("DestinataireConnexion", fields: [destinataire_id], references: [id_utilisateur], onDelete: Cascade)
+
+  @@unique([demandeur_id, destinataire_id])
+  @@map("connexions")
+}
+model ProfilSauvegarde {
+  id              BigInt   @id @default(autoincrement())
+  id_sauvegardeur BigInt
+  id_etudiant     BigInt
+  date_sauvegarde DateTime @default(now())
+
+  sauvegardeur Utilisateur @relation("ProfilsSauvegardes", fields: [id_sauvegardeur], references: [id_utilisateur], onDelete: Cascade)
+  etudiant     Utilisateur @relation("ProfilsSauvegardesParAutres", fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
+
+  @@unique([id_sauvegardeur, id_etudiant])
+  @@map("profils_sauvegardes")
+}
+

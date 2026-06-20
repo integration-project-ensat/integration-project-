@@ -1,0 +1,292 @@
+{
+  "info": {
+    "name": "Integration Project API",
+    "description": "Collection complète de l'API du projet d'intégration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "S'inscrire",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/auth/sinscrire",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Dupont\",\n  \"prenom\": \"Jean\",\n  \"email\": \"jean.dupont@email.com\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Se connecter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('token', res.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/auth/seconnecter",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@email.com\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Profil utilisateur connecté",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{baseUrl}}/api/auth/profil"
+          }
+        },
+        {
+          "name": "Mot de passe oublié",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/auth/mot-de-passe-oublie",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@email.com\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛠️ Technologies",
+      "item": [
+        {
+          "name": "Liste des technologies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/technologies?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "technologies"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Détail d'une technologie",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/technologies/1"
+          }
+        },
+        {
+          "name": "Créer une technologie",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "{{baseUrl}}/api/technologies",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"React\",\n  \"categorie\": \"Frontend\",\n  \"est_validee\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Modifier une technologie",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "{{baseUrl}}/api/technologies/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"React.js\",\n  \"categorie\": \"Frontend\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Supprimer une technologie",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{baseUrl}}/api/technologies/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎯 Compétences",
+      "item": [
+        {
+          "name": "Liste des compétences",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/competences"
+          }
+        },
+        {
+          "name": "Détail d'une compétence",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/competences/1"
+          }
+        },
+        {
+          "name": "Suggestions pour un étudiant",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{baseUrl}}/api/competences/suggestions/1"
+          }
+        },
+        {
+          "name": "Créer une compétence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "{{baseUrl}}/api/competences",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"JavaScript\",\n  \"niveau\": \"avance\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Modifier une compétence",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "{{baseUrl}}/api/competences/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"TypeScript\",\n  \"niveau\": \"expert\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Supprimer une compétence",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{baseUrl}}/api/competences/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Profils",
+      "item": [
+        {
+          "name": "Récupérer un profil",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{baseUrl}}/api/profils/1"
+          }
+        },
+        {
+          "name": "Mettre à jour un profil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "{{baseUrl}}/api/profils/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Dupont\",\n  \"prenom\": \"Jean\",\n  \"titre\": \"Développeur Full Stack\",\n  \"bio\": \"Passionné de développement web\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎓 Diplômes",
+      "item": [
+        {
+          "name": "Liste des diplômes",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{baseUrl}}/api/diplomes/1"
+          }
+        },
+        {
+          "name": "Ajouter un diplôme",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "{{baseUrl}}/api/diplomes/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Master Informatique\",\n  \"etablissement\": \"Université de Paris\",\n  \"annee\": 2023\n}"
+            }
+          }
+        },
+        {
+          "name": "Modifier un diplôme",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "{{baseUrl}}/api/diplomes/1/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Licence Informatique\",\n  \"etablissement\": \"Université de Lyon\",\n  \"annee\": 2021\n}"
+            }
+          }
+        },
+        {
+          "name": "Supprimer un diplôme",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{baseUrl}}/api/diplomes/1/1"
+          }
+        }
+      ]
+    }
+  ]
+}

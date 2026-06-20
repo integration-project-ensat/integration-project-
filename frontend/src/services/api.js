@@ -1,27 +1,39 @@
 // Instance Axios centralisée. Configure la baseURL vers le backend et injecte automatiquement le token JWT Bearer dans chaque requête via un intercepteur.
 // Contenu type
 import axios from 'axios'
+import { getApiBase } from '../utils/apiBase.js'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
-  headers: { 'Content-Type': 'application/json' }
+  baseURL: getApiBase(),
+  headers: { Accept: 'application/json' },
+  withCredentials: true
 })
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (token && token !== 'undefined' && token !== 'null') {
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
-      const isLoginPage = window.location.pathname === '/login'
-      if (!isLoginPage) {
-        localStorage.removeItem('token')
-        window.location.href = '/login'
-      }
+    const status = err.response?.status
+    const requestUrl = err.config?.url || ''
+    const message = err.response?.data?.message || ''
+    const shouldClearSession =
+      status === 401 &&
+      (
+        requestUrl.includes('/auth/me') ||
+        /session expir|session invalid|token invalide/i.test(message)
+      )
+
+    if (shouldClearSession) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('user')
     }
     return Promise.reject(err)
   }

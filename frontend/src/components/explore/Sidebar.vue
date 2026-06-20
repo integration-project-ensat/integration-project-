@@ -5,7 +5,7 @@
         <div class="grid h-12 w-12 place-items-center rounded-3xl bg-slate-900 text-cyan-300 text-2xl font-semibold">P</div>
         <div>
           <p class="text-xs uppercase tracking-[0.35em] text-slate-500">PheraCore</p>
-          <h1 class="text-xl font-semibold text-slate-100">Explore</h1>
+          <h1 class="text-xl font-semibold text-slate-100">Explorer</h1>
         </div>
       </div>
     </div>
@@ -25,8 +25,8 @@
 
     <div class="px-6 py-5 border-t border-slate-800">
       <div class="rounded-3xl bg-slate-900/80 p-4 text-sm text-slate-400">
-        <p class="text-slate-200 font-semibold">Boost your portfolio</p>
-        <p class="mt-2 leading-6">Explore curated profiles, certifications, et recommandations pour les prochaines collaborations.</p>
+        <p class="text-slate-200 font-semibold">Améliorez votre portfolio</p>
+        <p class="mt-2 leading-6">Explorez des profils sélectionnés, des certifications et des recommandations pour vos prochaines collaborations.</p>
       </div>
     </div>
   </aside>
@@ -36,7 +36,7 @@
 import { Activity, Award, Briefcase, Compass, Github, GraduationCap, LayoutGrid, Layers, LogOut, MessageCircle, Settings, ThumbsUp } from 'lucide-vue-next'
 
 const navItems = [
-  { label: 'Dashboard', icon: LayoutGrid, href: '#', active: false },
+  { label: 'Tableau de bord', icon: LayoutGrid, href: '#', active: false },
   { label: 'Explorer', icon: Compass, href: '#', active: true },
   { label: 'Projets', icon: Briefcase, href: '#', active: false },
   { label: 'Stages', icon: GraduationCap, href: '#', active: false },
@@ -44,7 +44,7 @@ const navItems = [
   { label: 'Activités', icon: Activity, href: '#', active: false },
   { label: 'Portfolio', icon: Layers, href: '#', active: false },
   { label: 'GitHub', icon: Github, href: '#', active: false },
-  { label: 'Mes Recos', icon: ThumbsUp, href: '#', active: false },
+  { label: 'Mes recommandations', icon: ThumbsUp, href: '#', active: false },
   { label: 'Commentaires', icon: MessageCircle, href: '#', active: false },
   { label: 'Paramètres', icon: Settings, href: '#', active: false },
   { label: 'Déconnexion', icon: LogOut, href: '#', active: false }
@@ -53,5 +53,5 @@ const navItems = [
 
 <style scoped>
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
+::-webkit-scrollbar-thumb { background: var(--overlay-slate-border); border-radius: 9999px; }
 </style>

@@ -6,11 +6,14 @@
         <p class="section-sub">Dernières actions et soumissions sur la plateforme</p>
       </div>
       <div class="header-actions">
-        <button class="btn-outline">Voir tout</button>
-        <button class="btn-outline icon-btn">
-          <Clock :size="14" />
-          Historique
-        </button>
+        <button class="btn-outline" @click="showAllActivities = !showAllActivities">
+  {{ showAllActivities ? 'Réduire' : 'Voir tout' }}
+</button>
+
+<button class="btn-outline" @click="goToHistory">
+  <Clock :size="14" />
+  Historique
+</button>
       </div>
     </div>
  
@@ -25,7 +28,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in activities" :key="item.id" class="activity-row">
+        <tr v-for="item in displayedActivities" :key="item.id" class="activity-row">
           <td>
             <div class="user-cell">
               <div class="avatar" :style="{ background: item.avatarColor }">
@@ -54,57 +57,31 @@
 </template>
  
 <script setup>
+import { ref, computed } from 'vue'
 import { Clock, MoreHorizontal } from 'lucide-vue-next'
 import StatusBadge from './StatusBadge.vue'
- 
-const activities = [
-  {
-    id: 1,
-    name: 'Marc-Antoine Dubois',
-    email: 'marc.dubois@ecole.fr',
-    action: 'Nouveau Portfolio soumis',
-    date: 'Il y a 2 min',
-    status: 'pending',
-    avatarColor: '#c7d2fe',
-  },
-  {
-    id: 2,
-    name: 'Sophie Laurent',
-    email: 's.laurent@univ-paris.fr',
-    action: 'Certification validée',
-    date: 'Il y a 15 min',
-    status: 'completed',
-    avatarColor: '#bbf7d0',
-  },
-  {
-    id: 3,
-    name: 'Thomas Bernard',
-    email: 't.bernard@tech.edu',
-    action: 'Mise à jour de profil',
-    date: 'Il y a 42 min',
-    status: 'completed',
-    avatarColor: '#fed7aa',
-  },
-  {
-    id: 4,
-    name: 'Léa Morel',
-    email: 'lea.morel@design.fr',
-    action: 'Nouvelle inscription',
-    date: 'Il y a 1h',
-    status: 'completed',
-    avatarColor: '#fce7f3',
-  },
-  {
-    id: 5,
-    name: 'Jean-Pierre Petit',
-    email: 'jp.petit@science.fr',
-    action: 'Demande de vérification',
-    date: 'Il y a 3h',
-    status: 'cancelled',
-    avatarColor: '#e2e8f0',
-  },
-]
- 
+
+const props = defineProps({
+  activities: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const showAllActivities = ref(false)
+
+const displayedActivities = computed(() =>
+  showAllActivities.value
+    ? props.activities
+    : props.activities.slice(0, 5)
+)
+
+const goToHistory = () => {
+  document
+    .getElementById('connexion-history')
+    ?.scrollIntoView({ behavior: 'smooth' })
+}
+
 const initials = (name) =>
   name
     .split(' ')
@@ -116,9 +93,10 @@ const initials = (name) =>
  
 <style scoped>
 .activity-card {
-  background: #fff;
-  border: 1px solid #e8eaf0;
+  background: var(--white);
+  border: 1px solid var(--border-admin);
   border-radius: 16px;
+  box-shadow: 0 1px 3px var(--overlay-black-04);
   padding: 24px;
 }
  
@@ -134,12 +112,12 @@ const initials = (name) =>
 .section-title {
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
   margin: 0 0 2px;
 }
 .section-sub {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
 }
  
@@ -153,17 +131,17 @@ const initials = (name) =>
   align-items: center;
   gap: 5px;
   padding: 7px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   background: transparent;
   font-size: 12.5px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s;
 }
 .btn-outline:hover {
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
  
 .activity-table {
@@ -172,7 +150,7 @@ const initials = (name) =>
 }
  
 .activity-table thead tr {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--surface-muted);
 }
  
 .activity-table th {
@@ -180,20 +158,20 @@ const initials = (name) =>
   padding: 10px 12px;
   font-size: 11.5px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-light);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
  
 .activity-row {
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface-subtle);
   transition: background 0.15s;
 }
 .activity-row:last-child {
   border-bottom: none;
 }
 .activity-row:hover {
-  background: #fafbff;
+  background: var(--surface-admin);
 }
  
 .activity-table td {
@@ -216,44 +194,44 @@ const initials = (name) =>
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-body);
   flex-shrink: 0;
 }
  
 .user-name {
   font-size: 13.5px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-heading);
   margin: 0 0 2px;
 }
 .user-email {
   font-size: 11.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   margin: 0;
 }
  
 .action-cell {
   font-size: 13px;
-  color: #475569;
+  color: var(--text-muted);
 }
  
 .date-cell {
   font-size: 12.5px;
-  color: #94a3b8;
+  color: var(--text-light);
   white-space: nowrap;
 }
  
 .action-btn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-light);
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
   transition: background 0.15s, color 0.15s;
 }
 .action-btn:hover {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--surface-muted);
+  color: var(--text-muted);
 }
 </style>

@@ -5,11 +5,6 @@
         <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="36" />
         <span>heraCore</span>
       </div>
-      <button class="theme-btn">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-         <path d="M7.01074 1.42676C3.87305 1.67578 1.40625 4.30078 1.40625 7.5C1.40625 10.8662 4.13379 13.5938 7.5 13.5938C8.47559 13.5938 9.39551 13.3652 10.2129 12.958C7.18359 12.2725 4.92188 9.56543 4.92188 6.32812C4.92188 4.40039 5.72461 2.66309 7.01074 1.42676ZM0 7.5C0 3.35742 3.35742 0 7.5 0C8.06836 0 8.625 0.0644531 9.16113 0.18457C9.45117 0.249023 9.66797 0.492187 9.70313 0.785156C9.73828 1.07812 9.58594 1.36523 9.31934 1.5C7.54395 2.38477 6.32813 4.21582 6.32813 6.32812C6.32813 9.30469 8.74219 11.7188 11.7188 11.7188C11.8652 11.7188 12.0088 11.7129 12.1523 11.7012C12.4482 11.6777 12.7266 11.8418 12.8496 12.1143C12.9727 12.3867 12.9082 12.7031 12.6943 12.9082C11.3467 14.2031 9.51563 15 7.5 15C3.35742 15 0 11.6426 0 7.5Z" fill="#111827"/>
-        </svg>
-      </button>
     </div>
 
     <div class="card">
@@ -61,7 +56,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import authService from '@/services/auth.service.js'
+import { useAuthStore } from '@/store/auth.js'
 
 type ApiError = {
   response?: {
@@ -72,6 +69,12 @@ type ApiError = {
   }
 }
 
+type PendingSignup = {
+  email: string
+  password: string
+  role: string
+}
+
 const getApiErrorMessage = (e: unknown, fallback: string) => {
   const data = (e as ApiError).response?.data
   return data?.errors?.[0]?.message || data?.message || fallback
@@ -79,6 +82,14 @@ const getApiErrorMessage = (e: unknown, fallback: string) => {
 
 const router   = useRouter()
 const route    = useRoute()
+const auth     = (() => {
+  const activePinia = getActivePinia()
+  if (activePinia) return useAuthStore()
+
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  return useAuthStore(pinia)
+})()
 const email    = route.query.email as string || ''
 const error    = ref('')
 const success  = ref('')
@@ -88,9 +99,17 @@ const countdown = ref(60)
 const code   = reactive(['', '', '', '', '', ''])
 const inputs = ref<HTMLInputElement[]>([])
 
+function clearLocalSession() {
+  auth.logout()
+  localStorage.removeItem('token')
+  localStorage.removeItem('role')
+  localStorage.removeItem('user')
+}
+
 // countdown timer
 let timer: ReturnType<typeof setInterval>
 onMounted(() => {
+  clearLocalSession()
   inputs.value[0]?.focus()
   startCountdown()
 })
@@ -126,6 +145,22 @@ function onPaste(e: ClipboardEvent) {
   inputs.value[Math.min(text.length, 5)]?.focus()
 }
 
+function redirectByRole(role: string | null | undefined) {
+  router.push('/dashboard')
+}
+
+function getPendingSignup(): PendingSignup | null {
+  const raw = sessionStorage.getItem('pendingSignup')
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw) as PendingSignup
+  } catch {
+    sessionStorage.removeItem('pendingSignup')
+    return null
+  }
+}
+
 async function submit() {
   error.value = ''
   const fullCode = code.join('')
@@ -133,10 +168,43 @@ async function submit() {
 
   loading.value = true
   try {
-    await authService.verifyCode(email, fullCode)
+    const response = await authService.verifyCode(email, fullCode)
     success.value = 'Code vérifié !'
-    setTimeout(() => {
-      router.push('/dashboard')
+    setTimeout(async () => {
+      const token = response?.data?.token
+      const user = response?.data?.user
+      const role = user?.role || localStorage.getItem('role')
+
+      if (token && user && role) {
+        auth.login(user, token, role)
+        sessionStorage.removeItem('pendingSignup')
+        redirectByRole(auth.role)
+        return
+      }
+
+      const pendingSignup = getPendingSignup()
+      const shouldAutoLogin =
+        pendingSignup &&
+        pendingSignup.email === email.trim().toLowerCase() &&
+        (
+          pendingSignup.role === 'student' ||
+          pendingSignup.role === 'Prof' ||
+          pendingSignup.role === 'Professional'
+        )
+
+      if (shouldAutoLogin) {
+        const loginData = await authService.login(pendingSignup.email, pendingSignup.password)
+        const loginUser = loginData?.data?.user
+        const loginRole = loginUser?.role || localStorage.getItem('role')
+
+        auth.login(loginUser, loginData?.data?.token, loginRole)
+        sessionStorage.removeItem('pendingSignup')
+        redirectByRole(auth.role)
+        return
+      }
+
+      sessionStorage.removeItem('pendingSignup')
+      router.push({ path: '/reset-password', query: { email } })
     }, 1000)
   } catch(e) {
     error.value = getApiErrorMessage(e, 'Code incorrect ou expiré.')
@@ -186,7 +254,7 @@ async function resend() {
 }
 
 .card {
-  background: white;
+  background: var(--white);
   border-radius: 16px;
   padding: 48px 40px;
   width: 100%;
@@ -248,7 +316,7 @@ form {
 
 .code-box:focus {
   border-color: var(--purple);
-  background: white;
+  background: var(--white);
   outline: none;
 }
 
@@ -258,7 +326,7 @@ form {
 .btn {
   width: 100%;
   background: var(--purple);
-  color: white;
+  color: var(--white);
   font-family: var(--font-head);
   font-size: .93rem;
   font-weight: 600;
@@ -278,7 +346,7 @@ form {
 .spin {
   width: 18px; height: 18px;
   border: 2px solid rgba(255,255,255,.3);
-  border-top-color: white;
+  border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }

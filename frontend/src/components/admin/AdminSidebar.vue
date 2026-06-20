@@ -44,13 +44,15 @@ import {
   Settings,
   LogOut,
 } from 'lucide-vue-next'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import authService from '@/services/auth.service.js'
  
 defineProps({
   open: { type: Boolean, default: true },
 })
  
 const route = useRoute()
+const router = useRouter()
  
 const navItems = [
   { label: 'Dashboard',      to: '/admin',                icon: LayoutDashboard },
@@ -67,8 +69,9 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
  
-const handleLogout = () => {
-  console.log('Déconnexion')
+const handleLogout = async () => {
+  await authService.logout()
+  router.push('/login')
 }
 </script>
  
@@ -80,11 +83,11 @@ const handleLogout = () => {
   top: 50px;
   left: 0;
   bottom: 0;
-  width: 185px;
+  width: 220px;
  
-  background: #fff;
-  border-right: 1px solid #e8eaf0;
- 
+  background: var(--white);
+  border-right: 1px solid var(--border-admin);
+  box-shadow: 2px 0 12px var(--overlay-black-04);
   /*
     Flex column : nav pousse vers le haut,
     spacer prend tout l'espace libre,
@@ -93,7 +96,7 @@ const handleLogout = () => {
   display: flex;
   flex-direction: column;
  
-  padding: 16px 12px;
+  padding: 16px 0px;
   z-index: 100;
   overflow-y: auto;
  
@@ -124,7 +127,7 @@ const handleLogout = () => {
   flex-direction: column;
   gap: 2px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--surface-muted);
   /* flex-shrink: 0 garantit qu'il ne sera jamais compressé */
   flex-shrink: 0;
 }
@@ -134,11 +137,11 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 11px;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border-radius: 0px;
   font-size: 13.5px;
-  font-weight: 500;
-  color: #64748b;
+  font-weight: 600;
+  color: var(--text-slate);
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
   cursor: pointer;
@@ -150,14 +153,17 @@ const handleLogout = () => {
 }
  
 .nav-item:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--surface-muted);
+  color: var(--text-heading);
 }
  
 .nav-item.active {
-  background: #ede9fe;
-  color: #6366f1;
+  background: var(--indigo-soft);
+  color: var(--indigo);
   font-weight: 600;
+  border-radius: 0;                        /* supprimer le border-radius */
+  border-left: 3px solid var(--indigo);         /* barre violette à gauche */
+  padding-left: 8px;  
 }
  
 .nav-label {
@@ -166,7 +172,7 @@ const handleLogout = () => {
 }
  
 /* ── Logout ─────────────────────────────────────── */
-.logout { color: #ef4444; }
-.logout:hover { background: #fef2f2; color: #dc2626; }
+.logout { color: var(--danger-light); }
+.logout:hover { background: var(--danger-bg); color: var(--danger); }
 </style>
  

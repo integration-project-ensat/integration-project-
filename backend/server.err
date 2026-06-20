@@ -1,0 +1,18 @@
+[CRITICAL ERROR] {
+  "timestamp": "2026-06-10T23:30:05.704Z",
+  "method": "POST",
+  "url": "/api/auth/seconnecter",
+  "statusCode": 500,
+  "errorName": "PrismaClientKnownRequestError",
+  "message": "\nInvalid `prisma.utilisateur.findUnique()` invocation in\nC:\\Users\\Admin\\Desktop\\integration-project-\\backend\\src\\controllers\\auth.controller.js:271:41\n\n  268 const { email, mot_de_passe } = req.body;\n  269 const normalizedEmail = email.trim().toLowerCase();\n  270 \n→ 271 const user = await prisma.utilisateur.findUnique(\nCan't reach database server at postgres",
+  "stack": "PrismaClientKnownRequestError: \nInvalid `prisma.utilisateur.findUnique()` invocation in\nC:\\Users\\Admin\\Desktop\\integration-project-\\backend\\src\\controllers\\auth.controller.js:271:41\n\n  268 const { email, mot_de_passe } = req.body;\n  269 const normalizedEmail = email.trim().toLowerCase();\n  270 \n→ 271 const user = await prisma.utilisateur.findUnique(\nCan't reach database server at postgres\n    at zr.handleRequestError (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:8286)\n    at zr.handleAndLogRequestError (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:7581)\n    at zr.request (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:7288)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async a (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:75:6862)\n    at async C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\src\\controllers\\auth.controller.js:271:16"
+}
+[CRITICAL ERROR] {
+  "timestamp": "2026-06-10T23:30:13.659Z",
+  "method": "POST",
+  "url": "/api/auth/seconnecter",
+  "statusCode": 500,
+  "errorName": "PrismaClientKnownRequestError",
+  "message": "\nInvalid `prisma.utilisateur.findUnique()` invocation in\nC:\\Users\\Admin\\Desktop\\integration-project-\\backend\\src\\controllers\\auth.controller.js:271:41\n\n  268 const { email, mot_de_passe } = req.body;\n  269 const normalizedEmail = email.trim().toLowerCase();\n  270 \n→ 271 const user = await prisma.utilisateur.findUnique(\nCan't reach database server at postgres",
+  "stack": "PrismaClientKnownRequestError: \nInvalid `prisma.utilisateur.findUnique()` invocation in\nC:\\Users\\Admin\\Desktop\\integration-project-\\backend\\src\\controllers\\auth.controller.js:271:41\n\n  268 const { email, mot_de_passe } = req.body;\n  269 const normalizedEmail = email.trim().toLowerCase();\n  270 \n→ 271 const user = await prisma.utilisateur.findUnique(\nCan't reach database server at postgres\n    at zr.handleRequestError (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:8286)\n    at zr.handleAndLogRequestError (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:7581)\n    at zr.request (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:7288)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async a (C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:75:6862)\n    at async C:\\Users\\Admin\\Desktop\\integration-project-\\backend\\src\\controllers\\auth.controller.js:271:16"
+}

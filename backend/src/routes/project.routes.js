@@ -1,1 +1,0 @@
-// Routes projets : CRUD complet + POST /projects/:id/submit (soumettre à validation) + PUT /projects/:id/validate (prof). Protégées par rôle.

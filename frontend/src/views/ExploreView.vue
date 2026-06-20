@@ -1,208 +1,260 @@
-<script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import Sidebar from '../components/explore/Sidebar.vue'
-import Topbar from '../components/explore/Topbar.vue'
-import ProfileCard from '../components/explore/ProfileCard.vue'
-import FilterPanel from '../components/explore/FilterPanel.vue'
+﻿<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import { Bookmark } from 'lucide-vue-next'
+import ExploreHeader from '../components/exploreStudent/ExploreHeader.vue'
+import FilterPanel   from '../components/exploreStudent/FilterPanel.vue'
+import ProfileCard   from '../components/exploreStudent/ProfileCard.vue'
+import Sidebar       from '../components/exploreStudent/Sidebar.vue'
+import Topbar        from '../components/exploreStudent/Topbar.vue'
+import { explorerProfils, type ProfilExplore } from '../services/profilApi'
+import { mapExploreProfileCard } from '../utils/exploreProfileCard'
 
-interface Profile {
-  id: number
-  name: string
-  role: string
+type ExploreFilterState = {
+  filiere: string
+  ville: string
+  year: number | undefined
   school: string
-  field: string
-  city: string
-  score: number
-  year: number
-  skills: string[]
-  recommendations: number
+  competences: string[]
+  score: string | undefined
+  recommandations: string | undefined
 }
 
-interface Filters {
-  year: number | null
-  school: string | null
-  field: string | null
-  city: string | null
-  scoreMin: number | null
-  skills: string[]
-  recMin: number | null
-}
-
+// State
 const searchQuery = ref('')
-const selectedFilters = reactive<Filters>({
-  year: null,
-  school: null,
-  field: null,
-  city: null,
-  scoreMin: null,
-  skills: [],
-  recMin: null
+const sidebarOpen = ref(true)
+const loading     = ref(false)
+const error       = ref<string | null>(null)
+const profiles    = ref<ProfilExplore[]>([])
+const pagination  = ref({ total: 0, page: 1, limit: 10, pages: 1 })
+
+const filters = ref<ExploreFilterState>({
+  filiere:         '',
+  ville:           '',
+  year:            undefined as number | undefined,
+  school:          '',
+  competences:     [] as string[],
+  score:           undefined,
+  recommandations: undefined
 })
 
-const profiles = ref<Profile[]>([
-  {
-    id: 1,
-    name: 'Nora Bennis',
-    role: 'UX Designer & Frontend',
-    school: 'ENSA Tanger',
-    field: 'GINF',
-    city: 'Tangier',
-    score: 94,
-    year: 2026,
-    skills: ['Figma', 'Vue.js', 'Tailwind'],
-    recommendations: 120
-  },
-  {
-    id: 2,
-    name: 'Youssef Aarab',
-    role: 'DevOps Engineer',
-    school: 'ENSA Rabat',
-    field: 'GSEA',
-    city: 'Rabat',
-    score: 88,
-    year: 2025,
-    skills: ['Docker', 'GitOps', 'CI/CD'],
-    recommendations: 84
-  },
-  {
-    id: 3,
-    name: 'Imane El Hadi',
-    role: 'Data Scientist',
-    school: 'ENSA',
-    field: 'GINF',
-    city: 'Casablanca',
-    score: 91,
-    year: 2026,
-    skills: ['Python', 'Machine Learning', 'SQL'],
-    recommendations: 104
-  },
-  {
-    id: 4,
-    name: 'Rachid Bakkali',
-    role: 'Full Stack Developer',
-    school: 'ENSA Tanger',
-    field: 'GINF',
-    city: 'Tanger',
-    score: 86,
-    year: 2024,
-    skills: ['Vue.js', 'Node.js', 'PostgreSQL'],
-    recommendations: 65
+// Charger les profils
+const chargerProfils = async () => {
+  loading.value = true
+  error.value   = null
+  try {
+    const res = await explorerProfils({
+      search:          searchQuery.value || undefined,
+      filiere:         filters.value.filiere         || undefined,
+      ville:           filters.value.ville           || undefined,
+      year:            filters.value.year            || undefined,
+      school:          filters.value.school          || undefined,
+      competences:     filters.value.competences.length ? filters.value.competences : undefined,
+      score:           toNumberFilter(filters.value.score) || undefined,
+      recommandations: filters.value.recommandations ? true : undefined,
+      page:            pagination.value.page,
+      limit:           pagination.value.limit
+    })
+    profiles.value   = res.data
+    pagination.value = res.pagination
+  } catch (e) {
+    error.value = 'Erreur lors du chargement des profils'
+  } finally {
+    loading.value = false
   }
-])
-
-const filterOptions = {
-  years: [2026, 2025, 2024],
-  schools: ['ENSA', 'ENSA Tanger', 'ENSA Rabat'],
-  fields: ['GINF', 'GSEA', 'FST'],
-  cities: ['Tangier', 'Rabat', 'Casablanca'],
-  scores: ['90', '80', '70'],
-  skills: ['Vue.js', 'DevOps', 'Machine Learning', 'Backend', 'Figma'],
-  recommendations: ['50', '100', '200']
 }
 
-const normalizedQuery = (value: string) => value.trim().toLowerCase()
+// Debounce recherche
+let searchDebounceTimer: number | undefined
+const debouncedSearch = () => {
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = window.setTimeout(() => {
+    pagination.value.page = 1
+    chargerProfils()
+  }, 400)
+}
 
-const filteredProfiles = computed(() =>
-  profiles.value.filter(profile => {
-    const query = normalizedQuery(searchQuery.value)
-    const matchesQuery =
-      !query ||
-      profile.name.toLowerCase().includes(query) ||
-      profile.role.toLowerCase().includes(query) ||
-      profile.school.toLowerCase().includes(query) ||
-      profile.field.toLowerCase().includes(query) ||
-      profile.city.toLowerCase().includes(query)
+watch(searchQuery, debouncedSearch)
+watch(filters, () => {
+  pagination.value.page = 1
+  chargerProfils()
+}, { deep: true })
 
-    const matchesYear = !selectedFilters.year || profile.year === selectedFilters.year
-    const matchesSchool = !selectedFilters.school || profile.school === selectedFilters.school
-    const matchesField = !selectedFilters.field || profile.field === selectedFilters.field
-    const matchesCity = !selectedFilters.city || profile.city === selectedFilters.city
-    const matchesScore =
-      !selectedFilters.scoreMin || profile.score >= selectedFilters.scoreMin
-    const matchesRec =
-      !selectedFilters.recMin || profile.recommendations >= selectedFilters.recMin
-    const matchesSkills =
-      selectedFilters.skills.length === 0 ||
-      selectedFilters.skills.every(skill => profile.skills.includes(skill))
+onMounted(chargerProfils)
 
-    return (
-      matchesQuery &&
-      matchesYear &&
-      matchesSchool &&
-      matchesField &&
-      matchesCity &&
-      matchesScore &&
-      matchesRec &&
-      matchesSkills
-    )
-  })
-)
+// Pagination
+const changerPage = (page: number) => {
+  pagination.value.page = page
+  chargerProfils()
+}
 
-const updateFilters = (filters: Filters) => Object.assign(selectedFilters, filters)
+// Adapter le profil pour ProfileCard
+const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'student')
 
-const resetFilters = () => {
-  Object.assign(selectedFilters, {
-    year: null,
-    school: null,
-    field: null,
-    city: null,
-    scoreMin: null,
-    skills: [],
-    recMin: null
-  })
+const toNumberFilter = (value: unknown) => {
+  if (typeof value === 'number') return value
+  const parsed = Number(String(value ?? '').replace('+', ''))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+}
+
+const handleUpdateFilters = (next: Record<string, any>) => {
+  filters.value = {
+    filiere: String(next.filiere ?? next.field ?? ''),
+    ville: String(next.ville ?? next.city ?? ''),
+    year: toNumberFilter(next.year),
+    school: String(next.school ?? next.university ?? next.universite ?? next.etablissement ?? ''),
+    competences: Array.isArray(next.competences)
+      ? next.competences
+      : Array.isArray(next.skills)
+        ? next.skills
+        : [],
+    score: next.score ? String(next.score) : undefined,
+    recommandations: next.recommandations ?? next.recommendations ?? undefined
+  }
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#081224] text-slate-100">
-    <div class="flex min-h-screen">
-      <Sidebar />
+  <div class="explore-page">
+    <Topbar @toggleSidebar="sidebarOpen = !sidebarOpen" />
+    <Sidebar :isOpen="sidebarOpen" />
 
-      <main class="flex-1 px-4 py-5 sm:px-6 lg:px-8">
-        <Topbar
-          :searchQuery="searchQuery"
-          @update:searchQuery="value => (searchQuery = value)"
-        />
+    <div class="explore-shell" :class="{ 'explore-shellShift': sidebarOpen }">
+      <main class="explore-middle">
+        <div class="explore-middle-inner">
+          <div class="explore-panel">
+            <ExploreHeader v-model="searchQuery" user-type="student" />
 
-        <div class="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-          <section class="space-y-6">
-            <div
-              class="rounded-[32px] border border-slate-800/90 bg-[#0f172a]/95 p-6 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
-            >
-              <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
-                    PheraCore Explorer
-                  </p>
-                  <h1 class="mt-2 text-3xl font-semibold text-white">
-                    Découvrez les talents prêts à collaborer
-                  </h1>
-                </div>
-
-                <div class="rounded-3xl bg-slate-950/80 px-4 py-3 text-sm text-slate-400">
-                  <span class="font-semibold text-white">{{ filteredProfiles.length }}</span>
-                  profils correspondants
-                </div>
-              </div>
+            <!-- Chargement -->
+            <div v-if="loading" class="explore-state">
+              Chargement...
             </div>
 
-            <div class="space-y-5">
+            <!-- Erreur -->
+            <div v-else-if="error" class="explore-state explore-state--error">
+              {{ error }}
+            </div>
+
+            <!-- Aucun résultat -->
+            <div v-else-if="profiles.length === 0" class="explore-state">
+              Aucun profil trouvé
+            </div>
+
+            <!-- Liste -->
+            <div v-else class="explore-feed">
               <ProfileCard
-                v-for="profile in filteredProfiles"
-                :key="profile.id"
-                :profile="profile"
+                v-for="profile in profiles"
+                :key="profile.id_utilisateur"
+                :profile="adapterProfil(profile)"
+                :show-score="true"
+                :default-expanded="profile.id_utilisateur === profiles[0]?.id_utilisateur"
               />
             </div>
-          </section>
 
-          <FilterPanel
-            :filters="selectedFilters"
-            :options="filterOptions"
-            @update:filters="updateFilters"
-            @clear-filters="resetFilters"
-          />
+            <!-- Pagination -->
+            <div v-if="pagination.pages > 1" class="explore-pagination">
+              <button
+                v-for="page in pagination.pages"
+                :key="page"
+                class="page-btn"
+                :class="{ active: page === pagination.page }"
+                @click="changerPage(page)"
+              >
+                {{ page }}
+              </button>
+            </div>
+          </div>
         </div>
       </main>
+
+      <div class="explore-right">
+        <FilterPanel :filters="filters" @update:filters="handleUpdateFilters" />
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.explore-page {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--surface-page);
+  color: var(--text-strong);
+  padding-top: 50px;
+}
+.explore-shell {
+  height: calc(100vh - 50px);
+  display: grid;
+  grid-template-columns: minmax(730px, 1fr) 270px;
+  justify-content: start;
+  gap: 16px;
+  padding: 14px;
+  overflow: hidden;
+}
+.explore-shellShift { padding-left: 238px; }
+.explore-right {
+  position: sticky;
+  top: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 6, 23, 0.2) rgba(2, 6, 23, 0.05);
+}
+.explore-right::-webkit-scrollbar { width: 8px; }
+.explore-right::-webkit-scrollbar-track { background: rgba(2, 6, 23, 0.04); border-radius: 9999px; }
+.explore-right::-webkit-scrollbar-thumb { background: rgba(2, 6, 23, 0.16); border-radius: 9999px; }
+.explore-middle {
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding: 14px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 6, 23, 0.22) rgba(2, 6, 23, 0.05);
+}
+.explore-middle::-webkit-scrollbar { width: 8px; }
+.explore-middle::-webkit-scrollbar-track { background: rgba(2, 6, 23, 0.04); border-radius: 9999px; }
+.explore-middle::-webkit-scrollbar-thumb { background: rgba(2, 6, 23, 0.2); border-radius: 9999px; }
+.explore-middle-inner { margin: 0; width: 100%; max-width: none; padding: 0; }
+.explore-panel {
+  border-radius: 14px;
+  background: var(--white);
+  border: 1px solid var(--overlay-slate-06);
+  box-shadow: 0 18px 40px var(--overlay-slate-09);
+  overflow: hidden;
+}
+.explore-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 18px 18px;
+  background: var(--white);
+}
+.explore-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-slate);
+  font-size: 14px;
+}
+.explore-state--error { color: #e11d48; }
+.explore-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--overlay-slate-border-soft);
+}
+.page-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.page-btn.active { background: var(--violet); color: var(--white); border-color: var(--violet); }
+</style>
+
