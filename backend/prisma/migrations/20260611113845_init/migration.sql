@@ -208,6 +208,7 @@ CREATE TABLE "profils" (
     "banniere_profil" VARCHAR(500),
     "telephone" VARCHAR(20),
     "adresse" VARCHAR(100),
+    "pays" VARCHAR(100),
     "email_professionnel" VARCHAR(255),
     "bio" TEXT,
     "linkedin_url" TEXT,
