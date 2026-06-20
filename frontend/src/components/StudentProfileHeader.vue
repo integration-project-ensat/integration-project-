@@ -1,8 +1,25 @@
-
-<template>
+﻿<template>
   <div class="profile-header">
-    <div class="cover-section">
-      <div class="cover-img" :style="localBannerStyle">
+    <div v-if="isLoadingProfile" class="profile-loading-state">
+      <div class="cover-section cover">
+        <div class="cover-img banner skeleton-banner"></div>
+        <div class="avatar-wrap avatar-wrapper">
+          <div class="avatar skeleton-avatar">
+            <span class="avatar-initials">…</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-info student-info">
+        <div class="skeleton-name skeleton-block"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>
+
+    <div v-if="apiError" class="api-error">{{ apiError }}</div>
+
+    <div v-else class="cover-section cover">
+      <div class="cover-img banner" :style="bannerStyle">
         <template v-if="isOwner">
           <label class="banner-edit-overlay" for="banner-file-input">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -14,10 +31,10 @@
           <input id="banner-file-input" type="file" accept="image/*" class="sr-only" @change="onBannerChange" />
         </template>
       </div>
-      <div class="avatar-wrap">
+      <div class="avatar-wrap avatar-wrapper">
         <div class="avatar" :class="avatarColorClass(profile.name)">
-          <img v-if="localAvatar || profile.avatar" :src="(localAvatar || profile.avatar) as string" alt="avatar" />
-          <span v-else>{{ initials }}</span>
+          <img v-if="profile.avatar" :src="profile.avatar" alt="avatar" />
+          <span v-else class="avatar-initials">{{ initials }}</span>
           <label v-if="isOwner" class="avatar-edit-overlay" for="avatar-file-input">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -27,16 +44,19 @@
         </div>
         <input v-if="isOwner" id="avatar-file-input" type="file" accept="image/*" class="sr-only" @change="onAvatarChange" />
       </div>
+      <div class="student-info cover-student-info" aria-hidden="true"></div>
     </div>
 
-    <div class="profile-info">
+    <div v-if="!isLoadingProfile" class="profile-info student-info">
       <div class="name-row">
-        <h1>{{ profile.name }}</h1>
+        <h1 class="student-name">{{ profile.name }}</h1>
+        <span v-if="profile.isVerified" class="verified-badge">Vérifié</span>
         <span v-if="showScore" class="score">{{ profile.score }}+</span>
       </div>
 
-      <p class="title">{{ profile.title }}</p>
-      <p class="school">{{ profile.school }}</p>
+      <p class="title field-badge">{{ profile.title }}</p>
+      <p class="student-field">{{ profile.year }}</p>
+      <p class="school student-school">{{ profile.school }}</p>
 
       <p class="location">
         {{ profile.location }}
@@ -44,6 +64,21 @@
           • Contact info
         </button>
       </p>
+
+      <div class="meta-row">
+        <span v-if="profile.apogee" class="meta-chip">APOGEE {{ profile.apogee }}</span>
+        <span v-if="profile.email" class="meta-chip">{{ profile.email }}</span>
+        <span v-if="profile.location" class="meta-chip">{{ profile.location }}</span>
+      </div>
+
+      <div class="social-links">
+        <a v-if="profile.github" :href="profile.github" target="_blank" rel="noopener" class="social-btn github">
+          GitHub
+        </a>
+        <a v-if="profile.linkedin" :href="profile.linkedin" target="_blank" rel="noopener" class="social-btn linkedin">
+          LinkedIn
+        </a>
+      </div>
 
       <button
         v-if="showRecommendationsSummary !== false"
@@ -112,17 +147,17 @@
 
       <div v-if="showAbout" class="about-section">
         <h3>À propos</h3>
-        <p v-if="profile.bio" class="bio">{{ profile.bio }}</p>
-        <p v-else class="bio muted">Aucune bio pour l’instant.</p>
+        <p v-if="profile.bio" class="bio student-bio">{{ profile.bio }}</p>
+        <p v-else class="bio muted">Aucune bio pour l'instant.</p>
       </div>
 
       <div v-if="showCompetances" class="competances-dropdown">
         <div class="competances-section">
-          <h3>Compétances Techniques</h3>
+          <h3>Compétences techniques</h3>
           <div class="skills-flex-list">
-            <span 
-              v-for="skill in technicalSkills" 
-              :key="skill.name" 
+            <span
+              v-for="skill in technicalSkills"
+              :key="skill.name"
               class="skill-tag clickable"
               @click="openSkillPopup(skill, 'tech')"
             >
@@ -132,11 +167,11 @@
         </div>
 
         <div class="competances-section">
-          <h3>Compétances Comportementales</h3>
+          <h3>Compétences comportementales</h3>
           <div class="skills-flex-list">
-            <span 
-              v-for="skill in softSkills" 
-              :key="skill.name" 
+            <span
+              v-for="skill in softSkills"
+              :key="skill.name"
               class="skill-tag soft clickable"
               @click="openSkillPopup(skill, 'soft')"
             >
@@ -245,7 +280,7 @@
     </div>
 
     <div
-      v-if="showSkillModal && selectedSkill"
+      v-if="!isLoadingProfile && showSkillModal && selectedSkill"
       class="modal-backdrop"
       @click.self="showSkillModal = false"
     >
@@ -275,7 +310,7 @@
           <div class="modal-details-section">
             <h4>Description & Application</h4>
             <p class="skill-description">{{ selectedSkill.description }}</p>
-            
+
             <div class="skill-meta-info">
               <div class="meta-item">
                 <span class="meta-icon">📁</span>
@@ -290,7 +325,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { resolveBackendAsset } from '../utils/backendAsset'
+import { profileService } from '../services/profile.service.js'
 
 type Recommendation = {
   id: number
@@ -312,37 +349,41 @@ type SelectedSkillState = SkillItem & {
   type: 'tech' | 'soft'
 }
 
+type ProfileInput = {
+  id?: number | string | null
+  name?: string
+  score?: number
+  title?: string
+  field?: string
+  year?: string
+  apogee?: string
+  school?: string
+  etablissement?: string
+  location?: string
+  city?: string
+  recos?: string | number
+  avatar?: string | null
+  photo_profil?: string | null
+  banner?: string | null
+  bannerColor?: string | null
+  banner_color?: string | null
+  bio?: string
+  email?: string
+  phone?: string
+  website?: string
+  linkedin?: string
+  github?: string
+  isVerified?: boolean
+  technicalSkills?: SkillItem[]
+  softSkills?: SkillItem[]
+}
+
 const showCompetances = ref(false)
 
-const showAbout = ref(false)
-const showContact = ref(false)
-const showShare = ref(false)
-const copied = ref(false)
-
-// Gestion du pop-up des compétences
-const showSkillModal = ref(false)
-const selectedSkill = ref<SelectedSkillState | null>(null)
-
-const props = defineProps<{
-  profile: {
-    id?: number | string | null
-    name: string
-    score: number
-    title: string
-    school: string
-    location: string
-    recos: string
-    avatar?: string
-    banner?: string
-    bio?: string
-    email?: string
-    phone?: string
-    website?: string
-    linkedin?: string
-    technicalSkills?: SkillItem[]
-    softSkills?: SkillItem[]
-  }
-  modelValue: string
+const props = withDefaults(defineProps<{
+  userId?: number | string | null
+  profile?: ProfileInput | null
+  modelValue?: string
   recentRecommendations?: Recommendation[]
   isOwner?: boolean
   connectionLabel?: string
@@ -350,7 +391,34 @@ const props = defineProps<{
   profileRole?: 'student' | 'teacher' | 'professional'
   tabs?: string[]
   showRecommendationsSummary?: boolean
-}>()
+}>(), {
+  userId: null,
+  profile: null,
+  modelValue: '',
+  recentRecommendations: () => [],
+  isOwner: false,
+  connectionLabel: 'Connecter',
+  recommendationLabel: 'Recommander',
+  profileRole: 'student',
+  tabs: () => [],
+  showRecommendationsSummary: true,
+})
+
+const showAbout = ref(true)
+const showContact = ref(false)
+const showShare = ref(false)
+const copied = ref(false)
+const apiError = ref('')
+
+// Gestion du pop-up des compétences
+const showSkillModal = ref(false)
+const selectedSkill = ref<SelectedSkillState | null>(null)
+const isLoadingProfile = ref(!props.profile)
+const fetchedProfile = ref<ProfileInput | null>(null)
+
+if (!props.profile && props.userId != null) {
+  isLoadingProfile.value = true
+}
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
@@ -359,26 +427,121 @@ const emit = defineEmits<{
   (e: 'banner-selected', file: File): void
 }>()
 
-const localAvatar = ref<string | null>(null)
-const localBanner = ref<string | null>(null)
+function toNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
 
-const tabList = computed(() =>
-  props.tabs?.length
-    ? props.tabs
-    : props.isOwner
-    ? props.profileRole === 'student'
-      ? ['Modifier bio', 'Partager']
-      : ['Modifier info', 'Partager']
-    : ['Portfolio', 'Recommander', 'Connecter', 'Compétances', 'À propos', 'Partager']
+function hexToRgb(color: string) {
+  const value = String(color || '').trim()
+  if (!value) return ''
+  if (!value.startsWith('#')) return value
+
+  const hex = value.slice(1)
+  const normalized = hex.length === 3
+    ? hex.split('').map((char) => char + char).join('')
+    : hex
+
+  if (normalized.length !== 6) return value
+
+  const int = Number.parseInt(normalized, 16)
+  const r = (int >> 16) & 255
+  const g = (int >> 8) & 255
+  const b = int & 255
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+function normalizeProfileData(input?: ProfileInput | null) {
+  const source = input ?? {}
+  const bannerColor = source.bannerColor || source.banner_color || ''
+  const avatar = source.avatar || source.photo_profil || ''
+
+  return {
+    id: source.id ?? null,
+    name: source.name || 'Profil',
+    score: toNumber(source.score, 0),
+    title: source.title || source.field || '',
+    year: source.year || '',
+    apogee: source.apogee || '',
+    school: source.school || source.etablissement || '',
+    location: source.location || source.city || '',
+    recos: String(source.recos ?? '0'),
+    avatar: resolveBackendAsset(avatar),
+    banner: resolveBackendAsset(source.banner || ''),
+    bannerColor,
+    bio: source.bio || '',
+    email: source.email || '',
+    phone: source.phone || '',
+    website: source.website || '',
+    linkedin: source.linkedin || '',
+    github: source.github || '',
+    isVerified: Boolean(source.isVerified),
+    technicalSkills: Array.isArray(source.technicalSkills) ? source.technicalSkills : [],
+    softSkills: Array.isArray(source.softSkills) ? source.softSkills : [],
+  }
+}
+
+const profile = computed(() => normalizeProfileData(props.profile ?? fetchedProfile.value))
+
+async function loadProfile(userId = props.userId) {
+  if (props.profile) {
+    isLoadingProfile.value = false
+    return
+  }
+
+  const targetUserId = userId == null ? 1 : userId
+  isLoadingProfile.value = true
+  try {
+    apiError.value = ''
+    fetchedProfile.value = await profileService.getProfile(targetUserId)
+  } catch (error) {
+    apiError.value = error instanceof Error ? error.message : 'Erreur serveur'
+    fetchedProfile.value = normalizeProfileData(null)
+  } finally {
+    isLoadingProfile.value = false
+  }
+}
+
+onMounted(() => {
+  void loadProfile(props.userId)
+})
+
+watch(
+  () => props.userId,
+  (nextUserId) => {
+    if (props.profile) return
+    void loadProfile(nextUserId)
+  },
 )
 
-const localBannerStyle = computed(() => {
-  if (localBanner.value) {
-    return { backgroundImage: `url(${localBanner.value})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+const tabList = computed(() => {
+  if (props.tabs?.length) return props.tabs
+  if (props.isOwner) {
+    if (props.profileRole === 'student') return ['Modifier bio', 'Partager']
+    return ['Modifier info', 'Partager']
   }
-  if ((props.profile as any).banner) {
-    return { backgroundImage: `url(${(props.profile as any).banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+
+  return ['Portfolio', 'Recommander', 'Connecter', 'Compétences', 'À propos', 'Partager']
+})
+
+const bannerStyle = computed(() => {
+  if (profile.value.banner) {
+    return {
+      backgroundImage: `url(${profile.value.banner})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }
   }
+
+  if (profile.value.bannerColor) {
+    const solid = hexToRgb(profile.value.bannerColor)
+    return {
+      backgroundImage: `linear-gradient(135deg, ${solid} 0%, ${solid} 100%)`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }
+  }
+
   return {}
 })
 
@@ -388,19 +551,11 @@ function tabClass(tab: string) {
     portfolio: tab === 'Portfolio',
     recommendation: tab === 'Recommander',
     connect: tab === 'Connecter',
-    competances: tab === 'Compétances',
+    competances: tab === 'Compétences',
     about: tab === 'À propos',
     share: tab === 'Partager',
     'modifier-bio': tab === 'Modifier bio' || tab === 'Modifier info',
   }
-}
-
-function previewImage(file: File, callback: (value: string) => void) {
-  const reader = new FileReader()
-  reader.onload = () => {
-    if (typeof reader.result === 'string') callback(reader.result)
-  }
-  reader.readAsDataURL(file)
 }
 
 async function onAvatarChange(e: Event) {
@@ -408,9 +563,6 @@ async function onAvatarChange(e: Event) {
   const file = input.files?.[0]
   if (!file) return
 
-  previewImage(file, (value) => {
-    localAvatar.value = value
-  })
   emit('avatar-selected', file)
   input.value = ''
 }
@@ -420,20 +572,17 @@ async function onBannerChange(e: Event) {
   const file = input.files?.[0]
   if (!file) return
 
-  previewImage(file, (value) => {
-    localBanner.value = value
-  })
   emit('banner-selected', file)
   input.value = ''
 }
 
-const technicalSkills = computed(() => props.profile.technicalSkills ?? [])
-const softSkills = computed(() => props.profile.softSkills ?? [])
+const technicalSkills = computed(() => profile.value.technicalSkills ?? [])
+const softSkills = computed(() => profile.value.softSkills ?? [])
 
 // Liens de Partage Dynamiques
 const profileUrl = computed(() => window.location.href)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
-const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${props.profile.name}`))
+const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${profile.value.name}`))
 
 const gmailShareUrl = computed(() => `mailto:?subject=${encodedShareText.value}&body=${encodedShareText.value}%0A${encodedProfileUrl.value}`)
 const linkedinShareUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodedProfileUrl.value}`)
@@ -444,10 +593,10 @@ const recosPreview = computed(() => props.recentRecommendations?.slice(0, 3) ?? 
 const latestTeacherReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'teacher'))
 const latestProfessionalReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'professional'))
 const latestStudentReco = computed(() => props.recentRecommendations?.find((reco) => reco.role === 'student'))
-const initials = computed(() => getInitials(props.profile.name))
+const initials = computed(() => getInitials(profile.value.name))
 const connectionLabel = computed(() => props.connectionLabel || 'Connecter')
 const recommendationLabel = computed(() => props.recommendationLabel || 'Recommander')
-const showScore = computed(() => props.profileRole === 'student' || !props.profileRole)
+const showScore = computed(() => (props.profileRole === 'student' || !props.profileRole) && profile.value.score > 0)
 const fallbackTab = computed(() => {
   if (tabList.value.includes('Modifier bio')) return 'Portfolio'
   if (tabList.value.includes('Modifier info')) return 'Portfolio'
@@ -455,6 +604,64 @@ const fallbackTab = computed(() => {
   if (tabList.value.includes('À propos')) return 'À propos'
   return tabList.value[0] || ''
 })
+
+
+const toggleInternalSection = (section: 'Compétences' | 'À propos' | 'Partager') => {
+  if (section === 'Compétences') {
+    showCompetances.value = !showCompetances.value
+    showAbout.value = false
+    showShare.value = false
+    return
+  }
+
+  if (section === 'À propos') {
+    showAbout.value = !showAbout.value
+    showCompetances.value = false
+    showShare.value = false
+    return
+  }
+
+  showShare.value = !showShare.value
+  showCompetances.value = false
+  showAbout.value = false
+}
+
+const openProfileEditTab = (tab: 'Modifier bio' | 'Modifier info') => {
+  if (props.modelValue === tab) {
+    emit('update:modelValue', fallbackTab.value)
+    return
+  }
+
+  emit('update:modelValue', tab)
+}
+
+const handleTabClick = (tab: string) => {
+  showContact.value = false
+
+  if (tab === 'Compétences' || tab === 'À propos' || tab === 'Partager') {
+    toggleInternalSection(tab)
+    return
+  }
+
+  if (tab === 'Portfolio') {
+    showCompetances.value = false
+    showAbout.value = false
+    showShare.value = false
+    emit('update:modelValue', 'Portfolio')
+    return
+  }
+
+  if (tab === 'Modifier bio' || tab === 'Modifier info') {
+    openProfileEditTab(tab)
+    return
+  }
+
+  if (props.modelValue === tab) {
+    emit('update:modelValue', fallbackTab.value)
+  } else {
+    emit('update:modelValue', tab)
+  }
+}
 
 function openSkillPopup(skill: SkillItem, type: 'tech' | 'soft') {
   selectedSkill.value = { ...skill, type }
@@ -465,40 +672,6 @@ async function copyProfileLink() {
   await navigator.clipboard.writeText(profileUrl.value)
   copied.value = true
   window.setTimeout(() => { copied.value = false }, 1600)
-}
-
-const handleTabClick = (tab: string) => {
-  showContact.value = false
-  
-  // Fermeture croisée des sections internes du Header
-  showCompetances.value = tab === 'Compétances' ? !showCompetances.value : false
-  showAbout.value = tab === 'À propos' ? !showAbout.value : false
-  showShare.value = tab === 'Partager' ? !showShare.value : false
-
-  if (tab === 'Portfolio') {
-    showCompetances.value = false
-    showAbout.value = false
-    emit('update:modelValue', 'Portfolio')
-    return
-  }
-
-  if (tab === 'Modifier bio' || tab === 'Modifier info') {
-    if (props.modelValue === tab) {
-      emit('update:modelValue', fallbackTab.value)
-    } else {
-      emit('update:modelValue', tab === 'Modifier info' ? 'Modifier info' : 'Modifier bio')
-    }
-    return
-  }
-
-  if (tab === 'Compétances' || tab === 'À propos' || tab === 'Partager') {
-    return
-  }
-  if (props.modelValue === tab) {
-    emit('update:modelValue', fallbackTab.value)
-  } else {
-    emit('update:modelValue', tab)
-  }
 }
 
 function avatarColorClass(name: string) {
@@ -531,6 +704,10 @@ function getInitials(name: string) {
   position: relative;
   margin-bottom: 56px;
   isolation: isolate;
+}
+
+.cover {
+  display: block;
 }
 
 .cover-img {
@@ -604,6 +781,10 @@ function getInitials(name: string) {
   -webkit-backdrop-filter: blur(10px);
 }
 
+.avatar-wrapper {
+  display: block;
+}
+
 .avatar {
   width: 96px;
   height: 96px;
@@ -634,6 +815,18 @@ function getInitials(name: string) {
   padding: 0 24px;
 }
 
+.student-info {
+  display: block;
+}
+
+.cover-student-info {
+  display: none;
+}
+
+.profile-loading-state {
+  padding-bottom: 10px;
+}
+
 .name-row {
   display: flex;
   align-items: center;
@@ -646,6 +839,23 @@ h1 {
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-dark);
+}
+
+.student-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8f5e9;
+  color: #15803d;
+  font-size: .72rem;
+  font-weight: 700;
 }
 
 .score {
@@ -663,6 +873,66 @@ h1 {
   color: var(--text-dark);
   font-size: .82rem;
   margin-bottom: 3px;
+}
+
+.field-badge {
+  font-weight: 700;
+  color: var(--purple);
+}
+
+.student-field {
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.student-school {
+  font-weight: 600;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  color: var(--text-dark);
+  font-size: .78rem;
+  font-weight: 600;
+}
+
+.social-links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 12px;
+}
+
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-neutral);
+  color: var(--purple);
+  font-size: .8rem;
+  font-weight: 700;
+  background: var(--white);
+}
+
+.social-btn:hover {
+  border-color: var(--purple);
+  color: var(--purple-hover);
 }
 
 .contact {
@@ -771,14 +1041,9 @@ h1 {
 .tab.about,
 .tab.share,
 .tab.connect {
+  min-width: 150px;
   border-radius: 180px 100px 100px 0;
 }
-
-.tab.recommendation { min-width: 180px; }
-.tab.demandes { min-width: 170px; }
-.tab.competances { min-width: 170px; }
-.tab.about, .tab.share { min-width: 150px; }
-.tab.connect { min-width: 160px; }
 
 .tab:hover:not(.portfolio) {
   border-color: var(--purple);
@@ -823,6 +1088,10 @@ h1 {
 
 .bio.muted {
   color: var(--text-muted);
+}
+
+.student-bio {
+  line-height: 1.6;
 }
 
 /* Grille des compétences */
@@ -1186,6 +1455,48 @@ h1 {
 .avatar-purple { --avatar-bg: var(--tech-deep-purple); }
 .avatar-slate { --avatar-bg: var(--tech-periwinkle); }
 
+.avatar-initials {
+  font-size: inherit;
+}
+
+.skeleton-block,
+.skeleton-name,
+.skeleton-line {
+  background: linear-gradient(90deg, #eef2f7 25%, #f8fafc 37%, #eef2f7 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 999px;
+}
+
+.skeleton-name {
+  width: 42%;
+  height: 22px;
+  margin: 0 0 12px 24px;
+}
+
+.skeleton-line {
+  width: 56%;
+  height: 12px;
+  margin: 0 0 10px 24px;
+}
+
+.skeleton-line.short {
+  width: 32%;
+}
+
+.skeleton-banner {
+  min-height: 190px;
+}
+
+.skeleton-avatar {
+  background: #e2e8f0;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1303,3 +1614,4 @@ h1 {
 }
 
 </style>
+

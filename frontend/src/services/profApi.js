@@ -33,12 +33,12 @@ export default {
   },
 
   updateValidationStatus(request, status) {
-    const normalizedStatus =
-      status === 'Validé' || status === 'ValidÃ©' || status === 'ValidÃƒÂ©'
-        ? 'VALIDE'
-        : status === 'Refusé' || status === 'RefusÃ©' || status === 'RefusÃƒÂ©'
-          ? 'REFUSE'
-          : 'EN_ATTENTE'
+    let normalizedStatus = 'EN_ATTENTE'
+    if (status === 'Validé') {
+      normalizedStatus = 'VALIDE'
+    } else if (status === 'Refusé') {
+      normalizedStatus = 'REFUSE'
+    }
 
     if (request.type === 'Projet') {
       return api.patch(`/projets/${request.id}/statut`, {
@@ -56,12 +56,12 @@ export default {
   },
 
   updateRecommendationStatus(letterId, status, payload = {}) {
-    const normalizedStatus =
-      status === 'Acceptée' || status === 'AcceptÃ©e' || status === 'AcceptÃƒÂ©e'
-        ? 'REDIGEE'
-        : status === 'Refusée' || status === 'RefusÃ©e' || status === 'RefusÃƒÂ©e'
-          ? 'REFUSEE'
-          : 'EN_ATTENTE'
+    let normalizedStatus = 'EN_ATTENTE'
+    if (status === 'Acceptée') {
+      normalizedStatus = 'REDIGEE'
+    } else if (status === 'Refusée') {
+      normalizedStatus = 'REFUSEE'
+    }
 
     return api.patch(`/lettres/${letterId}/statut`, {
       statut: normalizedStatus,
@@ -74,4 +74,6 @@ export default {
     return api.get('/pro/dashboard')
   }
 }
+
+
 

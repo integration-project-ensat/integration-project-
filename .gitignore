@@ -142,7 +142,10 @@ vite.config.ts.timestamp-*
 
 .vault_pass
 *.vault_pass
+gitlab-sync/.env.gitlab-sync.local
 .vscode
 mkcert.exe
 nginx/ssl/nginx.key
 nginx/ssl/nginx.crt
+frontend/test-results/
+frontend/playwright-report/

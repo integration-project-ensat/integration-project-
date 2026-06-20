@@ -1,6 +1,5 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
 import FilterPanel  from '../components/exploreStudent/FilterPanel.vue'
 import ExploreHeader from '../components/exploreStudent/ExploreHeader.vue'
 import ProfileCard  from '../components/exploreStudent/ProfileCard.vue'
@@ -9,7 +8,17 @@ import SidebarProf  from '../components/exploreProf/SidebarProf.vue'
 import { explorerProfils, type ProfilExplore } from '../services/profilApi'
 import { mapExploreProfileCard } from '../utils/exploreProfileCard'
 
-// ─── State ────────────────────────────────────
+type ExploreFilterState = {
+  filiere: string
+  ville: string
+  year: number | undefined
+  school: string
+  competences: string[]
+  score: number | undefined
+  recommandations: boolean
+}
+
+// â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const searchQuery = ref('')
 const sidebarOpen = ref(true)
 const loading     = ref(false)
@@ -17,15 +26,17 @@ const error       = ref<string | null>(null)
 const profiles    = ref<ProfilExplore[]>([])
 const pagination  = ref({ total: 0, page: 1, limit: 10, pages: 1 })
 
-const filters = ref({
+const filters = ref<ExploreFilterState>({
   filiere:         '',
   ville:           '',
+  year:            undefined as number | undefined,
+  school:          '',
   competences:     [] as string[],
   score:           undefined as number | undefined,
   recommandations: false
 })
 
-// ─── Charger les profils ──────────────────────
+// â”€â”€â”€ Charger les profils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const chargerProfils = async () => {
   loading.value = true
   error.value   = null
@@ -34,6 +45,8 @@ const chargerProfils = async () => {
       search:          searchQuery.value || undefined,
       filiere:         filters.value.filiere         || undefined,
       ville:           filters.value.ville           || undefined,
+      year:            filters.value.year            || undefined,
+      school:          filters.value.school          || undefined,
       competences:     filters.value.competences.length ? filters.value.competences : undefined,
       score:           filters.value.score           || undefined,
       recommandations: filters.value.recommandations || undefined,
@@ -49,11 +62,15 @@ const chargerProfils = async () => {
   }
 }
 
-// ─── Debounce recherche ───────────────────────
-const debouncedSearch = useDebounceFn(() => {
-  pagination.value.page = 1
-  chargerProfils()
-}, 400)
+// â”€â”€â”€ Debounce recherche â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let searchDebounceTimer: number | undefined
+const debouncedSearch = () => {
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = window.setTimeout(() => {
+    pagination.value.page = 1
+    chargerProfils()
+  }, 400)
+}
 
 watch(searchQuery, debouncedSearch)
 watch(filters, () => {
@@ -63,13 +80,13 @@ watch(filters, () => {
 
 onMounted(chargerProfils)
 
-// ─── Pagination ───────────────────────────────
+// â”€â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const changerPage = (page: number) => {
   pagination.value.page = page
   chargerProfils()
 }
 
-// ─── Adapter le profil pour ProfileCard ───────
+// â”€â”€â”€ Adapter le profil pour ProfileCard â”€â”€â”€â”€â”€â”€â”€
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'prof')
 
 const handleUpdateFilters = (
@@ -77,7 +94,17 @@ const handleUpdateFilters = (
 ) => {
   filters.value = {
     ...filters.value,
-    ...next
+    filiere: String(next.filiere ?? next.field ?? filters.value.filiere ?? ''),
+    ville: String(next.ville ?? next.city ?? filters.value.ville ?? ''),
+    year: next.year ?? filters.value.year,
+    school: String(next.school ?? next.university ?? next.universite ?? next.etablissement ?? filters.value.school ?? ''),
+    competences: Array.isArray(next.competences)
+      ? next.competences
+      : Array.isArray(next.skills)
+        ? next.skills
+        : filters.value.competences,
+    score: typeof next.score === 'number' ? next.score : filters.value.score,
+    recommandations: Boolean(next.recommandations ?? next.recommendations ?? filters.value.recommandations)
   }
 }
 </script>
@@ -103,9 +130,9 @@ const handleUpdateFilters = (
               {{ error }}
             </div>
 
-            <!-- Aucun résultat -->
+            <!-- Aucun rÃ©sultat -->
             <div v-else-if="profiles.length === 0" class="explore-state">
-              Aucun profil trouvé
+              Aucun profil trouvÃ©
             </div>
 
             <!-- Liste -->
@@ -216,3 +243,4 @@ const handleUpdateFilters = (
 }
 .page-btn.active { background: var(--violet); color: var(--white); border-color: var(--violet); }
 </style>
+

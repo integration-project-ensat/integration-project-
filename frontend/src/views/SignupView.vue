@@ -43,6 +43,13 @@
             </ul>
           </div>
 
+          <select v-model="form.role" class="role-select" aria-label="Rôle">
+            <option value="">Choisir un rôle</option>
+            <option v-for="role in roles" :key="role.value" :value="role.value">
+              {{ role.label }}
+            </option>
+          </select>
+
           <button type="submit" class="btn" :disabled="loading">
             <span v-if="!loading">S'inscrire</span>
             <span v-else class="spin" />
@@ -239,6 +246,17 @@ form {
 .row {
   display: flex;
   gap: 12px;
+}
+
+.role-select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 input {

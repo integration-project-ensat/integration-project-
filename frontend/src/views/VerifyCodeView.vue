@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import authService from '@/services/auth.service.js'
 import { useAuthStore } from '@/store/auth.js'
 
@@ -81,7 +82,14 @@ const getApiErrorMessage = (e: unknown, fallback: string) => {
 
 const router   = useRouter()
 const route    = useRoute()
-const auth     = useAuthStore()
+const auth     = (() => {
+  const activePinia = getActivePinia()
+  if (activePinia) return useAuthStore()
+
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  return useAuthStore(pinia)
+})()
 const email    = route.query.email as string || ''
 const error    = ref('')
 const success  = ref('')

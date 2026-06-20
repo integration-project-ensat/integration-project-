@@ -1,11 +1,13 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth.js'
 import TopBar from '../components/TopBar.vue'
 import SideBar from '../components/exploreStudent/Sidebar.vue'
 import { profileService } from '../services/profile.service'
 
 const router = useRouter()
+const auth = useAuthStore()
 const sidebarOpen = ref(false)
 type ProfileRole = 'student' | 'teacher' | 'professional'
 const profileRole = ref<ProfileRole>('student')
@@ -62,6 +64,34 @@ function applyBackendProfile(data: any) {
   profile.github = data?.github || ''
   profile.avatar = data?.avatar || null
   profile.banner = data?.banner || null
+}
+
+function syncCurrentUserAssets(avatar: string | null, banner: string | null) {
+  if (auth.user) {
+    const currentUser = auth.user as Record<string, any>
+    auth.user = {
+      ...currentUser,
+      avatar: avatar || currentUser.avatar || '',
+      banner: banner || currentUser.banner || ''
+    }
+  }
+
+  const storedUser = localStorage.getItem('user')
+  if (!storedUser) return
+
+  try {
+    const parsed = JSON.parse(storedUser)
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        ...parsed,
+        avatar: avatar || parsed.avatar || '',
+        banner: banner || parsed.banner || ''
+      })
+    )
+  } catch {
+    // Ignore malformed session payloads and keep the current in-memory state.
+  }
 }
 
 function normalizeProfileRole(roleRaw: unknown): ProfileRole {
@@ -236,55 +266,55 @@ const langueForm = reactive({ nom: '', niveau: 'Intermédiaire' })
 
 // ──────────────────────────────────────────────
 // Avatar / Banner upload
-// ──────────────────────────────────────────────
-function onAvatarChange(e: Event) {
+// --------------------------------------------------
+async function deleteAvatarPhoto() {
+  try {
+    await profileService.deleteAvatar()
+    profile.avatar = null
+    await loadProfile()
+    syncCurrentUserAssets(profile.avatar, profile.banner)
+    showToast('Photo supprimée', 'success')
+  } catch (error) {
+    console.warn("Erreur lors de la suppression de la photo", error)
+    showToast("Erreur lors de la suppression de la photo", 'error')
+  }
+}
+
+async function onAvatarChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
-  let settled = false
-  const reader = new FileReader()
-  reader.onload = ev => {
-    if (!settled) profile.avatar = ev.target?.result as string
-  }
-  reader.readAsDataURL(file)
-  showToast("Upload de la photo...", 'success')
-  profileService.uploadAvatar(profile.id, file).then(photoUrl => {
-    settled = true
-    if (photoUrl) {
-      profile.avatar = photoUrl
-      showToast('Photo enregistrée', 'success')
-    } else {
-      showToast("Erreur : l'URL retournée est vide", 'error')
-    }
-  }).catch(error => {
-    settled = true
+
+  showToast('Upload de la photo...', 'success')
+  try {
+    const photoUrl = await profileService.uploadAvatar(profile.id, file)
+    if (!photoUrl) throw new Error("L'URL retournée est vide")
+    profile.avatar = photoUrl
+    await loadProfile()
+    syncCurrentUserAssets(profile.avatar, profile.banner)
+    showToast('Photo enregistrée', 'success')
+  } catch (error) {
     console.warn("Erreur lors de l'upload de la photo", error)
     showToast("Erreur lors de l'upload de la photo", 'error')
-  })
+  }
 }
 
-function onBannerChange(e: Event) {
+async function onBannerChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
-  let settled = false
-  const reader = new FileReader()
-  reader.onload = ev => { if (!settled) profile.banner = ev.target?.result as string }
-  reader.readAsDataURL(file)
-  showToast("Upload de la bannière...", 'success')
-  profileService.uploadBanner(profile.id, file).then(photoUrl => {
-    settled = true
-    if (photoUrl) {
-      profile.banner = photoUrl
-      showToast('Bannière enregistrée', 'success')
-    } else {
-      showToast("Erreur : l'URL retournée est vide", 'error')
-    }
-  }).catch(error => {
-    settled = true
+
+  showToast('Upload de la bannière...', 'success')
+  try {
+    const photoUrl = await profileService.uploadBanner(profile.id, file)
+    if (!photoUrl) throw new Error("L'URL retournée est vide")
+    profile.banner = photoUrl
+    await loadProfile()
+    syncCurrentUserAssets(profile.avatar, profile.banner)
+    showToast('Bannière enregistrée', 'success')
+  } catch (error) {
     console.warn("Erreur lors de l'upload de la bannière", error)
     showToast("Erreur lors de l'upload de la bannière", 'error')
-  })
+  }
 }
-
 const bannerStyle = computed(() =>
   profile.banner
     ? { backgroundImage: `url(${profile.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
@@ -309,6 +339,8 @@ async function saveInfo() {
   try {
     Object.assign(profile, infoForm)
     await persistProfile({
+      name: infoForm.name,
+      title: infoForm.title,
       adresse: infoForm.location,
       etablissement: infoForm.school,
     })
@@ -356,9 +388,17 @@ function openEditSkills() {
   skillsForm.newSoft = ''
   editingSkills.value = true
 }
-function addTech() { const v = skillsForm.newTech.trim(); if (v && !skillsForm.tech.includes(v)) skillsForm.tech.push(v); skillsForm.newTech = '' }
+function addTech() {
+  const v = skillsForm.newTech.trim()
+  if (v && !skillsForm.tech.includes(v)) { skillsForm.tech.push(v) }
+  skillsForm.newTech = ''
+}
 function removeTech(i: number) { skillsForm.tech.splice(i, 1) }
-function addSoft() { const v = skillsForm.newSoft.trim(); if (v && !skillsForm.soft.includes(v)) skillsForm.soft.push(v); skillsForm.newSoft = '' }
+function addSoft() {
+  const v = skillsForm.newSoft.trim()
+  if (v && !skillsForm.soft.includes(v)) { skillsForm.soft.push(v) }
+  skillsForm.newSoft = ''
+}
 function removeSoft(i: number) { skillsForm.soft.splice(i, 1) }
 function saveSkills() { techSkills.value = [...skillsForm.tech]; softSkills.value = [...skillsForm.soft]; editingSkills.value = false; showToast('Compétences enregistrées') }
 
@@ -395,34 +435,28 @@ function openEditEntry(section: ModalSection, id: number) {
   }
 }
 
-function saveEntry() {
+function upsertEntry<T extends { id: number }>(list: { value: T[] }, editId: number | null, form: Omit<T, 'id'>) {
   const now = Date.now()
+  if (editId) {
+    const idx = list.value.findIndex(x => x.id === editId)
+    if (idx !== -1) { list.value[idx] = { id: editId, ...form } as T }
+  } else {
+    list.value.unshift({ id: now, ...form } as T)
+  }
+}
+
+function saveEntry() {
   if (activeModal.value === 'experience') {
-    if (editingEntryId.value) {
-      const idx = experiences.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) experiences.value[idx] = { id: editingEntryId.value, ...expForm }
-    } else { experiences.value.unshift({ id: now, ...expForm }) }
+    upsertEntry(experiences, editingEntryId.value, expForm)
     showToast('Expérience enregistrée')
-  }
-  if (activeModal.value === 'formation') {
-    if (editingEntryId.value) {
-      const idx = formations.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) formations.value[idx] = { id: editingEntryId.value, ...formForm }
-    } else { formations.value.unshift({ id: now, ...formForm }) }
+  } else if (activeModal.value === 'formation') {
+    upsertEntry(formations, editingEntryId.value, formForm)
     showToast('Formation enregistrée')
-  }
-  if (activeModal.value === 'certification') {
-    if (editingEntryId.value) {
-      const idx = certifications.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) certifications.value[idx] = { id: editingEntryId.value, ...certForm }
-    } else { certifications.value.unshift({ id: now, ...certForm }) }
+  } else if (activeModal.value === 'certification') {
+    upsertEntry(certifications, editingEntryId.value, certForm)
     showToast('Certification enregistrée')
-  }
-  if (activeModal.value === 'langue') {
-    if (editingEntryId.value) {
-      const idx = langues.value.findIndex(x => x.id === editingEntryId.value)
-      if (idx !== -1) langues.value[idx] = { id: editingEntryId.value, ...langueForm }
-    } else { langues.value.unshift({ id: now, ...langueForm }) }
+  } else if (activeModal.value === 'langue') {
+    upsertEntry(langues, editingEntryId.value, langueForm)
     showToast('Langue enregistrée')
   }
   activeModal.value = null
@@ -486,7 +520,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
             </div>
 
             <div class="cover-actions">
-              <button v-if="profile.avatar" class="btn-sm danger" @click="profile.avatar = null">Supprimer la photo</button>
+              <button v-if="profile.avatar" class="btn-sm danger" @click="deleteAvatarPhoto">Supprimer la photo</button>
               <button class="btn-sm outline" @click="router.push('/profile')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 Voir le profil
@@ -786,7 +820,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
         </div>
 
         <!-- ══ RECOMMANDATIONS ════════════════════════════════ -->
-        <div class="section-card">
+        <div v-if="false" class="section-card">
           <div class="section-head">
             <h2>Recommandations</h2>
           </div>
@@ -1037,6 +1071,7 @@ const niveaux = ['Débutant', 'Intermédiaire', 'Avancé', 'Courant', 'Natif', '
 
 /* ── Section cards ── */
 .section-card { padding: 22px 24px; }
+.section-card:last-of-type { display: none; }
 
 .section-head {
   display: flex;

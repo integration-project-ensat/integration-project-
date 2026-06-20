@@ -159,65 +159,81 @@ const isSelected = (key: SectionKey, option: string | number) => {
   return (f.recommendations ?? f.recommandations) === option;
 };
 
+const emitFilters = (next: Record<string, any>) => {
+  emit("update:filters", next);
+};
+
+const toggleStringField = (
+  source: Record<string, any>,
+  keys: [string, string | undefined],
+  option: string,
+) => {
+  const [primaryKey, aliasKey] = keys;
+  const currentValue = source[primaryKey] ?? (aliasKey ? source[aliasKey] : "") ?? "";
+  const nextValue = currentValue === option ? "" : option;
+  const next = { ...source, [primaryKey]: nextValue };
+
+  if (aliasKey && source[aliasKey] !== undefined) {
+    next[aliasKey] = nextValue;
+  }
+
+  emitFilters(next);
+};
+
+const toggleNumberField = (
+  source: Record<string, any>,
+  key: string,
+  option: number,
+) => {
+  const nextValue = source[key] === option ? "" : option;
+  emitFilters({ ...source, [key]: nextValue });
+};
+
+const toggleSkills = (source: Record<string, any>, option: string) => {
+  const currentSkills: string[] = source.skills ?? source.competences ?? [];
+  const nextSkills = currentSkills.includes(option)
+    ? currentSkills.filter((skill) => skill !== option)
+    : [...currentSkills, option];
+
+  if (source.competences !== undefined) {
+    emitFilters({ ...source, competences: nextSkills });
+    return;
+  }
+
+  emitFilters({ ...source, skills: nextSkills });
+};
+
 const toggleOption = (key: SectionKey, option: string | number) => {
   const f: Record<string, any> = props.filters || {};
 
   if (key === "skills") {
-    const value = String(option);
-    const currentSkills: string[] = f.skills ?? f.competences ?? [];
-    const nextSkills = Array.isArray(currentSkills) && currentSkills.includes(value)
-      ? currentSkills.filter((s) => s !== value)
-      : [...(Array.isArray(currentSkills) ? currentSkills : []), value];
-
-    // Preserve parent's property name if using French key
-    if (f.competences !== undefined) {
-      emit("update:filters", { ...f, competences: nextSkills });
-    } else {
-      emit("update:filters", { ...f, skills: nextSkills });
-    }
+    toggleSkills(f, String(option));
     return;
   }
 
   if (key === "year") {
-    const nextValue = f.year === Number(option) ? "" : Number(option);
-    emit("update:filters", { ...f, year: nextValue });
+    toggleNumberField(f, "year", Number(option));
     return;
   }
 
   if (key === "school") {
-    const nextValue = f.school === String(option) ? "" : String(option);
-    emit("update:filters", { ...f, school: nextValue });
+    toggleStringField(f, ["school", undefined], String(option));
     return;
   }
 
   if (key === "field") {
-    const currentValue = f.field ?? f.filiere ?? "";
-    const nextValue = currentValue === String(option) ? "" : String(option);
-
-    if (f.filiere !== undefined) {
-      emit("update:filters", { ...f, filiere: nextValue });
-    } else {
-      emit("update:filters", { ...f, field: nextValue });
-    }
+    toggleStringField(f, ["field", "filiere"], String(option));
     return;
   }
 
   if (key === "city") {
-    const currentValue = f.city ?? f.ville ?? "";
-    const nextValue = currentValue === String(option) ? "" : String(option);
-
-    if (f.ville !== undefined) {
-      emit("update:filters", { ...f, ville: nextValue });
-    } else {
-      emit("update:filters", { ...f, city: nextValue });
-    }
+    toggleStringField(f, ["city", "ville"], String(option));
     return;
   }
 
   if (key === "score") {
-    const currentValue = String(f.score ?? "");
-    const nextValue = currentValue === String(option) ? undefined : String(option);
-    emit("update:filters", { ...f, score: nextValue });
+    const nextValue = String(f.score ?? "") === String(option) ? undefined : String(option);
+    emitFilters({ ...f, score: nextValue });
     return;
   }
 
@@ -225,10 +241,11 @@ const toggleOption = (key: SectionKey, option: string | number) => {
   const nextValue = currentValue === String(option) ? "" : String(option);
 
   if (f.recommandations !== undefined) {
-    emit("update:filters", { ...f, recommandations: nextValue });
-  } else {
-    emit("update:filters", { ...f, recommendations: nextValue });
+    emitFilters({ ...f, recommandations: nextValue });
+    return;
   }
+
+  emitFilters({ ...f, recommendations: nextValue });
 };
 
 const visibleCounts = ref<Record<string, number>>({});

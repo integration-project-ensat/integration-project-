@@ -205,6 +205,7 @@ import { attestationService }    from "../services/attestation.service";
 import { projetService }         from "../services/projet.service";
 import { activiteService }       from "../services/activite.service";
 import { stageService }          from "../services/stage.service";
+import { resolveBackendAsset }   from "../utils/backendAsset";
 
 const showTemplateModal = ref(false);
 const templates = ref<Array<{ id_modele: number; nom: string }>>([]);
@@ -324,12 +325,6 @@ function scrollToSection(id: SectionId) {
   const targetTop =
     window.scrollY + element.getBoundingClientRect().top - headerOffset;
   window.scrollTo({ top: Math.max(targetTop, 0), behavior: "smooth" });
-}
-function resolveBackendAsset(path: string|null|undefined) {
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  const base = import.meta.env.VITE_API_BASE_URL || "/api";
-  return `${base.replace(/\/api\/?$/,"")}${path}`;
 }
 function inferGithubUrl(...sources: Array<string|null|undefined>) {
   for (const s of sources) {

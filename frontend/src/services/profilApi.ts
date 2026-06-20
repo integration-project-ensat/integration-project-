@@ -5,6 +5,8 @@ export interface ExploreFilters {
   search?:          string
   filiere?:         string
   ville?:           string
+  year?:            number
+  school?:          string
   competences?:     string | string[]
   score?:           number
   recommandations?: boolean

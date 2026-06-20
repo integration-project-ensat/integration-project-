@@ -17,6 +17,8 @@ services:
       "
     expose:
       - "3000"
+    volumes:
+      - backend_uploads:/app/uploads
     env_file:
       - ./.env
     environment:
@@ -33,12 +35,20 @@ services:
       keycloak:
         condition: service_started
       ai-service:
-        condition: service_started
+        condition: service_healthy
+
   ai-service:
     image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-ai:latest
     expose:
       - "8000"
     command: sh -c "python train_model.py && uvicorn app:app --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   postgres:
     image: postgres:15-alpine
     restart: always
@@ -81,3 +91,4 @@ services:
       - backend
 volumes:
   postgres-data:
+  backend_uploads:

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="page">
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
@@ -21,7 +21,7 @@
 
       <main class="content" :class="{ shifted: sidebarOpen }">
 
-        <!-- État chargement / erreur -->
+        <!-- Ã‰tat chargement / erreur -->
         <div v-if="profileLoading" class="page-state">
           Chargement du profil...
         </div>
@@ -65,13 +65,13 @@
               </div>
               <div class="connection-actions">
                 <template v-if="connectionStatus.isConnected">
-                  <button type="button" class="connect-btn connected" disabled>Déjà connecté</button>
+                  <button type="button" class="connect-btn connected" disabled>DÃ©jà connectÃ©</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="removeConnection">
                     {{ connectionLoading ? 'Traitement...' : 'Supprimer' }}
                   </button>
                 </template>
                 <template v-else-if="connectionStatus.requestSent">
-                  <button type="button" class="connect-btn pending" disabled>Demande envoyée</button>
+                  <button type="button" class="connect-btn pending" disabled>Demande envoyÃ©e</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="cancelConnectionRequest">
                     {{ connectionLoading ? 'Traitement...' : 'Annuler' }}
                   </button>
@@ -93,12 +93,12 @@
             </div>
           </section>
 
-          <!-- Action enseignant : attacher l'étudiant -->
+          <!-- Action enseignant : attacher l'Ã©tudiant -->
           <section v-if="canAttachStudent" class="teacher-actions">
             <div class="teacher-actions__content">
               <div>
-                <h3>Ajouter cet étudiant</h3>
-                <p>Ajoutez cet étudiant à votre liste pour pouvoir valider ses demandes.</p>
+                <h3>Ajouter cet Ã©tudiant</h3>
+                <p>Ajoutez cet Ã©tudiant à votre liste pour pouvoir valider ses demandes.</p>
               </div>
               <button
                 type="button"
@@ -110,8 +110,8 @@
                   attachingStudent
                     ? 'Ajout...'
                     : studentAttached
-                      ? 'Déjà ajouté'
-                      : 'Ajouter à mes étudiants'
+                      ? 'DÃ©jà ajoutÃ©'
+                      : 'Ajouter à mes Ã©tudiants'
                 }}
               </button>
             </div>
@@ -138,17 +138,17 @@
               <div class="post-composer__head">
                 <div>
                   <h3>Publier un post</h3>
-                  <p>Partagez une actualité, une expertise ou une opportunité avec votre réseau.</p>
+                  <p>Partagez une actualitÃ©, une expertise ou une opportunitÃ© avec votre rÃ©seau.</p>
                 </div>
                 <span class="post-composer__badge">{{ viewedProfileLabel }}</span>
               </div>
               <textarea
                 v-model="newPostForm.content"
                 class="bio-textarea"
-                placeholder="Écrivez votre publication..."
+                placeholder="Ã‰crivez votre publication..."
               />
               <div v-if="newPostForm.imagePreview" class="composer-preview">
-                <img :src="newPostForm.imagePreview" alt="Aperçu du post" />
+                <img :src="newPostForm.imagePreview" alt="AperÃ§u du post" />
                 <button type="button" class="remove-photo-btn" @click="clearNewPostImage">
                   Supprimer l'image
                 </button>
@@ -345,20 +345,61 @@
           <!-- Tab : Modifier bio (profil etudiant) -->
           <section v-if="activeTab === 'Modifier bio' && isStudentProfile" class="profile-edit-sections">
 
-            <!-- À propos -->
+            <!-- Informations personnelles -->
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>À propos</h3>
+                <h3>Informations personnelles</h3>
+                <button v-if="!editingInfo" type="button" class="btn-modifier" @click="openEditInfo">Modifier</button>
+              </div>
+              <template v-if="!editingInfo">
+                <div class="role-overview role-overview--edit">
+                  <article class="role-overview-card">
+                    <span>Nom complet</span>
+                    <strong>{{ profile.name || 'Non renseignÃ©' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Titre</span>
+                    <strong>{{ profile.title || 'Non renseignÃ©' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Ã‰tablissement</span>
+                    <strong>{{ profile.school || 'Non renseignÃ©' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Ville</span>
+                    <strong>{{ profile.location || 'Non renseignÃ©e' }}</strong>
+                  </article>
+                </div>
+              </template>
+              <template v-else>
+                <div class="contact-form">
+                  <div class="form-field"><label>Nom complet</label><input v-model="infoForm.name" type="text" placeholder="Nom PrÃ©nom" /></div>
+                  <div class="form-field"><label>Titre</label><input v-model="infoForm.title" type="text" placeholder="Ex: GÃ©nie Informatique" /></div>
+                  <div class="form-field"><label>Ã‰tablissement</label><input v-model="infoForm.school" type="text" placeholder="ENSA Tanger" /></div>
+                  <div class="form-field"><label>Ville</label><input v-model="infoForm.location" type="text" placeholder="Tanger" /></div>
+                </div>
+                <div class="pedit-row-actions">
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveInfo">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
+                  <button type="button" class="cancel-btn" @click="cancelInfo">Annuler</button>
+                </div>
+              </template>
+            </div>
+
+            <!-- Ã€ propos -->
+            <div class="pedit-card">
+              <div class="pedit-head">
+                <h3>Ã€ propos</h3>
                 <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Modifier
                 </button>
               </div>
               <template v-if="!editingAbout">
-                <p class="pedit-bio-text">{{ profile.bio || 'Aucune biographie renseignée.' }}</p>
+                <p class="pedit-bio-text">{{ profile.bio || 'Aucune biographie renseignÃ©e.' }}</p>
               </template>
               <template v-else>
-                <textarea v-model="bioForm" class="bio-textarea" placeholder="Décrivez-vous en quelques mots..." />
+                <textarea v-model="bioForm" class="bio-textarea" placeholder="DÃ©crivez-vous en quelques mots..." />
                 <div class="pedit-row-actions">
                   <button type="button" class="send-btn" :disabled="savingProfile" @click="saveBio">
                     {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
@@ -404,7 +445,7 @@
               <template v-else>
                 <div class="contact-form">
                   <div class="form-field"><label>Email</label><input v-model="contactForm.email" type="email" placeholder="exemple@univ.ac.ma" /></div>
-                  <div class="form-field"><label>Téléphone</label><input v-model="contactForm.phone" type="tel" placeholder="+212 6 00 00 00 00" /></div>
+                  <div class="form-field"><label>TÃ©lÃ©phone</label><input v-model="contactForm.phone" type="tel" placeholder="+212 6 00 00 00 00" /></div>
                   <div class="form-field"><label>Site web</label><input v-model="contactForm.website" type="url" placeholder="https://portfolio.example.com" /></div>
                   <div class="form-field"><label>LinkedIn</label><input v-model="contactForm.linkedin" type="url" placeholder="https://linkedin.com/in/..." /></div>
                   <div class="form-field"><label>GitHub</label><input v-model="contactForm.github" type="url" placeholder="https://github.com/..." /></div>
@@ -418,10 +459,10 @@
               </template>
             </div>
 
-            <!-- Compétences -->
+            <!-- CompÃ©tences -->
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>Compétences</h3>
+                <h3>CompÃ©tences</h3>
                 <button v-if="!editingSkills && isStudentProfile" type="button" class="btn-modifier" @click="openEditSkills">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Modifier
@@ -446,11 +487,11 @@
                   <p class="skills-label">Techniques</p>
                   <div class="skills-chips editable">
                     <span v-for="(s, i) in skillForms.tech" :key="i" class="skill-chip tech editable">
-                      {{ s }}<button type="button" @click="skillForms.tech.splice(i, 1)">×</button>
+                      {{ s }}<button type="button" @click="skillForms.tech.splice(i, 1)">Ã—</button>
                     </span>
                   </div>
                   <div class="skill-add-row">
-                    <input v-model="skillForms.newTech" placeholder="Ajouter une compétence..." @keyup.enter="addTechSkill" />
+                    <input v-model="skillForms.newTech" placeholder="Ajouter une compÃ©tence..." @keyup.enter="addTechSkill" />
                     <button type="button" class="btn-add-skill" @click="addTechSkill">+</button>
                   </div>
                 </div>
@@ -458,11 +499,11 @@
                   <p class="skills-label">Comportementales</p>
                   <div class="skills-chips editable">
                     <span v-for="(s, i) in skillForms.soft" :key="i" class="skill-chip soft editable">
-                      {{ s }}<button type="button" @click="skillForms.soft.splice(i, 1)">×</button>
+                      {{ s }}<button type="button" @click="skillForms.soft.splice(i, 1)">Ã—</button>
                     </span>
                   </div>
                   <div class="skill-add-row">
-                    <input v-model="skillForms.newSoft" placeholder="Ajouter une compétence..." @keyup.enter="addSoftSkill" />
+                    <input v-model="skillForms.newSoft" placeholder="Ajouter une compÃ©tence..." @keyup.enter="addSoftSkill" />
                     <button type="button" class="btn-add-skill" @click="addSoftSkill">+</button>
                   </div>
                 </div>
@@ -473,10 +514,10 @@
               </template>
             </div>
 
-            <!-- Expériences professionnelles -->
+            <!-- ExpÃ©riences professionnelles -->
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>Expériences professionnelles</h3>
+                <h3>ExpÃ©riences professionnelles</h3>
                 <button type="button" class="btn-add-entry" @click="openAddEntry('exp')">+ Ajouter</button>
               </div>
               <div v-for="exp in experiences" :key="exp.id" class="entry-item">
@@ -486,7 +527,7 @@
                     <div>
                       <strong>{{ exp.poste }}</strong>
                       <p class="entry-sub">{{ exp.entreprise }}</p>
-                      <p class="entry-date">{{ exp.debut }} - {{ exp.fin }}</p>
+                      <p class="entry-date">{{ exp.debut }} â€” {{ exp.fin }}</p>
                       <p v-if="exp.description" class="entry-desc">{{ exp.description }}</p>
                     </div>
                     <div class="entry-actions">
@@ -515,7 +556,7 @@
                     <div>
                       <strong>{{ f.diplome }}</strong>
                       <p class="entry-sub">{{ f.etablissement }}</p>
-                      <p class="entry-date">{{ f.debut }} - {{ f.fin }}</p>
+                      <p class="entry-date">{{ f.debut }} â€” {{ f.fin }}</p>
                     </div>
                     <div class="entry-actions">
                       <button type="button" class="icon-btn" @click="openEditEntry('form', f.id)" title="Modifier">
@@ -579,29 +620,6 @@
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Recommandations (lecture seule) -->
-            <div class="pedit-card">
-              <div class="pedit-head"><h3>Recommandations</h3></div>
-              <div class="recommendations-list">
-                <article v-for="r in recommendations" :key="r.id" class="recommendation-card">
-                  <div class="mini-avatar">
-                    <img v-if="r.avatar" :src="r.avatar" alt="" />
-                    <span v-else>{{ getInitials(r.author) }}</span>
-                  </div>
-                  <div class="recommendation-content">
-                    <div class="recommendation-head">
-                      <div>
-                        <h4>{{ r.author }}</h4>
-                        <p>{{ r.role === 'teacher' ? 'Professeur' : 'Professionnel' }}</p>
-                      </div>
-                      <span>{{ r.date }}</span>
-                    </div>
-                    <p class="recommendation-message">{{ r.message || 'Recommandation sans commentaire.' }}</p>
-                  </div>
-                </article>
               </div>
             </div>
 
@@ -744,7 +762,7 @@
                 <textarea
                   v-model="recommendationMessage"
                   class="bio-textarea"
-                  placeholder="Écrivez votre recommandation..."
+                  placeholder="Ã‰crivez votre recommandation..."
                 />
                 <div class="share-actions">
                   <button type="button" class="send-btn" @click="sendRecommendation">
@@ -763,12 +781,12 @@
                       <option value="MASTER">Master</option>
                       <option value="EMPLOI">Emploi</option>
                       <option value="STAGE">Stage</option>
-                      <option value="DOUBLE_DIPLOME">Double diplôme</option>
+                      <option value="DOUBLE_DIPLOME">Double diplÃ´me</option>
                       <option value="INTERNATIONAL">International</option>
                     </select>
                   </div>
                   <div class="form-field">
-                    <label>Date souhaitée</label>
+                    <label>Date souhaitÃ©e</label>
                     <input v-model="letterRequestForm.date_souhaitee" type="date" />
                   </div>
                 </div>
@@ -804,13 +822,13 @@
               </div>
               <div class="connection-actions">
                 <template v-if="connectionStatus.isConnected">
-                  <button type="button" class="connect-btn connected" disabled>Déjà connecté</button>
+                  <button type="button" class="connect-btn connected" disabled>DÃ©jà connectÃ©</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="removeConnection">
                     Retirer la connexion
                   </button>
                 </template>
                 <template v-else-if="connectionStatus.requestSent">
-                  <button type="button" class="connect-btn pending" disabled>Demande envoyée</button>
+                  <button type="button" class="connect-btn pending" disabled>Demande envoyÃ©e</button>
                   <button type="button" class="connect-btn danger" :disabled="connectionLoading" @click="cancelConnectionRequest">
                     Annuler la demande
                   </button>
@@ -837,12 +855,12 @@
             <div class="share-card">
               <div>
                 <h3>Partager ce profil</h3>
-                <p>Copiez le lien ou partagez directement avec votre réseau.</p>
+                <p>Copiez le lien ou partagez directement avec votre rÃ©seau.</p>
               </div>
               <div class="link-box">
                 <span>{{ profileUrl }}</span>
                 <button type="button" @click="copyProfileLink">
-                  {{ copied ? 'Copié' : 'Copier' }}
+                  {{ copied ? 'CopiÃ©' : 'Copier' }}
                 </button>
               </div>
               <div class="share-actions">
@@ -858,28 +876,28 @@
       </main>
     </div>
 
-    <!-- Modal CRUD entrées (exp, form, cert, langue) -->
+    <!-- Modal CRUD entrÃ©es (exp, form, cert, langue) -->
     <div v-if="activeEntryModal" class="modal-backdrop" @click.self="activeEntryModal = null">
       <div class="entry-modal">
         <div class="modal-head">
           <h3>{{ editingEntryId !== null ? 'Modifier' : 'Ajouter' }} {{ entryModalTitle }}</h3>
-          <button type="button" @click="activeEntryModal = null">×</button>
+          <button type="button" @click="activeEntryModal = null">Ã—</button>
         </div>
         <div class="entry-modal-body">
           <template v-if="activeEntryModal === 'exp'">
-            <div class="form-field"><label>Poste</label><input v-model="expForm.poste" placeholder="Développeur Full Stack" /></div>
+            <div class="form-field"><label>Poste</label><input v-model="expForm.poste" placeholder="DÃ©veloppeur Full Stack" /></div>
             <div class="form-field"><label>Entreprise</label><input v-model="expForm.entreprise" placeholder="Nom de l'entreprise" /></div>
             <div class="form-field-row">
-              <div class="form-field"><label>Début</label><input v-model="expForm.debut" placeholder="2024-01" /></div>
+              <div class="form-field"><label>DÃ©but</label><input v-model="expForm.debut" placeholder="2024-01" /></div>
               <div class="form-field"><label>Fin</label><input v-model="expForm.fin" placeholder="2024-06 ou En cours" /></div>
             </div>
             <div class="form-field"><label>Description</label><textarea v-model="expForm.description" placeholder="Description du poste..." /></div>
           </template>
           <template v-if="activeEntryModal === 'form'">
-            <div class="form-field"><label>Diplôme</label><input v-model="formForm.diplome" placeholder="Ingénierie Informatique" /></div>
-            <div class="form-field"><label>Établissement</label><input v-model="formForm.etablissement" placeholder="Nom de l'école" /></div>
+            <div class="form-field"><label>DiplÃ´me</label><input v-model="formForm.diplome" placeholder="IngÃ©nierie Informatique" /></div>
+            <div class="form-field"><label>Ã‰tablissement</label><input v-model="formForm.etablissement" placeholder="Nom de l'Ã©cole" /></div>
             <div class="form-field-row">
-              <div class="form-field"><label>Début</label><input v-model="formForm.debut" placeholder="2022" /></div>
+              <div class="form-field"><label>DÃ©but</label><input v-model="formForm.debut" placeholder="2022" /></div>
               <div class="form-field"><label>Fin</label><input v-model="formForm.fin" placeholder="2025" /></div>
             </div>
           </template>
@@ -889,15 +907,15 @@
             <div class="form-field"><label>Date</label><input v-model="certForm.date" placeholder="Jan 2025" /></div>
           </template>
           <template v-if="activeEntryModal === 'langue'">
-            <div class="form-field"><label>Langue</label><input v-model="langueForm.nom" placeholder="Français" /></div>
+            <div class="form-field"><label>Langue</label><input v-model="langueForm.nom" placeholder="FranÃ§ais" /></div>
             <div class="form-field">
               <label>Niveau</label>
               <select v-model="langueForm.niveau">
                 <option>Natif</option>
                 <option>Courant</option>
                 <option>Professionnel</option>
-                <option>Intermédiaire</option>
-                <option>Débutant</option>
+                <option>IntermÃ©diaire</option>
+                <option>DÃ©butant</option>
               </select>
             </div>
           </template>
@@ -914,7 +932,7 @@
       <div class="post-edit-modal">
         <div class="modal-head">
           <h3>Modifier le post</h3>
-          <button type="button" @click="showEditModal = false">×</button>
+          <button type="button" @click="showEditModal = false">Ã—</button>
         </div>
         <div class="post-edit-body">
           <label class="field-label">Description</label>
@@ -958,8 +976,8 @@
     >
       <div class="recos-modal">
         <div class="modal-head">
-          <h3>Personnes qui ont recommandé {{ profile.name }}</h3>
-          <button type="button" @click="showRecosModal = false">×</button>
+          <h3>Personnes qui ont recommandÃ© {{ profile.name }}</h3>
+          <button type="button" @click="showRecosModal = false">Ã—</button>
         </div>
         <div class="recommenders-list">
           <div v-for="recommendation in recommendations" :key="recommendation.id" class="recommender">
@@ -997,7 +1015,7 @@ import { profileService } from '../services/profile.service'
 import { recommendationService } from '../services/recommendation.service'
 import { stageService } from '../services/stage.service'
 
-// --- Types --------------------------------------------------------------------
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Recommendation = {
   id: number
@@ -1047,13 +1065,13 @@ interface Certification { id: number; titre: string; organisme: string; date: st
 interface Langue { id: number; nom: string; niveau: string }
 type EntrySection = 'exp' | 'form' | 'cert' | 'langue'
 
-// --- Router / Auth ------------------------------------------------------------
+// â”€â”€â”€ Router / Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-// --- UI state -----------------------------------------------------------------
+// â”€â”€â”€ UI state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const sidebarOpen = ref(false)
 const showRecosModal = ref(false)
@@ -1063,7 +1081,7 @@ const savingProfile = ref(false)
 const profileSuccess = ref('')
 const profileSaveError = ref('')
 
-// --- Role ---------------------------------------------------------------------
+// â”€â”€â”€ Role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | null>(() => {
   const storedRole = localStorage.getItem('role')
@@ -1093,9 +1111,9 @@ const userRole = computed<'student' | 'teacher' | 'professional'>(
   () => normalizedAuthRole.value ?? roleFromRoute.value ?? 'student'
 )
 
-// --- Tab ----------------------------------------------------------------------
+// â”€â”€â”€ Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'Compétances', 'À propos', 'Partager', 'Modifier bio', 'Modifier info'])
+const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'CompÃ©tances', 'Ã€ propos', 'Partager', 'Modifier bio', 'Modifier info'])
 
 const getRouteTab = () => {
   const rawTab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'
@@ -1109,12 +1127,12 @@ const activeTab = ref(getRouteTab())
 
 function resolveDefaultTab() {
   if (isOwnProfile.value) return isStudentProfile.value ? getRouteTab() : 'Portfolio'
-  if (isTeacherProfile.value) return canOpenProfessorRequests.value ? 'Demandes' : canRequestLetterValidation.value ? 'Recommander' : 'À propos'
-  if (isProfessionalProfile.value) return 'À propos'
+  if (isTeacherProfile.value) return canOpenProfessorRequests.value ? 'Demandes' : canRequestLetterValidation.value ? 'Recommander' : 'Ã€ propos'
+  if (isProfessionalProfile.value) return 'Ã€ propos'
   return getRouteTab()
 }
 
-// --- Profile data -------------------------------------------------------------
+// â”€â”€â”€ Profile data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const profileLoading = ref(true)
 const profileError = ref('')
@@ -1191,12 +1209,12 @@ const roleOverviewCards = computed(() => {
 const showRolePostsSection = computed(() => {
   if (isStudentProfile.value) return false
   if (isOwnProfile.value) return activeTab.value !== 'Modifier info'
-  return activeTab.value === 'À propos'
+  return activeTab.value === 'Ã€ propos'
 })
 const profileHeaderTabs = computed(() => {
   if (isOwnProfile.value) return undefined
-  if (isTeacherProfile.value) return ['Demandes', 'Connecter', 'À propos', 'Partager']
-  if (isProfessionalProfile.value) return ['Connecter', 'À propos', 'Partager']
+  if (isTeacherProfile.value) return ['Demandes', 'Connecter', 'Ã€ propos', 'Partager']
+  if (isProfessionalProfile.value) return ['Connecter', 'Ã€ propos', 'Partager']
   return undefined
 })
 const showRecommendationsSummary = computed(
@@ -1207,7 +1225,7 @@ const showRecommendationsSummary = computed(
 const technicalSkillNames = computed(() => profile.value.technicalSkills.map(s => s.name))
 const softSkillNames = computed(() => profile.value.softSkills.map(s => s.name))
 
-// --- Teacher attach -----------------------------------------------------------
+// â”€â”€â”€ Teacher attach â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const attachingStudent = ref(false)
 const studentAttached = ref(false)
@@ -1248,7 +1266,7 @@ const letterRequestForm = reactive({
   date_souhaitee: '',
 })
 
-// --- IDs ----------------------------------------------------------------------
+// â”€â”€â”€ IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const profileStudentId = computed<number | undefined>(() => {
   const id = Number(route.params.id)
@@ -1273,7 +1291,35 @@ const isOwnProfile = computed(() =>
   Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
 )
 
-// --- Connection ---------------------------------------------------------------
+function syncCurrentUserAssets(avatar: string | null, banner: string | null) {
+  if (auth.user) {
+    const currentUser = auth.user as Record<string, any>
+    auth.user = {
+      ...currentUser,
+      avatar: avatar || currentUser.avatar || '',
+      banner: banner || currentUser.banner || ''
+    } as any
+  }
+
+  const storedUser = localStorage.getItem('user')
+  if (!storedUser) return
+
+  try {
+    const parsed = JSON.parse(storedUser)
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        ...parsed,
+        avatar: avatar || parsed.avatar || '',
+        banner: banner || parsed.banner || ''
+      })
+    )
+  } catch {
+    // Ignore malformed stored sessions.
+  }
+}
+
+// â”€â”€â”€ Connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const defaultConnectionStatus = (): ConnectionStatus => ({
   isConnected: false,
@@ -1289,9 +1335,9 @@ const connectionActionMessage = ref('')
 
 const connectionTabLabel = computed(() => {
   if (isOwnProfile.value) return 'Connecter'
-  if (connectionStatus.value.isConnected) return 'Déjà connecté'
-  if (connectionStatus.value.requestSent) return 'Demande envoyée'
-  if (connectionStatus.value.requestReceived) return 'Répondre'
+  if (connectionStatus.value.isConnected) return 'DÃ©jà connectÃ©'
+  if (connectionStatus.value.requestSent) return 'Demande envoyÃ©e'
+  if (connectionStatus.value.requestReceived) return 'RÃ©pondre'
   return 'Connecter'
 })
 
@@ -1308,26 +1354,26 @@ const recommendationTabTitle = computed(() => {
 
 const recommendationTabDescription = computed(() => {
   if (canRequestLetterValidation.value) {
-    return `Envoyez une demande de lettre de recommandation à ${profile.value.name}.`
+    return `Envoyez une demande de lettre de recommandation Ãƒ  ${profile.value.name}.`
   }
   if (canSendRecommendation.value) {
     return `Partagez une recommandation utile pour renforcer le profil de ${profile.value.name}.`
   }
-  return "Ce profil ne propose pas d'action de recommandation pour votre rôle."
+  return "Ce profil ne propose pas d'action de recommandation pour votre rÃ´le."
 })
 
 const connectionPanelTitle = computed(() => {
-  if (connectionStatus.value.isConnected) return 'Déjà connecté'
-  if (connectionStatus.value.requestSent) return 'Demande envoyée'
-  if (connectionStatus.value.requestReceived) return 'Demande reçue'
+  if (connectionStatus.value.isConnected) return 'DÃ©jà connectÃ©'
+  if (connectionStatus.value.requestSent) return 'Demande envoyÃ©e'
+  if (connectionStatus.value.requestReceived) return 'Demande reÃ§ue'
   return 'Demande de connexion'
 })
 
 const connectionPanelDescription = computed(() => {
   if (isOwnProfile.value) return 'Vous consultez votre propre profil.'
-  if (connectionStatus.value.isConnected) return `Vous êtes connecté avec ${profile.value.name}.`
+  if (connectionStatus.value.isConnected) return `Vous Ãªtes connectÃ© avec ${profile.value.name}.`
   if (connectionStatus.value.requestSent) return `Votre demande à ${profile.value.name} est en attente.`
-  if (connectionStatus.value.requestReceived) return `${profile.value.name} vous a envoyé une demande de connexion.`
+  if (connectionStatus.value.requestReceived) return `${profile.value.name} vous a envoyÃ© une demande de connexion.`
   return `Envoyez une demande de connexion à ${profile.value.name} pour rester en contact.`
 })
 
@@ -1374,7 +1420,7 @@ async function sendConnectionRequest() {
   if (!profileId.value || isOwnProfile.value) return
   await runConnectionAction(
     () => connexionService.createConnexion({ id_destinataire: profileId.value, message: `Demande de connexion vers ${profile.value.name}` }),
-    'Demande envoyée.',
+    'Demande envoyÃ©e.',
     "Impossible d'envoyer la demande."
   )
 }
@@ -1384,7 +1430,7 @@ async function cancelConnectionRequest() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.supprimerConnexion(connexionId),
-    'Demande annulée.',
+    'Demande annulÃ©e.',
     "Impossible d'annuler la demande."
   )
 }
@@ -1394,7 +1440,7 @@ async function acceptConnectionRequest() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.accepterConnexion(connexionId),
-    'Connexion acceptée.',
+    'Connexion acceptÃ©e.',
     "Impossible d'accepter la demande."
   )
 }
@@ -1404,7 +1450,7 @@ async function rejectConnectionRequest() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.refuserConnexion(connexionId),
-    'Demande refusée.',
+    'Demande refusÃ©e.',
     'Impossible de refuser la demande.'
   )
 }
@@ -1414,16 +1460,16 @@ async function removeConnection() {
   if (!connexionId) return
   await runConnectionAction(
     () => connexionService.supprimerConnexion(connexionId),
-    'Connexion retirée.',
+    'Connexion retirÃ©e.',
     'Impossible de retirer la connexion.'
   )
 }
 
-// --- Share --------------------------------------------------------------------
+// â”€â”€â”€ Share â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const profileUrl = computed(() => `${window.location.origin}${route.path}`)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
-const encodedShareText = computed(() => encodeURIComponent(`Découvrez le profil de ${profile.value.name}`))
+const encodedShareText = computed(() => encodeURIComponent(`DÃ©couvrez le profil de ${profile.value.name}`))
 
 const gmailShareUrl = computed(() => `mailto:?subject=${encodedShareText.value}&body=${encodedShareText.value}%0A${encodedProfileUrl.value}`)
 const linkedinShareUrl = computed(() => `https://www.linkedin.com/sharing/share-offsite/?url=${encodedProfileUrl.value}`)
@@ -1436,14 +1482,19 @@ async function copyProfileLink() {
   window.setTimeout(() => { copied.value = false }, 1600)
 }
 
-// --- Profile edit - bio -------------------------------------------------------
+// â”€â”€â”€ Profile edit â€“ bio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+const editingInfo = ref(false)
 const editingAbout = ref(false)
+const infoForm = reactive({ name: '', title: '', school: '', location: '' })
 const bioForm = ref('')
 
 function applySavedProfile(savedProfile: any) {
   profile.value = {
     ...profile.value,
+    name: savedProfile?.name ?? profile.value.name,
+    title: savedProfile?.title ?? profile.value.title,
+    school: savedProfile?.school ?? profile.value.school,
     bio: savedProfile?.bio ?? profile.value.bio,
     email: savedProfile?.email ?? profile.value.email,
     phone: savedProfile?.phone ?? profile.value.phone,
@@ -1452,6 +1503,35 @@ function applySavedProfile(savedProfile: any) {
     avatar: savedProfile?.avatar ?? profile.value.avatar,
     banner: savedProfile?.banner ?? profile.value.banner,
   }
+}
+
+function openEditInfo() {
+  infoForm.name = profile.value.name
+  infoForm.title = profile.value.title
+  infoForm.school = profile.value.school
+  infoForm.location = profile.value.location
+  editingInfo.value = true
+}
+
+async function saveInfo() {
+  const saved = await saveProfileChanges(
+    {
+      name: infoForm.name,
+      title: infoForm.title,
+      etablissement: infoForm.school,
+      adresse: infoForm.location,
+    },
+    'Informations personnelles mises a jour avec succes.'
+  )
+  if (saved) editingInfo.value = false
+}
+
+function cancelInfo() {
+  infoForm.name = profile.value.name
+  infoForm.title = profile.value.title
+  infoForm.school = profile.value.school
+  infoForm.location = profile.value.location
+  editingInfo.value = false
 }
 
 async function saveProfileChanges(payload: Record<string, string>, successMessage: string) {
@@ -1486,7 +1566,7 @@ async function saveBio() {
 }
 function cancelBio() { bioForm.value = profile.value.bio; editingAbout.value = false }
 
-// --- Profile edit - contact ---------------------------------------------------
+// â”€â”€â”€ Profile edit â€“ contact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const editingContact = ref(false)
 const contactForm = reactive({ email: '', phone: '', website: '', linkedin: '', github: '' })
@@ -1525,7 +1605,7 @@ async function saveContact() {
   }
 }
 
-// --- Profile edit - skills ----------------------------------------------------
+// â”€â”€â”€ Profile edit â€“ skills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const editingSkills = ref(false)
 const skillForms = reactive({ tech: [] as string[], soft: [] as string[], newTech: '', newSoft: '' })
@@ -1556,7 +1636,7 @@ function saveSkills() {
   editingSkills.value = false
 }
 
-// --- Profile edit - entries (exp / form / cert / langue) ---------------------
+// â”€â”€â”€ Profile edit â€“ entries (exp / form / cert / langue) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const experiences = ref<Experience[]>([])
 const formations = ref<Formation[]>([])
@@ -1572,7 +1652,7 @@ const certForm = reactive({ titre: '', organisme: '', date: '' })
 const langueForm = reactive({ nom: '', niveau: 'Courant' })
 
 const entryModalTitle = computed(() => {
-  const labels: Record<string, string> = { exp: 'une expérience', form: 'une formation', cert: 'une certification', langue: 'une langue' }
+  const labels: Record<string, string> = { exp: 'une expÃ©rience', form: 'une formation', cert: 'une certification', langue: 'une langue' }
   return activeEntryModal.value ? labels[activeEntryModal.value] : ''
 })
 
@@ -1628,7 +1708,7 @@ function deleteEntry(section: EntrySection, id: number) {
   if (section === 'langue') langues.value = langues.value.filter(x => x.id !== id)
 }
 
-// --- Post edit modal ----------------------------------------------------------
+// â”€â”€â”€ Post edit modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const editingPostId = ref<number | null>(null)
 const editPostSaving = ref(false)
@@ -1696,7 +1776,7 @@ function onEditImageChange(e: Event) {
   reader.readAsDataURL(file)
 }
 
-// --- Post interactions --------------------------------------------------------
+// â”€â”€â”€ Post interactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function handleComment(id: number) {
   console.log('Commentaire sur le post', id)
@@ -1767,7 +1847,7 @@ async function handleRepost(post: ProfilePost, reposted: boolean) {
   }
 }
 
-// --- Recommendations ----------------------------------------------------------
+// â”€â”€â”€ Recommendations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const recommendationMessage = ref('')
 
@@ -1942,7 +2022,7 @@ async function submitLetterRequest() {
   }
 }
 
-// --- Navigate -----------------------------------------------------------------
+// â”€â”€â”€ Navigate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function openPortfolio() {
   const targetId = profileId.value
@@ -1964,6 +2044,7 @@ async function uploadProfileAvatar(file: File) {
 
     profile.value.avatar = uploadedUrl
     await loadProfile()
+    syncCurrentUserAssets(profile.value.avatar || null, profile.value.banner || null)
     profileSuccess.value = 'Photo de profil enregistree.'
     window.setTimeout(() => { profileSuccess.value = '' }, 3000)
   } catch (error: any) {
@@ -1988,6 +2069,7 @@ async function uploadProfileBanner(file: File) {
 
     profile.value.banner = uploadedUrl
     await loadProfile()
+    syncCurrentUserAssets(profile.value.avatar || null, profile.value.banner || null)
     profileSuccess.value = 'Banniere de profil enregistree.'
     window.setTimeout(() => { profileSuccess.value = '' }, 3000)
   } catch (error: any) {
@@ -1999,7 +2081,7 @@ async function uploadProfileBanner(file: File) {
   }
 }
 
-// --- API loaders --------------------------------------------------------------
+// â”€â”€â”€ API loaders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function loadProfile() {
   profileLoading.value = true
@@ -2018,18 +2100,18 @@ async function loadProfile() {
     const technicalSkills = rawCompetences
       .filter((item: any) => String(item?.competence?.categorie || '').toUpperCase() !== 'COMPORTEMENTALE')
       .map((item: any) => ({
-        name: item?.competence?.nom || 'Compétence',
+        name: item?.competence?.nom || 'CompÃ©tence',
         level: Number(item?.niveau_maitrise ?? 75),
-        description: 'Compétence issue du profil étudiant.',
+        description: 'CompÃ©tence issue du profil Ã©tudiant.',
         projectsCount: 0
       }))
 
     const softSkills = rawCompetences
       .filter((item: any) => String(item?.competence?.categorie || '').toUpperCase() === 'COMPORTEMENTALE')
       .map((item: any) => ({
-        name: item?.competence?.nom || 'Compétence',
+        name: item?.competence?.nom || 'CompÃ©tence',
         level: Number(item?.niveau_maitrise ?? 75),
-        description: 'Compétence comportementale issue du profil étudiant.',
+        description: 'CompÃ©tence comportementale issue du profil Ã©tudiant.',
         projectsCount: 0
       }))
 
@@ -2052,6 +2134,9 @@ async function loadProfile() {
       github: backendProfile.github || '',
       technicalSkills,
       softSkills
+    }
+    if (isOwnProfile.value) {
+      syncCurrentUserAssets(profile.value.avatar || null, profile.value.banner || null)
     }
 
     if (Array.isArray(backendProfile.posts)) posts.value = backendProfile.posts
@@ -2130,7 +2215,7 @@ async function loadAttachedStatus() {
     const { data } = await profApi.getAttachedStudentStatus(profileId.value)
     studentAttached.value = Boolean(data?.data?.attached)
   } catch (error) {
-    console.warn('Chargement statut étudiant lié impossible', error)
+    console.warn('Chargement statut Ã©tudiant liÃ© impossible', error)
   }
 }
 
@@ -2141,15 +2226,15 @@ async function attachCurrentStudent() {
   try {
     const { data } = await profApi.attachStudent({ id_etudiant: profileId.value })
     studentAttached.value = true
-    attachMessage.value = data?.created ? 'Étudiant ajouté à votre liste.' : 'Cet étudiant est déjà dans votre liste.'
+    attachMessage.value = data?.created ? 'Ã‰tudiant ajoutÃ© à votre liste.' : 'Cet Ã©tudiant est dÃ©jà dans votre liste.'
   } catch (error: any) {
-    attachMessage.value = error?.response?.data?.message || "Impossible d'ajouter cet étudiant."
+    attachMessage.value = error?.response?.data?.message || "Impossible d'ajouter cet Ã©tudiant."
   } finally {
     attachingStudent.value = false
   }
 }
 
-// --- Mappers ------------------------------------------------------------------
+// â”€â”€â”€ Mappers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function mapBackendPost(post: any): ProfilePost {
   const auteur = post.auteur
@@ -2203,7 +2288,7 @@ function mapBackendRecommendation(recommendation: any): Recommendation {
   }
 }
 
-// --- Helpers ------------------------------------------------------------------
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function fullName(user: any) {
   return [user?.prenom, user?.nom].filter(Boolean).join(' ')
@@ -2218,16 +2303,17 @@ function normalizeBackendRole(roleRaw: unknown): ProfileRole {
 
 function resolveBackendAsset(path: string) {
   if (!path || /^https?:\/\//.test(path)) return path
-  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-  const backendBase = apiBase.replace(/\/api\/?$/, '')
-  return `${backendBase}${path}`
+  if (String(path).startsWith('data:')) return path
+  if (String(path).startsWith('/')) return `${window.location.origin}${path}`
+  if (String(path).startsWith('uploads/')) return `${window.location.origin}/${path}`
+  return ''
 }
 
 function getInitials(name: string) {
   return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
 }
 
-// --- Lifecycle & watchers -----------------------------------------------------
+// â”€â”€â”€ Lifecycle & watchers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 onMounted(async () => {
   await loadProfile()
@@ -2421,7 +2507,7 @@ watch(profileId, async () => {
   width: 100%;
 }
 
-/* -- Teacher actions ------------------------------- */
+/* â”€â”€ Teacher actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .teacher-actions {
   margin-top: 14px;
   background: white;
@@ -2463,7 +2549,7 @@ watch(profileId, async () => {
 
 .attach-btn:disabled { opacity: .65; cursor: not-allowed; }
 
-/* -- Recommendations ------------------------------- */
+/* â”€â”€ Recommendations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .recommendations-list { display: grid; gap: 12px; }
 
 .recommendation-card {
@@ -2495,7 +2581,7 @@ watch(profileId, async () => {
 
 .recommendation-message { font-size: .9rem; line-height: 1.5; color: var(--text-dark); }
 
-/* -- Connect tab ----------------------------------- */
+/* â”€â”€ Connect tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .requests-panel {
   display: grid;
   gap: 16px;
@@ -2542,7 +2628,7 @@ watch(profileId, async () => {
 .connect-btn.danger { background: rgba(220, 38, 38, .09); color: #dc2626; }
 .connect-btn:disabled { opacity: .65; cursor: not-allowed; }
 
-/* -- Share tab ------------------------------------- */
+/* â”€â”€ Share tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .share-tab { display: flex; justify-content: center; margin-top: 18px; }
 
 .share-card {
@@ -2608,7 +2694,7 @@ watch(profileId, async () => {
 .share-btn.whatsapp { background: #25d366; }
 .share-btn.x { background: #111827; }
 
-/* -- Modals ---------------------------------------- */
+/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -2777,7 +2863,7 @@ watch(profileId, async () => {
   border: 0;
 }
 
-/* -- Mini avatar ----------------------------------- */
+/* â”€â”€ Mini avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mini-avatar {
   width: 42px;
   height: 42px;
@@ -2795,7 +2881,7 @@ watch(profileId, async () => {
 
 .mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-/* -- Profile edit sections ------------------------- */
+/* â”€â”€ Profile edit sections â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .profile-edit-sections { display: grid; gap: 12px; margin-top: 14px; }
 
 .pedit-card {
@@ -3069,7 +3155,7 @@ watch(profileId, async () => {
 
 .bio-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(79, 70, 229, .12); }
 
-/* -- Responsive ------------------------------------ */
+/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 900px) {
   .content,
   .content.shifted { padding: 16px; }
@@ -3079,3 +3165,5 @@ watch(profileId, async () => {
   .post-composer__head { flex-direction: column; }
 }
 </style>
+
+

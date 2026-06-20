@@ -83,7 +83,7 @@ function save() {
 <template>
   <Teleport to="body">
     <div v-if="visible" class="modal-backdrop" @click.self="$emit('close')">
-      <div class="modal" role="dialog" aria-modal="true">
+      <dialog class="modal" aria-modal="true">
 
         <div class="modal-head">
           <h2>{{ post ? 'Modifier le post' : 'Nouveau post' }}</h2>
@@ -193,7 +193,7 @@ function save() {
           </button>
         </div>
 
-      </div>
+      </dialog>
     </div>
   </Teleport>
 </template>

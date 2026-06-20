@@ -141,11 +141,57 @@ function mapComment(item: any, context: string, prefix: string): StudentCommentI
   };
 }
 
+function buildPostContext(post: any) {
+  if (!post?.contenu) return "Commentaire sur un post";
+  const content = String(post.contenu);
+  return `Post : ${content.slice(0, 60)}${content.length > 60 ? "..." : ""}`;
+}
+
+function pushMappedComments(
+  target: StudentCommentItem[],
+  comments: any[],
+  context: string,
+  prefix: string,
+) {
+  comments.forEach((comment: any) => {
+    target.push(mapComment(comment, context, prefix));
+  });
+}
+
+async function appendPostComments(target: StudentCommentItem[]) {
+  if (!currentUserId.value) return;
+
+  const { data } = await postService.getPosts();
+  const posts = Array.isArray(data?.data) ? data.data : [];
+  const myPosts = posts.filter(
+    (post: any) => Number(post?.auteur?.id_utilisateur ?? post?.id_auteur ?? 0) === Number(currentUserId.value),
+  );
+
+  for (const post of myPosts) {
+    const response = await commentaireService.getCommentaires({ id_poste: post?.id_poste });
+    const postComments = Array.isArray(response?.data?.data) ? response.data.data : [];
+    pushMappedComments(target, postComments, buildPostContext(post), `post-${post?.id_poste}`);
+  }
+}
+
+async function appendPortfolioComments(target: StudentCommentItem[]) {
+  const profile = await profileService.getProfile();
+  if (!profile?.portfolioId) return;
+
+  const { data } = await commentaireService.getCommentaires({ id_portfolio: profile.portfolioId });
+  const portfolioComments = Array.isArray(data?.data) ? data.data : [];
+  pushMappedComments(target, portfolioComments, "Commentaire sur votre portfolio", "portfolio");
+}
+
+function sortComments(items: StudentCommentItem[]) {
+  return items.sort((a, b) => b.dateValue - a.dateValue);
+}
+
 function resolveBackendAsset(path: string) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return path;
-  if (path.startsWith("/")) return path;
-  if (path.startsWith("uploads/")) return `/${path}`;
+  if (path.startsWith("/")) return `${window.location.origin}${path}`;
+  if (path.startsWith("uploads/")) return `${window.location.origin}/${path}`;
   return "";
 }
 
@@ -153,38 +199,12 @@ async function loadComments() {
   const merged: StudentCommentItem[] = [];
 
   try {
-    if (currentUserId.value) {
-      const { data } = await postService.getPosts();
-      const posts = Array.isArray(data?.data) ? data.data : [];
-      const myPosts = posts.filter(
-        (post: any) => Number(post?.auteur?.id_utilisateur ?? post?.id_auteur ?? 0) === Number(currentUserId.value),
-      );
-
-      for (const post of myPosts) {
-        const context = post?.contenu
-          ? `Post : ${String(post.contenu).slice(0, 60)}${String(post.contenu).length > 60 ? "..." : ""}`
-          : "Commentaire sur un post";
-        const response = await commentaireService.getCommentaires({ id_poste: post?.id_poste });
-        const postComments = Array.isArray(response?.data?.data) ? response.data.data : [];
-        postComments.forEach((comment: any) => {
-          merged.push(mapComment(comment, context, `post-${post?.id_poste}`));
-        });
-      }
-    }
-
-    const profile = await profileService.getProfile();
-    if (profile?.portfolioId) {
-      const { data } = await commentaireService.getCommentaires({ id_portfolio: profile.portfolioId });
-      const portfolioComments = Array.isArray(data?.data) ? data.data : [];
-      portfolioComments.forEach((comment: any) => {
-        merged.push(mapComment(comment, "Commentaire sur votre portfolio", "portfolio"));
-      });
-    }
-
-    comments.value = merged.sort((a, b) => b.dateValue - a.dateValue);
+    await appendPostComments(merged);
+    await appendPortfolioComments(merged);
+    comments.value = sortComments(merged);
   } catch (error) {
     console.warn("Chargement des commentaires impossible", error);
-    comments.value = merged.sort((a, b) => b.dateValue - a.dateValue);
+    comments.value = sortComments(merged);
   }
 }
 

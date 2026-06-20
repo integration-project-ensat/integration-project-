@@ -10,12 +10,12 @@ export const lettreService = {
   },
 
   getPdfUrl(letterId) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-    return `${apiBase}/lettres/${letterId}/export/pdf`
+    const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+    return `${apiBase.replace(/\/$/, '')}/lettres/${letterId}/export/pdf`
   },
 
   getHtmlUrl(letterId) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-    return `${apiBase}/lettres/${letterId}/export/html`
+    const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+    return `${apiBase.replace(/\/$/, '')}/lettres/${letterId}/export/html`
   },
 }
