@@ -1,9 +1,16 @@
-version: "3.8"
+x-logging: &default-logging
+  driver: json-file
+  options:
+    tag: "{{.Name}}|{{.ImageName}}"
+    max-size: "10m"
+    max-file: "3"
+
 services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: dockerfile
+      dockerfile: Dockerfile
+    logging: *default-logging
     expose:
       - "80"
     environment:
@@ -11,6 +18,7 @@ services:
       - VITE_BACKEND_URL=${VITE_BACKEND_URL:-http://backend:3000}
     depends_on:
       - backend
+
   backend:
     build: ./backend
     command: >
@@ -18,6 +26,7 @@ services:
         npx prisma migrate deploy &&
         npm run seed &&
         npm run start"
+    logging: *default-logging
     ports:
       - "3000:3000"
     volumes:
@@ -44,12 +53,16 @@ services:
       - postgres
       - keycloak
       - ai-service
+
   ai-service:
     build: ./ai-service
+    logging: *default-logging
     ports:
       - "8000:8000"
+
   postgres:
     image: postgres:15-alpine
+    logging: *default-logging
     environment:
       - POSTGRES_DB=${DB_NAME:?DB_NAME is required}
       - POSTGRES_USER=${DB_USER:?DB_USER is required}
@@ -58,13 +71,14 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-portfolio_db}"]
       interval: 10s
       timeout: 5s
       retries: 10
 
   db-init:
     image: postgres:15-alpine
+    logging: *default-logging
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,6 +107,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: portfolio_pgadmin
+    logging: *default-logging
     restart: unless-stopped
     ports:
       - "5050:80"
@@ -110,6 +125,7 @@ services:
   sonarqube:
     image: sonarqube:10-community
     container_name: portfolio_sonarqube
+    logging: *default-logging
     restart: unless-stopped
     ports:
       - "9000:9000"
@@ -127,6 +143,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
+    logging: *default-logging
     ports:
       - "8081:8080"
     environment:
@@ -144,6 +161,7 @@ services:
 
   nginx:
     image: nginx:alpine
+    logging: *default-logging
     ports:
       - "80:80"
       - "443:443"
@@ -154,62 +172,12 @@ services:
       - frontend
       - backend
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: portfolio_grafana
-    restart: unless-stopped
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SERVER_ROOT_URL=http://localhost:3001
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
-      - GF_AUTH_GENERIC_OAUTH_ENABLED=true
-      - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
-      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
-      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${GRAFANA_OAUTH_SECRET:-grafana-secret}
-      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile
-      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost:8081/auth/realms/portfolio-realm/protocol/openid-connect/auth
-      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak:8080/auth/realms/portfolio-realm/protocol/openid-connect/token
-      - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak:8080/auth/realms/portfolio-realm/protocol/openid-connect/userinfo
-      - GF_AUTH_GENERIC_OAUTH_REDIRECT_URI=http://localhost:3001/login/generic_oauth
-      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(roles[*], 'chef-equipe') && 'Admin' || contains(roles[*], 'adjoint') && 'Admin' || contains(roles[*], 'devops') && 'Editor' || contains(roles[*], 'qa') && 'Editor' || 'Viewer'
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json
-      - ./monitoring/provisioning/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
-    depends_on:
-      - prometheus
-      - keycloak
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: portfolio_prometheus
-    restart: unless-stopped
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/var/prometheus/data
-    depends_on:
-      - keycloak
-
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: portfolio_node_exporter
-    restart: unless-stopped
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-
   gitlab:
     build:
       context: .
       dockerfile: Dockerfile.gitlab
     container_name: portfolio_gitlab
+    logging: *default-logging
     restart: unless-stopped
     ports:
       - "9080:9080"
@@ -222,11 +190,134 @@ services:
       - ./gitlab.rb:/etc/gitlab/gitlab.rb
     shm_size: '256m'
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: portfolio_prometheus
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - node-exporter
+      - cadvisor
+      - postgres-exporter
+      - nginx-exporter
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: portfolio_grafana
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_GENERIC_OAUTH_ENABLED=true
+      - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${GRAFANA_OAUTH_SECRET:-grafana-secret}
+      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile
+      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost:8081/auth/realms/portfolio-realm/protocol/openid-connect/auth
+      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak:8080/auth/realms/portfolio-realm/protocol/openid-connect/token
+      - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak:8080/auth/realms/portfolio-realm/protocol/openid-connect/userinfo
+      - GF_AUTH_GENERIC_OAUTH_REDIRECT_URI=http://localhost:3001/login/generic_oauth
+      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(roles[*], 'chef-equipe') && 'Admin' || contains(roles[*], 'adjoint') && 'Admin' || contains(roles[*], 'devops') && 'Editor' || contains(roles[*], 'qa') && 'Editor' || 'Viewer'
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+      - keycloak
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: portfolio_loki
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: portfolio_promtail
+    logging: *default-logging
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: portfolio_node_exporter
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: portfolio_cadvisor
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: portfolio_postgres_exporter
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-secret}@postgres:5432/${DB_NAME:-portfolio_db}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.3.0
+    container_name: portfolio_nginx_exporter
+    logging: *default-logging
+    restart: unless-stopped
+    command:
+      - "-nginx.scrape-uri=http://nginx/nginx_status"
+    ports:
+      - "9113:9113"
+    depends_on:
+      - nginx
+
 volumes:
   postgres-data:
   backend_uploads:
-  grafana_data:
-  prometheus_data:
+  grafana-data:
+  prometheus-data:
   keycloak_data:
   pgadmin_data:
   sonarqube_data:
