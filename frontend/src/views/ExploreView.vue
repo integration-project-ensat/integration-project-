@@ -1,7 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { Bookmark } from 'lucide-vue-next'
-import { useDebounceFn } from '@vueuse/core'
 import ExploreHeader from '../components/exploreStudent/ExploreHeader.vue'
 import FilterPanel   from '../components/exploreStudent/FilterPanel.vue'
 import ProfileCard   from '../components/exploreStudent/ProfileCard.vue'
@@ -13,12 +12,14 @@ import { mapExploreProfileCard } from '../utils/exploreProfileCard'
 type ExploreFilterState = {
   filiere: string
   ville: string
+  year: number | undefined
+  school: string
   competences: string[]
-  score: number | undefined
-  recommandations: boolean
+  score: string | undefined
+  recommandations: string | undefined
 }
 
-// ─── State ────────────────────────────────────
+// State
 const searchQuery = ref('')
 const sidebarOpen = ref(true)
 const loading     = ref(false)
@@ -29,12 +30,14 @@ const pagination  = ref({ total: 0, page: 1, limit: 10, pages: 1 })
 const filters = ref<ExploreFilterState>({
   filiere:         '',
   ville:           '',
+  year:            undefined as number | undefined,
+  school:          '',
   competences:     [] as string[],
-  score:           undefined as number | undefined,
-  recommandations: false
+  score:           undefined,
+  recommandations: undefined
 })
 
-// ─── Charger les profils ──────────────────────
+// Charger les profils
 const chargerProfils = async () => {
   loading.value = true
   error.value   = null
@@ -43,9 +46,11 @@ const chargerProfils = async () => {
       search:          searchQuery.value || undefined,
       filiere:         filters.value.filiere         || undefined,
       ville:           filters.value.ville           || undefined,
+      year:            filters.value.year            || undefined,
+      school:          filters.value.school          || undefined,
       competences:     filters.value.competences.length ? filters.value.competences : undefined,
-      score:           filters.value.score           || undefined,
-      recommandations: filters.value.recommandations || undefined,
+      score:           toNumberFilter(filters.value.score) || undefined,
+      recommandations: filters.value.recommandations ? true : undefined,
       page:            pagination.value.page,
       limit:           pagination.value.limit
     })
@@ -58,11 +63,15 @@ const chargerProfils = async () => {
   }
 }
 
-// ─── Debounce recherche ───────────────────────
-const debouncedSearch = useDebounceFn(() => {
-  pagination.value.page = 1
-  chargerProfils()
-}, 400)
+// Debounce recherche
+let searchDebounceTimer: number | undefined
+const debouncedSearch = () => {
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = window.setTimeout(() => {
+    pagination.value.page = 1
+    chargerProfils()
+  }, 400)
+}
 
 watch(searchQuery, debouncedSearch)
 watch(filters, () => {
@@ -72,13 +81,13 @@ watch(filters, () => {
 
 onMounted(chargerProfils)
 
-// ─── Pagination ───────────────────────────────
+// Pagination
 const changerPage = (page: number) => {
   pagination.value.page = page
   chargerProfils()
 }
 
-// ─── Adapter le profil pour ProfileCard ───────
+// Adapter le profil pour ProfileCard
 const adapterProfil = (p: ProfilExplore) => mapExploreProfileCard(p, 'student')
 
 const toNumberFilter = (value: unknown) => {
@@ -91,13 +100,15 @@ const handleUpdateFilters = (next: Record<string, any>) => {
   filters.value = {
     filiere: String(next.filiere ?? next.field ?? ''),
     ville: String(next.ville ?? next.city ?? ''),
+    year: toNumberFilter(next.year),
+    school: String(next.school ?? next.university ?? next.universite ?? next.etablissement ?? ''),
     competences: Array.isArray(next.competences)
       ? next.competences
       : Array.isArray(next.skills)
         ? next.skills
         : [],
-    score: toNumberFilter(next.score),
-    recommandations: Boolean(next.recommandations ?? next.recommendations)
+    score: next.score ? String(next.score) : undefined,
+    recommandations: next.recommandations ?? next.recommendations ?? undefined
   }
 }
 </script>
@@ -134,6 +145,7 @@ const handleUpdateFilters = (next: Record<string, any>) => {
                 v-for="profile in profiles"
                 :key="profile.id_utilisateur"
                 :profile="adapterProfil(profile)"
+                :show-score="true"
                 :default-expanded="profile.id_utilisateur === profiles[0]?.id_utilisateur"
               />
             </div>
@@ -245,3 +257,4 @@ const handleUpdateFilters = (next: Record<string, any>) => {
 }
 .page-btn.active { background: var(--violet); color: var(--white); border-color: var(--violet); }
 </style>
+

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -32,8 +32,8 @@ const filteredRequests = computed(() => {
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "ValidÃ©" || status === "ValidÃƒÂ©") return "Validé";
-  if (status === "Refusé" || status === "RefusÃ©" || status === "RefusÃƒÂ©") return "Refusé";
+  if (status === "Validé") return "Validé";
+  if (status === "Refusé") return "Refusé";
   return "En attente";
 };
 
@@ -48,14 +48,10 @@ const resolveAvatar = (path?: string | null) => {
   if (!value) return "";
   if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
   if (value.startsWith("/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}${value}`;
+    return `${window.location.origin}${value}`;
   }
   if (value.startsWith("uploads/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}/${value}`;
+    return `${window.location.origin}/${value}`;
   }
   return "";
 };

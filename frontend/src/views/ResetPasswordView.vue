@@ -2,7 +2,7 @@
   <div class="page">
     <div class="header">
       <div class="logo">
-        <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="32"/>
+        <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" height="32" />
         <span>heraCore</span>
       </div>
     </div>
@@ -10,30 +10,19 @@
     <div class="card">
       <img src="@/assets/PheraCoreLogoPurple.svg" alt="PheraCore" class="card-logo" width="48" height="48" />
 
-      <h1>Réinitialiser votre mot de passe</h1>
+      <h1>Reinitialiser votre passe</h1>
       <p class="subtitle">Choisissez un nouveau mot de passe pour votre compte</p>
 
-      <div v-if="tokenInvalid" class="token-error">
-        <p class="err">{{ tokenInvalid }}</p>
-        <RouterLink to="/forgot" class="back">← Demander un nouveau lien</RouterLink>
-      </div>
+      <form @submit.prevent="submit">
+        <input v-model="form.email" type="email" placeholder="Adresse e-mail" />
+        <input v-model="form.password" type="password" placeholder="Mot de passe" />
+        <input v-model="form.confirmPassword" type="password" placeholder="Comfirmer le mot de passe" />
 
-      <form v-else @submit.prevent="submit">
-        <input
-          :value="email"
-          type="email"
-          placeholder="Adresse e-mail"
-          disabled
-          class="disabled-input"
-        />
-        <input v-model="form.password"        type="password" placeholder="Nouveau mot de passe" />
-        <input v-model="form.confirmPassword" type="password" placeholder="Confirmer le mot de passe" />
-
-        <p v-if="error"   class="err">{{ error }}</p>
+        <p v-if="error" class="err">{{ error }}</p>
         <p v-if="success" class="success">{{ success }}</p>
 
-        <button type="submit" class="btn" :disabled="loading || tokenLoading">
-          <span v-if="!loading">Réinitialiser</span>
+        <button type="submit" class="btn" :disabled="loading">
+          <span v-if="!loading">Envoyer</span>
           <span v-else class="spin" />
         </button>
       </form>
@@ -42,10 +31,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
-import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import authService from '@/services/auth.service.js'
-import api from '@/services/api.js'
 
 type ApiError = {
   response?: {
@@ -61,58 +49,51 @@ const getApiErrorMessage = (e: unknown, fallback: string) => {
   return data?.errors?.[0]?.message || data?.message || fallback
 }
 
-const router      = useRouter()
-const route       = useRoute()
-const token       = route.query.token as string || ''
-
-const email       = ref('')
-const tokenInvalid = ref('')
-const tokenLoading = ref(true)
-const error       = ref('')
-const success     = ref('')
-const loading     = ref(false)
+const route = useRoute()
+const router = useRouter()
+const loading = ref(false)
+const error = ref('')
+const success = ref('')
 
 const form = reactive({
+  email: '',
   password: '',
   confirmPassword: ''
 })
 
-// Vérifie le token au montage et récupère l'email
-onMounted(async () => {
-  if (!token) {
-    tokenInvalid.value = 'Token manquant. Veuillez redemander un lien.'
-    tokenLoading.value = false
-    return
-  }
-  try {
-    const { data } = await api.get(`/auth/verifier-token-reset?token=${token}`)
-    email.value = data.data.email
-  } catch {
-    tokenInvalid.value = 'Token invalide ou expiré. Veuillez redemander un lien.'
-  } finally {
-    tokenLoading.value = false
+onMounted(() => {
+  const email = route.query.email
+  if (typeof email === 'string' && email) {
+    form.email = email
   }
 })
 
 async function submit() {
   error.value = ''
   success.value = ''
-  if (!form.password || !form.confirmPassword) {
-    error.value = 'Veuillez remplir tous les champs'; return
+
+  if (!form.email || !form.password || !form.confirmPassword) {
+    error.value = 'Veuillez remplir tous les champs'
+    return
   }
+
   if (form.password !== form.confirmPassword) {
-    error.value = 'Les mots de passe ne correspondent pas.'; return
+    error.value = 'Le mot de passe ne correspond pas.'
+    return
   }
+
   loading.value = true
   try {
+    success.value = 'Mot de passe réinitialisé !'
     await authService.resetPassword({
-      token,
+      token: '',
       newPassword: form.password,
       confirmPassword: form.confirmPassword
     })
-    success.value = 'Mot de passe réinitialisé avec succès !'
-    setTimeout(() => router.push('/login'), 2000)
-  } catch(e) {
+    window.setTimeout(() => {
+      router.push('/login')
+    }, 50)
+  } catch (e) {
     error.value = getApiErrorMessage(e, 'Une erreur est survenue.')
   } finally {
     loading.value = false
@@ -148,7 +129,9 @@ async function submit() {
   color: var(--purple);
 }
 
-.logo img { height: 50px; }
+.logo img {
+  height: 50px;
+}
 
 .card {
   background: var(--white);
@@ -161,10 +144,12 @@ async function submit() {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .08);
 }
 
-.card-logo { margin-bottom: 4px; }
+.card-logo {
+  margin-bottom: 4px;
+}
 
 h1 {
   font-family: var(--font-head);
@@ -198,28 +183,26 @@ input {
   font-family: var(--font-body);
   transition: var(--ease);
 }
-input::placeholder { color: var(--text-gray); }
-input:focus { border-color: var(--purple); outline: none; }
 
-.disabled-input {
-  opacity: 0.6;
-  cursor: not-allowed;
+input::placeholder {
+  color: var(--text-gray);
 }
 
-.err     { font-size: .78rem; color: var(--error); padding-left: 6px; }
-.success { font-size: .78rem; color: #22c55e; padding-left: 6px; }
-
-.token-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+input:focus {
+  border-color: var(--purple);
+  outline: none;
 }
 
-.back {
-  font-size: .82rem;
-  color: var(--purple);
-  font-weight: 600;
+.err {
+  font-size: .78rem;
+  color: var(--error);
+  padding-left: 6px;
+}
+
+.success {
+  font-size: .78rem;
+  color: #22c55e;
+  padding-left: 6px;
 }
 
 .btn {
@@ -232,23 +215,36 @@ input:focus { border-color: var(--purple); outline: none; }
   padding: 14px;
   border-radius: 50px 50px 0px 50px;
   min-height: 48px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: var(--ease);
   margin-top: 4px;
 }
+
 .btn:hover:not(:disabled) {
   background: var(--purple-hover);
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(91,63,212,.32);
+  box-shadow: 0 8px 22px rgba(91, 63, 212, .32);
 }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
 
 .spin {
-  width: 18px; height: 18px;
-  border: 2px solid rgba(255,255,255,.3);
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, .3);
   border-top-color: var(--white);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>

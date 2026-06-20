@@ -381,6 +381,7 @@ import { attestationService } from "../services/attestation.service";
 import { projetService } from "../services/projet.service";
 import { activiteService } from "../services/activite.service";
 import { stageService } from "../services/stage.service";
+import { resolveBackendAsset } from "../utils/backendAsset";
 const showTemplateModal = ref(false);
 const templates = ref<Array<{ id_modele: number; nom: string }>>([]);
 const currentTemplate = ref<number>(1);
@@ -567,6 +568,12 @@ const sortedCertifications = computed(() =>
 
 const githubPattern = /(github\.com\/[^\s)]+)/i;
 
+function pickTriadIcon(index: number, icons: [string, string, string]) {
+  if (index % 3 === 0) return icons[0]
+  if (index % 3 === 1) return icons[1]
+  return icons[2]
+}
+
 function getInitials(name: string) {
   return String(name || "")
     .split(" ")
@@ -602,14 +609,6 @@ function scrollToSection(id: SectionId) {
   const targetTop =
     window.scrollY + element.getBoundingClientRect().top - headerOffset;
   window.scrollTo({ top: Math.max(targetTop, 0), behavior: "smooth" });
-}
-
-function resolveBackendAsset(path: string | null | undefined) {
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-  const backendBase = apiBase.replace(/\/api\/?$/, "");
-  return `${backendBase}${path}`;
 }
 
 function inferGithubUrl(...sources: Array<string | null | undefined>) {
@@ -687,10 +686,15 @@ function isValidatedProject(project: any) {
   return ["VALIDE", "ACCEPTE", "APPROUVE"].includes(status);
 }
 
+function resolveImages(imageUrl?: string | null) {
+  if (!imageUrl) return [];
+  return [resolveBackendAsset(imageUrl)];
+}
+
 function mapBackendProject(project: any, index: number): Project {
   return {
     id: Number(project?.id_projet ?? project?.id ?? index + 1),
-    icon: index % 3 === 0 ? "PR" : index % 3 === 1 ? "UX" : "AI",
+    icon: pickTriadIcon(index, ["PR", "UX", "AI"]),
     title: project?.titre || project?.title || `Projet ${index + 1}`,
     type: project?.type || project?.statut || "Projet",
     description: project?.description || "Aucune description.",
@@ -720,9 +724,7 @@ function mapBackendActivity(activity: any, index: number): Project {
     details: activity?.description || "Aucun detail supplementaire.",
     tech: [],
     github: "",
-    images: activity?.justificatif_url
-      ? [resolveBackendAsset(activity.justificatif_url)]
-      : [],
+    images: resolveImages(activity?.justificatif_url),
   };
 }
 
@@ -730,7 +732,7 @@ function mapPostProject(post: any, index: number): Project {
   const structured = parseStructuredContent(post?.contenu || "");
   return {
     id: Number(post?.id_poste ?? 100000 + index),
-    icon: index % 3 === 0 ? "PB" : index % 3 === 1 ? "FE" : "DB",
+    icon: pickTriadIcon(index, ["PB", "FE", "DB"]),
     title:
       structured?.projectTitle ||
       (
@@ -748,7 +750,7 @@ function mapPostProject(post: any, index: number): Project {
       ? structured.technologies.filter(Boolean)
       : [],
     github: inferGithubUrl(structured?.github, post?.contenu),
-    images: post?.image_url ? [resolveBackendAsset(post.image_url)] : [],
+    images: resolveImages(post?.image_url),
   };
 }
 
@@ -761,9 +763,7 @@ function setSelectedProjectFallback() {
   if (
     !projects.value.some((project) => project.id === selectedProjectId.value)
   ) {
-    selectedProjectId.value = projects.value.length
-      ? projects.value[0]!.id
-      : null;
+    selectedProjectId.value = projects.value[0]?.id ?? null;
   }
 }
 
@@ -861,7 +861,7 @@ function mapProjects(items: any[]) {
     const structured = parseStructuredContent(post?.contenu || "");
     return {
       id: Number(post?.id_poste ?? index + 1),
-      icon: index % 3 === 0 ? "📚" : index % 3 === 1 ? "💼" : "📊",
+      icon: pickTriadIcon(index, ["📚", "💼", "📊"]),
       title:
         structured?.projectTitle ||
         (String(post?.contenu || "Projet").split("\n")[0] ?? "Projet").slice(
@@ -880,14 +880,12 @@ function mapProjects(items: any[]) {
         ? structured.technologies.filter(Boolean)
         : [],
       github: inferGithubUrl(structured?.github, post?.contenu),
-      images: post?.image_url ? [resolveBackendAsset(post.image_url)] : [],
+      images: resolveImages(post?.image_url),
     };
   });
 
   if (!selectedProjectId.value && projects.value.length) {
-    selectedProjectId.value = projects.value.length
-      ? projects.value[0]!.id
-      : null;
+    selectedProjectId.value = projects.value[0]?.id ?? null;
   }
 }
 

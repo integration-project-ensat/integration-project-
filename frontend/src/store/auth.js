@@ -1,30 +1,5 @@
 import { defineStore } from 'pinia'
-
-function resolveBackendAsset(path) {
-  const value = String(path || '').trim()
-
-  if (!value) {
-    return ''
-  }
-
-  if (/^https?:\/\//.test(value) || value.startsWith('data:')) {
-    return value
-  }
-
-  if (value.startsWith('/')) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-    const backendBase = apiBase.replace(/\/api\/?$/, '')
-    return `${backendBase}${value}`
-  }
-
-  if (value.startsWith('uploads/')) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-    const backendBase = apiBase.replace(/\/api\/?$/, '')
-    return `${backendBase}/${value}`
-  }
-
-  return ''
-}
+import { resolveBackendAsset } from '../utils/backendAsset'
 
 function pickAvatar(user) {
   return (

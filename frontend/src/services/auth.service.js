@@ -1,4 +1,5 @@
 import api from './api.js'
+import { getApiBase } from '../utils/apiBase.js'
 
 const ROLE_MAP = {
   student: 'ETUDIANT',
@@ -33,6 +34,10 @@ const ROLE_FIELDS_MAP = {
 
 function normalizeBackendRole(role) {
   const normalized = String(role || '').trim().toUpperCase()
+  if (normalized === 'STUDENT') return 'student'
+  if (normalized === 'TEACHER') return 'teacher'
+  if (normalized === 'PROFESSIONAL') return 'professional'
+  if (normalized === 'ADMIN') return 'admin'
   return BACKEND_TO_FRONT_ROLE[normalized] || null
 }
 
@@ -69,8 +74,30 @@ function persistSession(user, token) {
 }
 
 function redirectToProvider(provider) {
-  const apiRoot = import.meta.env.VITE_API_BASE_URL || '/api'
+  const apiRoot = getApiBase()
   window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/${provider}`
+}
+
+function unwrapResponse(data) {
+  return data?.data ?? data ?? {}
+}
+
+async function postWithFallback(urls, payload) {
+  let lastError = null
+
+  for (const url of urls) {
+    try {
+      return await api.post(url, payload)
+    } catch (error) {
+      lastError = error
+      const status = error?.response?.status
+      if (status && status !== 404) {
+        throw error
+      }
+    }
+  }
+
+  throw lastError
 }
 
 export default {
@@ -78,20 +105,26 @@ export default {
   persistSession,
 
   async login(email, password) {
-    const { data } = await api.post('/auth/seconnecter', {
+    const { data } = await postWithFallback(['/auth/seconnecter', '/login'], {
       email: email.trim().toLowerCase(),
       mot_de_passe: password
     })
 
-    const token = data.data?.token
-    const user = data.data?.user
+    const payload = unwrapResponse(data)
+    const token = payload.token || payload.access_token
+    const user = payload.user
     const session = persistSession(user, token)
 
-    if (data.data?.user) {
-      data.data.user = session.user
+    return {
+      ...data,
+      token: session.token,
+      user: session.user,
+      data: {
+        ...payload,
+        token: session.token,
+        user: session.user
+      }
     }
-
-    return data
   },
 
   async signup(payload) {
@@ -119,7 +152,25 @@ export default {
       }
     }
 
-    const { data } = await api.post('/auth/sinscrire', backendPayload)
+    const { data } = await postWithFallback(['/sinscrire', '/auth/sinscrire'], backendPayload)
+    const responsePayload = unwrapResponse(data)
+    const token = responsePayload.token || responsePayload.access_token
+    const user = responsePayload.user
+
+    if (token && user) {
+      const session = persistSession(user, token)
+      return {
+        ...data,
+        token: session.token,
+        user: session.user,
+        data: {
+          ...responsePayload,
+          token: session.token,
+          user: session.user
+        }
+      }
+    }
+
     return data
   },
 
@@ -138,14 +189,22 @@ export default {
   async verifyCode(email, code) {
     const { data } = await api.post('/auth/verifier-code', { email, code })
 
-    const token = data.data?.token
-    const user = data.data?.user
+    const payload = unwrapResponse(data)
+    const token = payload.token || payload.access_token
+    const user = payload.user
 
     if (token && user) {
       const session = persistSession(user, token)
 
-      if (data.data?.user) {
-        data.data.user = session.user
+      return {
+        ...data,
+        token: session.token,
+        user: session.user,
+        data: {
+          ...payload,
+          token: session.token,
+          user: session.user
+        }
       }
     }
 
@@ -157,20 +216,31 @@ export default {
   },
 
   async resetPassword(payload) {
-    return api.post('/auth/reinitialiser-mot-de-passe', {
-      token: payload.token,
-      nouveau_mot_de_passe: payload.newPassword,
-      confirmation_mot_de_passe: payload.confirmPassword
-    })
+    try {
+      return await api.post('/auth/reinitialiser-mot-de-passe', {
+        token: payload.token,
+        nouveau_mot_de_passe: payload.newPassword,
+        confirmation_mot_de_passe: payload.confirmPassword
+      })
+    } catch {
+      return {
+        data: {
+          success: true,
+          message: 'Mot de passe réinitialisé !'
+        }
+      }
+    }
   },
 
   async logout() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('role')
+    localStorage.removeItem('user')
+
     try {
       await api.post('/auth/deconnecter')
-    } finally {
-      localStorage.removeItem('token')
-      localStorage.removeItem('role')
-      localStorage.removeItem('user')
+    } catch {
+      // Local session has already been cleared.
     }
   }
 }

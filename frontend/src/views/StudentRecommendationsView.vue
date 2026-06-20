@@ -151,16 +151,8 @@ function resolveAvatar(path?: string | null) {
   const value = String(path || "").trim();
   if (!value) return "";
   if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
-  if (value.startsWith("/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}${value}`;
-  }
-  if (value.startsWith("uploads/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}/${value}`;
-  }
+  if (value.startsWith("/")) return `${window.location.origin}${value}`;
+  if (value.startsWith("uploads/")) return `${window.location.origin}/${value}`;
   return "";
 }
 

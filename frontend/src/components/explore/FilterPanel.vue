@@ -154,40 +154,29 @@ const emit = defineEmits<{
 
 type SingleFilterKey = Exclude<keyof FilterState, "skills">;
 
-const setFilter = (key: SingleFilterKey, value: string | number) => {
-  const next: FilterState = { ...props.filters, skills: [...props.filters.skills] };
-  const nextValue = props.filters[key] === value ? null : value;
-
-  switch (key) {
-    case "year":
-      next.year = nextValue as number | null;
-      break;
-    case "school":
-      next.school = nextValue as string | null;
-      break;
-    case "field":
-      next.field = nextValue as string | null;
-      break;
-    case "city":
-      next.city = nextValue as string | null;
-      break;
-    case "scoreMin":
-      next.scoreMin = nextValue as number | null;
-      break;
-    case "recMin":
-      next.recMin = nextValue as number | null;
-      break;
-  }
-
+const emitNextFilters = (next: FilterState) => {
   emit("update:filters", next);
 };
 
-const toggleArrayFilter = (key: "skills", value: string) => {
-  const next = { ...props.filters, skills: [...props.filters.skills] };
-  const index = next.skills.indexOf(value);
-  if (index === -1) next.skills.push(value);
-  else next.skills.splice(index, 1);
-  emit("update:filters", next);
+const setScalarFilter = (key: SingleFilterKey, value: string | number) => {
+  const nextValue = props.filters[key] === value ? null : value;
+  emitNextFilters({
+    ...props.filters,
+    skills: [...props.filters.skills],
+    [key]: nextValue,
+  });
+};
+
+const setFilter = (key: SingleFilterKey, value: string | number) => {
+  setScalarFilter(key, value);
+};
+
+const toggleArrayFilter = (_key: "skills", value: string) => {
+  const skills = [...props.filters.skills];
+  const index = skills.indexOf(value);
+  if (index === -1) skills.push(value);
+  else skills.splice(index, 1);
+  emitNextFilters({ ...props.filters, skills });
 };
 
 const clearFilters = () => emit("clear-filters");

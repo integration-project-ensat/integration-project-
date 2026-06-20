@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import AuthLayout from '../components/AuthLayout.vue'
 import authService from '../services/auth.service.js'
 import { useAuthStore } from '@/store/auth.js'
@@ -69,7 +70,14 @@ function startGithubLogin() {
 }
 
 const router   = useRouter()
-const auth     = useAuthStore()
+const auth     = (() => {
+  const activePinia = getActivePinia()
+  if (activePinia) return useAuthStore()
+
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  return useAuthStore(pinia)
+})()
 const email    = ref('')
 const password = ref('')
 const error    = ref('')
@@ -96,11 +104,7 @@ async function submit() {
   try {
     const data = await authService.login(email.value, password.value)
     auth.login(data.data.user, data.data.token, data.data.user ? data.data.user.role : localStorage.getItem('role'))
-    const role = localStorage.getItem('role')
-    if (role === 'admin') router.push('/admin')
-    else if (role === 'teacher') router.push('/explore-prof')
-    else if (role === 'professional') router.push('/explore-pro')
-    else router.push('/student/explore')
+    router.push('/dashboard')
   } catch (e: any) {
     error.value = getErrorMessage(e)
   } finally {

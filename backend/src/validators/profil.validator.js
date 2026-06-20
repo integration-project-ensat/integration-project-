@@ -8,6 +8,18 @@ const ProfilValidator = {
       .isURL().withMessage('URL de photo invalide')
       .isLength({ max: 500 }).withMessage('URL trop longue'),
 
+    body('name')
+      .optional()
+      .isString().withMessage('Nom invalide')
+      .isLength({ max: 200 }).withMessage('Nom trop long')
+      .trim(),
+
+    body('title')
+      .optional()
+      .isString().withMessage('Titre invalide')
+      .isLength({ max: 200 }).withMessage('Titre trop long')
+      .trim(),
+
     body('telephone')
       .optional()
       .matches(/^\+?[\d\s\-().]{7,20}$/).withMessage('Numéro de téléphone invalide')

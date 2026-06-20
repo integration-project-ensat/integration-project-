@@ -23,13 +23,12 @@ type ExploreCardProfile = {
 };
 
 const resolveBackendAsset = (path?: string | null) => {
-  if (!path || /^https?:\/\//.test(path) || String(path).startsWith("data:")) {
-    return path || "";
-  }
-
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-  const backendBase = apiBase.replace(/\/api\/?$/, "");
-  return `${backendBase}${path}`;
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("/")) return `${window.location.origin}${value}`;
+  if (value.startsWith("uploads/")) return `${window.location.origin}/${value}`;
+  return "";
 };
 
 const pickRole = (profile: ProfilExplore) =>
@@ -39,7 +38,9 @@ const pickRole = (profile: ProfilExplore) =>
   "Étudiant en développement";
 
 const pickSchool = (profile: ProfilExplore) =>
-  profile.etudiant?.diplomes?.[0]?.etablissement || "École Nationale des Sciences Appliquées";
+  profile.etudiant?.etablissement ||
+  profile.etudiant?.diplomes?.[0]?.etablissement ||
+  "École Nationale des Sciences Appliquées";
 
 const cityOptions = [
   "Tanger",
@@ -123,7 +124,7 @@ export const mapExploreProfileCard = (
   role: pickRole(profile),
   school: pickSchool(profile),
   city: pickCity(profile),
-  score: profile.etudiant?.score_credibilite?.score_total ?? 0,
+  score: Number(profile.etudiant?.score_credibilite?.score_total ?? 0),
   recommendations: profile.nb_recommandations,
   badges: pickBadges(profile),
   profilePath: `/profile/student/${profile.id_utilisateur}?from=${context}`,

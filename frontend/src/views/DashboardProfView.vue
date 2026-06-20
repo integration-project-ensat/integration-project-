@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import SidebarProf from "../components/exploreProf/SidebarProf.vue";
@@ -112,10 +112,10 @@ const statusClass = (status: ValidationStatus) => ({
 });
 
 const normalizeValidationStatus = (status: string): ValidationStatus => {
-  if (status === "Validé" || status === "ValidÃ©" || status === "ValidÃƒÂ©") {
+  if (status === "Validé") {
     return "Validé";
   }
-  if (status === "Refusé" || status === "RefusÃ©" || status === "RefusÃƒÂ©") {
+  if (status === "Refusé") {
     return "Refusé";
   }
   return "En attente";
@@ -125,16 +125,12 @@ const normalizeRecommendationStatus = (
   status: string,
 ): RecommendationStatus => {
   if (
-    status === "Acceptée" ||
-    status === "AcceptÃ©e" ||
-    status === "AcceptÃƒÂ©e"
+    status === "Acceptée"
   ) {
     return "Acceptée";
   }
   if (
-    status === "Refusée" ||
-    status === "RefusÃ©e" ||
-    status === "RefusÃƒÂ©e"
+    status === "Refusée"
   ) {
     return "Refusée";
   }
@@ -152,14 +148,10 @@ const resolveAvatar = (path?: string | null) => {
   if (!value) return "";
   if (/^https?:\/\//.test(value) || value.startsWith("data:")) return value;
   if (value.startsWith("/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}${value}`;
+    return `${window.location.origin}${value}`;
   }
   if (value.startsWith("uploads/")) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const backendBase = apiBase.replace(/\/api\/?$/, "");
-    return `${backendBase}/${value}`;
+    return `${window.location.origin}/${value}`;
   }
   return "";
 };

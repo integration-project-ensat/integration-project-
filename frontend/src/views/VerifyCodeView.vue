@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import authService from '@/services/auth.service.js'
 import { useAuthStore } from '@/store/auth.js'
 
@@ -81,7 +82,14 @@ const getApiErrorMessage = (e: unknown, fallback: string) => {
 
 const router   = useRouter()
 const route    = useRoute()
-const auth     = useAuthStore()
+const auth     = (() => {
+  const activePinia = getActivePinia()
+  if (activePinia) return useAuthStore()
+
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  return useAuthStore(pinia)
+})()
 const email    = route.query.email as string || ''
 const error    = ref('')
 const success  = ref('')
@@ -91,9 +99,17 @@ const countdown = ref(60)
 const code   = reactive(['', '', '', '', '', ''])
 const inputs = ref<HTMLInputElement[]>([])
 
+function clearLocalSession() {
+  auth.logout()
+  localStorage.removeItem('token')
+  localStorage.removeItem('role')
+  localStorage.removeItem('user')
+}
+
 // countdown timer
 let timer: ReturnType<typeof setInterval>
 onMounted(() => {
+  clearLocalSession()
   inputs.value[0]?.focus()
   startCountdown()
 })
@@ -130,19 +146,7 @@ function onPaste(e: ClipboardEvent) {
 }
 
 function redirectByRole(role: string | null | undefined) {
-  if (role === 'admin') {
-    router.push('/admin')
-    return
-  }
-  if (role === 'teacher') {
-    router.push('/explore-prof')
-    return
-  }
-  if (role === 'professional') {
-    router.push('/explore-pro')
-    return
-  }
-  router.push('/student/explore')
+  router.push('/dashboard')
 }
 
 function getPendingSignup(): PendingSignup | null {
@@ -200,7 +204,7 @@ async function submit() {
       }
 
       sessionStorage.removeItem('pendingSignup')
-      router.push('/login')
+      router.push({ path: '/reset-password', query: { email } })
     }, 1000)
   } catch(e) {
     error.value = getApiErrorMessage(e, 'Code incorrect ou expiré.')

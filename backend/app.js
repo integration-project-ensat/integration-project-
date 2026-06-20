@@ -15,6 +15,10 @@ require("./src/routes/portfolioAI.routes");
 
 const { apiLimiter, authLimiter, passwordLimiter,profilLimiter,diplomeLimiter } = require('./src/middlewares/rateLimiter.middleware')
 const errorMiddleware = require('./src/middlewares/error.middleware')
+const {
+  metricsMiddleware,
+  monitoringRoutes
+} = require('./src/routes/monitoring.routes')
 
 // Routes existantes
 const authRoutes = require('./src/routes/auth.routes')
@@ -73,6 +77,7 @@ app.use(passport.initialize());
 // Body parser
 app.use(express.json({ limit: '10Kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10Kb' }))
+app.use(metricsMiddleware)
 
 
 
@@ -103,6 +108,7 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+app.use('/', monitoringRoutes)
 
 // Routes
 app.use('/api/auth', authRoutes)

@@ -7,12 +7,13 @@ import './assets/main.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
 
 const pinia = createPinia()
+const authStore = useAuthStore(pinia)
+
+authStore.restoreSession()
+await authStore.validateSession()
+
 const app = createApp(App)
 app.use(pinia)
 app.use(router)
-
-const authStore = useAuthStore()
-authStore.restoreSession()
-authStore.validateSession().finally(() => {
-  app.mount('#app')
-})
+await router.isReady()
+app.mount('#app')

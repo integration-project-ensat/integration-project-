@@ -1,11 +1,5 @@
 import api from './api'
-
-const resolveBackendAsset = (path) => {
-  if (!path || /^https?:\/\//.test(path) || String(path).startsWith('data:')) return path
-  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-  const backendBase = apiBase.replace(/\/api\/?$/, '')
-  return `${backendBase}${path}`
-}
+import { resolveBackendAsset } from '../utils/backendAsset'
 
 const fullName = (user) =>
   [user?.prenom, user?.nom].filter(Boolean).join(' ').trim()
@@ -95,6 +89,28 @@ const profileRole = (role) => {
   return 'student'
 }
 
+const safeJsonParse = (value) => {
+  if (!value) return null
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+const buildFallbackProfile = (userId) => {
+  const storedUser = typeof localStorage !== 'undefined' ? safeJsonParse(localStorage.getItem('user')) : null
+  const fallbackName = fullName(storedUser) || storedUser?.name || 'Profil utilisateur'
+  const fallbackEmail = storedUser?.email || 'profil@plateforme.ma'
+
+  return normalizeProfile({
+    id: userId ?? storedUser?.id ?? storedUser?.id_utilisateur ?? 0,
+    name: fallbackName,
+    email: fallbackEmail,
+    role: storedUser?.role || 'student'
+  })
+}
+
 const mapRecommendation = (item) => ({
   id: Number(item?.id_recommandation ?? item?.id ?? Date.now()),
   author: fullName(item?.auteur) || item?.author || 'Auteur inconnu',
@@ -123,7 +139,9 @@ const mapPost = (item) => ({
   subtitle: item?.subtitle || item?.visibilite || 'Post portfolio',
   description: item?.description || item?.contenu || '',
   avatar: resolveBackendAsset(item?.avatar || item?.auteur?.profil?.photo_profil || ''),
-  images: item?.images || (item?.image_url ? [item.image_url] : []),
+  images:
+    item?.images ||
+    (item?.image_url ? [resolveBackendAsset(item.image_url)] : []),
   media: item?.media || [],
   compteurs_reactions: item?.compteurs_reactions || {},
   reposts: item?.reposts || item?._count?.reposts || 0,
@@ -144,16 +162,15 @@ const normalizeProfile = (payload) => {
   const professional = payload?.professionnel || {}
   const professor = payload?.professeur || {}
   const normalizedRole = profileRole(payload?.role)
-  const score = normalizedRole === 'student'
-    ? (
-        Number(
-          payload?.score ??
-          student?.score_credibilite?.score_total ??
-          professional?.score_credibilite?.score_total ??
-          0,
-        ) || 0
-      )
-    : 0
+  let score = 0
+  if (normalizedRole === 'student') {
+    score = Number(
+      payload?.score ??
+      student?.score_credibilite?.score_total ??
+      professional?.score_credibilite?.score_total ??
+      0,
+    ) || 0
+  }
 
   const recommendations = Array.isArray(payload?.recommendations)
     ? payload.recommendations.map(mapRecommendation)
@@ -216,14 +233,22 @@ export const profileService = {
   async getProfile(userId) {
     const id = userId == null || Number.isNaN(Number(userId)) ? null : Number(userId)
     const url = id != null ? `/profil/${id}` : '/profil/me'
-    const { data } = await api.get(url)
-    return normalizeProfile(data?.data ?? data)
+    try {
+      const { data } = await api.get(url)
+      return normalizeProfile(data?.data ?? data)
+    } catch {
+      return buildFallbackProfile(id)
+    }
   },
 
   async getCurrentUser() {
-  const { data } = await api.get('/profil/me')
-  return normalizeProfile(data?.data ?? data)
-},
+    try {
+      const { data } = await api.get('/profil/me')
+      return normalizeProfile(data?.data ?? data)
+    } catch {
+      return buildFallbackProfile(null)
+    }
+  },
   async updateProfile(userId, payload) {
     const id = userId == null || Number.isNaN(Number(userId)) ? null : Number(userId)
     const url = id != null ? `/profil/${id}` : '/profil/me'
@@ -234,9 +259,14 @@ export const profileService = {
 
   async uploadAvatar(userId, file) {
     const form = new FormData()
-    form.append('photo', file)
+    form.append('avatar', file)
     const { data } = await api.post('/profil/photo', form)
     return resolveBackendAsset(data?.data?.photo_profil || data?.photo_profil || '')
+  },
+
+  async deleteAvatar() {
+    const { data } = await api.delete('/profil/photo')
+    return data
   },
 
   async uploadBanner(userId, file) {

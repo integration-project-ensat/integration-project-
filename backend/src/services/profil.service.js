@@ -164,6 +164,13 @@ const uniqueStrings = (values) => {
   )];
 };
 
+const splitDisplayName = (value) => {
+  const parts = String(value || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return { prenom: undefined, nom: undefined };
+  if (parts.length === 1) return { prenom: parts[0], nom: '' };
+  return { prenom: parts[0], nom: parts.slice(1).join(' ') };
+};
+
 const expandVilleFilter = (value) => {
   const normalized = String(value || '').trim().toLowerCase();
   const aliases = {
@@ -274,6 +281,17 @@ class ProfilService {
     });
 
     const adresseNormalisee = data.adresse !== undefined ? canonicalVille(data.adresse) : undefined;
+    const nameParts = data.name !== undefined ? splitDisplayName(data.name) : null;
+
+    if (nameParts) {
+      await prisma.utilisateur.update({
+        where: { id_utilisateur: BigInt(idUtilisateur) },
+        data: {
+          ...(nameParts.prenom !== undefined && { prenom: nameParts.prenom }),
+          ...(nameParts.nom !== undefined && { nom: nameParts.nom })
+        }
+      });
+    }
 
     const champsCommuns = {
       ...(data.photo_profil        !== undefined && { photo_profil:        data.photo_profil }),
@@ -310,6 +328,25 @@ class ProfilService {
       });
     }
 
+    if (data.title !== undefined) {
+      if (utilisateur?.role === ROLES.ETUDIANT) {
+        await prisma.etudiant.update({
+          where: { id_utilisateur: BigInt(idUtilisateur) },
+          data: { filiere: data.title || null }
+        });
+      } else if (utilisateur?.role === ROLES.PROFESSEUR) {
+        await prisma.professeur.update({
+          where: { id_utilisateur: BigInt(idUtilisateur) },
+          data: { specialite: data.title || null }
+        });
+      } else if (utilisateur?.role === ROLES.PROFESSIONNEL) {
+        await prisma.professionnel.update({
+          where: { id_utilisateur: BigInt(idUtilisateur) },
+          data: { poste: data.title || null }
+        });
+      }
+    }
+
     await recalculerScore(idUtilisateur);
     return profil;
   }
@@ -317,7 +354,7 @@ class ProfilService {
   async updateProfilParId(idCible, data) {
     const utilisateur = await prisma.utilisateur.findUnique({
       where:  { id_utilisateur: BigInt(idCible) },
-      select: { id_utilisateur: true }
+      select: { id_utilisateur: true, role: true }
     });
 
     if (!utilisateur) {
@@ -327,6 +364,17 @@ class ProfilService {
     }
 
     const adresseNormalisee = data.adresse !== undefined ? canonicalVille(data.adresse) : undefined;
+    const nameParts = data.name !== undefined ? splitDisplayName(data.name) : null;
+
+    if (nameParts) {
+      await prisma.utilisateur.update({
+        where: { id_utilisateur: BigInt(idCible) },
+        data: {
+          ...(nameParts.prenom !== undefined && { prenom: nameParts.prenom }),
+          ...(nameParts.nom !== undefined && { nom: nameParts.nom })
+        }
+      });
+    }
 
     const profil = await prisma.profil.upsert({
       where:  { id_utilisateur: BigInt(idCible) },
@@ -351,6 +399,25 @@ class ProfilService {
       }
     });
 
+    if (data.title !== undefined) {
+      if (utilisateur?.role === ROLES.ETUDIANT) {
+        await prisma.etudiant.update({
+          where: { id_utilisateur: BigInt(idCible) },
+          data: { filiere: data.title || null }
+        });
+      } else if (utilisateur?.role === ROLES.PROFESSEUR) {
+        await prisma.professeur.update({
+          where: { id_utilisateur: BigInt(idCible) },
+          data: { specialite: data.title || null }
+        });
+      } else if (utilisateur?.role === ROLES.PROFESSIONNEL) {
+        await prisma.professionnel.update({
+          where: { id_utilisateur: BigInt(idCible) },
+          data: { poste: data.title || null }
+        });
+      }
+    }
+
     await recalculerScore(idCible);
     return profil;
   }
@@ -362,6 +429,8 @@ class ProfilService {
       search,
       filiere,
       ville,
+      year,
+      school,
       competences,
       score,
       recommandations,
@@ -386,13 +455,70 @@ class ProfilService {
       ];
     }
 
-    if (filiere || competences || score || recommandations) {
+    if (filiere || year || school || competences || score || recommandations) {
       where.etudiant = {};
 
       if (filiere) {
-        where.etudiant.OR = filiereFilterVariants(filiere).map((item) => ({
-          filiere: { equals: item, mode: 'insensitive' }
-        }));
+        where.etudiant.AND = [
+          ...(where.etudiant.AND || []),
+          {
+            OR: filiereFilterVariants(filiere).map((item) => ({
+              filiere: { equals: item, mode: 'insensitive' }
+            }))
+          }
+        ];
+      }
+
+      if (year) {
+        const yearValue = String(year).trim();
+        const yearNumber = Number.parseInt(yearValue, 10);
+
+        where.etudiant.AND = [
+          ...(where.etudiant.AND || []),
+          {
+            OR: [
+              {
+                annee_universitaire: {
+                  contains: yearValue,
+                  mode: 'insensitive'
+                }
+              },
+              ...(Number.isFinite(yearNumber)
+                ? [
+                    {
+                      diplomes: {
+                        some: {
+                          OR: [
+                            { annee_debut: yearNumber },
+                            { annee_fin: yearNumber }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                : [])
+            ]
+          }
+        ];
+      }
+
+      if (school) {
+        const schoolValue = String(school).trim();
+        where.etudiant.AND = [
+          ...(where.etudiant.AND || []),
+          {
+            OR: [
+              { etablissement: { startsWith: schoolValue, mode: 'insensitive' } },
+              {
+                diplomes: {
+                  some: {
+                    etablissement: { startsWith: schoolValue, mode: 'insensitive' }
+                  }
+                }
+              }
+            ]
+          }
+        ];
       }
 
       if (competences) {

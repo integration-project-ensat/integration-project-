@@ -35,6 +35,43 @@ const FILIERES = [
   { label: 'Design', variants: ['Design'] }
 ];
 
+function resolveFrontendBaseUrl(req) {
+  const configuredUrl = String(process.env.FRONTEND_URL || '').trim();
+  const fallbackOrigin = `${req.protocol}://${req.get('host')}`;
+
+  if (!configuredUrl) {
+    return fallbackOrigin;
+  }
+
+  try {
+    const url = new URL(configuredUrl, fallbackOrigin);
+    const normalizedPath = url.pathname.replace(/\/+$/, '');
+
+    if (normalizedPath === '/api') {
+      url.pathname = '';
+    }
+
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return fallbackOrigin;
+  }
+}
+
+function redirectToFrontend(req, res, path, query = {}) {
+  const frontendBaseUrl = resolveFrontendBaseUrl(req);
+  const targetUrl = new URL(path, `${frontendBaseUrl.replace(/\/+$/, '')}/`);
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    targetUrl.searchParams.set(key, String(value));
+  });
+
+  return res.redirect(targetUrl.toString());
+}
+
 function normalizeFiliere(value) {
   const normalized = normalizeText(value);
   const match = FILIERES.find((item) =>
@@ -42,6 +79,27 @@ function normalizeFiliere(value) {
   );
 
   return match?.label || String(value || '').trim() || null;
+}
+
+function buildOAuthFallbackName(email) {
+  const localPart = String(email || '').split('@')[0].trim();
+  return localPart || 'Utilisateur';
+}
+
+function validateOAuthRoleData(role, specificData) {
+  if (role === ROLES.ETUDIANT && !String(specificData.numero_etudiant || '').trim()) {
+    return 'Le numéro étudiant est obligatoire.';
+  }
+
+  if (role === ROLES.PROFESSEUR && !String(specificData.code_administratif || '').trim()) {
+    return 'Le code administratif est obligatoire.';
+  }
+
+  if (role === ROLES.PROFESSIONNEL && !String(specificData.entreprise || '').trim()) {
+    return "L'entreprise est obligatoire.";
+  }
+
+  return null;
 }
 
 function generateToken(user) {
@@ -415,7 +473,10 @@ const handleOAuthCallback = async (req, res, provider) => {
   const providerDbField = provider === 'GOOGLE' ? 'google_id' : 'github_id';
   const tempFlag = provider === 'GOOGLE' ? 'tempGoogleSignup' : 'tempGithubSignup';
   const providerId = req.user[providerIdField];
-  const { email, nom, prenom } = req.user;
+  const nom = String(req.user?.nom || '').trim();
+  const prenom = String(req.user?.prenom || '').trim();
+  const email = String(req.user?.email || '').trim().toLowerCase();
+  const fallbackName = buildOAuthFallbackName(email);
 
   if (!email) {
     return res.status(400).json({
@@ -434,20 +495,21 @@ const handleOAuthCallback = async (req, res, provider) => {
       profil: true
     }
   });
+  const existingAuthProvider = String(existingUser?.auth_provider || 'LOCAL').trim().toUpperCase();
 
   // CAS 1 : compte existe avec un autre provider
-  if (existingUser && existingUser.auth_provider !== provider) {
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/login?error=email_exists_${existingUser.auth_provider.toLowerCase()}`
-    );
+  if (existingUser && existingAuthProvider !== provider) {
+    return redirectToFrontend(req, res, '/login', {
+      error: `email_exists_${existingAuthProvider.toLowerCase()}`
+    });
   }
 
   // CAS 2 : compte OAuth existant
-  if (existingUser && existingUser.auth_provider === provider) {
+  if (existingUser && existingAuthProvider === provider) {
     if (provider === 'GITHUB' && existingUser.role !== ROLES.ETUDIANT) {
-      return res.redirect(
-        `${process.env.FRONTEND_URL}/login?error=github_students_only`
-      );
+      return redirectToFrontend(req, res, '/login', {
+        error: 'github_students_only'
+      });
     }
 
     await prisma.utilisateur.update({
@@ -467,17 +529,15 @@ const handleOAuthCallback = async (req, res, provider) => {
     const token = generateToken(existingUser);
     setAuthCookie(res, token);
 
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/oauth-success?token=${encodeURIComponent(token)}`
-    );
+    return redirectToFrontend(req, res, '/oauth-success', { token });
   }
 
   // CAS 3 : nouveau compte OAuth
   const tempToken = jwt.sign(
     {
       email,
-      nom,
-      prenom,
+      nom: nom || fallbackName,
+      prenom: prenom || fallbackName,
       [providerIdField]: providerId,
       provider,
       [tempFlag]: true
@@ -486,13 +546,21 @@ const handleOAuthCallback = async (req, res, provider) => {
     { expiresIn: '15m' }
   );
 
-  return res.redirect(
-    `${process.env.FRONTEND_URL}/complete-profile?provider=${provider.toLowerCase()}&token=${tempToken}`
-  );
+  return redirectToFrontend(req, res, '/complete-profile', {
+    provider: provider.toLowerCase(),
+    token: tempToken
+  });
 };
 
 const googleCallback = asyncHandler(async (req, res) => {
-  return handleOAuthCallback(req, res, 'GOOGLE');
+  try {
+    return await handleOAuthCallback(req, res, 'GOOGLE');
+  } catch (error) {
+    console.error('[oauth][google-callback]', error);
+    return redirectToFrontend(req, res, '/login', {
+      error: 'oauth_callback_failed'
+    });
+  }
 });
 
 const completeOAuthSignup = async (req, res, provider) => {
@@ -533,6 +601,14 @@ const completeOAuthSignup = async (req, res, provider) => {
     });
   }
 
+  const validationError = validateOAuthRoleData(role, specificData);
+  if (validationError) {
+    return res.status(400).json({
+      success: false,
+      message: validationError
+    });
+  }
+
   if (provider === 'GITHUB' && role !== ROLES.ETUDIANT) {
     return res.status(403).json({
       success: false,
@@ -566,11 +642,12 @@ const completeOAuthSignup = async (req, res, provider) => {
   }
 
   const user = await prisma.$transaction(async (tx) => {
+    const fallbackName = buildOAuthFallbackName(decoded.email);
     const newUser = await tx.utilisateur.create({
       data: {
         email: decoded.email,
-        nom: decoded.nom,
-        prenom: decoded.prenom,
+        nom: String(decoded.nom || '').trim() || fallbackName,
+        prenom: String(decoded.prenom || '').trim() || fallbackName,
         role,
         [providerDbField]: decoded[providerIdField],
         auth_provider: provider,
@@ -681,7 +758,14 @@ const completeGoogleSignup = asyncHandler(async (req, res) => {
 });
 
 const githubCallback = asyncHandler(async (req, res) => {
-  return handleOAuthCallback(req, res, 'GITHUB');
+  try {
+    return await handleOAuthCallback(req, res, 'GITHUB');
+  } catch (error) {
+    console.error('[oauth][github-callback]', error);
+    return redirectToFrontend(req, res, '/login', {
+      error: 'oauth_callback_failed'
+    });
+  }
 });
 
 const completeGithubSignup = asyncHandler(async (req, res) => {
@@ -692,7 +776,10 @@ const completeGithubSignup = asyncHandler(async (req, res) => {
 // ==================== PROFIL ====================
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await prisma.utilisateur.findUnique({
+  const fallbackUser = req.utilisateur ? sanitizeUser(req.utilisateur) : null;
+
+  try {
+    const user = await prisma.utilisateur.findUnique({
     where: { id_utilisateur: req.utilisateur.id_utilisateur },
     include: {
       etudiant: true,
@@ -701,18 +788,30 @@ const getCurrentUser = asyncHandler(async (req, res) => {
       administrateur: true,
       profil:true
     }
-  });
-  if (!user) {
+    });
+    if (!user) {
     return res.status(404).json({
       success: false, 
       message: 'Utilisateur non trouvé'
     });
-  }
+    }
 
-  res.json({
-    success: true,
-    data: sanitizeUser(user)
-  });
+    return res.json({
+      success: true,
+      data: sanitizeUser(user)
+    });
+  } catch (error) {
+    console.error('[getCurrentUser] fallback minimal user:', error.message);
+
+    if (!fallbackUser) {
+      throw error;
+    }
+
+    return res.json({
+      success: true,
+      data: fallbackUser
+    });
+  }
 });
 
 // ==================== Déconnexion ====================

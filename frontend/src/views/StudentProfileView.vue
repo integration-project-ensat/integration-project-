@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="page">
     <TopBar @toggleSidebar="sidebarOpen = !sidebarOpen" />
 
@@ -14,6 +14,11 @@
         :force-navigation="true"
       />
       <SidebarPro
+        v-else-if="userRole === 'professional'"
+        :isOpen="sidebarOpen"
+        :force-navigation="true"
+      />
+      <SidebarStudent
         v-else
         :isOpen="sidebarOpen"
         :force-navigation="true"
@@ -273,7 +278,7 @@
           >
             <div class="pedit-card">
               <div class="pedit-head">
-                <h3>A propos</h3>
+                <h3>À propos</h3>
                 <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
                   Modifier
                 </button>
@@ -345,12 +350,53 @@
           <!-- Tab : Modifier bio (profil etudiant) -->
           <section v-if="activeTab === 'Modifier bio' && isStudentProfile" class="profile-edit-sections">
 
+            <!-- Informations personnelles -->
+            <div class="pedit-card">
+              <div class="pedit-head">
+                <h3>Informations personnelles</h3>
+                <button v-if="!editingInfo" type="button" class="btn-modifier" @click="openEditInfo">Modifier</button>
+              </div>
+              <template v-if="!editingInfo">
+                <div class="role-overview role-overview--edit">
+                  <article class="role-overview-card">
+                    <span>Nom complet</span>
+                    <strong>{{ profile.name || 'Non renseigné' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Titre</span>
+                    <strong>{{ profile.title || 'Non renseigné' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Établissement</span>
+                    <strong>{{ profile.school || 'Non renseigné' }}</strong>
+                  </article>
+                  <article class="role-overview-card">
+                    <span>Ville</span>
+                    <strong>{{ profile.location || 'Non renseignée' }}</strong>
+                  </article>
+                </div>
+              </template>
+              <template v-else>
+                <div class="contact-form">
+                  <div class="form-field"><label>Nom complet</label><input v-model="infoForm.name" type="text" placeholder="Nom Prénom" /></div>
+                  <div class="form-field"><label>Titre</label><input v-model="infoForm.title" type="text" placeholder="Ex: Génie Informatique" /></div>
+                  <div class="form-field"><label>Établissement</label><input v-model="infoForm.school" type="text" placeholder="ENSA Tanger" /></div>
+                  <div class="form-field"><label>Ville</label><input v-model="infoForm.location" type="text" placeholder="Tanger" /></div>
+                </div>
+                <div class="pedit-row-actions">
+                  <button type="button" class="send-btn" :disabled="savingProfile" @click="saveInfo">
+                    {{ savingProfile ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
+                  <button type="button" class="cancel-btn" @click="cancelInfo">Annuler</button>
+                </div>
+              </template>
+            </div>
+
             <!-- À propos -->
             <div class="pedit-card">
               <div class="pedit-head">
                 <h3>À propos</h3>
                 <button v-if="!editingAbout" type="button" class="btn-modifier" @click="openEditAbout">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Modifier
                 </button>
               </div>
@@ -486,7 +532,7 @@
                     <div>
                       <strong>{{ exp.poste }}</strong>
                       <p class="entry-sub">{{ exp.entreprise }}</p>
-                      <p class="entry-date">{{ exp.debut }} - {{ exp.fin }}</p>
+                      <p class="entry-date">{{ exp.debut }} — {{ exp.fin }}</p>
                       <p v-if="exp.description" class="entry-desc">{{ exp.description }}</p>
                     </div>
                     <div class="entry-actions">
@@ -515,7 +561,7 @@
                     <div>
                       <strong>{{ f.diplome }}</strong>
                       <p class="entry-sub">{{ f.etablissement }}</p>
-                      <p class="entry-date">{{ f.debut }} - {{ f.fin }}</p>
+                      <p class="entry-date">{{ f.debut }} — {{ f.fin }}</p>
                     </div>
                     <div class="entry-actions">
                       <button type="button" class="icon-btn" @click="openEditEntry('form', f.id)" title="Modifier">
@@ -579,29 +625,6 @@
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Recommandations (lecture seule) -->
-            <div class="pedit-card">
-              <div class="pedit-head"><h3>Recommandations</h3></div>
-              <div class="recommendations-list">
-                <article v-for="r in recommendations" :key="r.id" class="recommendation-card">
-                  <div class="mini-avatar">
-                    <img v-if="r.avatar" :src="r.avatar" alt="" />
-                    <span v-else>{{ getInitials(r.author) }}</span>
-                  </div>
-                  <div class="recommendation-content">
-                    <div class="recommendation-head">
-                      <div>
-                        <h4>{{ r.author }}</h4>
-                        <p>{{ r.role === 'teacher' ? 'Professeur' : 'Professionnel' }}</p>
-                      </div>
-                      <span>{{ r.date }}</span>
-                    </div>
-                    <p class="recommendation-message">{{ r.message || 'Recommandation sans commentaire.' }}</p>
-                  </div>
-                </article>
               </div>
             </div>
 
@@ -997,7 +1020,7 @@ import { profileService } from '../services/profile.service'
 import { recommendationService } from '../services/recommendation.service'
 import { stageService } from '../services/stage.service'
 
-// --- Types --------------------------------------------------------------------
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Recommendation = {
   id: number
@@ -1047,13 +1070,13 @@ interface Certification { id: number; titre: string; organisme: string; date: st
 interface Langue { id: number; nom: string; niveau: string }
 type EntrySection = 'exp' | 'form' | 'cert' | 'langue'
 
-// --- Router / Auth ------------------------------------------------------------
+// â”€â”€â”€ Router / Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-// --- UI state -----------------------------------------------------------------
+// â”€â”€â”€ UI state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const sidebarOpen = ref(false)
 const showRecosModal = ref(false)
@@ -1063,11 +1086,11 @@ const savingProfile = ref(false)
 const profileSuccess = ref('')
 const profileSaveError = ref('')
 
-// --- Role ---------------------------------------------------------------------
+// â”€â”€â”€ Role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const normalizedAuthRole = computed<'student' | 'teacher' | 'professional' | null>(() => {
   const storedRole = localStorage.getItem('role')
-  const role = String(auth.role || storedRole || '').trim().toUpperCase()
+  const role = String(auth.role || auth.user?.role || storedRole || '').trim().toUpperCase()
   if (role === 'TEACHER' || role === 'PROFESSEUR') return 'teacher'
   if (role === 'PROFESSIONAL' || role === 'PROFESSIONNEL') return 'professional'
   if (role === 'STUDENT' || role === 'ETUDIANT') return 'student'
@@ -1093,9 +1116,9 @@ const userRole = computed<'student' | 'teacher' | 'professional'>(
   () => normalizedAuthRole.value ?? roleFromRoute.value ?? 'student'
 )
 
-// --- Tab ----------------------------------------------------------------------
+// â”€â”€â”€ Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'Compétances', 'À propos', 'Partager', 'Modifier bio', 'Modifier info'])
+const allowedTabs = new Set(['Portfolio', 'Recommander', 'Demandes', 'Connecter', 'Compétences', 'À propos', 'Partager', 'Modifier bio', 'Modifier info'])
 
 const getRouteTab = () => {
   const rawTab = typeof route.query.tab === 'string' ? route.query.tab : 'Portfolio'
@@ -1114,7 +1137,7 @@ function resolveDefaultTab() {
   return getRouteTab()
 }
 
-// --- Profile data -------------------------------------------------------------
+// â”€â”€â”€ Profile data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const profileLoading = ref(true)
 const profileError = ref('')
@@ -1194,7 +1217,11 @@ const showRolePostsSection = computed(() => {
   return activeTab.value === 'À propos'
 })
 const profileHeaderTabs = computed(() => {
-  if (isOwnProfile.value) return undefined
+  if (isOwnProfile.value) {
+    return isStudentProfile.value
+      ? ['Modifier bio', 'Partager']
+      : ['Modifier info', 'Partager']
+  }
   if (isTeacherProfile.value) return ['Demandes', 'Connecter', 'À propos', 'Partager']
   if (isProfessionalProfile.value) return ['Connecter', 'À propos', 'Partager']
   return undefined
@@ -1207,7 +1234,7 @@ const showRecommendationsSummary = computed(
 const technicalSkillNames = computed(() => profile.value.technicalSkills.map(s => s.name))
 const softSkillNames = computed(() => profile.value.softSkills.map(s => s.name))
 
-// --- Teacher attach -----------------------------------------------------------
+// â”€â”€â”€ Teacher attach â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const attachingStudent = ref(false)
 const studentAttached = ref(false)
@@ -1248,7 +1275,7 @@ const letterRequestForm = reactive({
   date_souhaitee: '',
 })
 
-// --- IDs ----------------------------------------------------------------------
+// â”€â”€â”€ IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const profileStudentId = computed<number | undefined>(() => {
   const id = Number(route.params.id)
@@ -1256,6 +1283,7 @@ const profileStudentId = computed<number | undefined>(() => {
 })
 
 const profileId = computed(() => profileStudentId.value || profile.value.id)
+const isOwnProfileRoute = computed(() => !profileStudentId.value)
 
 const currentUserId = computed(() => {
   const rawUser = localStorage.getItem('user')
@@ -1270,10 +1298,40 @@ const currentUserId = computed(() => {
 })
 
 const isOwnProfile = computed(() =>
-  Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
+  isOwnProfileRoute.value
+    ? Boolean(currentUserId.value)
+    : Boolean(currentUserId.value && profileId.value && Number(currentUserId.value) === Number(profileId.value))
 )
 
-// --- Connection ---------------------------------------------------------------
+function syncCurrentUserAssets(avatar: string | null, banner: string | null) {
+  if (auth.user) {
+    const currentUser = auth.user as Record<string, any>
+    auth.user = {
+      ...currentUser,
+      avatar: avatar || currentUser.avatar || '',
+      banner: banner || currentUser.banner || ''
+    } as any
+  }
+
+  const storedUser = localStorage.getItem('user')
+  if (!storedUser) return
+
+  try {
+    const parsed = JSON.parse(storedUser)
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        ...parsed,
+        avatar: avatar || parsed.avatar || '',
+        banner: banner || parsed.banner || ''
+      })
+    )
+  } catch {
+    // Ignore malformed stored sessions.
+  }
+}
+
+// â”€â”€â”€ Connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const defaultConnectionStatus = (): ConnectionStatus => ({
   isConnected: false,
@@ -1419,7 +1477,7 @@ async function removeConnection() {
   )
 }
 
-// --- Share --------------------------------------------------------------------
+// â”€â”€â”€ Share â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const profileUrl = computed(() => `${window.location.origin}${route.path}`)
 const encodedProfileUrl = computed(() => encodeURIComponent(profileUrl.value))
@@ -1436,14 +1494,19 @@ async function copyProfileLink() {
   window.setTimeout(() => { copied.value = false }, 1600)
 }
 
-// --- Profile edit - bio -------------------------------------------------------
+// â”€â”€â”€ Profile edit â€“ bio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+const editingInfo = ref(false)
 const editingAbout = ref(false)
+const infoForm = reactive({ name: '', title: '', school: '', location: '' })
 const bioForm = ref('')
 
 function applySavedProfile(savedProfile: any) {
   profile.value = {
     ...profile.value,
+    name: savedProfile?.name ?? profile.value.name,
+    title: savedProfile?.title ?? profile.value.title,
+    school: savedProfile?.school ?? profile.value.school,
     bio: savedProfile?.bio ?? profile.value.bio,
     email: savedProfile?.email ?? profile.value.email,
     phone: savedProfile?.phone ?? profile.value.phone,
@@ -1452,6 +1515,35 @@ function applySavedProfile(savedProfile: any) {
     avatar: savedProfile?.avatar ?? profile.value.avatar,
     banner: savedProfile?.banner ?? profile.value.banner,
   }
+}
+
+function openEditInfo() {
+  infoForm.name = profile.value.name
+  infoForm.title = profile.value.title
+  infoForm.school = profile.value.school
+  infoForm.location = profile.value.location
+  editingInfo.value = true
+}
+
+async function saveInfo() {
+  const saved = await saveProfileChanges(
+    {
+      name: infoForm.name,
+      title: infoForm.title,
+      etablissement: infoForm.school,
+      adresse: infoForm.location,
+    },
+    'Informations personnelles mises a jour avec succes.'
+  )
+  if (saved) editingInfo.value = false
+}
+
+function cancelInfo() {
+  infoForm.name = profile.value.name
+  infoForm.title = profile.value.title
+  infoForm.school = profile.value.school
+  infoForm.location = profile.value.location
+  editingInfo.value = false
 }
 
 async function saveProfileChanges(payload: Record<string, string>, successMessage: string) {
@@ -1486,7 +1578,7 @@ async function saveBio() {
 }
 function cancelBio() { bioForm.value = profile.value.bio; editingAbout.value = false }
 
-// --- Profile edit - contact ---------------------------------------------------
+// â”€â”€â”€ Profile edit â€“ contact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const editingContact = ref(false)
 const contactForm = reactive({ email: '', phone: '', website: '', linkedin: '', github: '' })
@@ -1525,7 +1617,7 @@ async function saveContact() {
   }
 }
 
-// --- Profile edit - skills ----------------------------------------------------
+// â”€â”€â”€ Profile edit â€“ skills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const editingSkills = ref(false)
 const skillForms = reactive({ tech: [] as string[], soft: [] as string[], newTech: '', newSoft: '' })
@@ -1556,7 +1648,7 @@ function saveSkills() {
   editingSkills.value = false
 }
 
-// --- Profile edit - entries (exp / form / cert / langue) ---------------------
+// â”€â”€â”€ Profile edit â€“ entries (exp / form / cert / langue) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const experiences = ref<Experience[]>([])
 const formations = ref<Formation[]>([])
@@ -1628,7 +1720,7 @@ function deleteEntry(section: EntrySection, id: number) {
   if (section === 'langue') langues.value = langues.value.filter(x => x.id !== id)
 }
 
-// --- Post edit modal ----------------------------------------------------------
+// â”€â”€â”€ Post edit modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const editingPostId = ref<number | null>(null)
 const editPostSaving = ref(false)
@@ -1696,7 +1788,7 @@ function onEditImageChange(e: Event) {
   reader.readAsDataURL(file)
 }
 
-// --- Post interactions --------------------------------------------------------
+// â”€â”€â”€ Post interactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function handleComment(id: number) {
   console.log('Commentaire sur le post', id)
@@ -1767,7 +1859,7 @@ async function handleRepost(post: ProfilePost, reposted: boolean) {
   }
 }
 
-// --- Recommendations ----------------------------------------------------------
+// â”€â”€â”€ Recommendations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const recommendationMessage = ref('')
 
@@ -1875,7 +1967,9 @@ async function submitProjectValidationRequest() {
     window.setTimeout(() => { projectRequestSuccess.value = '' }, 3000)
   } catch (error: any) {
     projectRequestError.value =
-      error?.response?.data?.message || 'Impossible denvoyer cette demande de projet.'
+      error?.response?.data?.errors?.[0]?.message ||
+      error?.response?.data?.message ||
+      'Impossible denvoyer cette demande de projet.'
   } finally {
     projectRequestLoading.value = false
   }
@@ -1942,7 +2036,7 @@ async function submitLetterRequest() {
   }
 }
 
-// --- Navigate -----------------------------------------------------------------
+// â”€â”€â”€ Navigate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function openPortfolio() {
   const targetId = profileId.value
@@ -1964,6 +2058,7 @@ async function uploadProfileAvatar(file: File) {
 
     profile.value.avatar = uploadedUrl
     await loadProfile()
+    syncCurrentUserAssets(profile.value.avatar || null, profile.value.banner || null)
     profileSuccess.value = 'Photo de profil enregistree.'
     window.setTimeout(() => { profileSuccess.value = '' }, 3000)
   } catch (error: any) {
@@ -1988,6 +2083,7 @@ async function uploadProfileBanner(file: File) {
 
     profile.value.banner = uploadedUrl
     await loadProfile()
+    syncCurrentUserAssets(profile.value.avatar || null, profile.value.banner || null)
     profileSuccess.value = 'Banniere de profil enregistree.'
     window.setTimeout(() => { profileSuccess.value = '' }, 3000)
   } catch (error: any) {
@@ -1999,7 +2095,7 @@ async function uploadProfileBanner(file: File) {
   }
 }
 
-// --- API loaders --------------------------------------------------------------
+// â”€â”€â”€ API loaders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function loadProfile() {
   profileLoading.value = true
@@ -2010,7 +2106,9 @@ async function loadProfile() {
       : await profileService.getCurrentUser()
 
     profileRaw.value = backendProfile?.raw ?? null
-    viewedProfileRole.value = normalizeBackendRole(backendProfile?.raw?.role)
+    viewedProfileRole.value = isOwnProfileRoute.value && normalizedAuthRole.value
+      ? normalizedAuthRole.value
+      : normalizeBackendRole(backendProfile?.raw?.role)
 
     const rawStudent = backendProfile?.raw?.etudiant || {}
     const rawCompetences = Array.isArray(rawStudent?.competences) ? rawStudent.competences : []
@@ -2052,6 +2150,9 @@ async function loadProfile() {
       github: backendProfile.github || '',
       technicalSkills,
       softSkills
+    }
+    if (isOwnProfile.value) {
+      syncCurrentUserAssets(profile.value.avatar || null, profile.value.banner || null)
     }
 
     if (Array.isArray(backendProfile.posts)) posts.value = backendProfile.posts
@@ -2149,7 +2250,7 @@ async function attachCurrentStudent() {
   }
 }
 
-// --- Mappers ------------------------------------------------------------------
+// â”€â”€â”€ Mappers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function mapBackendPost(post: any): ProfilePost {
   const auteur = post.auteur
@@ -2203,7 +2304,7 @@ function mapBackendRecommendation(recommendation: any): Recommendation {
   }
 }
 
-// --- Helpers ------------------------------------------------------------------
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function fullName(user: any) {
   return [user?.prenom, user?.nom].filter(Boolean).join(' ')
@@ -2218,16 +2319,17 @@ function normalizeBackendRole(roleRaw: unknown): ProfileRole {
 
 function resolveBackendAsset(path: string) {
   if (!path || /^https?:\/\//.test(path)) return path
-  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
-  const backendBase = apiBase.replace(/\/api\/?$/, '')
-  return `${backendBase}${path}`
+  if (String(path).startsWith('data:')) return path
+  if (String(path).startsWith('/')) return `${window.location.origin}${path}`
+  if (String(path).startsWith('uploads/')) return `${window.location.origin}/${path}`
+  return ''
 }
 
 function getInitials(name: string) {
   return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
 }
 
-// --- Lifecycle & watchers -----------------------------------------------------
+// â”€â”€â”€ Lifecycle & watchers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 onMounted(async () => {
   await loadProfile()
@@ -2421,7 +2523,7 @@ watch(profileId, async () => {
   width: 100%;
 }
 
-/* -- Teacher actions ------------------------------- */
+/* â”€â”€ Teacher actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .teacher-actions {
   margin-top: 14px;
   background: white;
@@ -2463,7 +2565,7 @@ watch(profileId, async () => {
 
 .attach-btn:disabled { opacity: .65; cursor: not-allowed; }
 
-/* -- Recommendations ------------------------------- */
+/* â”€â”€ Recommendations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .recommendations-list { display: grid; gap: 12px; }
 
 .recommendation-card {
@@ -2495,7 +2597,7 @@ watch(profileId, async () => {
 
 .recommendation-message { font-size: .9rem; line-height: 1.5; color: var(--text-dark); }
 
-/* -- Connect tab ----------------------------------- */
+/* â”€â”€ Connect tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .requests-panel {
   display: grid;
   gap: 16px;
@@ -2542,7 +2644,7 @@ watch(profileId, async () => {
 .connect-btn.danger { background: rgba(220, 38, 38, .09); color: #dc2626; }
 .connect-btn:disabled { opacity: .65; cursor: not-allowed; }
 
-/* -- Share tab ------------------------------------- */
+/* â”€â”€ Share tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .share-tab { display: flex; justify-content: center; margin-top: 18px; }
 
 .share-card {
@@ -2608,7 +2710,7 @@ watch(profileId, async () => {
 .share-btn.whatsapp { background: #25d366; }
 .share-btn.x { background: #111827; }
 
-/* -- Modals ---------------------------------------- */
+/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -2777,7 +2879,7 @@ watch(profileId, async () => {
   border: 0;
 }
 
-/* -- Mini avatar ----------------------------------- */
+/* â”€â”€ Mini avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mini-avatar {
   width: 42px;
   height: 42px;
@@ -2795,7 +2897,7 @@ watch(profileId, async () => {
 
 .mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-/* -- Profile edit sections ------------------------- */
+/* â”€â”€ Profile edit sections â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .profile-edit-sections { display: grid; gap: 12px; margin-top: 14px; }
 
 .pedit-card {
@@ -3069,7 +3171,7 @@ watch(profileId, async () => {
 
 .bio-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(79, 70, 229, .12); }
 
-/* -- Responsive ------------------------------------ */
+/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 900px) {
   .content,
   .content.shifted { padding: 16px; }
@@ -3079,3 +3181,5 @@ watch(profileId, async () => {
   .post-composer__head { flex-direction: column; }
 }
 </style>
+
+

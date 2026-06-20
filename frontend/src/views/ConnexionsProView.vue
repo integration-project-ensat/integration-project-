@@ -130,8 +130,8 @@ const getSchoolLabel = (user: any) => user?.profil?.adresse || "Étudiant";
 const resolveAvatar = (path?: string | null) => {
   if (!path) return "";
   if (/^https?:\/\//i.test(path) || String(path).startsWith("data:")) return path;
-  if (String(path).startsWith("/")) return String(path);
-  if (String(path).startsWith("uploads/")) return `/${path}`;
+  if (String(path).startsWith("/")) return `${window.location.origin}${String(path)}`;
+  if (String(path).startsWith("uploads/")) return `${window.location.origin}/${String(path)}`;
   return "";
 };
 

@@ -32,6 +32,16 @@ const securityHeaders = helmet({
   crossOriginResourcePolicy: { policy: 'same-origin' },
   crossOriginOpenerPolicy: { policy: 'same-origin' },
   crossOriginEmbedderPolicy: false,
+
+  permissionsPolicy: {
+    directives: {
+      geolocation: ["'none'"],
+      camera: ["'none'"],
+      microphone: ["'none'"],
+      payment: ["'none'"],
+      usb: ["'none'"],
+    },
+  },
 });
 
 module.exports = securityHeaders;

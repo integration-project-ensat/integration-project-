@@ -1,4 +1,5 @@
 import api from './api'
+import { getApiBase } from '../utils/apiBase.js'
 
 export const portfolioService = {
   getPortfolio(studentId) {
@@ -6,12 +7,12 @@ export const portfolioService = {
   },
 
   getPortfolioExportHtmlUrl(studentId) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+    const apiBase = getApiBase()
     return `${apiBase.replace(/\/$/, '')}/portfolio/${studentId}/export/html`
   },
 
   getPortfolioExportPdfUrl(studentId) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+    const apiBase = getApiBase()
     return `${apiBase.replace(/\/$/, '')}/portfolio/${studentId}/export/pdf`
   },
 

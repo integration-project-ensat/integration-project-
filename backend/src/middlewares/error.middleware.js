@@ -9,16 +9,39 @@ const ERROR_STATUS_MAP = {
   TooManyRequestsError: 429,
 };
 
+const PRISMA_STATUS_MAP = {
+  P2002: 409,
+  P2003: 400,
+  P2025: 404,
+};
+
 const resolveStatusCode = (err) => {
   if (err instanceof AppError) return err.statusCode;
+  if (err.code && PRISMA_STATUS_MAP[err.code]) return PRISMA_STATUS_MAP[err.code];
   if (err.statusCode && Number.isInteger(err.statusCode)) return err.statusCode;
   if (err.status && Number.isInteger(err.status)) return err.status;
   if (ERROR_STATUS_MAP[err.name]) return ERROR_STATUS_MAP[err.name];
   return 500;
 };
 
+const resolvePrismaMessage = (err) => {
+  if (err.code !== 'P2002') return null;
+
+  const targets = Array.isArray(err.meta?.target) ? err.meta.target : [];
+
+  if (targets.includes('email')) return 'Cet email est déjà utilisé.';
+  if (targets.includes('numero_etudiant')) return 'Ce numéro étudiant est déjà utilisé.';
+  if (targets.includes('code_administratif')) return 'Ce code administratif est déjà utilisé.';
+  if (targets.includes('google_id')) return 'Ce compte Google est déjà associé à un utilisateur.';
+  if (targets.includes('github_id')) return 'Ce compte GitHub est déjà associé à un utilisateur.';
+
+  return 'Une donnée unique existe déjà.';
+};
+
 const resolveClientMessage = (err, statusCode) => {
   if (err instanceof AppError) return err.message;
+  const prismaMessage = resolvePrismaMessage(err);
+  if (prismaMessage) return prismaMessage;
   if (statusCode >= 400 && statusCode < 500) return 'Bad request.';
   return 'An internal server error occurred. Please try again later.';
 };
