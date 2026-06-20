@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   frontend:
     image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-frontend:latest
@@ -7,7 +6,6 @@ services:
       - "80"
     depends_on:
       - backend
-
   backend:
     image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-backend:latest
     command: >
@@ -24,7 +22,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
+      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD
+       is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
       - AI_SERVICE_URL=http://ai-service:8000
@@ -35,13 +34,11 @@ services:
         condition: service_started
       ai-service:
         condition: service_started
-
   ai-service:
     image: ${ECR_REGISTRY:?ECR_REGISTRY is required}/integration-ai:latest
     expose:
       - "8000"
     command: sh -c "python train_model.py && uvicorn app:app --host 0.0.0.0 --port 8000"
-
   postgres:
     image: postgres:15-alpine
     restart: always
@@ -57,7 +54,6 @@ services:
       timeout: 5s
       retries: 12
       start_period: 10s
-
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     restart: always
@@ -71,7 +67,6 @@ services:
       - KC_HTTP_ENABLED=true
       - KC_PROXY=edge
     command: start
-
   nginx:
     image: nginx:alpine
     restart: always
@@ -84,6 +79,5 @@ services:
     depends_on:
       - frontend
       - backend
-
 volumes:
   postgres-data:

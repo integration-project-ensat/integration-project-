@@ -1,32 +1,28 @@
 version: "3.8"
-
 services:
   frontend:
     build:
       context: ./frontend
-
       dockerfile: dockerfile
     expose:
       - "80"
     depends_on:
       - backend
-
   backend:
     build: ./backend
     command: >
-      sh -c "
-        sleep 10 &&
+      sh -c "sleep 10 &&
         npx prisma migrate deploy &&
         npm run seed &&
-        npm run start
-      "
-    ports:  
+        npm run start"
+    ports:
       - "3000:3000"
     env_file:
       - ./.env
     environment:
       - PORT=3000
-      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
+      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD 
+        is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
       - AI_SERVICE_URL=http://ai-service:8000
@@ -34,12 +30,10 @@ services:
       - postgres
       - keycloak
       - ai-service
-
   ai-service:
     build: ./ai-service
     ports:
       - "8000:8000"
-
   postgres:
     image: postgres:15-alpine
     environment:
@@ -50,7 +44,6 @@ services:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     ports:
@@ -59,7 +52,6 @@ services:
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
     command: start-dev
-
   nginx:
     image: nginx:alpine
     ports:
@@ -71,6 +63,5 @@ services:
     depends_on:
       - frontend
       - backend
-
 volumes:
   postgres-data:
