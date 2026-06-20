@@ -8,7 +8,7 @@ CREATE TYPE "TypeNotification" AS ENUM ('SOUMISSION_PROJET', 'VALIDATION_PROJET'
 CREATE TYPE "Visibilite" AS ENUM ('PUBLIC', 'PRIVE', 'ENSEIGNANTS', 'LIEN_PARTAGE');
 
 -- CreateEnum
-CREATE TYPE "CategorieCompetence" AS ENUM ('TECHNIQUE', 'SOFT');
+CREATE TYPE "CategorieCompetence" AS ENUM ('TECHNIQUE', 'COMPORTEMENTALE');
 
 -- CreateEnum
 CREATE TYPE "NiveauCompetence" AS ENUM ('DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT');
@@ -65,7 +65,7 @@ CREATE TYPE "CritereScore" AS ENUM ('PROJETS', 'GITHUB', 'STAGES', 'RECOMMANDATI
 CREATE TYPE "TypeReaction" AS ENUM ('JAIME', 'BRAVO', 'LIKE');
 
 -- CreateEnum
-CREATE TYPE "niveau_acces" AS ENUM ('SUPER_ADMIN', 'STANDARD');
+CREATE TYPE "NiveauAcces" AS ENUM ('SUPER_ADMIN', 'STANDARD');
 
 -- CreateTable
 CREATE TABLE "utilisateurs" (
@@ -82,6 +82,10 @@ CREATE TABLE "utilisateurs" (
     "email_verifie" BOOLEAN NOT NULL DEFAULT false,
     "email_verification" VARCHAR(255),
     "token_expires_at" TIMESTAMP(3),
+    "reset_token_hash" VARCHAR(255),
+    "reset_token_expires_at" TIMESTAMP(3),
+    "admin_action_token" TEXT,
+    "admin_action_expires_at" TIMESTAMP(3),
 
     CONSTRAINT "utilisateurs_pkey" PRIMARY KEY ("id_utilisateur")
 );
@@ -92,6 +96,7 @@ CREATE TABLE "etudiants" (
     "numero_etudiant" VARCHAR(20),
     "filiere" VARCHAR(100),
     "annee_universitaire" VARCHAR(9),
+    "date_naissance" DATE,
 
     CONSTRAINT "etudiants_pkey" PRIMARY KEY ("id_utilisateur")
 );
@@ -102,8 +107,6 @@ CREATE TABLE "professeurs" (
     "departement" VARCHAR(100),
     "specialite" VARCHAR(100),
     "titre" VARCHAR(100),
-    "email_professionnel" VARCHAR(255),
-    "telephone" VARCHAR(20),
     "code_administratif" VARCHAR(50),
 
     CONSTRAINT "professeurs_pkey" PRIMARY KEY ("id_utilisateur")
@@ -114,7 +117,7 @@ CREATE TABLE "administrateurs" (
     "id_utilisateur" BIGINT NOT NULL,
     "droits_admin" JSONB,
     "date_validation" TIMESTAMP(3),
-    "niveau_acces" "niveau_acces" NOT NULL DEFAULT 'STANDARD',
+    "niveau_acces" "NiveauAcces" NOT NULL DEFAULT 'STANDARD',
 
     CONSTRAINT "administrateurs_pkey" PRIMARY KEY ("id_utilisateur")
 );
@@ -125,7 +128,9 @@ CREATE TABLE "professionnels" (
     "entreprise" VARCHAR(150) NOT NULL,
     "poste" VARCHAR(150) NOT NULL,
     "secteur" VARCHAR(100),
-    "est_valide_admin" BOOLEAN NOT NULL DEFAULT false,
+    "est_valide" BOOLEAN NOT NULL DEFAULT false,
+    "statut_validation" "StatutValidation" NOT NULL DEFAULT 'EN_ATTENTE',
+    "date_validation" TIMESTAMP(3),
     "justificatifs_url" TEXT,
 
     CONSTRAINT "professionnels_pkey" PRIMARY KEY ("id_utilisateur")
@@ -152,11 +157,10 @@ CREATE TABLE "profils" (
     "id_utilisateur" BIGINT NOT NULL,
     "photo_profil" VARCHAR(500),
     "telephone" VARCHAR(20),
-    "date_naissance" DATE,
     "pays" VARCHAR(100),
-    "objectif_professionnel" VARCHAR(100),
-    "linkedin_url" TEXT,
+    "email_professionnel" VARCHAR(255),
     "bio" TEXT,
+    "linkedin_url" TEXT,
     "visibilite" "Visibilite" NOT NULL DEFAULT 'PUBLIC',
 
     CONSTRAINT "profils_pkey" PRIMARY KEY ("id_profil")
@@ -174,12 +178,12 @@ CREATE TABLE "competences" (
 
 -- CreateTable
 CREATE TABLE "profil_competence" (
-    "id_profil" BIGINT NOT NULL,
+    "id_etudiant" BIGINT NOT NULL,
     "id_competence" BIGINT NOT NULL,
     "niveau_maitrise" INTEGER,
     "date_ajout" DATE,
 
-    CONSTRAINT "profil_competence_pkey" PRIMARY KEY ("id_profil","id_competence")
+    CONSTRAINT "profil_competence_pkey" PRIMARY KEY ("id_etudiant","id_competence")
 );
 
 -- CreateTable
@@ -271,7 +275,7 @@ CREATE TABLE "activites_parascolaires" (
 CREATE TABLE "lettres_recommandation" (
     "id_lettre" BIGSERIAL NOT NULL,
     "id_etudiant" BIGINT NOT NULL,
-    "id_professeur" BIGINT NOT NULL,
+    "id_professeur" BIGINT,
     "motif" "MotifLettre",
     "date_souhaitee" DATE,
     "contenu" TEXT,
@@ -340,7 +344,7 @@ CREATE TABLE "modeles_portfolio" (
 -- CreateTable
 CREATE TABLE "scores_credibilite" (
     "id_score" BIGSERIAL NOT NULL,
-    "id_profil" BIGINT NOT NULL,
+    "id_etudiant" BIGINT NOT NULL,
     "score_total" DECIMAL(5,2),
     "score_projets" DECIMAL(5,2),
     "score_github" DECIMAL(5,2),
@@ -370,7 +374,7 @@ CREATE TABLE "commentaires" (
 CREATE TABLE "recommandations" (
     "id_recommandation" BIGSERIAL NOT NULL,
     "id_auteur" BIGINT NOT NULL,
-    "id_profil" BIGINT NOT NULL,
+    "id_etudiant_cible" BIGINT NOT NULL,
     "message" TEXT,
     "role_auteur" "RoleAuteur",
     "statut" "StatutValidation" NOT NULL DEFAULT 'EN_ATTENTE',
@@ -403,12 +407,12 @@ CREATE TABLE "badges" (
 
 -- CreateTable
 CREATE TABLE "profil_badge" (
-    "id_profil" BIGINT NOT NULL,
+    "id_etudiant" BIGINT NOT NULL,
     "id_badge" BIGINT NOT NULL,
     "date_attribution" TIMESTAMP(3),
     "position" INTEGER,
 
-    CONSTRAINT "profil_badge_pkey" PRIMARY KEY ("id_profil","id_badge")
+    CONSTRAINT "profil_badge_pkey" PRIMARY KEY ("id_etudiant","id_badge")
 );
 
 -- CreateTable
@@ -466,7 +470,7 @@ CREATE TABLE "depots_github" (
 -- CreateTable
 CREATE TABLE "postes" (
     "id_poste" BIGSERIAL NOT NULL,
-    "id_etudiant" BIGINT NOT NULL,
+    "id_auteur" BIGINT NOT NULL,
     "contenu" TEXT NOT NULL,
     "visibilite" "Visibilite" NOT NULL DEFAULT 'PUBLIC',
     "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -489,6 +493,9 @@ CREATE TABLE "reactions" (
 CREATE UNIQUE INDEX "utilisateurs_email_key" ON "utilisateurs"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "utilisateurs_admin_action_token_key" ON "utilisateurs"("admin_action_token");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "etudiants_numero_etudiant_key" ON "etudiants"("numero_etudiant");
 
 -- CreateIndex
@@ -507,7 +514,7 @@ CREATE UNIQUE INDEX "portfolios_id_etudiant_key" ON "portfolios"("id_etudiant");
 CREATE UNIQUE INDEX "portfolios_url_public_key" ON "portfolios"("url_public");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "scores_credibilite_id_profil_key" ON "scores_credibilite"("id_profil");
+CREATE UNIQUE INDEX "scores_credibilite_id_etudiant_key" ON "scores_credibilite"("id_etudiant");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "github_integration_id_etudiant_key" ON "github_integration"("id_etudiant");
@@ -531,10 +538,10 @@ ALTER TABLE "professionnels" ADD CONSTRAINT "professionnels_id_utilisateur_fkey"
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_utilisateur_id_fkey" FOREIGN KEY ("utilisateur_id") REFERENCES "utilisateurs"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "profils" ADD CONSTRAINT "profils_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "etudiants"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "profils" ADD CONSTRAINT "profils_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "utilisateurs"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "profil_competence" ADD CONSTRAINT "profil_competence_id_profil_fkey" FOREIGN KEY ("id_profil") REFERENCES "profils"("id_profil") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "profil_competence" ADD CONSTRAINT "profil_competence_id_etudiant_fkey" FOREIGN KEY ("id_etudiant") REFERENCES "etudiants"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "profil_competence" ADD CONSTRAINT "profil_competence_id_competence_fkey" FOREIGN KEY ("id_competence") REFERENCES "competences"("id_competence") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -570,7 +577,7 @@ ALTER TABLE "activites_parascolaires" ADD CONSTRAINT "activites_parascolaires_id
 ALTER TABLE "lettres_recommandation" ADD CONSTRAINT "lettres_recommandation_id_etudiant_fkey" FOREIGN KEY ("id_etudiant") REFERENCES "etudiants"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "lettres_recommandation" ADD CONSTRAINT "lettres_recommandation_id_professeur_fkey" FOREIGN KEY ("id_professeur") REFERENCES "professeurs"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "lettres_recommandation" ADD CONSTRAINT "lettres_recommandation_id_professeur_fkey" FOREIGN KEY ("id_professeur") REFERENCES "professeurs"("id_utilisateur") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "elements_validables" ADD CONSTRAINT "elements_validables_validateur_id_fkey" FOREIGN KEY ("validateur_id") REFERENCES "utilisateurs"("id_utilisateur") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -588,7 +595,7 @@ ALTER TABLE "portfolios" ADD CONSTRAINT "portfolios_id_modele_fkey" FOREIGN KEY 
 ALTER TABLE "modeles_portfolio" ADD CONSTRAINT "modeles_portfolio_cree_par_admin_fkey" FOREIGN KEY ("cree_par_admin") REFERENCES "administrateurs"("id_utilisateur") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "scores_credibilite" ADD CONSTRAINT "scores_credibilite_id_profil_fkey" FOREIGN KEY ("id_profil") REFERENCES "profils"("id_profil") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "scores_credibilite" ADD CONSTRAINT "scores_credibilite_id_etudiant_fkey" FOREIGN KEY ("id_etudiant") REFERENCES "etudiants"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "commentaires" ADD CONSTRAINT "commentaires_id_auteur_fkey" FOREIGN KEY ("id_auteur") REFERENCES "utilisateurs"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -603,7 +610,7 @@ ALTER TABLE "commentaires" ADD CONSTRAINT "commentaires_id_poste_fkey" FOREIGN K
 ALTER TABLE "recommandations" ADD CONSTRAINT "recommandations_id_auteur_fkey" FOREIGN KEY ("id_auteur") REFERENCES "utilisateurs"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "recommandations" ADD CONSTRAINT "recommandations_id_profil_fkey" FOREIGN KEY ("id_profil") REFERENCES "profils"("id_profil") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "recommandations" ADD CONSTRAINT "recommandations_id_etudiant_cible_fkey" FOREIGN KEY ("id_etudiant_cible") REFERENCES "etudiants"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "portfolio_recommandation" ADD CONSTRAINT "portfolio_recommandation_id_portfolio_fkey" FOREIGN KEY ("id_portfolio") REFERENCES "portfolios"("id_portfolio") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -612,7 +619,7 @@ ALTER TABLE "portfolio_recommandation" ADD CONSTRAINT "portfolio_recommandation_
 ALTER TABLE "portfolio_recommandation" ADD CONSTRAINT "portfolio_recommandation_id_recommandation_fkey" FOREIGN KEY ("id_recommandation") REFERENCES "recommandations"("id_recommandation") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "profil_badge" ADD CONSTRAINT "profil_badge_id_profil_fkey" FOREIGN KEY ("id_profil") REFERENCES "profils"("id_profil") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "profil_badge" ADD CONSTRAINT "profil_badge_id_etudiant_fkey" FOREIGN KEY ("id_etudiant") REFERENCES "etudiants"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "profil_badge" ADD CONSTRAINT "profil_badge_id_badge_fkey" FOREIGN KEY ("id_badge") REFERENCES "badges"("id_badge") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -630,7 +637,7 @@ ALTER TABLE "github_integration" ADD CONSTRAINT "github_integration_id_etudiant_
 ALTER TABLE "depots_github" ADD CONSTRAINT "depots_github_id_integration_fkey" FOREIGN KEY ("id_integration") REFERENCES "github_integration"("id_integration") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "postes" ADD CONSTRAINT "postes_id_etudiant_fkey" FOREIGN KEY ("id_etudiant") REFERENCES "etudiants"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "postes" ADD CONSTRAINT "postes_id_auteur_fkey" FOREIGN KEY ("id_auteur") REFERENCES "utilisateurs"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "reactions" ADD CONSTRAINT "reactions_id_auteur_fkey" FOREIGN KEY ("id_auteur") REFERENCES "utilisateurs"("id_utilisateur") ON DELETE CASCADE ON UPDATE CASCADE;
