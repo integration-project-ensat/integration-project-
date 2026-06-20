@@ -38,7 +38,9 @@ const pickRole = (profile: ProfilExplore) =>
   "Étudiant en développement";
 
 const pickSchool = (profile: ProfilExplore) =>
-  profile.etudiant?.diplomes?.[0]?.etablissement || "École Nationale des Sciences Appliquées";
+  profile.etudiant?.etablissement ||
+  profile.etudiant?.diplomes?.[0]?.etablissement ||
+  "École Nationale des Sciences Appliquées";
 
 const cityOptions = [
   "Tanger",
@@ -122,7 +124,7 @@ export const mapExploreProfileCard = (
   role: pickRole(profile),
   school: pickSchool(profile),
   city: pickCity(profile),
-  score: profile.etudiant?.score_credibilite?.score_total ?? 0,
+  score: Number(profile.etudiant?.score_credibilite?.score_total ?? 0),
   recommendations: profile.nb_recommandations,
   badges: pickBadges(profile),
   profilePath: `/profile/student/${profile.id_utilisateur}?from=${context}`,

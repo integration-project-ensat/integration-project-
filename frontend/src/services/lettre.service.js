@@ -1,4 +1,5 @@
 import api from './api'
+import { getApiBase } from '../utils/apiBase.js'
 
 export const lettreService = {
   requestRecommendationLetter(payload) {
@@ -10,12 +11,12 @@ export const lettreService = {
   },
 
   getPdfUrl(letterId) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+    const apiBase = getApiBase()
     return `${apiBase.replace(/\/$/, '')}/lettres/${letterId}/export/pdf`
   },
 
   getHtmlUrl(letterId) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+    const apiBase = getApiBase()
     return `${apiBase.replace(/\/$/, '')}/lettres/${letterId}/export/html`
   },
 }

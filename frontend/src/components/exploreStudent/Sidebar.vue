@@ -98,7 +98,14 @@ function normalizedPath(path: string) {
 }
 
 function isActive(path: string) {
-  return route.path === normalizedPath(path);
+  const currentPath = normalizedPath(route.path);
+  const targetPath = normalizedPath(path);
+
+  if (targetPath === "/student/explore") {
+    return currentPath === "/student/explore" || currentPath === "/explore";
+  }
+
+  return currentPath === targetPath;
 }
 
 function handleNavigation(path: string, event?: Event) {
@@ -164,7 +171,7 @@ const navItems = [
     activeIcon: icons.dashboardFill,
   },
   {
-    path: "/explore",
+    path: "/student/explore",
     label: "Explorer",
     icon: icons.explore,
     activeIcon: icons.exploreFill,

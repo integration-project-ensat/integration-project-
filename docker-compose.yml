@@ -6,6 +6,9 @@ services:
       dockerfile: dockerfile
     expose:
       - "80"
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api}
+      - VITE_BACKEND_URL=${VITE_BACKEND_URL:-http://backend:3000}
     depends_on:
       - backend
   backend:
@@ -22,12 +25,18 @@ services:
     env_file:
       - ./.env
     environment:
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=3000
+      - RUNNING_IN_DOCKER=true
       - DB_HOST=postgres
       - DB_NAME=${DB_NAME:-portfolio_db}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@${DB_HOST:-postgres}:5432/${DB_NAME:?DB_NAME is required}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - BACKEND_URL=${BACKEND_URL:-http://localhost:3000}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-http://localhost:3000/api/auth/google/callback}
+      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-http://localhost:3000/api/auth/github/callback}
       - KEYCLOAK_URL=http://keycloak:8080/auth
       - KEYCLOAK_REALM=${KEYCLOAK_REALM:-portfolio-realm}
       - AI_SERVICE_URL=http://ai-service:8000
@@ -62,9 +71,24 @@ services:
     environment:
       - PGPASSWORD=${DB_PASSWORD:-secret}
       - DB_USER=${DB_USER:-postgres}
-    volumes:
-      - ./db-init.sh:/db-init.sh:ro
-    command: ["sh", "/db-init.sh"]
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        until pg_isready -h postgres -U "$DB_USER"; do
+          sleep 2
+        done
+
+        create_db() {
+          db_name="$$1"
+          exists="$$(psql -h postgres -U "$$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$$db_name'")"
+          if [ "$$exists" != "1" ]; then
+            createdb -h postgres -U "$$DB_USER" "$$db_name"
+          fi
+        }
+
+        create_db keycloak_db
+        create_db sonarqube_db
 
   pgadmin:
     image: dpage/pgadmin4:latest

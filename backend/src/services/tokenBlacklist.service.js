@@ -8,29 +8,42 @@ const prisma = require('../../prisma/client');
 // userId   : id de l'utilisateur (optionnel, pour audit)
 
 async function révoquerToken(jti, expiresAt, userId = null) {
-  await prisma.tokenRévoqué.create({
-    data: {
-      jti,
-      expires_at: new Date(expiresAt * 1000),
-      ...(userId !== null && { user_id: userId }),
-    },
-  });
+  try {
+    await prisma.tokenRévoqué.create({
+      data: {
+        jti,
+        expires_at: new Date(expiresAt * 1000),
+        ...(userId !== null && { user_id: userId }),
+      },
+    });
+  } catch (error) {
+    console.error('[TokenBlacklist] Echec révocation token :', error.message);
+  }
 }
 
 // ── Vérifier si un token est révoqué ────────────────────────
 
 async function estRévoqué(jti) {
-  const token = await prisma.tokenRévoqué.findUnique({ where: { jti } });
-  return !!token;
+  try {
+    const token = await prisma.tokenRévoqué.findUnique({ where: { jti } });
+    return !!token;
+  } catch (error) {
+    console.error('[TokenBlacklist] Echec vérification token :', error.message);
+    return false;
+  }
 }
 
 // ── Nettoyage des tokens expirés (toutes les 24h via app.js) ─
 
 async function nettoyerTokensExpirés() {
-  const résultat = await prisma.tokenRévoqué.deleteMany({
-    where: { expires_at: { lt: new Date() } },
-  });
-  console.log(`[Blacklist] ${résultat.count} token(s) expiré(s) supprimé(s)`);
+  try {
+    const résultat = await prisma.tokenRévoqué.deleteMany({
+      where: { expires_at: { lt: new Date() } },
+    });
+    console.log(`[Blacklist] ${résultat.count} token(s) expiré(s) supprimé(s)`);
+  } catch (error) {
+    console.error('[TokenBlacklist] Echec nettoyage tokens :', error.message);
+  }
 }
 
 module.exports = { révoquerToken, estRévoqué, nettoyerTokensExpirés };

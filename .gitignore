@@ -149,3 +149,4 @@ nginx/ssl/nginx.key
 nginx/ssl/nginx.crt
 frontend/test-results/
 frontend/playwright-report/
+test-results/

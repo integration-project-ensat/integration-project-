@@ -25,7 +25,7 @@ const certifications = ref<Certification[]>([]);
 const highlightedCertificationId = ref<number | null>(null);
 
 const typeLabels: Record<Certification["type"], string> = {
-  diplome: "Dipl�me",
+  diplome: "Diplôme",
   certification: "Certification",
   formation: "Formation",
 };
@@ -40,8 +40,8 @@ function mapDiplome(item: any): Certification {
   return {
     id: Number(item?.id_diplome),
     source: "diplome",
-    titre: item?.titre_diplome || "Dipl�me",
-    organisme: item?.etablissement || "�tablissement non renseign�",
+    titre: item?.titre_diplome || "Diplôme",
+    organisme: item?.etablissement || "Établissement non renseigné",
     type: "diplome",
     dateObtention: item?.annee_fin ? `${item.annee_fin}-06` : "",
     description: item?.domaine || "",
@@ -58,7 +58,7 @@ function mapAttestation(item: any): Certification {
     id: Number(item?.id_attestation),
     source: "attestation",
     titre: item?.titre || item?.type || "Attestation",
-    organisme: item?.organisme || "Organisme non renseign�",
+    organisme: item?.organisme || "Organisme non renseigné",
     type: mappedType,
     dateObtention: item?.date ? String(item.date).slice(0, 7) : "",
     dateExpiration: item?.date_retention ? String(item.date_retention).slice(0, 7) : undefined,
@@ -84,7 +84,7 @@ async function loadCertifications() {
     certifications.value = [...diplomes, ...attestations];
     await scrollToHighlightedCertification();
   } catch (error) {
-    console.warn("Chargement des dipl�mes/certifications impossible", error);
+    console.warn("Chargement des diplômes/certifications impossible", error);
     certifications.value = [];
   }
 }
@@ -115,14 +115,14 @@ async function supprimerCertification(item: Certification) {
     }
     await loadCertifications();
   } catch (error) {
-    console.warn("Suppression dipl�me/certification impossible", error);
+    console.warn("Suppression diplôme/certification impossible", error);
   }
 }
 
 function formatDate(d: string) {
   if (!d) return "";
   const [y, m] = d.split("-");
-  const mois = ["", "Jan", "F�v", "Mar", "Avr", "Mai", "Juin", "Juil", "Ao�t", "Sep", "Oct", "Nov", "D�c"];
+  const mois = ["", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
   return `${mois[parseInt(m || "0")]} ${y}`;
 }
 
@@ -299,4 +299,3 @@ watch(
 .verify-link { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--purple); font-weight: 600; text-decoration: none; font-family: var(--font-head); transition: var(--ease); }
 .verify-link:hover { color: var(--navy-mid); text-decoration: underline; }
 </style>
-

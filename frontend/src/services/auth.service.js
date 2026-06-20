@@ -1,4 +1,5 @@
 import api from './api.js'
+import { getApiBase } from '../utils/apiBase.js'
 
 const ROLE_MAP = {
   student: 'ETUDIANT',
@@ -73,7 +74,7 @@ function persistSession(user, token) {
 }
 
 function redirectToProvider(provider) {
-  const apiRoot = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api'
+  const apiRoot = getApiBase()
   window.location.href = `${apiRoot.replace(/\/$/, '')}/auth/${provider}`
 }
 
@@ -104,7 +105,7 @@ export default {
   persistSession,
 
   async login(email, password) {
-    const { data } = await postWithFallback(['/login', '/auth/seconnecter'], {
+    const { data } = await postWithFallback(['/auth/seconnecter', '/login'], {
       email: email.trim().toLowerCase(),
       mot_de_passe: password
     })

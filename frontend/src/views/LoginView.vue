@@ -104,11 +104,7 @@ async function submit() {
   try {
     const data = await authService.login(email.value, password.value)
     auth.login(data.data.user, data.data.token, data.data.user ? data.data.user.role : localStorage.getItem('role'))
-    const role = localStorage.getItem('role')
-    if (role === 'admin') router.push('/admin')
-    else if (role === 'teacher') router.push('/explore-prof')
-    else if (role === 'professional') router.push('/explore-pro')
-    else router.push('/student/explore')
+    router.push('/dashboard')
   } catch (e: any) {
     error.value = getErrorMessage(e)
   } finally {

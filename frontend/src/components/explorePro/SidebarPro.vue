@@ -39,15 +39,16 @@
         :to="forceNavigation ? undefined : '/pro/settings'"
         :href="forceNavigation ? '/pro/settings' : undefined"
         class="nav-item"
+        :class="{ active: isActive('/pro/settings') }"
         @click="handleNavigation('/pro/settings', $event)"
       >
-        <span>Paramètres</span>
-        <span>Paramètres</span>
+        <span class="nav-icon" v-html="icons.settings" />
+        <span>Parametres</span>
       </component>
-      <a href="/login" class="nav-item logout" @click="handleLogout">
+      <button type="button" class="nav-item logout logout-btn" @click="handleLogout">
         <span class="nav-icon" v-html="icons.logout" />
-        <span>Déconnexion</span>
-      </a>
+        <span>Deconnexion</span>
+      </button>
     </div>
   </aside>
 </template>
@@ -55,7 +56,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
-import { useAuthStore } from '@/store/auth.js'
+import { useAuthStore } from "@/store/auth.js";
 import authService from "@/services/auth.service.js";
 
 const props = withDefaults(
@@ -67,48 +68,49 @@ const props = withDefaults(
 );
 
 const route = useRoute();
-const router = useRouter()
-const auth = useAuthStore()
+const router = useRouter();
+const auth = useAuthStore();
+
 const currentUser = computed(() => ({
-  name: auth.user?.name || 'Nom Prenom',
-  email: auth.user?.email || 'Exemple.exemple@exemple.pro',
-  avatar: auth.user?.avatar || ''
-}))
+  name: auth.user?.name || "Nom Prenom",
+  email: auth.user?.email || "exemple@exemple.pro",
+  avatar: auth.user?.avatar || "",
+}));
 
 const initials = computed(() => {
-  const name = currentUser.value.name || 'Nom Prenom'
+  const name = currentUser.value.name || "Nom Prenom";
   return name
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-})
+    .split(" ")
+    .map((part: string) => part[0] || "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+});
 
-const profileLink = computed(() => '/pro/profile')
+const profileLink = computed(() => "/pro/profile");
 
 function normalizedPath(path: string) {
-  return path.split('?')[0]
+  return path.split("?")[0];
 }
 
 function isActive(path: string) {
-  return route.path === normalizedPath(path)
+  return route.path === normalizedPath(path);
 }
 
 function handleNavigation(path: string, event?: Event) {
-  if (!props.forceNavigation) return
-  event?.preventDefault()
-  window.location.assign(path)
+  if (!props.forceNavigation) return;
+  event?.preventDefault();
+  window.location.assign(path);
 }
 
-async function handleLogout(event: Event) {
-  event.preventDefault()
-  await authService.logout()
-  auth.logout()
+async function handleLogout() {
+  await authService.logout();
+  auth.logout();
   if (props.forceNavigation) {
-    window.location.assign('/login')
-    return
+    window.location.assign("/login");
+    return;
   }
-  router.push('/login')
+  router.push("/login");
 }
 
 const icons = {
@@ -116,10 +118,7 @@ const icons = {
   explore: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
   feed: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/></svg>`,
   topProfiles: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-  stagiaires: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3 6 12H2"/></svg>`,
   connexions: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>`,
-  recos: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
-  comments: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
   settings: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
   logout: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
 };
@@ -127,11 +126,10 @@ const icons = {
 const navItems = [
   { path: "/pro/dashboard", label: "Tableau de bord", icon: icons.dashboard },
   { path: "/explore-pro", label: "Explorer", icon: icons.explore },
-  { path: "/pro/dashboard", label: "Tableau de bord", icon: icons.dashboard },
-  { path: "/pro/top-profiles", label: "Meilleurs profils", icon: icons.topProfiles },
+  { path: "/pro/feed", label: "Fil d'actualite", icon: icons.feed },
   { path: "/pro/connexions?tab=pending", label: "Connexions", icon: icons.connexions },
   { path: "/pro/top-profiles", label: "Meilleurs profils", icon: icons.topProfiles },
-]
+];
 </script>
 
 <style scoped>
@@ -180,6 +178,12 @@ const navItems = [
   overflow: hidden;
 }
 
+.avatar-sm img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .user-info {
   overflow: hidden;
 }
@@ -220,6 +224,10 @@ const navItems = [
   text-decoration: none;
   transition: 0.2s ease;
   cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
 }
 
 .nav-item:hover {
@@ -248,5 +256,9 @@ const navItems = [
 
 .logout {
   color: #e53e3e;
+}
+
+.logout-btn {
+  width: 100%;
 }
 </style>
